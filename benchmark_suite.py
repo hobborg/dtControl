@@ -1,6 +1,5 @@
 import project_path
 from dataset import Dataset
-from sklearn.metrics import accuracy_score
 import glob
 from os.path import join, exists, isfile
 from timeout import call_with_timeout
@@ -10,8 +9,11 @@ from collections import defaultdict
 class BenchmarkResults:
     """
     The benchmark results store the benchmark data in a table format (dataset x classifier -> results).
-    """
 
+    :param row_names: the names of the datasets
+    :param column_names: the names of the classifiers
+    :param table: a two-dimensional array of result dictionaries
+    """
     def __init__(self, row_names, column_names, table):
         self.row_names = row_names
         self.column_names = column_names
@@ -39,7 +41,8 @@ class BenchmarkSuite:
             exclude = []
         for (X_file, Y_file) in self.get_XY_files(path):
             if Dataset.get_dataset_name(X_file) not in exclude:
-                self.datasets.append(Dataset(X_file, Y_file))
+                any_label = 'cruise' in X_file
+                self.datasets.append(Dataset(X_file, Y_file, any_label=any_label))
 
     def get_XY_files(self, path):
         return [(file, '{}_Y.npy'.format(file.split('_X.')[0])) for file in glob.glob(join(path, '*.pickle'))]
@@ -59,11 +62,10 @@ class BenchmarkSuite:
                     Y_train = ds.get_labels_as_unique() if classifier.needs_unique_labels else ds.Y_train
                     classifier, success = call_with_timeout(classifier, 'fit', ds.X_train, Y_train, timeout=self.timeout)
                     if success:
-                        pred = classifier.predict(ds.X_train)
-                        if len(pred[pred == None]) != 0:
+                        acc = ds.compute_accuracy(classifier)
+                        if acc == None:
                             stats = 'failed to fit'
                         else:
-                            acc = accuracy_score(pred, Y_train)
                             stats = classifier.get_stats()
                             stats['accuracy'] = acc
                     else:

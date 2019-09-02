@@ -2,7 +2,7 @@
     "cruise-latest": {
         "DecisionTreeClassifier": {
             "num_nodes": 1015,
-            "accuracy": 0.9999763489542859
+            "accuracy": 1.0
         },
         "LinearClassifierDT(LogisticRegression)": "failed to fit",
         "OC1": "timeout"
