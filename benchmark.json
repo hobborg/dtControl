@@ -1,0 +1,42 @@
+{
+    "cruise-latest": {
+        "DecisionTreeClassifier": {
+            "num_nodes": 1015,
+            "accuracy": 0.9999763489542859
+        },
+        "LinearClassifierDT(LogisticRegression)": "failed to fit",
+        "OC1": "timeout"
+    },
+    "cruise-small-latest": {
+        "DecisionTreeClassifier": {
+            "num_nodes": 109,
+            "accuracy": 1.0
+        },
+        "LinearClassifierDT(LogisticRegression)": {
+            "num_nodes": 89,
+            "num_not_aa": 22,
+            "accuracy": 1.0
+        },
+        "OC1": {
+            "num_nodes": 57,
+            "num_oblique": 18,
+            "accuracy": 1.0
+        }
+    },
+    "cruise-medium-latest": {
+        "DecisionTreeClassifier": {
+            "num_nodes": 289,
+            "accuracy": 1.0
+        },
+        "LinearClassifierDT(LogisticRegression)": {
+            "num_nodes": 255,
+            "num_not_aa": 59,
+            "accuracy": 1.0
+        },
+        "OC1": {
+            "num_nodes": 147,
+            "num_oblique": 50,
+            "accuracy": 1.0
+        }
+    }
+}
