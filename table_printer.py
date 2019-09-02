@@ -3,14 +3,14 @@ from IPython.display import HTML, display
 def print_table(benchmark_results):
     output = '<html><body><table><tr><td></td>'
     for c in benchmark_results.column_names:
-        output += '<th scope="col">{}</th>'.format(c)
+        output += '<th scope="col" style="text-align:center">{}</th>'.format(c)
     output += '</tr>'
 
     for i in range(len(benchmark_results.row_names)):
         output += '<tr>'
-        output += '<th scope="row">{}</th>'.format(benchmark_results.row_names[i])
+        output += '<th scope="row" style="text-align:center">{}</th>'.format(benchmark_results.row_names[i])
         for column in benchmark_results.table[i]:
-            output += '<td>'
+            output += '<td style="text-align:center">'
             if isinstance(column, str):
                 output += '<span style="color:red">{}</span>'.format(column)
             else:
