@@ -53,12 +53,13 @@ class BenchmarkSuite:
         step = 0
         num_steps = len(self.datasets) * len(classifiers)
         for ds in self.datasets:
-            prev_dataset_results = prev_results[ds.name] if ds.name in prev_results else {}
             row = []
             for classifier in classifiers:
-                if classifier.name in prev_dataset_results:
-                    stats = prev_dataset_results[classifier.name]
+                if classifier.name in prev_results and ds.name in prev_results[classifier.name]:
+                    loaded = True
+                    stats = prev_results[classifier.name][ds.name]
                 else:
+                    loaded = False
                     Y_train = ds.get_labels_as_unique() if classifier.needs_unique_labels else ds.Y_train
                     classifier, success = call_with_timeout(classifier, 'fit', ds.X_train, Y_train, timeout=self.timeout)
                     if success:
@@ -72,7 +73,7 @@ class BenchmarkSuite:
                         stats = 'timeout'
                 row.append(stats)
                 step += 1
-                msg = 'Loaded' if classifier is not None and classifier.name in prev_dataset_results else 'Tested'
+                msg = 'Loaded' if loaded else 'Tested'
                 print('{} {} on {} ({}/{}).'.format(msg, classifier.name, ds.name, step, num_steps))
             table.append(row)
         print('Done.')
@@ -80,11 +81,11 @@ class BenchmarkSuite:
         self.save_results(results, file)
         return results
 
-    def save_results(self, results, file):  # TODO: invert json mapping
+    def save_results(self, results, file):
         json_obj = defaultdict(dict)
-        for i in range(len(results.row_names)):
-            for j in range(len(results.column_names)):
-                json_obj[results.row_names[i]][results.column_names[j]] = results.table[i][j]
+        for i in range(len(results.column_names)):
+            for j in range(len(results.row_names)):
+                json_obj[results.column_names[i]][results.row_names[j]] = results.table[j][i]
         with open(file, 'w+') as outfile:
             json.dump(json_obj, outfile, indent=4)
 

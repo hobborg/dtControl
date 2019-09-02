@@ -24,7 +24,7 @@ def call_with_timeout(obj, method, *args, timeout=60):
                 p.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 p.kill()
-                return None, False
+                return obj, False
         getattr(obj, '{}_command_called'.format(method))()
         return obj, True
     else:
@@ -36,5 +36,5 @@ def call_with_timeout(obj, method, *args, timeout=60):
             if p.is_alive():
                 p.terminate()
                 p.join()
-                return None, False
+                return obj, False
             return return_list[0], True
