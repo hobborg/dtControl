@@ -73,14 +73,14 @@ class BenchmarkSuite:
                 row.append(stats)
                 step += 1
                 msg = 'Loaded' if classifier is not None and classifier.name in prev_dataset_results else 'Tested'
-                print('{} {}/{}.'.format(msg, step, num_steps))
+                print('{} {} on {} ({}/{}).'.format(msg, classifier.name, ds.name, step, num_steps))
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
         self.save_results(results, file)
         return results
 
-    def save_results(self, results, file):
+    def save_results(self, results, file):  # TODO: invert json mapping
         json_obj = defaultdict(dict)
         for i in range(len(results.row_names)):
             for j in range(len(results.column_names)):
