@@ -45,7 +45,7 @@ class BenchmarkSuite:
         return [(file, '{}_Y.npy'.format(file.split('_X.')[0])) for file in glob.glob(join(path, '*.pickle'))]
 
     def benchmark(self, classifiers, file='benchmark.json'):
-        prev_results = self.read_results(file)
+        prev_results = self.load_results(file)
         table = []
         step = 0
         num_steps = len(self.datasets) * len(classifiers)
@@ -86,7 +86,7 @@ class BenchmarkSuite:
         with open(file, 'w+') as outfile:
             json.dump(json_obj, outfile, indent=4)
 
-    def read_results(self, file):
-        if not exists(file) or not isfile(file): return BenchmarkResults([], [], {})
+    def load_results(self, file):
+        if not exists(file) or not isfile(file): return {}
         with open(file, 'r') as infile:
             return json.load(infile)
