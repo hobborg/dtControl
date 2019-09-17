@@ -23,7 +23,7 @@
             "accuracy": 1.0
         },
         "cartpole": {
-            "num_nodes": 253,
+            "num_nodes": 109,
             "accuracy": 1.0
         },
         "cruise-latest": {
@@ -42,8 +42,8 @@
             "accuracy": 1.0
         },
         "cartpole": {
-            "num_nodes": 199,
-            "num_not_aa": 22,
+            "num_nodes": 37,
+            "num_not_aa": 7,
             "accuracy": 1.0
         },
         "cruise-latest": "failed to fit",
@@ -60,8 +60,8 @@
             "accuracy": 1.0
         },
         "cartpole": {
-            "num_nodes": 251,
-            "num_not_aa": 3,
+            "num_nodes": 107,
+            "num_not_aa": 1,
             "accuracy": 1.0
         },
         "cruise-latest": {
@@ -84,7 +84,7 @@
         "cartpole": {
             "num_nodes": 3,
             "num_oblique": 0,
-            "accuracy": 0.5830258302583026
+            "accuracy": 0.8191881918819188
         },
         "cruise-latest": "timeout",
         "cruise-small-latest": {

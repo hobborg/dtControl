@@ -41,7 +41,7 @@ class BenchmarkSuite:
             exclude = []
         for (X_file, Y_file) in self.get_XY_files(path):
             if Dataset.get_dataset_name(X_file) not in exclude:
-                any_label = 'cruise' in X_file
+                any_label = 'cruise' in X_file or 'cartpole' in X_file
                 self.datasets.append(Dataset(X_file, Y_file, any_label=any_label))
 
     def get_XY_files(self, path):
@@ -93,3 +93,19 @@ class BenchmarkSuite:
         if not exists(file) or not isfile(file): return {}
         with open(file, 'r') as infile:
             return json.load(infile)
+
+    def delete_dataset_results(self, dataset_name, file='benchmark.json'):
+        results = self.load_results(file)
+        for classifier in results:
+            datasets = results[classifier]
+            if dataset_name in datasets:
+                del datasets[dataset_name]
+        with open(file, 'w+') as outfile:
+            json.dump(results, outfile, indent=4)
+
+    def delete_classifier_results(self, classifier_name, file='benchmark.json'):
+        results = self.load_results(file)
+        if classifier_name in results:
+            del results[classifier_name]
+        with open(file, 'w+') as outfile:
+            json.dump(results, outfile, indent=4)

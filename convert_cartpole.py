@@ -9,7 +9,7 @@ data = data[1:]  # remove column names
 
 labels = np.unique(data[:,2])
 label_mapping = dict()
-for i in range(len(labels)):4
+for i in range(len(labels)):
     label_mapping[labels[i]] = i
 
 same_points_indices = [0]
