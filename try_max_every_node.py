@@ -15,8 +15,8 @@ def compute_accuracy(Y_pred, Y_train):
             num_correct += 1
     return num_correct / len(Y_pred)
 
-X_train = np.array(pd.read_pickle('../XYdatasets/cruise-latest_X.pickle'))
-Y_train = np.load('../XYdatasets/cruise-latest_Y.npy')
+X_train = np.array(pd.read_pickle('../XYdatasets/cartpole_X.pickle'))
+Y_train = np.load('../XYdatasets/cartpole_Y.npy')
 
 classifier = MaxEveryNodeDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')
 classifier.fit(X_train, Y_train)

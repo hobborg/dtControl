@@ -142,9 +142,12 @@ class Node:
 
     def _export_dot(self, starting_number):
         if not self.left and not self.right:
-            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, 'Leaf')
+            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.label)
 
         tag = 'AA' if self.is_axis_aligned() else 'SVM'
+        if self.is_axis_aligned():
+            tree = self.classifier.tree_
+            tag = f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
         text = '{} [label=\"{}\"'.format(starting_number, tag)
         if not self.is_axis_aligned():
             text += ', fillcolor=firebrick1, style=filled'
