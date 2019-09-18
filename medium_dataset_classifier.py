@@ -1,8 +1,8 @@
 import numpy as np
 
-class MediumDatasetClassifier:
+class MediumCruiseDatasetClassifier:
     def __init__(self, **kwargs):
-        self.name = 'MediumDatasetClassifier'
+        self.name = 'MediumCruiseDatasetClassifier'
         self.needs_unique_labels = True
 
     def get_stats(self):

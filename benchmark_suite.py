@@ -26,7 +26,7 @@ class BenchmarkSuite:
 
     The classifiers have to satisfy the following interface:
         classifier.name returns the name to be displayed in the results
-        classifier.needs_unique_labels returns true if the classifier cannot handle multi-labels
+        classifier.label_format returns the {LabelFormat} format of the classifier
         classifier.fit(X_train, Y_train) trains the classifier on the given dataset
         classifier.predict(X) returns an array of the classifiers predictions for X
         classifier.get_stats() returns a dictionary of statistics to be displayed (e.g. the number of nodes in the tree)
@@ -41,8 +41,8 @@ class BenchmarkSuite:
             exclude = []
         for (X_file, Y_file) in self.get_XY_files(path):
             if Dataset.get_dataset_name(X_file) not in exclude:
-                any_label = 'cruise' in X_file or 'cartpole' in X_file
-                self.datasets.append(Dataset(X_file, Y_file, any_label=any_label))
+                self.datasets.append(Dataset(X_file, Y_file))
+        self.datasets.sort(key=lambda ds: ds.name)
 
     def get_XY_files(self, path):
         return [(file, '{}_Y.npy'.format(file.split('_X.')[0])) for file in glob.glob(join(path, '*.pickle'))]
@@ -60,7 +60,7 @@ class BenchmarkSuite:
                     stats = prev_results[classifier.name][ds.name]
                 else:
                     loaded = False
-                    Y_train = ds.get_labels_as_unique() if classifier.needs_unique_labels else ds.Y_train
+                    Y_train = ds.get_labels_for_format(classifier.label_format)
                     classifier, success = call_with_timeout(classifier, 'fit', ds.X_train, Y_train, timeout=self.timeout)
                     if success:
                         acc = ds.compute_accuracy(classifier)

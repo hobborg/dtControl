@@ -1,10 +1,11 @@
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from label_format import LabelFormat
 
 class UniqueLabelDecisionTree:
     def __init__(self, **kwargs):
-        self.name = 'UniqueLabelDecisionTree'
-        self.needs_unique_labels = True
+        self.name = 'UniqueLabelDT'
         self.dt = DecisionTreeClassifier(**kwargs)
+        self.label_format = LabelFormat.COMBINATIONS
 
     def get_stats(self):
         return {

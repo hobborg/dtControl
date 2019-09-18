@@ -1,10 +1,11 @@
 from sklearn.tree import DecisionTreeClassifier
+from label_format import LabelFormat
 
 class DecisionTreeWrapper:
     def __init__(self, **kwargs):
-        self.name = 'DecisionTreeClassifier'
-        self.needs_unique_labels = False
+        self.name = 'DT'
         self.dt = DecisionTreeClassifier(**kwargs)
+        self.label_format = LabelFormat.VECTOR
 
     def get_stats(self):
         return {

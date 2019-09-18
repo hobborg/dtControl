@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.base import BaseEstimator
+from dataset import Dataset
+from label_format import LabelFormat
 
 import warnings
 
@@ -13,8 +15,8 @@ class MaxEveryNodeDecisionTree(BaseEstimator):
         self.root = None
         self.kwargs = kwargs
         self.classifierClass = classifierClass
-        self.name = 'MaxEveryNodeDecisionTree({})'.format(classifierClass.__name__)
-        self.needs_unique_labels = False
+        self.name = 'MaxEveryNodeDT({})'.format(classifierClass.__name__)
+        self.label_format = LabelFormat.MAX_EVERY_NODE
 
     def fit(self, X, y):
         self.root = Node(self.classifierClass, **self.kwargs)
@@ -68,21 +70,12 @@ class Node:
             tree = self.classifier.tree_
             return x[:, tree.feature[0]][0] <= tree.threshold[0]
 
-    def get_max_labels(self, y):
-        label_counts = np.count_nonzero(y, axis=0)
-        new_labels = []
-        for i in range(len(y)):
-            labels = y[i]
-            max_label = max([i for i in range(len(labels)) if labels[i] == 1], key=lambda l: label_counts[l])
-            new_labels.append(max_label)
-        return np.array(new_labels)  # TODO: be careful when computing accuracies because of unique labels
-
     def fit(self, X, y):
         if self.depth >= 500:
             print("Cannot find a good split.")
             return
 
-        new_labels = self.get_max_labels(y)
+        new_labels = Dataset.get_max_labels(y)
         unique_labels = np.unique(new_labels)
         num_unique_labels = len(unique_labels)
         if num_unique_labels <= 1:

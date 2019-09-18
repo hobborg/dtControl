@@ -1,9 +1,5 @@
 {
-    "DecisionTreeClassifier": {
-        "cruise-medium-latest": {
-            "num_nodes": 289,
-            "accuracy": 1.0
-        },
+    "DT": {
         "cartpole": {
             "num_nodes": 253,
             "accuracy": 1.0
@@ -12,16 +8,16 @@
             "num_nodes": 1015,
             "accuracy": 1.0
         },
+        "cruise-medium-latest": {
+            "num_nodes": 289,
+            "accuracy": 1.0
+        },
         "cruise-small-latest": {
             "num_nodes": 109,
             "accuracy": 1.0
         }
     },
-    "UniqueLabelDecisionTree": {
-        "cruise-medium-latest": {
-            "num_nodes": 289,
-            "accuracy": 1.0
-        },
+    "UniqueLabelDT": {
         "cartpole": {
             "num_nodes": 253,
             "accuracy": 1.0
@@ -30,23 +26,27 @@
             "num_nodes": 1003,
             "accuracy": 0.9999763489542859
         },
+        "cruise-medium-latest": {
+            "num_nodes": 289,
+            "accuracy": 1.0
+        },
         "cruise-small-latest": {
             "num_nodes": 109,
             "accuracy": 1.0
         }
     },
     "LinearClassifierDT(LogisticRegression)": {
-        "cruise-medium-latest": {
-            "num_nodes": 255,
-            "num_not_aa": 59,
-            "accuracy": 1.0
-        },
         "cartpole": {
             "num_nodes": 199,
             "num_not_aa": 22,
             "accuracy": 1.0
         },
         "cruise-latest": "failed to fit",
+        "cruise-medium-latest": {
+            "num_nodes": 255,
+            "num_not_aa": 59,
+            "accuracy": 1.0
+        },
         "cruise-small-latest": {
             "num_nodes": 89,
             "num_not_aa": 22,
@@ -54,19 +54,15 @@
         }
     },
     "LinearClassifierDT(LinearSVC)": {
-        "cruise-medium-latest": {
-            "num_nodes": 133,
-            "num_not_aa": 20,
-            "accuracy": 1.0
-        },
         "cartpole": {
             "num_nodes": 251,
             "num_not_aa": 3,
             "accuracy": 1.0
         },
-        "cruise-latest": {
-            "num_nodes": 3,
-            "num_not_aa": 0,
+        "cruise-latest": "failed to fit",
+        "cruise-medium-latest": {
+            "num_nodes": 133,
+            "num_not_aa": 20,
             "accuracy": 1.0
         },
         "cruise-small-latest": {
@@ -75,18 +71,40 @@
             "accuracy": 1.0
         }
     },
-    "OC1": {
-        "cruise-medium-latest": {
-            "num_nodes": 147,
-            "num_oblique": 50,
+    "MaxEveryNodeDT(LogisticRegression)": {
+        "cartpole": {
+            "num_nodes": 11,
+            "num_not_aa": 0,
             "accuracy": 1.0
         },
+        "cruise-latest": {
+            "num_nodes": 3,
+            "num_not_aa": 0,
+            "accuracy": 1.0
+        },
+        "cruise-medium-latest": {
+            "num_nodes": 9,
+            "num_not_aa": 0,
+            "accuracy": 1.0
+        },
+        "cruise-small-latest": {
+            "num_nodes": 11,
+            "num_not_aa": 0,
+            "accuracy": 1.0
+        }
+    },
+    "OC1": {
         "cartpole": {
             "num_nodes": 3,
             "num_oblique": 0,
             "accuracy": 0.5830258302583026
         },
         "cruise-latest": "timeout",
+        "cruise-medium-latest": {
+            "num_nodes": 147,
+            "num_oblique": 50,
+            "accuracy": 1.0
+        },
         "cruise-small-latest": {
             "num_nodes": 57,
             "num_oblique": 18,
