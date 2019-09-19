@@ -33,10 +33,10 @@ class Dataset(ABC):
         for i in range(len(self.Y_train)):
             label = ','.join([str(i) for i in self.Y_train[i]])
             if label not in label_to_int:
-                next_unused_int += 1
                 label_to_int[label] = next_unused_int
+                self.combination_label_mapping[next_unused_int] = self.Y_train[i]
+                next_unused_int += 1
             new_label = label_to_int[label]
-            self.combination_label_mapping[new_label] = self.Y_train[i]
             l.append(new_label)
         return np.array(l)
 
@@ -92,10 +92,31 @@ class AnyLabelDataset(Dataset):
 class MultiOutputDataset(Dataset):
     def __init__(self, X_file, Y_file):
         super().__init__(X_file, Y_file)
+        self.multi_label_mapping = {}
         self.label_format_to_labels = {
             LabelFormat.COMBINATIONS: self.get_combination_labels(),
-            LabelFormat.MULTI: self.Y_train  # TODO: das muss ich noch anpassen damit integers
+            LabelFormat.MULTI: self.get_multi_labels()
         }
+
+    def get_multi_labels(self):
+        """
+        :return: a numpy array of the labels in integer format
+        """
+        l = []
+        next_unused_int = 0
+        label_to_int = {}
+        for i in range(len(self.Y_train)):
+            inner = []
+            for j in range(self.Y_train.shape[1]):
+                label = self.Y_train[i,j]
+                if label not in label_to_int:
+                    label_to_int[label] = next_unused_int
+                    self.multi_label_mapping[next_unused_int] = label
+                    next_unused_int += 1
+                new_label = label_to_int[label]
+                inner.append(new_label)
+            l.append(inner)
+        return np.array(l)
 
     def is_applicable(self, label_format):
         return label_format in [LabelFormat.MULTI, LabelFormat.COMBINATIONS]
@@ -103,4 +124,7 @@ class MultiOutputDataset(Dataset):
     def compute_accuracy(self, Y_pred, label_format):
         if len(Y_pred[Y_pred == None]) != 0:
             return None
-        return accuracy_score(self.get_labels_for_format(label_format), Y_pred)
+        labels = self.get_labels_for_format(label_format)
+        if label_format == LabelFormat.COMBINATIONS:
+            return accuracy_score(labels, Y_pred)
+        return sum(int(np.all(Y_pred[i] == labels[i])) for i in range(len(labels))) / len(labels)
