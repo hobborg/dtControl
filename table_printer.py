@@ -31,6 +31,9 @@ def print_table(benchmark_results, inline=True):
     if inline:
         display(HTML(f"<html>{body}</html>"))
     else:
-        with open('tmp/benchmark.html', 'w+') as out:
-            out.write(f"<html>{head}{body}</html>")
-        webbrowser.open(f"file://{os.path.abspath('tmp/benchmark.html')}")
+        filename = 'tmp/benchmark.html'
+        with open(filename, 'w+') as out:
+            out.write(f'<html>{head}{body}</html>')
+        display(HTML(f'<html><a href="{filename}" target="_blank">Open table</a></html>'))
+        url = f'file://{os.path.abspath(filename)}'
+        webbrowser.open(url)
