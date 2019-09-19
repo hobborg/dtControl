@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.base import BaseEstimator
-from dataset import Dataset
+from dataset import AnyLabelDataset
 from label_format import LabelFormat
 
 import warnings
@@ -75,7 +75,7 @@ class Node:
             print("Cannot find a good split.")
             return
 
-        new_labels = Dataset.get_max_labels(y)
+        new_labels = AnyLabelDataset.get_max_labels(y)
         unique_labels = np.unique(new_labels)
         num_unique_labels = len(unique_labels)
         if num_unique_labels <= 1:

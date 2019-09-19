@@ -5,3 +5,4 @@ class LabelFormat(Enum):
     COMBINATIONS = 2
     MAX = 3
     MAX_EVERY_NODE = 4
+    MULTI = 5

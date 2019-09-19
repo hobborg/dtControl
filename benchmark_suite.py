@@ -1,10 +1,11 @@
 import project_path
-from dataset import Dataset
+from dataset import Dataset, MultiOutputDataset, AnyLabelDataset
 import glob
 from os.path import join, exists, isfile
 from timeout import call_with_timeout
 import json
 from collections import defaultdict
+from label_format import LabelFormat
 
 class BenchmarkResults:
     """
@@ -14,6 +15,7 @@ class BenchmarkResults:
     :param column_names: the names of the classifiers
     :param table: a two-dimensional array of result dictionaries
     """
+
     def __init__(self, row_names, column_names, table):
         self.row_names = row_names
         self.column_names = column_names
@@ -36,12 +38,18 @@ class BenchmarkSuite:
         self.datasets = []
         self.timeout = timeout
 
-    def load_datasets(self, path, exclude=None):
+    def load_datasets(self, path, exclude=None, multiout=None):
         if not exclude:
             exclude = []
+        if not multiout:
+            multiout = []
         for (X_file, Y_file) in self.get_XY_files(path):
             if Dataset.get_dataset_name(X_file) not in exclude:
-                self.datasets.append(Dataset(X_file, Y_file))
+                if Dataset.get_dataset_name(X_file) in multiout:
+                    ds = MultiOutputDataset(X_file, Y_file)
+                else:
+                    ds = AnyLabelDataset(X_file, Y_file)
+                self.datasets.append(ds)
         self.datasets.sort(key=lambda ds: ds.name)
 
     def get_XY_files(self, path):
@@ -55,22 +63,7 @@ class BenchmarkSuite:
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                if classifier.name in prev_results and ds.name in prev_results[classifier.name]:
-                    loaded = True
-                    stats = prev_results[classifier.name][ds.name]
-                else:
-                    loaded = False
-                    Y_train = ds.get_labels_for_format(classifier.label_format)
-                    classifier, success = call_with_timeout(classifier, 'fit', ds.X_train, Y_train, timeout=self.timeout)
-                    if success:
-                        acc = ds.compute_accuracy(classifier)
-                        if acc == None:
-                            stats = 'failed to fit'
-                        else:
-                            stats = classifier.get_stats()
-                            stats['accuracy'] = acc
-                    else:
-                        stats = 'timeout'
+                stats, loaded = self.compute_stats(ds, classifier, prev_results)
                 row.append(stats)
                 step += 1
                 msg = 'Loaded' if loaded else 'Tested'
@@ -81,7 +74,34 @@ class BenchmarkSuite:
         self.save_results(results, file)
         return results
 
-    def save_results(self, results, file):
+    def compute_stats(self, dataset, classifier, prev_results):
+        if classifier.name in prev_results and dataset.name in prev_results[classifier.name]:
+            loaded = True
+            stats = prev_results[classifier.name][dataset.name]
+        else:
+            loaded = False
+            if not dataset.is_applicable(classifier.label_format):
+                stats = 'not applicable'
+            else:
+                stats = self.train_and_get_stats(dataset, classifier)
+        return stats, loaded
+
+    def train_and_get_stats(self, dataset, classifier):
+        Y_train = dataset.get_labels_for_format(classifier.label_format)
+        classifier, success = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
+        if success:
+            acc = dataset.compute_accuracy(classifier.predict(dataset.X_train), classifier.label_format)
+            if acc is None:
+                stats = 'failed to fit'
+            else:
+                stats = classifier.get_stats()
+                stats['accuracy'] = acc
+        else:
+            stats = 'timeout'
+        return stats
+
+    @staticmethod
+    def save_results(results, file):
         json_obj = defaultdict(dict)
         for i in range(len(results.column_names)):
             for j in range(len(results.row_names)):
@@ -89,13 +109,15 @@ class BenchmarkSuite:
         with open(file, 'w+') as outfile:
             json.dump(json_obj, outfile, indent=4)
 
-    def load_results(self, file):
+    @staticmethod
+    def load_results(file):
         if not exists(file) or not isfile(file): return {}
         with open(file, 'r') as infile:
             return json.load(infile)
 
-    def delete_dataset_results(self, dataset_name, file='benchmark.json'):
-        results = self.load_results(file)
+    @staticmethod
+    def delete_dataset_results(dataset_name, file='benchmark.json'):
+        results = BenchmarkSuite.load_results(file)
         for classifier in results:
             datasets = results[classifier]
             if dataset_name in datasets:
@@ -103,8 +125,9 @@ class BenchmarkSuite:
         with open(file, 'w+') as outfile:
             json.dump(results, outfile, indent=4)
 
-    def delete_classifier_results(self, classifier_name, file='benchmark.json'):
-        results = self.load_results(file)
+    @staticmethod
+    def delete_classifier_results(classifier_name, file='benchmark.json'):
+        results = Dataset.load_results(file)
         if classifier_name in results:
             del results[classifier_name]
         with open(file, 'w+') as outfile:
