@@ -19,7 +19,8 @@
         "tworooms_large": {
             "num_nodes": 1059,
             "accuracy": 1.0
-        }
+        },
+        "vehicle": "not applicable"
     },
     "UniqueLabelDT": {
         "cartpole": {
@@ -40,6 +41,10 @@
         },
         "tworooms_large": {
             "num_nodes": 1059,
+            "accuracy": 1.0
+        },
+        "vehicle": {
+            "num_nodes": 13229,
             "accuracy": 1.0
         }
     },
@@ -64,6 +69,11 @@
             "num_nodes": 29,
             "num_not_aa": 11,
             "accuracy": 1.0
+        },
+        "vehicle": {
+            "num_nodes": 10387,
+            "num_not_aa": 1299,
+            "accuracy": 1.0
         }
     },
     "LinearClassifierDT(LinearSVC)": {
@@ -83,7 +93,8 @@
             "num_not_aa": 9,
             "accuracy": 1.0
         },
-        "tworooms_large": "timeout"
+        "tworooms_large": "timeout",
+        "vehicle": "timeout"
     },
     "MaxEveryNodeDT(LogisticRegression)": {
         "cartpole": {
@@ -110,7 +121,8 @@
             "num_nodes": 9,
             "num_not_aa": 0,
             "accuracy": 1.0
-        }
+        },
+        "vehicle": "not applicable"
     },
     "OC1": {
         "cartpole": {
@@ -129,6 +141,11 @@
             "num_oblique": 18,
             "accuracy": 1.0
         },
-        "tworooms_large": "timeout"
+        "tworooms_large": "timeout",
+        "vehicle": {
+            "num_nodes": 957,
+            "num_oblique": 110,
+            "accuracy": 0.46086884085134744
+        }
     }
 }
