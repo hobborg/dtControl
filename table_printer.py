@@ -34,6 +34,6 @@ def print_table(benchmark_results, inline=True):
         filename = 'tmp/benchmark.html'
         with open(filename, 'w+') as out:
             out.write(f'<html>{head}{body}</html>')
-        display(HTML(f'<html><a href="{filename}" target="_blank">Open table</a></html>'))
+        display(HTML(f'<html><a href="{filename}" target="_blank">View table</a></html>'))
         url = f'file://{os.path.abspath(filename)}'
         webbrowser.open(url)
