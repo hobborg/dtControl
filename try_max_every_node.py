@@ -1,27 +1,23 @@
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.multioutput import MultiOutputClassifier
+from benchmark_suite import BenchmarkSuite
+from max_every_node_lc_decision_tree import MaxEveryNodeLCDecisionTree
+from max_every_node_decision_tree import MaxEveryNodeDecisionTree
+from decision_tree_wrapper import DecisionTreeWrapper
+from unique_label_decision_tree import UniqueLabelDecisionTree
+from linear_classifier_decision_tree import LinearClassifierDecisionTree
+from smarter_splits.OC1Wrapper import OC1Wrapper
 from sklearn.linear_model import LogisticRegression
+from table_printer import print_table
 import numpy as np
 import pandas as pd
-from max_every_node_decision_tree import MaxEveryNodeDecisionTree
+from sklearn.metrics import accuracy_score
+from dataset import MultiOutputDataset, AnyLabelDataset
+from label_format import LabelFormat
+from multi_output_decision_tree import MultiOutputDecisionTree
+from standard_custom_decision_tree import StandardCustomDecisionTree
 
-def compute_accuracy(Y_pred, Y_train):
-    if len(Y_pred[Y_pred == None]) != 0:
-        return None
-
-    num_correct = 0
-    for i in range(len(Y_pred)):
-        predicted_indices = {Y_pred[i]}
-        correct_indices = set(np.nonzero(Y_train[i])[0])
-        if set.issubset(predicted_indices, correct_indices):
-            num_correct += 1
-    return num_correct / len(Y_pred)
-
-X_train = np.array(pd.read_pickle('../XYdatasets/cartpole_X.pickle'))
-Y_train = np.load('../XYdatasets/cartpole_Y.npy')
-
-classifier = MaxEveryNodeDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')
-classifier.fit(X_train, Y_train)
-classifier.export_dot(file='tree.dot')
-
-print('Total number of nodes: {}'.format(classifier.root.num_nodes))
-print('{}/{} nodes used not AA'.format(classifier.root.num_not_axis_aligned, classifier.root.num_nodes))
-print('Accuracy: {}'.format(compute_accuracy(classifier.predict(X_train), Y_train)))
+ds = AnyLabelDataset('../XYdatasets/cartpole_X.pickle', '../XYdatasets/cartpole_Y.npy')
+dt = LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')
+dt.fit(ds.X_train, ds.get_combination_labels())
+dt.export_dot(file='tmp/try_max.dot')

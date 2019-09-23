@@ -103,11 +103,35 @@
         "tworooms_large": "timeout",
         "vehicle": "timeout"
     },
-    "MaxEveryNodeDT(LogisticRegression)": {
+    "MaxEveryNodeDT": {
         "aircraft": "not applicable",
         "cartpole": {
             "num_nodes": 11,
-            "num_not_aa": 0,
+            "accuracy": 1.0
+        },
+        "cruise-latest": {
+            "num_nodes": 3,
+            "accuracy": 1.0
+        },
+        "cruise-medium-latest": {
+            "num_nodes": 9,
+            "accuracy": 1.0
+        },
+        "cruise-small-latest": {
+            "num_nodes": 11,
+            "accuracy": 1.0
+        },
+        "tworooms_large": {
+            "num_nodes": 9,
+            "accuracy": 1.0
+        },
+        "vehicle": "not applicable"
+    },
+    "MaxEveryNodeLCDT(LogisticRegression)": {
+        "aircraft": "not applicable",
+        "cartpole": {
+            "num_nodes": 13,
+            "num_not_aa": 5,
             "accuracy": 1.0
         },
         "cruise-latest": {
@@ -116,18 +140,18 @@
             "accuracy": 1.0
         },
         "cruise-medium-latest": {
-            "num_nodes": 9,
-            "num_not_aa": 0,
+            "num_nodes": 31,
+            "num_not_aa": 7,
             "accuracy": 1.0
         },
         "cruise-small-latest": {
-            "num_nodes": 11,
-            "num_not_aa": 0,
+            "num_nodes": 15,
+            "num_not_aa": 5,
             "accuracy": 1.0
         },
         "tworooms_large": {
             "num_nodes": 9,
-            "num_not_aa": 0,
+            "num_not_aa": 2,
             "accuracy": 1.0
         },
         "vehicle": "not applicable"
