@@ -1,5 +1,6 @@
 {
     "DT": {
+        "aircraft": "not applicable",
         "cartpole": {
             "num_nodes": 253,
             "accuracy": 1.0
@@ -23,6 +24,10 @@
         "vehicle": "not applicable"
     },
     "UniqueLabelDT": {
+        "aircraft": {
+            "num_nodes": 271905,
+            "accuracy": 1.0
+        },
         "cartpole": {
             "num_nodes": 253,
             "accuracy": 1.0
@@ -49,6 +54,7 @@
         }
     },
     "LinearClassifierDT(LogisticRegression)": {
+        "aircraft": "timeout",
         "cartpole": {
             "num_nodes": 199,
             "num_not_aa": 22,
@@ -77,6 +83,7 @@
         }
     },
     "LinearClassifierDT(LinearSVC)": {
+        "aircraft": "timeout",
         "cartpole": {
             "num_nodes": 251,
             "num_not_aa": 3,
@@ -97,6 +104,7 @@
         "vehicle": "timeout"
     },
     "MaxEveryNodeDT(LogisticRegression)": {
+        "aircraft": "not applicable",
         "cartpole": {
             "num_nodes": 11,
             "num_not_aa": 0,
@@ -125,6 +133,7 @@
         "vehicle": "not applicable"
     },
     "OC1": {
+        "aircraft": "timeout",
         "cartpole": {
             "num_nodes": 3,
             "num_oblique": 0,
@@ -149,6 +158,11 @@
         }
     },
     "MultiOutputDT": {
+        "aircraft": {
+            "num_nodes_0": 46693,
+            "num_nodes_1": 231963,
+            "accuracy": 1.0
+        },
         "cartpole": "not applicable",
         "cruise-latest": "not applicable",
         "cruise-medium-latest": "not applicable",
