@@ -7,6 +7,7 @@ import json
 from collections import defaultdict
 from label_format import LabelFormat
 from datetime import timedelta
+import sys
 
 class BenchmarkResults:
     """
@@ -35,7 +36,7 @@ class BenchmarkSuite:
         classifier.get_stats() returns a dictionary of statistics to be displayed (e.g. the number of nodes in the tree)
     """
 
-    def __init__(self, timeout=60):  # TODO timeout = maxsize und dann keine message printen, anzeigen wie lang gedauert
+    def __init__(self, timeout=sys.maxsize):
         self.datasets = []
         self.timeout = timeout
 
@@ -78,7 +79,7 @@ class BenchmarkSuite:
         return results
 
     def print_max_wait_time(self, num_steps):
-        if num_steps > 0:
+        if num_steps > 0 and self.timeout != sys.maxsize:
             total_seconds = num_steps * self.timeout
             seconds = total_seconds % 60
             total_minutes = int(total_seconds / 60)
