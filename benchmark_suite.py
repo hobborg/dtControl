@@ -6,6 +6,7 @@ from timeout import call_with_timeout
 import json
 from collections import defaultdict
 from label_format import LabelFormat
+from datetime import timedelta
 
 class BenchmarkResults:
     """
@@ -34,15 +35,16 @@ class BenchmarkSuite:
         classifier.get_stats() returns a dictionary of statistics to be displayed (e.g. the number of nodes in the tree)
     """
 
-    def __init__(self, timeout=60):
+    def __init__(self, timeout=60):  # TODO timeout = maxsize und dann keine message printen, anzeigen wie lang gedauert
         self.datasets = []
         self.timeout = timeout
 
-    def load_datasets(self, path, exclude=None, multiout=None):
+    def add_datasets(self, path, exclude=None, multiout=None):
         if not exclude:
             exclude = []
         if not multiout:
             multiout = []
+        self.datasets = []
         for (X_file, Y_file) in self.get_XY_files(path):
             if Dataset.get_dataset_name(X_file) not in exclude:
                 if Dataset.get_dataset_name(X_file) in multiout:
@@ -57,34 +59,58 @@ class BenchmarkSuite:
 
     def benchmark(self, classifiers, file='benchmark.json'):
         prev_results = self.load_results(file)
+        num_steps = self.count_num_steps(classifiers, prev_results)
+        self.print_max_wait_time(num_steps)
         table = []
         step = 0
-        num_steps = len(self.datasets) * len(classifiers)
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                stats, loaded = self.compute_stats(ds, classifier, prev_results)
+                stats, computed = self.compute_stats(ds, classifier, prev_results)
                 row.append(stats)
-                step += 1
-                msg = 'Loaded' if loaded else 'Tested'
-                print('{} {} on {} ({}/{}).'.format(msg, classifier.name, ds.name, step, num_steps))
+                if computed:
+                    step += 1
+                    print('Evaluated {} on {} ({}/{}).'.format(classifier.name, ds.name, step, num_steps))
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
         self.save_results(results, file)
         return results
 
+    def print_max_wait_time(self, num_steps):
+        if num_steps > 0:
+            total_seconds = num_steps * self.timeout
+            seconds = total_seconds % 60
+            total_minutes = int(total_seconds / 60)
+            minutes = total_minutes % 60
+            hours = int(total_minutes / 60)
+            print('Maximum wait time: {}h {}m {}s.'.format(hours, minutes, seconds))
+
+    def count_num_steps(self, classifiers, prev_results):
+        num_steps = 0
+        for ds in self.datasets:
+            for classifier in classifiers:
+                if not self.already_computed(ds, classifier, prev_results) and \
+                        ds.is_applicable(classifier.label_format):
+                    num_steps += 1
+        return num_steps
+
     def compute_stats(self, dataset, classifier, prev_results):
-        if classifier.name in prev_results and dataset.name in prev_results[classifier.name]:
-            loaded = True
+        if self.already_computed(dataset, classifier, prev_results):
+            computed = False
             stats = prev_results[classifier.name][dataset.name]
+        elif not dataset.is_applicable(classifier.label_format):
+            computed = False
+            stats = 'not applicable'
         else:
-            loaded = False
-            if not dataset.is_applicable(classifier.label_format):
-                stats = 'not applicable'
-            else:
-                stats = self.train_and_get_stats(dataset, classifier)
-        return stats, loaded
+            computed = True
+            dataset.load_if_necessary()
+            stats = self.train_and_get_stats(dataset, classifier)
+        return stats, computed
+
+    @staticmethod
+    def already_computed(dataset, classifier, prev_results):
+        return classifier.name in prev_results and dataset.name in prev_results[classifier.name]
 
     def train_and_get_stats(self, dataset, classifier):
         Y_train = dataset.get_labels_for_format(classifier.label_format)

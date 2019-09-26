@@ -8,10 +8,21 @@ from abc import ABC, abstractmethod
 class Dataset(ABC):
     def __init__(self, X_file, Y_file):
         self.name = self.get_dataset_name(X_file)
-        self.X_train = np.array(pd.read_pickle(X_file))
-        self.Y_train = np.load(Y_file)
+        self.X_file = X_file
+        self.Y_file = Y_file
+        self.X_train = None
+        self.Y_train = None
         self.combination_label_mapping = {}
         self.label_format_to_labels = None
+
+    def load_if_necessary(self):
+        if self.X_train is None:
+            self.X_train = np.array(pd.read_pickle(self.X_file))
+            self.Y_train = np.load(self.Y_file)
+
+    def check_loaded(self):
+        if self.X_train is None:
+            raise RuntimeError('Dataset is not loaded.')
 
     @staticmethod
     def get_dataset_name(file):
@@ -22,11 +33,13 @@ class Dataset(ABC):
         pass
 
     def get_labels_for_format(self, label_format):
+        self.check_loaded()
         if not self.is_applicable(label_format):
             raise ValueError(f'Dataset is not applicable to {label_format}.')
-        return self.label_format_to_labels[label_format]
+        return self.label_format_to_labels[label_format]()
 
     def get_combination_labels(self):
+        self.check_loaded()
         l = []
         next_unused_int = 0
         label_to_int = {}
@@ -48,10 +61,10 @@ class AnyLabelDataset(Dataset):
     def __init__(self, X_file, Y_file):
         super().__init__(X_file, Y_file)
         self.label_format_to_labels = {
-            LabelFormat.VECTOR: self.Y_train,
-            LabelFormat.COMBINATIONS: self.get_combination_labels(),
-            LabelFormat.MAX: self.get_max_labels(self.Y_train),
-            LabelFormat.MAX_EVERY_NODE: self.Y_train
+            LabelFormat.VECTOR: lambda: self.Y_train,
+            LabelFormat.COMBINATIONS: lambda: self.get_combination_labels(),  # lambda to delay computation
+            LabelFormat.MAX: lambda: self.get_max_labels(self.Y_train),
+            LabelFormat.MAX_EVERY_NODE: lambda: self.Y_train
         }
 
     def is_applicable(self, label_format):
@@ -68,6 +81,7 @@ class AnyLabelDataset(Dataset):
         return np.array(new_labels)
 
     def compute_accuracy(self, Y_pred, label_format):
+        self.check_loaded()
         if len(Y_pred[Y_pred == None]) != 0:
             return None
         num_correct = 0
@@ -94,21 +108,22 @@ class MultiOutputDataset(Dataset):
         super().__init__(X_file, Y_file)
         self.multi_label_mapping = {}
         self.label_format_to_labels = {
-            LabelFormat.COMBINATIONS: self.get_combination_labels(),
-            LabelFormat.MULTI: self.get_multi_labels()
+            LabelFormat.COMBINATIONS: lambda: self.get_combination_labels(),
+            LabelFormat.MULTI: lambda: self.get_multi_labels()
         }
 
     def get_multi_labels(self):
         """
         :return: a numpy array of the labels in integer format
         """
+        self.check_loaded()
         l = []
         next_unused_int = 0
         label_to_int = {}
         for i in range(len(self.Y_train)):
             inner = []
             for j in range(self.Y_train.shape[1]):
-                label = self.Y_train[i,j]
+                label = self.Y_train[i, j]
                 if label not in label_to_int:
                     label_to_int[label] = next_unused_int
                     self.multi_label_mapping[next_unused_int] = label
@@ -122,6 +137,7 @@ class MultiOutputDataset(Dataset):
         return label_format in [LabelFormat.MULTI, LabelFormat.COMBINATIONS]
 
     def compute_accuracy(self, Y_pred, label_format):
+        self.check_loaded()
         if len(Y_pred[Y_pred == None]) != 0:
             return None
         labels = self.get_labels_for_format(label_format)
