@@ -1,13 +1,12 @@
-import project_path
-from dataset import Dataset, MultiOutputDataset, AnyLabelDataset
 import glob
-from os.path import join, exists, isfile
-from timeout import call_with_timeout
 import json
-from collections import defaultdict
-from label_format import LabelFormat
-from datetime import timedelta
 import sys
+from collections import defaultdict
+from os.path import join, exists, isfile
+
+from dataset import Dataset, MultiOutputDataset, AnyLabelDataset
+from timeout import call_with_timeout
+from util import format_seconds
 
 class BenchmarkResults:
     """
@@ -61,31 +60,27 @@ class BenchmarkSuite:
     def benchmark(self, classifiers, file='benchmark.json'):
         prev_results = self.load_results(file)
         num_steps = self.count_num_steps(classifiers, prev_results)
-        self.print_max_wait_time(num_steps)
+        if num_steps > 0 and self.timeout != sys.maxsize:
+            print('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
         table = []
         step = 0
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                stats, computed = self.compute_stats(ds, classifier, prev_results)
+                stats, computed, time = self.compute_stats(ds, classifier, prev_results)
                 row.append(stats)
                 if computed:
                     step += 1
-                    print('Evaluated {} on {} ({}/{}).'.format(classifier.name, ds.name, step, num_steps))
+                    msg = '{}/{}: Evaluated {} on {} in {}'.format(step, num_steps, classifier.name, ds.name,
+                                                                    format_seconds(time))
+                    if stats == 'timeout':
+                        msg += ' (Timeout)'
+                    print('{}.'.format(msg))
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
         self.save_results(results, file)
         return results
-
-    def print_max_wait_time(self, num_steps):
-        if num_steps > 0 and self.timeout != sys.maxsize:
-            total_seconds = num_steps * self.timeout
-            seconds = total_seconds % 60
-            total_minutes = int(total_seconds / 60)
-            minutes = total_minutes % 60
-            hours = int(total_minutes / 60)
-            print('Maximum wait time: {}h {}m {}s.'.format(hours, minutes, seconds))
 
     def count_num_steps(self, classifiers, prev_results):
         num_steps = 0
@@ -97,6 +92,7 @@ class BenchmarkSuite:
         return num_steps
 
     def compute_stats(self, dataset, classifier, prev_results):
+        time = None
         if self.already_computed(dataset, classifier, prev_results):
             computed = False
             stats = prev_results[classifier.name][dataset.name]
@@ -106,8 +102,8 @@ class BenchmarkSuite:
         else:
             computed = True
             dataset.load_if_necessary()
-            stats = self.train_and_get_stats(dataset, classifier)
-        return stats, computed
+            stats, time = self.train_and_get_stats(dataset, classifier)
+        return stats, computed, time
 
     @staticmethod
     def already_computed(dataset, classifier, prev_results):
@@ -115,7 +111,7 @@ class BenchmarkSuite:
 
     def train_and_get_stats(self, dataset, classifier):
         Y_train = dataset.get_labels_for_format(classifier.label_format)
-        classifier, success = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
+        classifier, success, time = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
         if success:
             acc = dataset.compute_accuracy(classifier.predict(dataset.X_train), classifier.label_format)
             if acc is None:
@@ -125,7 +121,7 @@ class BenchmarkSuite:
                 stats['accuracy'] = acc
         else:
             stats = 'timeout'
-        return stats
+        return stats, time
 
     @staticmethod
     def save_results(results, file):
