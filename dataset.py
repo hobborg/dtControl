@@ -41,7 +41,7 @@ class Dataset(ABC):
     def get_combination_labels(self):
         self.check_loaded()
         l = []
-        next_unused_int = 0
+        next_unused_int = 1  # OC1 expects labels starting with 1
         label_to_int = {}
         for i in range(len(self.Y_train)):
             label = ','.join([str(i) for i in self.Y_train[i]])
@@ -118,7 +118,7 @@ class MultiOutputDataset(Dataset):
         """
         self.check_loaded()
         l = []
-        next_unused_int = 0
+        next_unused_int = 1  # OC1 expects labels starting with 1
         label_to_int = {}
         for i in range(len(self.Y_train)):
             inner = []
