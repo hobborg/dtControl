@@ -18,13 +18,19 @@ def print_table(benchmark_results, inline=True):
         body += '<tr>'
         body += '<th scope="row" style="text-align:center">{}</th>'.format(benchmark_results.row_names[i])
         for column in benchmark_results.table[i]:
-            body += '<td style="text-align:center">'
+            td_style = 'text-align:center'
+            td_content = ''
             if isinstance(column, str):
-                body += '<span style="color:red">{}</span>'.format(column)
+                if column == 'timeout' or column == 'failed to fit':
+                    td_style += ';background-color:#ff5733'
+                td_content += f'<span>{column}</span>'
             else:
                 for k, v in column.items():
-                    body += '{}: {}<br>'.format(k, v)
-            body += '</td>'
+                    if k == 'accuracy':
+                        if abs(v - 1.0) < 0.001: continue
+                        td_style += ';background-color:#ff5733'
+                    td_content += '{}: {}<br>'.format(k, v)
+            body += f'<td style="{td_style}">{td_content}</td>'
         body += '</tr>'
     body += '</tbody></table></body>'
 
