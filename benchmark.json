@@ -54,7 +54,11 @@
         }
     },
     "LinearClassifierDT(LogisticRegression)": {
-        "aircraft": "timeout",
+        "aircraft": {
+            "num_nodes": 256581,
+            "num_not_aa": 10393,
+            "accuracy": 1.0
+        },
         "cartpole": {
             "num_nodes": 199,
             "num_not_aa": 22,
@@ -100,8 +104,16 @@
             "num_not_aa": 9,
             "accuracy": 1.0
         },
-        "tworooms_large": "timeout",
-        "vehicle": "timeout"
+        "tworooms_large": {
+            "num_nodes": 979,
+            "num_not_aa": 25,
+            "accuracy": 1.0
+        },
+        "vehicle": {
+            "num_nodes": 13167,
+            "num_not_aa": 151,
+            "accuracy": 1.0
+        }
     },
     "MaxEveryNodeDT": {
         "aircraft": "not applicable",
@@ -157,13 +169,21 @@
         "vehicle": "not applicable"
     },
     "OC1": {
-        "aircraft": "timeout",
+        "aircraft": {
+            "num_nodes": 923,
+            "num_oblique": 40,
+            "accuracy": 0.5042902855943825
+        },
         "cartpole": {
             "num_nodes": 3,
             "num_oblique": 0,
             "accuracy": 0.5830258302583026
         },
-        "cruise-latest": "timeout",
+        "cruise-latest": {
+            "num_nodes": 797,
+            "num_oblique": 270,
+            "accuracy": 0.9999729702334696
+        },
         "cruise-medium-latest": {
             "num_nodes": 147,
             "num_oblique": 50,
@@ -174,7 +194,11 @@
             "num_oblique": 18,
             "accuracy": 1.0
         },
-        "tworooms_large": "timeout",
+        "tworooms_large": {
+            "num_nodes": 191,
+            "num_oblique": 63,
+            "accuracy": 0.9999824311741247
+        },
         "vehicle": {
             "num_nodes": 957,
             "num_oblique": 110,
