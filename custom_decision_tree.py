@@ -42,6 +42,14 @@ class CustomDecisionTree(ABC, BaseEstimator):
         else:
             return dot
 
+    def export_c(self, file=None):
+        c = self.root.export_c()
+        if file:
+            with open(file, 'w+') as outfile:
+                outfile.write(c)
+        else:
+            return c
+
     @abstractmethod
     def __str__(self):
         pass
@@ -138,10 +146,38 @@ class Node(ABC):
 
         return last_number, text
 
+    def export_c(self):
+        return self._export_c(0)
+
+    def _export_c(self, indent_index):
+        # If leaf node
+        if not self.left and not self.right:
+            return "\t"*indent_index + self.get_c_label()
+
+        text = ""
+        text += "\t"*indent_index + f"if ({self.get_c_label()}) {{\n"
+        if self.left:
+            text += f"{self.left._export_c(indent_index + 1)}\n"
+        else:
+            text += "\t"*(indent_index + 1) + ";\n"
+        text += "\t"*indent_index + "}\n"
+
+        if self.right:
+            text += "\t"*indent_index + "else {\n"
+            text += f"{self.right._export_c(indent_index + 1)}\n"
+            text += "\t"*indent_index + "}\n"
+
+        return text
+
     @abstractmethod
     def get_dot_label(self):
         pass
 
     @abstractmethod
     def print_dot_red(self):
+        pass
+
+    @abstractmethod
+    def get_c_label(self):
+        # if non-leaf, return test condition; else return class
         pass

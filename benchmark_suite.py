@@ -1,8 +1,11 @@
 import glob
 import json
+import pickle
 import sys
+import time
 from collections import defaultdict
-from os.path import join, exists, isfile
+from os import mkdir
+from os.path import join, exists, isfile, isdir
 
 from dataset import Dataset, MultiOutputDataset, AnyLabelDataset
 from timeout import call_with_timeout
@@ -57,7 +60,7 @@ class BenchmarkSuite:
     def get_XY_files(self, path):
         return [(file, '{}_Y.npy'.format(file.split('_X.')[0])) for file in glob.glob(join(path, '*.pickle'))]
 
-    def benchmark(self, classifiers, file='benchmark.json'):
+    def benchmark(self, classifiers, file='benchmark.json', save_location='/tmp/classifiers'):
         prev_results = self.load_results(file)
         num_steps = self.count_num_steps(classifiers, prev_results)
         if num_steps > 0 and self.timeout != sys.maxsize:
@@ -67,7 +70,7 @@ class BenchmarkSuite:
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                stats, computed, time = self.compute_stats(ds, classifier, prev_results)
+                stats, computed, time = self.compute_stats(ds, classifier, prev_results, save_location)
                 row.append(stats)
                 if computed:
                     step += 1
@@ -91,7 +94,7 @@ class BenchmarkSuite:
                     num_steps += 1
         return num_steps
 
-    def compute_stats(self, dataset, classifier, prev_results):
+    def compute_stats(self, dataset, classifier, prev_results, save_location):
         time = None
         if self.already_computed(dataset, classifier, prev_results):
             computed = False
@@ -102,16 +105,17 @@ class BenchmarkSuite:
         else:
             computed = True
             dataset.load_if_necessary()
-            stats, time = self.train_and_get_stats(dataset, classifier)
+            stats, time = self.train_and_get_stats(dataset, classifier, save_location)
         return stats, computed, time
 
     @staticmethod
     def already_computed(dataset, classifier, prev_results):
         return classifier.name in prev_results and dataset.name in prev_results[classifier.name]
 
-    def train_and_get_stats(self, dataset, classifier):
+    def train_and_get_stats(self, dataset, classifier, save_location):
         Y_train = dataset.get_labels_for_format(classifier.label_format)
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
+        classifier_file = self.save_classifier(save_location, classifier)
         if success:
             acc = dataset.compute_accuracy(classifier.predict(dataset.X_train), classifier.label_format)
             if acc is None:
@@ -131,6 +135,17 @@ class BenchmarkSuite:
                 json_obj[results.column_names[i]][results.row_names[j]] = results.table[j][i]
         with open(file, 'w+') as outfile:
             json.dump(json_obj, outfile, indent=4)
+
+    @staticmethod
+    def save_classifier(save_location, classifier):
+        if not isdir(save_location):
+            mkdir(save_location)
+        assert isdir(save_location)
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"{save_location}/{classifier.name}-{timestr}.pickle"
+        file = open(filename, 'wb')
+        pickle.dump(classifier, file)
+        return filename
 
     @staticmethod
     def load_results(file):
