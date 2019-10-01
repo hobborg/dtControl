@@ -36,5 +36,11 @@ class StandardCustomNode(Node):
         tree = self.dt.tree_
         return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
 
+    def get_c_label(self):
+        if self.label:
+            return f'return {self.label};'
+        tree = self.dt.tree_
+        return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
+
     def print_dot_red(self):
         return False

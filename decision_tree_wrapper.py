@@ -9,8 +9,12 @@ class DecisionTreeWrapper:
 
     def get_stats(self):
         return {
-            'num_nodes': self.dt.tree_.node_count
+            'num_nodes': self.dt.tree_.node_count,
+            'filename:' self.get_filename()
         }
+
+    def get_filename():
+        pass
 
     def fit(self, X_train, Y_train):
         self.dt.fit(X_train, Y_train)

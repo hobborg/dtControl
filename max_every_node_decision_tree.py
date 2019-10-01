@@ -27,9 +27,3 @@ class MaxStandardNode(StandardCustomNode):
 
     def check_done(self, y):
         return super().check_done(AnyLabelDataset.get_max_labels(y))
-
-    def get_c_label(self):
-        if self.label:
-            return f'return {self.label};'
-        tree = self.dt.tree_
-        return f'X[{tree.feature[0]}] <= {tree.threshold[0]}'

@@ -100,5 +100,14 @@ class LinearClassifierOrAxisAlignedNode(Node):
         else:
             return 'LC'
 
+    def get_c_label(self):
+        if self.label is not None:
+            return f'return {self.label}'
+        if self.is_axis_aligned():
+            tree = self.classifier.tree_
+            return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
+        else:
+            return 'LC'
+
     def print_dot_red(self):
         return not self.is_axis_aligned()

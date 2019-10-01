@@ -60,7 +60,7 @@ class BenchmarkSuite:
     def get_XY_files(self, path):
         return [(file, '{}_Y.npy'.format(file.split('_X.')[0])) for file in glob.glob(join(path, '*.pickle'))]
 
-    def benchmark(self, classifiers, file='benchmark.json', save_location='/tmp/classifiers'):
+    def benchmark(self, classifiers, file='benchmark.json', save_location='models/classifiers'):
         prev_results = self.load_results(file)
         num_steps = self.count_num_steps(classifiers, prev_results)
         if num_steps > 0 and self.timeout != sys.maxsize:
