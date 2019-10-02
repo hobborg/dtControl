@@ -98,16 +98,32 @@ class LinearClassifierOrAxisAlignedNode(Node):
             tree = self.classifier.tree_
             return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
         else:
-            return 'LC'
+            # this implicitly assumes n_classes == 2
+            coef_ = self.classifier.coef_[0]
+            intercept_ = self.classifier.intercept_[0]
+            line = []
+            for i in range(0, len(coef_)):
+                line.append(f"{round(coef_[i], 4)}*X[{i}]")
+            line.append(f"{round(intercept_, 4)}")
+            hyperplane = "+".join(line) + " >= 0"
+            return hyperplane
 
     def get_c_label(self):
         if self.label is not None:
             return f'return {self.label}'
         if self.is_axis_aligned():
             tree = self.classifier.tree_
-            return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
+            return f'X[{tree.feature[0]}] <= {tree.threshold[0]}'
         else:
-            return 'LC'
+            # this implicitly assumes n_classes == 2
+            coef_ = self.classifier.coef_[0]
+            intercept_ = self.classifier.intercept_[0]
+            line = []
+            for i in range(0, len(coef_)):
+                line.append(f"{coef_[i]}*X[{i}]")
+            line.append(f"{intercept_}")
+            hyperplane = "+".join(line) + " >= 0"
+            return hyperplane
 
     def print_dot_red(self):
         return not self.is_axis_aligned()

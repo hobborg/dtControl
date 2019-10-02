@@ -4,7 +4,7 @@ import pickle
 import sys
 import time
 from collections import defaultdict
-from os import mkdir
+from os import makedirs
 from os.path import join, exists, isfile, isdir
 
 from dataset import Dataset, MultiOutputDataset, AnyLabelDataset
@@ -115,8 +115,8 @@ class BenchmarkSuite:
     def train_and_get_stats(self, dataset, classifier, save_location):
         Y_train = dataset.get_labels_for_format(classifier.label_format)
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
-        classifier_file = self.save_classifier(save_location, classifier)
         if success:
+            classifier_file = self.save_classifier(save_location, classifier)
             acc = dataset.compute_accuracy(classifier.predict(dataset.X_train), classifier.label_format)
             if acc is None:
                 stats = 'failed to fit'
@@ -139,7 +139,7 @@ class BenchmarkSuite:
     @staticmethod
     def save_classifier(save_location, classifier):
         if not isdir(save_location):
-            mkdir(save_location)
+            makedirs(save_location)
         assert isdir(save_location)
         timestr = time.strftime("%Y%m%d-%H%M%S")
         filename = f"{save_location}/{classifier.name}-{timestr}.pickle"
