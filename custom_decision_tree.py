@@ -1,4 +1,3 @@
-from label_format import LabelFormat
 import numpy as np
 from abc import ABC, abstractmethod
 from sklearn.base import BaseEstimator
@@ -7,19 +6,18 @@ import sys
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
-        self.label_format = LabelFormat.COMBINATIONS
 
-    def fit(self, X, y):
+    def fit(self, dataset):
         self.root = self.create_root_node()
-        self.root.fit(X, y)
+        self.root.fit(dataset)
 
     @abstractmethod
     def create_root_node(self):
         pass
 
-    def predict(self, X):
+    def predict(self, dataset):
         pred = []
-        for row in np.array(X):
+        for row in np.array(dataset.X_train):
             pred.append(self.classify_instance(row.reshape(1, -1)))
         return np.array(pred)
 
@@ -66,13 +64,18 @@ class Node(ABC):
     def test_condition(self, x):
         pass
 
-    def fit(self, X, y):
+    def fit(self, dataset):
+        y = self.get_labels(dataset)
         if self.check_done(y):
             return
-        mask = self.find_split(X, y)
+        mask = self.find_split(dataset)
         self.left = self.create_child_node()
         self.right = self.create_child_node()
-        self.fit_children(X, y, mask)
+        self.fit_children(dataset, mask)
+
+    @abstractmethod
+    def get_labels(self, dataset):
+        pass
 
     @abstractmethod
     def create_child_node(self):

@@ -1,32 +1,37 @@
 import pandas as pd
 import numpy as np
-import os
 from sklearn.metrics import accuracy_score
-from label_format import LabelFormat
 from abc import ABC, abstractmethod
 
 class Dataset(ABC):
-    def __init__(self, X_file, Y_file):
-        self.name = self.get_dataset_name(X_file)
-        self.X_file = X_file
-        self.Y_file = Y_file
+    def __init__(self, name):
+        self.name = name
         self.X_train = None
         self.Y_train = None
-        self.combination_label_mapping = {}
-        self.label_format_to_labels = None
 
     def load_if_necessary(self):
         if self.X_train is None:
-            self.X_train = np.array(pd.read_pickle(self.X_file))
-            self.Y_train = np.load(self.Y_file)
+            self.load()
+            assert self.X_train is not None and self.Y_train is not None
 
     def check_loaded(self):
         if self.X_train is None:
             raise RuntimeError('Dataset is not loaded.')
 
-    @staticmethod
-    def get_dataset_name(file):
-        return os.path.basename(file).replace('_X.pickle', '')
+    @abstractmethod
+    def load(self):
+        pass
+
+    def is_multioutput(self):
+        return len(self.Y_train) > 1
+
+    def split(self, mask):
+        ds = Dataset(self.name)
+        ds.X_train = self.X_train[mask]
+        ds.Y_train = self.Y_train[mask]
+
+    @classmethod
+    def from_data(cls, name, X_train, Y_train):
 
     """
     Reads {file} and procudes either a Single-OutputDataset
@@ -36,13 +41,14 @@ class Dataset(ABC):
     value_index_mapping maps action values (floats) to action indices - here, always {}
     X_vars contains the names of the columns in X_train
     action_dict is the mapping from action index to action name
+    
+    :param file: A file exported using UPPAAL's --print-strategies CLI switch
     """
+
     @staticmethod
     def from_uppaal(file):
-        # A file exported using UPPAAL's --print-strategies CLI switch
-
         f = open(file)
-        print("Reading from %s" % file)   
+        print("Reading from %s" % file)
 
         lines = f.readlines()
 
@@ -56,7 +62,7 @@ class Dataset(ABC):
         action_set = set()
         for line in lines:
             if line.startswith('When'):
-                action_set.add(line[line.index(' take transition ')+17:].rstrip())
+                action_set.add(line[line.index(' take transition ') + 17:].rstrip())
         action_set.add('wait')
         actions = dict(zip(list(action_set), range(0, len(action_set))))
 
@@ -74,7 +80,7 @@ class Dataset(ABC):
                 continue
             elif line.startswith("When"):
                 collect_actions = True
-                action_str = line[line.index(' take transition ')+17:].rstrip()
+                action_str = line[line.index(' take transition ') + 17:].rstrip()
                 current_actions.append(actions[action_str])
             elif line.startswith("While"):
                 # We implicityly assume that transitions starting with 'While' are mapped to wait.
@@ -102,10 +108,9 @@ class Dataset(ABC):
 
         print("\nConstructed training set with %s datapoints" % X_train.shape[0])
 
-        index_to_action_name = [{y:x} for (x, y) in actions.items()]
+        index_to_action_name = [{y: x} for (x, y) in actions.items()]
 
         return (X_train, Y_train, {}, projection_variables, index_to_action_name)
-
 
     """
     Reads {file} and procudes either a Single- or Multi-Output Dataset
@@ -118,6 +123,7 @@ class Dataset(ABC):
     X_vars contains the names of the columns in X_train
     actions is a list of control input names
     """
+
     def from_scots(file):
         pass
 
@@ -150,7 +156,9 @@ class Dataset(ABC):
     def compute_accuracy(self, Y_pred, label_format):
         pass
 
-class AnyLabelDataset(Dataset):
+
+
+class UppaalDataset(Dataset):
     def __init__(self, X_file, Y_file):
         super().__init__(X_file, Y_file)
         self.label_format_to_labels = {
@@ -196,7 +204,7 @@ class AnyLabelDataset(Dataset):
     def create_one_hot_vector(index, length):
         return np.array([int(tmp == index) for tmp in range(length)])
 
-class MultiOutputDataset(Dataset):
+class ScotsDataset(Dataset):
     def __init__(self, X_file, Y_file):
         super().__init__(X_file, Y_file)
         self.multi_label_mapping = {}
