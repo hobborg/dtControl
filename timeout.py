@@ -4,6 +4,7 @@ import time
 
 def _call_and_return_in_list(obj, method, return_list, *args):
     getattr(obj, method)(*args)
+    obj.save_classifier()
     return_list[0] = obj
 
 def call_with_timeout(obj, method, *args, timeout=60):

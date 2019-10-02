@@ -2,7 +2,6 @@ import glob
 import json
 import pickle
 import sys
-import time
 from collections import defaultdict
 from os import makedirs
 from os.path import join, exists, isfile, isdir
@@ -116,7 +115,6 @@ class BenchmarkSuite:
         Y_train = dataset.get_labels_for_format(classifier.label_format)
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
         if success:
-            classifier_file = self.save_classifier(save_location, classifier)
             acc = dataset.compute_accuracy(classifier.predict(dataset.X_train), classifier.label_format)
             if acc is None:
                 stats = 'failed to fit'
@@ -135,17 +133,6 @@ class BenchmarkSuite:
                 json_obj[results.column_names[i]][results.row_names[j]] = results.table[j][i]
         with open(file, 'w+') as outfile:
             json.dump(json_obj, outfile, indent=4)
-
-    @staticmethod
-    def save_classifier(save_location, classifier):
-        if not isdir(save_location):
-            makedirs(save_location)
-        assert isdir(save_location)
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"{save_location}/{classifier.name}-{timestr}.pickle"
-        file = open(filename, 'wb')
-        pickle.dump(classifier, file)
-        return filename
 
     @staticmethod
     def load_results(file):

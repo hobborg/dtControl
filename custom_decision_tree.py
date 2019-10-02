@@ -3,11 +3,16 @@ import numpy as np
 from abc import ABC, abstractmethod
 from sklearn.base import BaseEstimator
 import sys
+from os import makedirs
+from os.path import isdir
+import time
+import pickle
 
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
         self.label_format = LabelFormat.COMBINATIONS
+        self.last_saved_file = ""
 
     def fit(self, X, y):
         self.root = self.create_root_node()
@@ -31,7 +36,8 @@ class CustomDecisionTree(ABC, BaseEstimator):
 
     def get_stats(self):
         return {
-            'num_nodes': self.root.num_nodes
+            'num_nodes': self.root.num_nodes,
+            'filename': self.last_saved_file
         }
 
     def export_dot(self, file=None):
@@ -49,6 +55,16 @@ class CustomDecisionTree(ABC, BaseEstimator):
                 outfile.write(c)
         else:
             return c
+
+    def save_classifier(self, save_location='models/classifiers'):
+        if not isdir(save_location):
+            makedirs(save_location)
+        assert isdir(save_location)
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"{save_location}/{self.name}-{timestr}.pickle"
+        file = open(filename, 'wb')
+        pickle.dump(self, file)
+        self.last_saved_file = filename
 
     @abstractmethod
     def __str__(self):
