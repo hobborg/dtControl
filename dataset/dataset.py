@@ -2,12 +2,21 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
 from abc import ABC, abstractmethod
+from os.path import basename, splitext
 
 class Dataset(ABC):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, filename):
+        self.filename = filename
+        path, self.extension = splitext(filename)
+        self.name = basename(path)
+        self.extension_to_loader = {
+            'vector': VectorDatasetLoader()
+        }
+
         self.X_train = None
+        self.X_vars = None
         self.Y_train = None
+        self.index_to_value = {}
 
     def load_if_necessary(self):
         if self.X_train is None:
@@ -18,17 +27,13 @@ class Dataset(ABC):
         if self.X_train is None:
             raise RuntimeError('Dataset is not loaded.')
 
-    @abstractmethod
-    def load(self):
-        pass
-
     def is_multioutput(self):
         return len(self.Y_train) > 1
 
     def split(self, mask):
         ds = Dataset(self.name)
         ds.X_train = self.X_train[mask]
-        ds.Y_train = self.Y_train[mask]
+        ds.Y_train = [l[mask] for l in self.Y_train]
 
     @classmethod
     def from_data(cls, name, X_train, Y_train):
@@ -155,8 +160,6 @@ class Dataset(ABC):
     @abstractmethod
     def compute_accuracy(self, Y_pred, label_format):
         pass
-
-
 
 class UppaalDataset(Dataset):
     def __init__(self, X_file, Y_file):

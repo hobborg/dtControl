@@ -7,12 +7,8 @@ class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
 
-    def fit(self, dataset):
-        self.root = self.create_root_node()
-        self.root.fit(dataset)
-
     @abstractmethod
-    def create_root_node(self):
+    def fit(self, dataset):
         pass
 
     def predict(self, dataset):
@@ -64,18 +60,13 @@ class Node(ABC):
     def test_condition(self, x):
         pass
 
-    def fit(self, dataset):
-        y = self.get_labels(dataset)
+    def fit(self, X, y):
         if self.check_done(y):
             return
-        mask = self.find_split(dataset)
+        mask = self.find_split(X, y)
         self.left = self.create_child_node()
         self.right = self.create_child_node()
-        self.fit_children(dataset, mask)
-
-    @abstractmethod
-    def get_labels(self, dataset):
-        pass
+        self.fit_children(X, y, mask)
 
     @abstractmethod
     def create_child_node(self):
