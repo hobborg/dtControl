@@ -7,9 +7,11 @@ from collections import defaultdict
 from os import mkdir
 from os.path import join, exists, isfile, isdir
 
-from dataset import Dataset, MultiOutputDataset, AnyLabelDataset
+from dataset.multi_output_dataset import MultiOutputDataset
+from dataset.single_output_dataset import SingleOutputDataset
 from timeout import call_with_timeout
 from util import format_seconds
+from util import get_filename_and_ext
 
 class BenchmarkResults:
     """
@@ -32,10 +34,10 @@ class BenchmarkSuite:
 
     The classifiers have to satisfy the following interface:
         classifier.name returns the name to be displayed in the results
-        classifier.label_format returns the {LabelFormat} format of the classifier
-        classifier.fit(X_train, Y_train) trains the classifier on the given dataset
-        classifier.predict(X) returns an array of the classifiers predictions for X
+        classifier.fit(dataset) trains the classifier on the given dataset
+        classifier.predict(dataset) returns an array of the classifiers predictions for the dataset
         classifier.get_stats() returns a dictionary of statistics to be displayed (e.g. the number of nodes in the tree)
+        classifier.is_applicable(dataset) returns whether the classifier can be applied to the dataset
     """
 
     def __init__(self, timeout=sys.maxsize):
@@ -48,19 +50,20 @@ class BenchmarkSuite:
         if not multiout:
             multiout = []
         self.datasets = []
-        for (X_file, Y_file) in self.get_XY_files(path):
-            if Dataset.get_dataset_name(X_file) not in exclude:
-                if Dataset.get_dataset_name(X_file) in multiout:
-                    ds = MultiOutputDataset(X_file, Y_file)
+        for file in self.get_files(path):
+            name, _ = get_filename_and_ext(file)
+            if name not in exclude:
+                if name in multiout:
+                    ds = MultiOutputDataset(file)
                 else:
-                    ds = AnyLabelDataset(X_file, Y_file)
+                    ds = SingleOutputDataset(file)
                 self.datasets.append(ds)
         self.datasets.sort(key=lambda ds: ds.name)
 
-    def get_XY_files(self, path):
-        return [(file, '{}_Y.npy'.format(file.split('_X.')[0])) for file in glob.glob(join(path, '*.pickle'))]
+    def get_files(self, path):
+        return [f'{file.split("_X.")[0]}.vector' for file in glob.glob(join(path, '*.pickle'))]  # TODO
 
-    def benchmark(self, classifiers, file='benchmark.json', save_location='models/classifiers'):
+    def benchmark(self, classifiers, file='benchmark.json', save_location='decision_trees'):
         prev_results = self.load_results(file)
         num_steps = self.count_num_steps(classifiers, prev_results)
         if num_steps > 0 and self.timeout != sys.maxsize:
@@ -75,7 +78,7 @@ class BenchmarkSuite:
                 if computed:
                     step += 1
                     msg = '{}/{}: Evaluated {} on {} in {}'.format(step, num_steps, classifier.name, ds.name,
-                                                                    format_seconds(time))
+                                                                   format_seconds(time))
                     if stats == 'timeout':
                         msg += ' (Timeout)'
                     print('{}.'.format(msg))
@@ -90,7 +93,7 @@ class BenchmarkSuite:
         for ds in self.datasets:
             for classifier in classifiers:
                 if not self.already_computed(ds, classifier, prev_results) and \
-                        ds.is_applicable(classifier.label_format):
+                        classifier.is_applicable(ds):
                     num_steps += 1
         return num_steps
 
@@ -99,7 +102,7 @@ class BenchmarkSuite:
         if self.already_computed(dataset, classifier, prev_results):
             computed = False
             stats = prev_results[classifier.name][dataset.name]
-        elif not dataset.is_applicable(classifier.label_format):
+        elif not classifier.is_applicable(dataset):
             computed = False
             stats = 'not applicable'
         else:
@@ -113,11 +116,10 @@ class BenchmarkSuite:
         return classifier.name in prev_results and dataset.name in prev_results[classifier.name]
 
     def train_and_get_stats(self, dataset, classifier, save_location):
-        Y_train = dataset.get_labels_for_format(classifier.label_format)
-        classifier, success, time = call_with_timeout(classifier, 'fit', dataset.X_train, Y_train, timeout=self.timeout)
+        classifier, success, time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
         classifier_file = self.save_classifier(save_location, classifier)
         if success:
-            acc = dataset.compute_accuracy(classifier.predict(dataset.X_train), classifier.label_format)
+            acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:
                 stats = 'failed to fit'
             else:
@@ -165,7 +167,7 @@ class BenchmarkSuite:
 
     @staticmethod
     def delete_classifier_results(classifier_name, file='benchmark.json'):
-        results = Dataset.load_results(file)
+        results = BenchmarkSuite.load_results(file)
         if classifier_name in results:
             del results[classifier_name]
         with open(file, 'w+') as outfile:

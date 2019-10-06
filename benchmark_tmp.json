@@ -1,13 +1,63 @@
 {
-    "MultiOutputDT": {
-        "cartpole": "not applicable",
-        "cruise-latest": "not applicable",
-        "cruise-medium-latest": "not applicable",
-        "cruise-small-latest": "not applicable",
-        "tworooms_large": "not applicable",
-        "vehicle": {
-            "num_nodes_0": 6913,
-            "num_nodes_1": 10955,
+    "CART": {
+        "cartpole": {
+            "num_nodes": 253,
+            "accuracy": 1.0
+        },
+        "cruise-small-latest": {
+            "num_nodes": 109,
+            "accuracy": 1.0
+        },
+        "tworooms_large": {
+            "num_nodes": 1059,
+            "accuracy": 1.0
+        }
+    },
+    "LinearClassifierDT(LogisticRegression)": {
+        "cartpole": {
+            "num_nodes": 199,
+            "num_not_aa": 22,
+            "accuracy": 1.0
+        },
+        "cruise-small-latest": {
+            "num_nodes": 89,
+            "num_not_aa": 22,
+            "accuracy": 1.0
+        },
+        "tworooms_large": {
+            "num_nodes": 29,
+            "num_not_aa": 11,
+            "accuracy": 1.0
+        }
+    },
+    "MaxEveryNodeDT": {
+        "cartpole": {
+            "num_nodes": 11,
+            "accuracy": 1.0
+        },
+        "cruise-small-latest": {
+            "num_nodes": 9,
+            "accuracy": 1.0
+        },
+        "tworooms_large": {
+            "num_nodes": 9,
+            "accuracy": 1.0
+        }
+    },
+    "MaxEveryNodeLCDT(LogisticRegression)": {
+        "cartpole": {
+            "num_nodes": 13,
+            "num_not_aa": 5,
+            "accuracy": 1.0
+        },
+        "cruise-small-latest": {
+            "num_nodes": 15,
+            "num_not_aa": 5,
+            "accuracy": 1.0
+        },
+        "tworooms_large": {
+            "num_nodes": 9,
+            "num_not_aa": 2,
             "accuracy": 1.0
         }
     }
