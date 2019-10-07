@@ -28,5 +28,5 @@ class MaxLCNode(LinearClassifierOrAxisAlignedNode):
     def find_split(self, X, y):
         return super().find_split(X, Dataset._get_max_labels(y))
 
-    def check_done(self, y):
-        return super().check_done(Dataset._get_max_labels(y))
+    def check_done(self, X, y):
+        return super().check_done(X, Dataset._get_max_labels(y))

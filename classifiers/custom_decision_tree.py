@@ -82,7 +82,7 @@ class Node(ABC):
         pass
 
     def fit(self, X, y):
-        if self.check_done(y):
+        if self.check_done(X, y):
             return
         mask = self.find_split(X, y)
         self.left = self.create_child_node()
@@ -93,17 +93,20 @@ class Node(ABC):
     def create_child_node(self):
         pass
 
-    def check_done(self, y):
+    def check_done(self, X, y):
         if self.depth >= 500:
             print("Cannot find a good split.")
             return True
 
         unique_labels = np.unique(y)
         num_unique_labels = len(unique_labels)
-        if num_unique_labels <= 1:
+        unique_data = np.unique(X, axis=0)
+        num_unique_data = len(unique_data)
+        if num_unique_labels <= 1 or num_unique_data <= 1:
             self.trained_label = y[0] if len(unique_labels) > 0 else None
             self.num_nodes = 1
             return True
+        return False
 
     @abstractmethod
     def find_split(self, X, y):
