@@ -362,7 +362,7 @@ char* argv[];
         print_dot (root, "tree.dot");
 
         result = estimate_accuracy (train_points, no_of_train_points, root);
-        printf ("acc. on training set = %.2f\t#leaves = %.0f\tmax depth = %.0f\n", result.accuracy,
+        printf ("acc. on training set = %f\t#leaves = %.0f\tmax depth = %.0f\n", result.accuracy,
                 result.leaf_count, result.tree_depth);
 
         if (verbose)

@@ -226,6 +226,8 @@ struct tree_node* root;
         total_incorrects += incorrect[i];
     }
 
+    printf("total correct: %d\n", total_corrects);
+    printf("no points: %d\n", no_of_points);
     result.accuracy = 100.0 * total_corrects / no_of_points;
 
     for (i = 1; i <= no_of_categories; i++)

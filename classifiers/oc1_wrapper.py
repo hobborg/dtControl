@@ -35,7 +35,7 @@ class OC1Wrapper:
         }
 
     def get_fit_command(self, dataset):
-        self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()])
+        self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()], last_column_is_label=True)
         command = './{} -t {} -D {} -p0 -i{} -j{} -l {}' \
             .format(self.oc1_path, self.data_file, self.dt_file, self.num_restarts, self.num_jumps, self.log_file)
         return command
@@ -62,14 +62,18 @@ class OC1Wrapper:
         self.execute_command(command)
         output = self.parse_predict_output()
         output = np.reshape(output, (-1, 1))
-        return np.apply_along_axis(lambda x: dataset.map_unique_label_back(x[0]), axis=1, arr=output)  # TODO: represent tree in python
+        return np.apply_along_axis(lambda x: dataset.map_unique_label_back(x[0]), axis=1,
+                                   arr=output)  # TODO: represent tree in python
 
     def parse_predict_output(self):
         data = np.loadtxt('{}.classified'.format(self.data_file), delimiter='\t')
         return data[:, -1]
 
-    def save_data_to_file(self, data):
-        np.savetxt(self.data_file, data, fmt='%d', delimiter='\t')
+    def save_data_to_file(self, data, last_column_is_label=False):
+        num_int_columns = 1 if last_column_is_label else 0
+        num_float_columns = data.shape[1] - num_int_columns
+        np.savetxt(self.data_file, data, fmt=' '.join(['%f'] * num_float_columns + ['%d'] * num_int_columns),
+                   delimiter='\t')
 
     def execute_command(self, command):
         with open(self.output_file, 'w+') as out:

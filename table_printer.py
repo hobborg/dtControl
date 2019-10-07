@@ -27,7 +27,7 @@ def print_table(benchmark_results, inline=True):
             else:
                 for k, v in column.items():
                     if k == 'accuracy':
-                        if abs(v - 1.0) < 0.001: continue
+                        if abs(v - 1.0) < 1e-10: continue
                         td_style += ';background-color:#ff5733'
                     td_content += '{}: {}<br>'.format(k, v)
             body += f'<td style="{td_style}">{td_content}</td>'
