@@ -1,10 +1,7 @@
 import glob
 import json
-import pickle
-import sys
 from collections import defaultdict
-from os import makedirs
-from os.path import join, exists, isfile, isdir
+from os.path import join, exists, isfile
 
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
@@ -39,7 +36,7 @@ class BenchmarkSuite:
         classifier.is_applicable(dataset) returns whether the classifier can be applied to the dataset
     """
 
-    def __init__(self, timeout=sys.maxsize):
+    def __init__(self, timeout=100):
         self.datasets = []
         self.timeout = timeout
 
@@ -65,7 +62,7 @@ class BenchmarkSuite:
     def benchmark(self, classifiers, file='benchmark.json', save_location='decision_trees'):
         prev_results = self.load_results(file)
         num_steps = self.count_num_steps(classifiers, prev_results)
-        if num_steps > 0 and self.timeout != sys.maxsize:
+        if num_steps > 0:
             print('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
         table = []
         step = 0
@@ -116,6 +113,7 @@ class BenchmarkSuite:
 
     def train_and_get_stats(self, dataset, classifier, save_location):
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
+        classifier.save(save_location)
         if success:
             acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:

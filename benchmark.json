@@ -6,6 +6,7 @@
         },
         "cartpole": {
             "num_nodes": 253,
+            "filename": "decision_trees/CART-20191007-142656.pickle",
             "accuracy": 1.0
         },
         "cruise-latest": {
@@ -103,10 +104,12 @@
         "aircraft": "not applicable",
         "cartpole": {
             "num_nodes": 11,
+            "filename": "decision_trees/MaxEveryNodeDT-20191007-144037.pickle",
             "accuracy": 1.0
         },
         "cruise-latest": {
             "num_nodes": 3,
+            "filename": "decision_trees/MaxEveryNodeDT-20191007-143949.pickle",
             "accuracy": 1.0
         },
         "cruise-medium-latest": {

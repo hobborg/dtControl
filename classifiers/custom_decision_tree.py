@@ -69,14 +69,14 @@ class CustomDecisionTree(ABC, BaseEstimator):
         else:
             return c
 
-    def save_classifier(self, save_location='models/classifiers'):
+    def save(self, save_location):
         if not isdir(save_location):
             makedirs(save_location)
         assert isdir(save_location)
         timestr = time.strftime("%Y%m%d-%H%M%S")
         filename = f"{save_location}/{self.name}-{timestr}.pickle"
-        file = open(filename, 'wb')
-        pickle.dump(self, file)
+        with open(filename, 'wb') as outfile:
+            pickle.dump(self, outfile)
         self.last_saved_file = filename
 
     @abstractmethod
