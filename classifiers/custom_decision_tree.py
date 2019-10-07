@@ -1,4 +1,3 @@
-from label_format import LabelFormat
 import numpy as np
 from abc import ABC, abstractmethod
 from sklearn.base import BaseEstimator
@@ -11,20 +10,34 @@ import pickle
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
-        self.label_format = LabelFormat.COMBINATIONS
         self.last_saved_file = ""
 
-    def fit(self, X, y):
-        self.root = self.create_root_node()
-        self.root.fit(X, y)
-
     @abstractmethod
-    def create_root_node(self):
+    def is_applicable(self, dataset):
         pass
 
-    def predict(self, X):
+    @abstractmethod
+    def fit(self, dataset):
+        pass
+
+    def set_labels(self, leaf_fun, index_to_value):
+        def _visit_leaves(tree):
+            if tree is None:
+                return
+            if tree.trained_label is not None:
+                tree.mapped_label = leaf_fun(tree)
+                # the mapped label can be either a list of labels or a single label
+                try:
+                    tree.actual_label = [index_to_value[i] for i in tree.mapped_label]
+                except TypeError:
+                    tree.actual_label = index_to_value[tree.mapped_label]
+            _visit_leaves(tree.left)
+            _visit_leaves(tree.right)
+        _visit_leaves(self.root)
+
+    def predict(self, dataset):
         pred = []
-        for row in np.array(X):
+        for row in np.array(dataset.X_train):
             pred.append(self.classify_instance(row.reshape(1, -1)))
         return np.array(pred)
 
@@ -32,7 +45,7 @@ class CustomDecisionTree(ABC, BaseEstimator):
         node = self.root
         while node.left:
             node = node.left if node.test_condition(features) else node.right
-        return node.label
+        return node.mapped_label
 
     def get_stats(self):
         return {
@@ -74,7 +87,9 @@ class Node(ABC):
     def __init__(self, depth=0):
         self.left = None
         self.right = None
-        self.label = None
+        self.trained_label = None  # the label from the training data the node sees (e.g. unique)
+        self.mapped_label = None  # the label corresponding to the actual int labels
+        self.actual_label = None  # the actual float label
         self.depth = depth
         self.num_nodes = 0
 
@@ -83,7 +98,7 @@ class Node(ABC):
         pass
 
     def fit(self, X, y):
-        if self.check_done(y):
+        if self.check_done(X, y):
             return
         mask = self.find_split(X, y)
         self.left = self.create_child_node()
@@ -94,17 +109,20 @@ class Node(ABC):
     def create_child_node(self):
         pass
 
-    def check_done(self, y):
+    def check_done(self, X, y):
         if self.depth >= 500:
             print("Cannot find a good split.")
             return True
 
         unique_labels = np.unique(y)
         num_unique_labels = len(unique_labels)
-        if num_unique_labels <= 1:
-            self.label = y[0] if len(unique_labels) > 0 else None
+        unique_data = np.unique(X, axis=0)
+        num_unique_data = len(unique_data)
+        if num_unique_labels <= 1 or num_unique_data <= 1:
+            self.trained_label = y[0] if len(unique_labels) > 0 else None
             self.num_nodes = 1
             return True
+        return False
 
     @abstractmethod
     def find_split(self, X, y):

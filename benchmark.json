@@ -1,29 +1,5 @@
 {
-    "DT": {
-        "aircraft": "not applicable",
-        "cartpole": {
-            "num_nodes": 253,
-            "accuracy": 1.0
-        },
-        "cruise-latest": {
-            "num_nodes": 1015,
-            "accuracy": 1.0
-        },
-        "cruise-medium-latest": {
-            "num_nodes": 289,
-            "accuracy": 1.0
-        },
-        "cruise-small-latest": {
-            "num_nodes": 109,
-            "accuracy": 1.0
-        },
-        "tworooms_large": {
-            "num_nodes": 1059,
-            "accuracy": 1.0
-        },
-        "vehicle": "not applicable"
-    },
-    "UniqueLabelDT": {
+    "CART": {
         "aircraft": {
             "num_nodes": 271905,
             "accuracy": 1.0
@@ -64,7 +40,11 @@
             "num_not_aa": 22,
             "accuracy": 1.0
         },
-        "cruise-latest": "failed to fit",
+        "cruise-latest": {
+            "num_nodes": 773,
+            "num_not_aa": 180,
+            "accuracy": 0.9999864851167348
+        },
         "cruise-medium-latest": {
             "num_nodes": 255,
             "num_not_aa": 59,
@@ -93,7 +73,11 @@
             "num_not_aa": 3,
             "accuracy": 1.0
         },
-        "cruise-latest": "failed to fit",
+        "cruise-latest": {
+            "num_nodes": 1251,
+            "num_not_aa": 136,
+            "accuracy": 0.9999864851167348
+        },
         "cruise-medium-latest": {
             "num_nodes": 133,
             "num_not_aa": 20,
@@ -175,9 +159,9 @@
             "accuracy": 0.5042902855943825
         },
         "cartpole": {
-            "num_nodes": 3,
-            "num_oblique": 0,
-            "accuracy": 0.5830258302583026
+            "num_nodes": 183,
+            "num_oblique": 13,
+            "accuracy": 1.0
         },
         "cruise-latest": {
             "num_nodes": 797,
@@ -203,23 +187,6 @@
             "num_nodes": 957,
             "num_oblique": 110,
             "accuracy": 0.46086884085134744
-        }
-    },
-    "MultiOutputDT": {
-        "aircraft": {
-            "num_nodes_0": 46693,
-            "num_nodes_1": 231963,
-            "accuracy": 1.0
-        },
-        "cartpole": "not applicable",
-        "cruise-latest": "not applicable",
-        "cruise-medium-latest": "not applicable",
-        "cruise-small-latest": "not applicable",
-        "tworooms_large": "not applicable",
-        "vehicle": {
-            "num_nodes_0": 6927,
-            "num_nodes_1": 10945,
-            "accuracy": 1.0
         }
     }
 }

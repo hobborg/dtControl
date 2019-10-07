@@ -27,7 +27,7 @@ def print_table(benchmark_results, inline=True):
             else:
                 for k, v in column.items():
                     if k == 'accuracy':
-                        if abs(v - 1.0) < 0.001: continue
+                        if abs(v - 1.0) < 1e-10: continue
                         td_style += ';background-color:#ff5733'
                     td_content += '{}: {}<br>'.format(k, v)
             body += f'<td style="{td_style}">{td_content}</td>'
@@ -37,7 +37,7 @@ def print_table(benchmark_results, inline=True):
     if inline:
         display(HTML(f"<html>{body}</html>"))
     else:
-        filename = 'tmp/benchmark.html'
+        filename = 'tmp/benchmark.html'  # TODO: adapt based on json name
         with open(filename, 'w+') as out:
             out.write(f'<html>{head}{body}</html>')
         display(HTML(f'<html><a href="{filename}" target="_blank">View table</a></html>'))

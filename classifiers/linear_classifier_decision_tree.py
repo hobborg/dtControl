@@ -1,10 +1,12 @@
-import numpy as np
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.exceptions import ConvergenceWarning
-from custom_decision_tree import CustomDecisionTree, Node
-
 import warnings
 
+import numpy as np
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.tree import DecisionTreeClassifier
+
+from classifiers.custom_decision_tree import CustomDecisionTree, Node
+
+# SVM sometimes does not converge and clutters the output with warnings
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 class LinearClassifierDecisionTree(CustomDecisionTree):
@@ -14,8 +16,13 @@ class LinearClassifierDecisionTree(CustomDecisionTree):
         self.classifier_class = classifier_class
         self.name = 'LinearClassifierDT({})'.format(classifier_class.__name__)
 
-    def create_root_node(self):
-        return LinearClassifierOrAxisAlignedNode(self.classifier_class, **self.kwargs)
+    def is_applicable(self, dataset):
+        return True
+
+    def fit(self, dataset):
+        self.root = LinearClassifierOrAxisAlignedNode(self.classifier_class, **self.kwargs)
+        self.root.fit(dataset.X_train, dataset.get_unique_labels())
+        self.set_labels(lambda leaf: dataset.map_unique_label_back(leaf.trained_label), dataset.index_to_value)
 
     def get_stats(self):
         return {
@@ -92,8 +99,8 @@ class LinearClassifierOrAxisAlignedNode(Node):
         return not isinstance(self.classifier, self.classifier_class)
 
     def get_dot_label(self):
-        if self.label is not None:
-            return f'Leaf({self.label})'
+        if self.actual_label is not None:
+            return f'Leaf({self.actual_label})'
         if self.is_axis_aligned():
             tree = self.classifier.tree_
             return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
@@ -109,8 +116,8 @@ class LinearClassifierOrAxisAlignedNode(Node):
             return hyperplane
 
     def get_c_label(self):
-        if self.label is not None:
-            return f'return {self.label}'
+        if self.actual_label is not None:
+            return f'return {self.actual_label}'
         if self.is_axis_aligned():
             tree = self.classifier.tree_
             return f'X[{tree.feature[0]}] <= {tree.threshold[0]}'
