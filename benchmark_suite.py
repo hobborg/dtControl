@@ -1,14 +1,21 @@
 import glob
 import json
+import os
+import time
+import webbrowser
 from collections import defaultdict
-from os.path import join, exists, isfile
 from os import makedirs
+from os.path import join, exists, isfile
 
+from IPython.display import HTML, display
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
+from jinja2 import Environment, FileSystemLoader
 from timeout import call_with_timeout
 from util import format_seconds, get_filename_and_ext
-import time
+
+file_loader = FileSystemLoader('.')
+env = Environment(loader=file_loader)
 
 class BenchmarkResults:
     """
@@ -40,9 +47,10 @@ class BenchmarkSuite:
         classifier.export_c(file) saves a C-representation of the classifier to a file
     """
 
-    def __init__(self, benchmark_file='benchmark.json', timeout=100, output_folder='decision_trees', save_folder=None):
+    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None):
         self.datasets = []
-        self.benchmark_file = benchmark_file
+        self.benchmark_json = f'{benchmark_file}.json'
+        self.benchmark_html = f'{benchmark_file}.html'
         self.prev_results = {}
         self.timeout = timeout
         self.output_folder = output_folder
@@ -67,6 +75,11 @@ class BenchmarkSuite:
     def get_files(self, path):
         return [f'{file.split("_X.")[0]}.vector' for file in glob.glob(join(path, '*.pickle'))]  # TODO
 
+    def display_html(self):
+        display(HTML(f'<html><a href="{self.benchmark_html}" target="_blank">View table</a></html>'))
+        url = f'file://{os.path.abspath(self.benchmark_html)}'
+        webbrowser.open(url)
+
     def benchmark(self, classifiers):
         self.load_results()
         num_steps = self.count_num_steps(classifiers)
@@ -90,7 +103,7 @@ class BenchmarkSuite:
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
         self.save_results(results)
-        return results
+        self.save_html(results)
 
     def count_num_steps(self, classifiers):
         num_steps = 0
@@ -144,18 +157,24 @@ class BenchmarkSuite:
         name += extension
         return join(dir, name)
 
+    def save_html(self, results):
+        template = env.get_template('ui/table.html')
+        with open(self.benchmark_html, 'w+') as out:
+            out.write(template.render(column_names=results.column_names, row_names=results.row_names,
+                                      table=results.table))
+
     def save_results(self, results):
         json_obj = defaultdict(dict)
         for i in range(len(results.column_names)):
             for j in range(len(results.row_names)):
                 json_obj[results.column_names[i]][results.row_names[j]] = results.table[j][i]
         self.prev_results = json_obj
-        with open(self.benchmark_file, 'w+') as outfile:
+        with open(self.benchmark_json, 'w+') as outfile:
             json.dump(json_obj, outfile, indent=2)
 
     def load_results(self):
-        if not exists(self.benchmark_file) or not isfile(self.benchmark_file): return
-        with open(self.benchmark_file, 'r') as infile:
+        if not exists(self.benchmark_json) or not isfile(self.benchmark_json): return
+        with open(self.benchmark_json, 'r') as infile:
             self.prev_results = json.load(infile)
 
     def delete_dataset_results(self, dataset_name):
@@ -165,7 +184,7 @@ class BenchmarkSuite:
             if dataset_name in datasets:
                 del datasets[dataset_name]
         self.prev_results = results
-        with open(self.benchmark_file, 'w+') as outfile:
+        with open(self.benchmark_json, 'w+') as outfile:
             json.dump(results, outfile, indent=2)
 
     def delete_classifier_results(self, classifier_name):
@@ -173,5 +192,5 @@ class BenchmarkSuite:
         if classifier_name in results:
             del results[classifier_name]
         self.prev_results = results
-        with open(self.benchmark_file, 'w+') as outfile:
+        with open(self.benchmark_json, 'w+') as outfile:
             json.dump(results, outfile, indent=2)
