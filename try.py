@@ -7,10 +7,8 @@ from classifiers.oc1_wrapper import OC1Wrapper
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
-suite = BenchmarkSuite()
-suite.add_datasets('../XYdatasets',
-                   exclude=[],
-                   multiout=['vehicle', 'aircraft'])
+suite = BenchmarkSuite(timeout=60*60*2.4, save_folder='saved_classifiers')
+suite.add_datasets('../XYdatasets', exclude=[], multiout=['vehicle', 'aircraft'])
 classifiers = [CartCustomDecisionTree(),
                LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
                LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
@@ -18,4 +16,4 @@ classifiers = [CartCustomDecisionTree(),
                MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
                OC1Wrapper(num_restarts=20, num_jumps=5)
                ]
-suite.benchmark(classifiers, file='benchmark.json')
+suite.benchmark(classifiers)

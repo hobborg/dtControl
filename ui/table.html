@@ -22,7 +22,9 @@
     {% for i in range(row_names|length) %}
         <tr>
             <th scope="row" style="text-align:center">{{ row_names[i] }}</th>
-            {% for cell in table[i] %}
+            {% for j in range(table[i]|length) %}
+                {% set cell = table[i][j] %}
+                {% set links = links_table[i][j] %}
                 {% if cell is string %}
                     <td style="text-align: center{{ '; background-color:#ff5733' if cell == 'timeout' or cell=='failed to fit' else '' }}">
                         <span>{{ cell }}</span>
@@ -34,6 +36,12 @@
                         {% endfor %}
                         {% if 'accuracy' in cell %}
                             accuracy: {{ cell['accuracy'] }}
+                        {% endif %}
+                        {% if 'dot_link' in links %}
+                            <a href="{{ links['dot_link'] }}" target="_blank">View dot file</a>
+                        {% endif %}
+                        {% if 'c_link' in links %}
+                            <br><a href="{{ links['c_link'] }}" target="_blank">View C file</a>
                         {% endif %}
                     </td>
                 {% endif %}

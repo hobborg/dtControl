@@ -10,12 +10,9 @@ from os.path import join, exists, isfile
 from IPython.display import HTML, display
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
-from jinja2 import Environment, FileSystemLoader
 from timeout import call_with_timeout
+from ui.table_controller import TableController
 from util import format_seconds, get_filename_and_ext
-
-file_loader = FileSystemLoader('.')
-env = Environment(loader=file_loader)
 
 class BenchmarkResults:
     """
@@ -55,6 +52,7 @@ class BenchmarkSuite:
         self.timeout = timeout
         self.output_folder = output_folder
         self.save_folder = save_folder
+        self.table_controller = TableController(self.benchmark_html, self.output_folder)
 
     def add_datasets(self, path, exclude=None, multiout=None):
         if not exclude:
@@ -103,7 +101,7 @@ class BenchmarkSuite:
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
         self.save_results(results)
-        self.save_html(results)
+        self.table_controller.update_and_save(results)
 
     def count_num_steps(self, classifiers):
         num_steps = 0
@@ -139,7 +137,10 @@ class BenchmarkSuite:
                 cell = 'failed to fit'
             else:
                 cell = {'stats': classifier.get_stats()}
-
+                dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
+                classifier.export_dot(dot_filename)
+                c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
+                classifier.export_c(c_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
@@ -150,18 +151,13 @@ class BenchmarkSuite:
 
     def get_filename(self, folder, dataset, classifier, extension, unique=False):
         dir = join(folder, classifier.name, dataset.name)
-        makedirs(dir)
+        if not exists(dir):
+            makedirs(dir)
         name = classifier.name
         if unique:
             name += f'--{time.strftime("%Y%m%d-%H%M%S")}'
         name += extension
         return join(dir, name)
-
-    def save_html(self, results):
-        template = env.get_template('ui/table.html')
-        with open(self.benchmark_html, 'w+') as out:
-            out.write(template.render(column_names=results.column_names, row_names=results.row_names,
-                                      table=results.table))
 
     def save_results(self, results):
         json_obj = defaultdict(dict)
@@ -178,19 +174,16 @@ class BenchmarkSuite:
             self.prev_results = json.load(infile)
 
     def delete_dataset_results(self, dataset_name):
-        results = self.load_results()
-        for classifier in results:
-            datasets = results[classifier]
+        self.load_results()
+        for classifier in self.prev_results:
+            datasets = self.prev_results[classifier]
             if dataset_name in datasets:
                 del datasets[dataset_name]
-        self.prev_results = results
         with open(self.benchmark_json, 'w+') as outfile:
-            json.dump(results, outfile, indent=2)
+            json.dump(self.prev_results, outfile, indent=2)
 
     def delete_classifier_results(self, classifier_name):
-        results = self.load_results()
-        if classifier_name in results:
-            del results[classifier_name]
-        self.prev_results = results
+        if classifier_name in self.prev_results:
+            del self.prev_results[classifier_name]
         with open(self.benchmark_json, 'w+') as outfile:
-            json.dump(results, outfile, indent=2)
+            json.dump(self.prev_results, outfile, indent=2)
