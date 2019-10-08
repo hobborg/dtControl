@@ -10,7 +10,6 @@ import pickle
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
-        self.last_saved_file = ""
 
     @abstractmethod
     def is_applicable(self, dataset):
@@ -49,8 +48,7 @@ class CustomDecisionTree(ABC, BaseEstimator):
 
     def get_stats(self):
         return {
-            'num_nodes': self.root.num_nodes,
-            'filename': self.last_saved_file
+            'num_nodes': self.root.num_nodes
         }
 
     def export_dot(self, file=None):
@@ -77,7 +75,7 @@ class CustomDecisionTree(ABC, BaseEstimator):
         filename = f"{save_location}/{self.name}-{timestr}.pickle"
         with open(filename, 'wb') as outfile:
             pickle.dump(self, outfile)
-        self.last_saved_file = filename
+        return filename
 
     @abstractmethod
     def __str__(self):

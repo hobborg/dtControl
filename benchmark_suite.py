@@ -69,13 +69,13 @@ class BenchmarkSuite:
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                stats, computed, time = self.compute_stats(ds, classifier, prev_results, save_location)
-                row.append(stats)
+                cell, computed, time = self.compute_cell(ds, classifier, prev_results, save_location)
+                row.append(cell)
                 if computed:
                     step += 1
                     msg = '{}/{}: Evaluated {} on {} in {}'.format(step, num_steps, classifier.name, ds.name,
                                                                    format_seconds(time))
-                    if stats == 'timeout':
+                    if cell == 'timeout':
                         msg += ' (Timeout)'
                     print('{}.'.format(msg))
             table.append(row)
@@ -93,37 +93,38 @@ class BenchmarkSuite:
                     num_steps += 1
         return num_steps
 
-    def compute_stats(self, dataset, classifier, prev_results, save_location):
+    def compute_cell(self, dataset, classifier, prev_results, save_location):
         time = None
         if self.already_computed(dataset, classifier, prev_results):
             computed = False
-            stats = prev_results[classifier.name][dataset.name]
+            cell = prev_results[classifier.name][dataset.name]
         elif not classifier.is_applicable(dataset):
             computed = False
-            stats = 'not applicable'
+            cell = 'not applicable'
         else:
             computed = True
             dataset.load_if_necessary()
-            stats, time = self.train_and_get_stats(dataset, classifier, save_location)
-        return stats, computed, time
+            cell, time = self.train_and_get_cell(dataset, classifier, save_location)
+        return cell, computed, time
 
     @staticmethod
     def already_computed(dataset, classifier, prev_results):
         return classifier.name in prev_results and dataset.name in prev_results[classifier.name]
 
-    def train_and_get_stats(self, dataset, classifier, save_location):
+    def train_and_get_cell(self, dataset, classifier, save_location):
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
         classifier.save(save_location)
         if success:
             acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:
-                stats = 'failed to fit'
+                cell = 'failed to fit'
             else:
-                stats = classifier.get_stats()
-                stats['accuracy'] = acc
+                cell = {'stats': classifier.get_stats()}
+                if abs(acc - 1.0) > 1e-10:
+                    cell['accuracy'] = acc
         else:
-            stats = 'timeout'
-        return stats, time
+            cell = 'timeout'
+        return cell, time
 
     @staticmethod
     def save_results(results, file):
@@ -132,7 +133,7 @@ class BenchmarkSuite:
             for j in range(len(results.row_names)):
                 json_obj[results.column_names[i]][results.row_names[j]] = results.table[j][i]
         with open(file, 'w+') as outfile:
-            json.dump(json_obj, outfile, indent=4)
+            json.dump(json_obj, outfile, indent=2)
 
     @staticmethod
     def load_results(file):
@@ -148,7 +149,7 @@ class BenchmarkSuite:
             if dataset_name in datasets:
                 del datasets[dataset_name]
         with open(file, 'w+') as outfile:
-            json.dump(results, outfile, indent=4)
+            json.dump(results, outfile, indent=2)
 
     @staticmethod
     def delete_classifier_results(classifier_name, file='benchmark.json'):
@@ -156,4 +157,4 @@ class BenchmarkSuite:
         if classifier_name in results:
             del results[classifier_name]
         with open(file, 'w+') as outfile:
-            json.dump(results, outfile, indent=4)
+            json.dump(results, outfile, indent=2)
