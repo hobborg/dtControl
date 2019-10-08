@@ -1,6 +1,8 @@
-import numpy as np
-import subprocess
 import os
+import subprocess
+from shutil import copyfile
+
+import numpy as np
 from dataset.single_output_dataset import SingleOutputDataset
 
 class OC1Wrapper:
@@ -31,7 +33,7 @@ class OC1Wrapper:
     def get_stats(self):
         return {
             'num_nodes': self.num_nodes,
-            'num_oblique': self.num_oblique
+            'num_not_aa': self.num_oblique
         }
 
     def get_fit_command(self, dataset):
@@ -79,3 +81,12 @@ class OC1Wrapper:
         with open(self.output_file, 'w+') as out:
             p = subprocess.Popen(command.split(' '), stdout=out)
             p.wait()
+
+    def save(self, filename):
+        copyfile(self.dt_file, filename)
+
+    def export_dot(self, file=None):
+        pass
+
+    def export_c(self, file=None):
+        pass

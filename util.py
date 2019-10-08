@@ -1,4 +1,6 @@
-from os.path import basename, splitext
+from os.path import basename, splitext, isdir
+from os import makedirs
+from time import strftime
 
 def format_seconds(sec):
     m, s = divmod(sec, 60)
@@ -18,3 +20,4 @@ def make_set(v):
         return set(v)
     except TypeError:
         return {v}
+

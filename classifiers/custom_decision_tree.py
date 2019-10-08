@@ -1,11 +1,9 @@
-import numpy as np
-from abc import ABC, abstractmethod
-from sklearn.base import BaseEstimator
-import sys
-from os import makedirs
-from os.path import isdir
-import time
 import pickle
+import sys
+from abc import ABC, abstractmethod
+
+import numpy as np
+from sklearn.base import BaseEstimator
 
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
@@ -67,15 +65,9 @@ class CustomDecisionTree(ABC, BaseEstimator):
         else:
             return c
 
-    def save(self, save_location):
-        if not isdir(save_location):
-            makedirs(save_location)
-        assert isdir(save_location)
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"{save_location}/{self.name}-{timestr}.pickle"
+    def save(self, filename):
         with open(filename, 'wb') as outfile:
             pickle.dump(self, outfile)
-        return filename
 
     @abstractmethod
     def __str__(self):
