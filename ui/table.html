@@ -22,18 +22,26 @@
     {% for i in range(row_names|length) %}
         <tr>
             <th scope="row" style="text-align:center">{{ row_names[i] }}</th>
-            {% for column in table[i] %}
-                {% if column is string %}
-                    <td style="text-align: center{{ '; background-color:#ff5733' if column == 'timeout' or column=='failed to fit' else '' }}">
-                        <span>{{ column }}</span>
+            {% for j in range(table[i]|length) %}
+                {% set cell = table[i][j] %}
+                {% set links = links_table[i][j] %}
+                {% if cell is string %}
+                    <td style="text-align: center{{ '; background-color:#ff5733' if cell == 'timeout' or cell=='failed to fit' else '' }}">
+                        <span>{{ cell }}</span>
                     </td>
                 {% else %}
-                    <td style="text-align: center{{ ';background-color:#ff5733' if (column['accuracy'] - 1.0)|abs > 0.000000000001 else '' }}">
-                        {% for k,v in column.items() if not k == 'accuracy' %}
-                            {{ k }}:{{ v }}<br>
+                    <td style="text-align: center{{ ';background-color:#ff5733' if 'accuracy' in cell else '' }}">
+                        {% for k,v in cell['stats'].items() %}
+                            {{ k }}: {{ v }}<br>
                         {% endfor %}
-                        {% if (column['accuracy'] - 1.0)|abs > 0.000000000001 %}
-                            accuracy: {{ column['accuracy'] }}
+                        {% if 'accuracy' in cell %}
+                            accuracy: {{ cell['accuracy'] }}
+                        {% endif %}
+                        {% if 'dot_link' in links %}
+                            <a href="{{ links['dot_link'] }}" target="_blank">View dot file</a>
+                        {% endif %}
+                        {% if 'c_link' in links %}
+                            <br><a href="{{ links['c_link'] }}" target="_blank">View C file</a>
                         {% endif %}
                     </td>
                 {% endif %}
