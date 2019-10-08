@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from dataset.vector_dataset_loader import VectorDatasetLoader
+from dataset.scots_dataset_loader import ScotsDatasetLoader
+from dataset.uppaal_dataset_loader import UppaalDatasetLoader
 from util import get_filename_and_ext
 
 class Dataset(ABC):
@@ -10,7 +12,9 @@ class Dataset(ABC):
         self.filename = filename
         self.name, self.extension = get_filename_and_ext(filename)
         self.extension_to_loader = {
-            '.vector': VectorDatasetLoader()
+            '.vector': VectorDatasetLoader(),
+            '.scs': ScotsDatasetLoader(),
+            '.dump': UppaalDatasetLoader()
         }
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
@@ -67,8 +71,12 @@ class Dataset(ABC):
 
     @staticmethod
     def _get_max_labels(labels):
-        label_counts = np.bincount(labels.flatten())
-        label_counts[0] = -1  # ignore count of zeros since we use it only as a filler
+        flattened_labels = labels.flatten()
+        # remove -1 as we use it only as a filler
+        flattened_labels = flattened_labels[flattened_labels != -1]
+        label_counts = np.bincount(flattened_labels)
+        # Below line might not be relevant now because we are using -1 as a filler
+        # label_counts[0] = -1  # ignore count of zeros since we use it only as a filler
         new_labels = []
         for i in range(len(labels)):
             current = labels[i]

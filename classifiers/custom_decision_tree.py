@@ -28,7 +28,7 @@ class CustomDecisionTree(ABC, BaseEstimator):
                 tree.mapped_label = leaf_fun(tree)
                 # the mapped label can be either a list of labels or a single label
                 try:
-                    tree.actual_label = [index_to_value[i] for i in tree.mapped_label]
+                    tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
                 except TypeError:
                     tree.actual_label = index_to_value[tree.mapped_label]
             _visit_leaves(tree.left)

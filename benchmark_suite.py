@@ -40,7 +40,7 @@ class BenchmarkSuite:
         self.datasets = []
         self.timeout = timeout
 
-    def add_datasets(self, path, exclude=None, multiout=None):
+    def add_datasets(self, path, include=None, exclude=None, multiout=None):
         if not exclude:
             exclude = []
         if not multiout:
@@ -48,7 +48,7 @@ class BenchmarkSuite:
         self.datasets = []
         for file in self.get_files(path):
             name, _ = get_filename_and_ext(file)
-            if name not in exclude:
+            if ((not include) or name in include) and name not in exclude:
                 if name in multiout:
                     ds = MultiOutputDataset(file)
                 else:
@@ -57,6 +57,7 @@ class BenchmarkSuite:
         self.datasets.sort(key=lambda ds: ds.name)
 
     def get_files(self, path):
+        # return [file for file in glob.glob(join(path, '*.scs'))]
         return [f'{file.split("_X.")[0]}.vector' for file in glob.glob(join(path, '*.pickle'))]  # TODO
 
     def benchmark(self, classifiers, file='benchmark.json', save_location='decision_trees'):

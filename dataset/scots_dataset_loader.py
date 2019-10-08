@@ -121,6 +121,10 @@ class ScotsDatasetLoader(DatasetLoader):
                     kk = kk-1
         
         # inverse map
-        unique_label_to_float = {y: x for (x, y) in float_to_unique_label.items()}                  
+        unique_label_to_float = {y: x for (x, y) in float_to_unique_label.items()}
+
+        # if only single control input, do not wrap it in another array
+        if y_train.shape[0] == 1:
+            y_train = y_train[0]
         
         return (x_train, [], y_train, unique_label_to_float)
