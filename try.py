@@ -9,13 +9,21 @@ from sklearn.svm import LinearSVC
 
 suite = BenchmarkSuite()
 suite.add_datasets('../XYdatasets',
-                   exclude=[],
-                   multiout=['vehicle', 'aircraft'])
+                   include=['cartpole'],
+                   exclude=['cruise-latest',
+                            'cruise-medium-latest',
+                            'cruise-small-latest',
+                            #'cartpole',
+                            'tworooms_large',
+                            'aircraft',
+                            'vehicle'
+                            ],
+                   multiout=['vehicle', 'aircraft', '10rooms'])
 classifiers = [CartCustomDecisionTree(),
-               LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
+               #LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
                LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
                MaxCartDecisionTree(),
-               MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
+               #MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
                OC1Wrapper(num_restarts=20, num_jumps=5)
                ]
 suite.benchmark(classifiers, file='benchmark.json')
