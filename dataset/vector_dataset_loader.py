@@ -7,8 +7,8 @@ from os.path import splitext
 class VectorDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
         path, _ = splitext(filename)
-        X_train = pd.read_pickle(f'{path}_X.pickle')
-        Y_train = np.load(f'{path}_Y.npy')
+        X_train = pd.read_pickle(filename)
+        Y_train = np.load(f'{path}.npy')
         Y_train = self.convert_vector_labels_to_new_format(Y_train)
         return np.array(X_train), list(X_train.columns), Y_train, {x:x for x in Y_train.flatten()}
 

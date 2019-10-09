@@ -1,6 +1,6 @@
 if (X[0] <= 64.5) {
 	if (X[1] <= 1.0) {
-		return 1;
+		return 0;
 	}
 	else {
 		return 3;
@@ -13,7 +13,7 @@ else {
 			return 1;
 		}
 		else {
-			return 3;
+			return 0;
 		}
 
 	}

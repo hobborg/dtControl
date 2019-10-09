@@ -46,37 +46,38 @@ class BenchmarkSuite:
 
     def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None):
         self.datasets = []
-        self.benchmark_json = f'{benchmark_file}.json'
-        self.benchmark_html = f'{benchmark_file}.html'
-        self.prev_results = {}
+        self.json_file = f'{benchmark_file}.json'
+        self.html_file = f'{benchmark_file}.html'
+        self.results = {}
         self.timeout = timeout
         self.output_folder = output_folder
         self.save_folder = save_folder
-        self.table_controller = TableController(self.benchmark_html, self.output_folder)
+        self.table_controller = TableController(self.html_file, self.output_folder)
 
-    def add_datasets(self, path, include=None, exclude=None, multiout=None):
+    def add_datasets(self, paths, include=None, exclude=None, multiout=None):
         if not exclude:
             exclude = []
         if not multiout:
             multiout = []
         self.datasets = []
-        for file in self.get_files(path):
-            name, _ = get_filename_and_ext(file)
-            if ((not include) or name in include) and name not in exclude:
-                if name in multiout:
-                    ds = MultiOutputDataset(file)
-                else:
-                    ds = SingleOutputDataset(file)
-                self.datasets.append(ds)
+        for path in paths:
+            for file in self.get_files(path):
+                name, _ = get_filename_and_ext(file)
+                if ((not include) or name in include) and name not in exclude:
+                    if name in multiout:
+                        ds = MultiOutputDataset(file)
+                    else:
+                        ds = SingleOutputDataset(file)
+                    self.datasets.append(ds)
         self.datasets.sort(key=lambda ds: ds.name)
 
     def get_files(self, path):
-        # return [file for file in glob.glob(join(path, '*.scs'))]
-        return [f'{file.split("_X.")[0]}.vector' for file in glob.glob(join(path, '*.pickle'))]  # TODO
+        # return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump'))
+        return glob.glob(join(path, '*.vector'))  # TODO
 
     def display_html(self):
-        display(HTML(f'<html><a href="{self.benchmark_html}" target="_blank">View table</a></html>'))
-        url = f'file://{os.path.abspath(self.benchmark_html)}'
+        display(HTML(f'<html><a href="{self.html_file}" target="_blank">View table</a></html>'))
+        url = f'file://{os.path.abspath(self.html_file)}'
         webbrowser.open(url)
 
     def benchmark(self, classifiers):
@@ -92,6 +93,7 @@ class BenchmarkSuite:
                 cell, computed, time = self.compute_cell(ds, classifier)
                 row.append(cell)
                 if computed:
+                    self.save_result(classifier.name, ds.name, cell)
                     step += 1
                     msg = '{}/{}: Evaluated {} on {} in {}'.format(step, num_steps, classifier.name, ds.name,
                                                                    format_seconds(time))
@@ -101,7 +103,6 @@ class BenchmarkSuite:
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
-        self.save_results(results)
         self.table_controller.update_and_save(results)
 
     def count_num_steps(self, classifiers):
@@ -117,7 +118,7 @@ class BenchmarkSuite:
         time = None
         if self.already_computed(dataset, classifier):
             computed = False
-            cell = self.prev_results[classifier.name][dataset.name]
+            cell = self.results[classifier.name][dataset.name]
         elif not classifier.is_applicable(dataset):
             computed = False
             cell = 'not applicable'
@@ -128,7 +129,7 @@ class BenchmarkSuite:
         return cell, computed, time
 
     def already_computed(self, dataset, classifier):
-        return classifier.name in self.prev_results and dataset.name in self.prev_results[classifier.name]
+        return classifier.name in self.results and dataset.name in self.results[classifier.name]
 
     def train_and_get_cell(self, dataset, classifier):
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
@@ -160,31 +161,37 @@ class BenchmarkSuite:
         name += extension
         return join(dir, name)
 
-    def save_results(self, results):
-        json_obj = defaultdict(dict)
-        for i in range(len(results.column_names)):
-            for j in range(len(results.row_names)):
-                json_obj[results.column_names[i]][results.row_names[j]] = results.table[j][i]
-        self.prev_results = json_obj
-        with open(self.benchmark_json, 'w+') as outfile:
-            json.dump(json_obj, outfile, indent=2)
+    def save_result(self, classifier_name, dataset_name, result):
+        if classifier_name not in self.results:
+            self.results[classifier_name] = {}
+        self.results[classifier_name][dataset_name] = result
+        self.save_to_disk()
 
     def load_results(self):
-        if not exists(self.benchmark_json) or not isfile(self.benchmark_json): return
-        with open(self.benchmark_json, 'r') as infile:
-            self.prev_results = json.load(infile)
+        if not exists(self.json_file) or not isfile(self.json_file): return
+        with open(self.json_file, 'r') as infile:
+            self.results = json.load(infile)
 
     def delete_dataset_results(self, dataset_name):
         self.load_results()
-        for classifier in self.prev_results:
-            datasets = self.prev_results[classifier]
+        for classifier in self.results:
+            datasets = self.results[classifier]
             if dataset_name in datasets:
                 del datasets[dataset_name]
-        with open(self.benchmark_json, 'w+') as outfile:
-            json.dump(self.prev_results, outfile, indent=2)
+        self.save_to_disk()
 
     def delete_classifier_results(self, classifier_name):
-        if classifier_name in self.prev_results:
-            del self.prev_results[classifier_name]
-        with open(self.benchmark_json, 'w+') as outfile:
-            json.dump(self.prev_results, outfile, indent=2)
+        if classifier_name in self.results:
+            del self.results[classifier_name]
+        self.save_to_disk()
+
+    def delete_cell(self, dataset_name, classifier_name):
+        if classifier_name in self.results:
+            datasets = self.results[classifier_name]
+            if dataset_name in datasets:
+                del datasets[dataset_name]
+        self.save_to_disk()
+
+    def save_to_disk(self):
+        with open(self.json_file, 'w+') as outfile:
+            json.dump(self.results, outfile, indent=2)
