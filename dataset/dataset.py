@@ -78,7 +78,7 @@ class Dataset(ABC):
         new_labels = []
         for i in range(len(labels)):
             current = labels[i]
-            current = current[current[i]] != -1
+            current = current[current != -1]
             max_label = max(list(current), key=lambda l: label_counts[l])
             assert max_label != -1
             new_labels.append(max_label)
