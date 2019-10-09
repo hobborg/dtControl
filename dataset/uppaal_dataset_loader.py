@@ -1,4 +1,6 @@
 import re
+import pandas as pd
+import numpy as np
 
 from dataset.dataset_loader import DatasetLoader
 
@@ -20,7 +22,7 @@ class UppaalDatasetLoader(DatasetLoader):
         for line in lines:
             if line.startswith('When'):
                 action_set.add(line[line.index(' take transition ')+17:].rstrip())
-        actions = dict(zip(list(action_set), range(0, len(action_set))))
+        actions = dict(zip(list(action_set), range(1, len(action_set)+1)))
 
         # Figure out the assignments in each action and extract
         # the assigned value. The assigned variable is extracted
@@ -68,7 +70,7 @@ class UppaalDatasetLoader(DatasetLoader):
         num_df = pd.DataFrame(row_num_vals, columns=numeric_features, dtype='float32')
         num_df = num_df[projection_variables]
 
-        grouped = num_df.groupby(numeric_features)
+        grouped = num_df.groupby(projection_variables)
         X = np.empty((len(grouped), len(projection_variables)))
         Y = np.full((len(grouped), max([len(y) for y in row_actions])), -1)
 
