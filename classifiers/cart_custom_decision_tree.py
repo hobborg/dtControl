@@ -38,7 +38,7 @@ class CartCustomNode(Node):
 
     def get_dot_label(self):
         if self.actual_label:
-            return f'Leaf({self.actual_label})'
+            return self.actual_label
         tree = self.dt.tree_
         return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
 

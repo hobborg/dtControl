@@ -43,7 +43,7 @@ class LinearClassifierOrAxisAlignedNode(Node):
 
     def test_condition(self, x):
         if not self.is_axis_aligned():
-            return self.classifier.predict(x)[0] == 0
+            return self.classifier.predict(x)[0] == -1
         else:
             tree = self.classifier.tree_
             return x[:, tree.feature[0]][0] <= tree.threshold[0]
@@ -75,18 +75,18 @@ class LinearClassifierOrAxisAlignedNode(Node):
             new_y = np.copy(y)
             label_mask = (new_y == label)
             new_y[label_mask] = 1
-            new_y[~label_mask] = 0
+            new_y[~label_mask] = -1
             classifier = self.classifier_class(**self.kwargs)
             classifier.fit(X, new_y)
             label_to_classifier[label] = classifier
             pred = classifier.predict(X)
-            impurity = self.calculate_impurity(y, (pred == 0))
+            impurity = self.calculate_impurity(y, (pred == -1))
             label_to_impurity[label] = impurity
 
         min_impurity = min(label_to_impurity.values())
         label = min(label_to_impurity.items(), key=lambda x: x[1])[0]
         classifier = label_to_classifier[label]
-        mask = (classifier.predict(X) == 0)
+        mask = (classifier.predict(X) == -1)
         return classifier, min_impurity, mask
 
     def find_best_axis_aligned_split(self, X, y):
@@ -100,7 +100,7 @@ class LinearClassifierOrAxisAlignedNode(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return f'Leaf({self.actual_label})'
+            return self.actual_label
         if self.is_axis_aligned():
             tree = self.classifier.tree_
             return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
@@ -109,11 +109,11 @@ class LinearClassifierOrAxisAlignedNode(Node):
             coef_ = self.classifier.coef_[0]
             intercept_ = self.classifier.intercept_[0]
             line = []
-            for i in range(0, len(coef_)):
+            for i in range(len(coef_)):
                 line.append(f"{round(coef_[i], 4)}*X[{i}]")
             line.append(f"{round(intercept_, 4)}")
-            hyperplane = "+".join(line) + " >= 0"
-            return hyperplane
+            hyperplane = "\n+".join(line) + " <= 0"
+            return hyperplane.replace('+-', '-')
 
     def get_c_label(self):
         if self.actual_label is not None:
@@ -133,4 +133,4 @@ class LinearClassifierOrAxisAlignedNode(Node):
             return hyperplane
 
     def print_dot_red(self):
-        return not self.is_axis_aligned()
+        return False

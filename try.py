@@ -7,7 +7,7 @@ from classifiers.oc1_wrapper import OC1Wrapper
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
-suite = BenchmarkSuite(timeout=60*60*2.4, save_folder='saved_classifiers')
+suite = BenchmarkSuite(timeout=60*60*2, save_folder='saved_classifiers', benchmark_file='benchmark_tmp')
 suite.add_datasets('../XYdatasets',
                    include=['cartpole'],
                    exclude=['cruise-latest',

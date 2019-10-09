@@ -158,14 +158,16 @@ class Node(ABC):
         if self.left:
             last_left_number, left_text = self.left._export_dot(starting_number + 1)
             text += left_text
-            text += '{} -> {};\n'.format(starting_number, starting_number + 1)
+            label = 'True' if starting_number == 0 else ''
+            text += '{} -> {} [label="{}"];\n'.format(starting_number, starting_number + 1, label)
             number_for_right = last_left_number + 1
             last_number = last_left_number
 
         if self.right:
             last_right_number, right_text = self.right._export_dot(number_for_right)
             text += right_text
-            text += '{} -> {};\n'.format(starting_number, number_for_right)
+            label = 'False' if starting_number == 0 else ''
+            text += '{} -> {} [label="{}"];\n'.format(starting_number, number_for_right, label)
             last_number = last_right_number
 
         return last_number, text
