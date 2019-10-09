@@ -75,8 +75,6 @@ class Dataset(ABC):
         # remove -1 as we use it only as a filler
         flattened_labels = flattened_labels[flattened_labels != -1]
         label_counts = np.bincount(flattened_labels)
-        # Below line might not be relevant now because we are using -1 as a filler
-        # label_counts[0] = -1  # ignore count of zeros since we use it only as a filler
         new_labels = []
         for i in range(len(labels)):
             current = labels[i]

@@ -4,26 +4,8 @@ from dataset.dataset_loader import DatasetLoader
 
 class UppaalDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
-        return self.from_uppaal(filename)
-
-    # TODO: integrate the following method into the _load_dataset method
-
-    """
-        Reads {file} and procudes either a Single-OutputDataset
-        (X_train, Y_train, mapping_dict, X_vars, action_dict) where 
-        X_train is a numpy array of state valuations for each state in the controller
-        Y_train a list of lists of action indices
-        value_index_mapping maps action values (floats) to action indices - here, always {}
-        X_vars contains the names of the columns in X_train
-        action_dict is the mapping from action index to action name
-
-        :param file: A file exported using UPPAAL's --print-strategies CLI switch
-    """
-
-    @staticmethod
-    def from_uppaal(file):
-        f = open(file)
-        print("Reading from %s" % file)   
+        f = open(filename)
+        print("Reading from %s" % filename)
 
         lines = f.readlines()
 
