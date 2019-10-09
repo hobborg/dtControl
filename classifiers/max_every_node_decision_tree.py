@@ -12,7 +12,8 @@ class MaxCartDecisionTree(CartCustomDecisionTree):
 
     def fit(self, dataset):
         self.root = MaxCartNode()
-        self.root.fit(dataset.X_train, dataset.Y_train)
+        self.root.fit(dataset.X_train, dataset.Y_train) # single output case
+        # TODO multi output case where 2 is applied on 1 on Y_train
         self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
 
     def __str__(self):
