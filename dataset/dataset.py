@@ -60,7 +60,7 @@ class Dataset(ABC):
         next_unused_int = 1  # OC1 expects labels starting with 1
         label_str_to_int = {}
         for i in range(len(labels)):
-            label_str = ','.join(sorted([str(i) for i in labels[i]]))
+            label_str = ','.join(sorted([str(i) for i in labels[i] if i != -1]))
             if label_str not in label_str_to_int:
                 label_str_to_int[label_str] = next_unused_int
                 int_to_label[next_unused_int] = labels[i]
@@ -75,31 +75,11 @@ class Dataset(ABC):
         # remove -1 as we use it only as a filler
         flattened_labels = flattened_labels[flattened_labels != -1]
         label_counts = np.bincount(flattened_labels)
-        # Below line might not be relevant now because we are using -1 as a filler
-        # label_counts[0] = -1  # ignore count of zeros since we use it only as a filler
         new_labels = []
         for i in range(len(labels)):
             current = labels[i]
+            current = current[current != -1]
             max_label = max(list(current), key=lambda l: label_counts[l])
             assert max_label != -1
             new_labels.append(max_label)
         return np.array(new_labels)
-
-    @staticmethod
-    def _convert_floats_to_ints(labels):  # TODO: double-check if this works / remove if not needed
-        l = []
-        next_unused_int = 1  # OC1 expects labels starting with 1
-        multi_label_mapping = {}
-        label_to_int = {}
-        for i in range(len(labels)):
-            inner = []
-            for j in range(labels.shape[1]):
-                label = labels[i, j]
-                if label not in label_to_int:
-                    label_to_int[label] = next_unused_int
-                    multi_label_mapping[next_unused_int] = label
-                    next_unused_int += 1
-                new_label = label_to_int[label]
-                inner.append(new_label)
-            l.append(inner)
-        return np.array(l), multi_label_mapping

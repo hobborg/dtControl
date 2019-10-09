@@ -116,7 +116,7 @@ class ScotsDatasetLoader(DatasetLoader):
                     idu = idu % u_NN[kk]
                     u[kk] = input_lb[kk] + u_idx[0,kk]*input_eta[kk]
                     if u[kk] not in float_to_unique_label.keys():
-                        float_to_unique_label[u[kk]] = len(float_to_unique_label)
+                        float_to_unique_label[u[kk]] = len(float_to_unique_label) + 1
                     y_train[kk][i - controller_start][j - 1] = float_to_unique_label[u[kk]]
                     kk = kk-1
         
