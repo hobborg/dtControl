@@ -1,30 +1,18 @@
-if (X[0] <= 28.5) {
+if (X[0] <= 25.5) {
 	if (X[1] <= 1.0) {
-		return 1;
+		return 0;
 	}
 	else {
-		return 3;
+		return -2;
 	}
 
 }
 else {
-	if (X[0] <= 29.5) {
-		if (X[3] <= 1.0) {
-			if (X[1] <= 7.0) {
-				return 1;
-			}
-			else {
-				return 3;
-			}
-
-		}
-		else {
-			return 1;
-		}
-
+	if (X[1] <= 7.0) {
+		return 0;
 	}
 	else {
-		return 1;
+		return -2;
 	}
 
 }
