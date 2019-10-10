@@ -8,13 +8,16 @@ class MaxCartDecisionTree(CartCustomDecisionTree):
         self.name = 'MaxEveryNodeDT'
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, SingleOutputDataset)  # TODO: change this and adapt to multi-output?
+        return True
 
     def fit(self, dataset):
         self.root = MaxCartNode()
-        self.root.fit(dataset.X_train, dataset.Y_train) # single output case
-        # TODO multi output case where 2 is applied on 1 on Y_train
-        self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
+        if isinstance(dataset, SingleOutputDataset):
+            self.root.fit(dataset.X_train, dataset.Y_train)  # single output case
+            self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
+        else:
+            self.root.fit(dataset.X_train, dataset.get_tuple_ids())  # single output case
+            self.set_labels(lambda leaf: dataset.map_tuple_id_back(leaf.trained_label), dataset.index_to_value)
 
     def __str__(self):
         return 'MaxEveryNodeDecisionTree'

@@ -9,11 +9,11 @@ class SingleOutputDataset(Dataset):
 
     def compute_accuracy(self, Y_pred):
         self.check_loaded()
-        if len(Y_pred[Y_pred == None]) != 0:
-            return None
         num_correct = 0
         for i in range(len(Y_pred)):
             pred = Y_pred[i]
+            if pred is None:
+                return None
             if set.issubset(make_set(pred), set(self.Y_train[i])):  # TODO: debug this once we have the tree in python. OC1 console says acc = 100%. i = 24455, pred = [3 4 0 0]
                 num_correct += 1
         return num_correct / len(Y_pred)

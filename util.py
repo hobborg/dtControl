@@ -16,6 +16,8 @@ def get_filename_and_ext(filename):
     return basename(path), ext
 
 def make_set(v):
+    if isinstance(v, tuple):
+        return {v}
     try:
         return set(v)
     except TypeError:

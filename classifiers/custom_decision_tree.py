@@ -26,20 +26,21 @@ class CustomDecisionTree(ABC, BaseEstimator):
                 # the mapped label can be either a list of labels or a single label
                 if isinstance(tree.mapped_label, Iterable):
                     if isinstance(tree.mapped_label[0], Iterable):
-                        tree.actual_label = [(index_to_value[i], index_to_value[j]) for (i, j) in tree.mapped_label if i != -1]
+                        tree.actual_label = [(index_to_value[i], index_to_value[j]) for (i, j) in tree.mapped_label]
                     else:
                         tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
                 else:
                     tree.actual_label = index_to_value[tree.mapped_label]
             _visit_leaves(tree.left)
             _visit_leaves(tree.right)
+
         _visit_leaves(self.root)
 
     def predict(self, dataset):
         pred = []
         for row in np.array(dataset.X_train):
             pred.append(self.classify_instance(row.reshape(1, -1)))
-        return np.array(pred)
+        return pred
 
     def classify_instance(self, features):
         node = self.root
@@ -122,8 +123,10 @@ class Node(ABC):
         pass
 
     def fit_children(self, X, y, mask):
-        self.left.fit(X[mask], y[mask])
-        self.right.fit(X[~mask], y[~mask])
+        left_labels = np.array([i[mask] for i in y]) if len(y.shape) == 3 else y[mask]  # TODO
+        right_labels = np.array([i[~mask] for i in y]) if len(y.shape) == 3 else y[~mask]
+        self.left.fit(X[mask], left_labels)
+        self.right.fit(X[~mask], right_labels)
         self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
 
     @staticmethod
@@ -181,20 +184,20 @@ class Node(ABC):
     def _export_c(self, indent_index):
         # If leaf node
         if not self.left and not self.right:
-            return "\t"*indent_index + self.get_c_label()
+            return "\t" * indent_index + self.get_c_label()
 
         text = ""
-        text += "\t"*indent_index + f"if ({self.get_c_label()}) {{\n"
+        text += "\t" * indent_index + f"if ({self.get_c_label()}) {{\n"
         if self.left:
             text += f"{self.left._export_c(indent_index + 1)}\n"
         else:
-            text += "\t"*(indent_index + 1) + ";\n"
-        text += "\t"*indent_index + "}\n"
+            text += "\t" * (indent_index + 1) + ";\n"
+        text += "\t" * indent_index + "}\n"
 
         if self.right:
-            text += "\t"*indent_index + "else {\n"
+            text += "\t" * indent_index + "else {\n"
             text += f"{self.right._export_c(indent_index + 1)}\n"
-            text += "\t"*indent_index + "}\n"
+            text += "\t" * indent_index + "}\n"
 
         return text
 
