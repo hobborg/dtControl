@@ -71,8 +71,8 @@ class BenchmarkSuite:
         self.datasets.sort(key=lambda ds: ds.name)
 
     def get_files(self, path):
-        # return [file for file in glob.glob(join(path, '*.scs'))]
-        return [f'{file.split("_X.")[0]}.vector' for file in glob.glob(join(path, '*.pickle'))]  # TODO
+        return [file for file in glob.glob(join(path, '*.scs'))]
+        # return [f'{file.split("_X.")[0]}.vector' for file in glob.glob(join(path, '*.pickle'))]  # TODO
 
     def display_html(self):
         display(HTML(f'<html><a href="{self.benchmark_html}" target="_blank">View table</a></html>'))

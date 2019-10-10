@@ -21,7 +21,7 @@ class LinearClassifierDecisionTree(CustomDecisionTree):
 
     def fit(self, dataset):
         self.root = LinearClassifierOrAxisAlignedNode(self.classifier_class, **self.kwargs)
-        self.root.fit(dataset.X_train, dataset.get_unique_labels())
+        self.root.fit(dataset.X_train, dataset.get_unique_labels(dataset.Y_train))
         self.set_labels(lambda leaf: dataset.map_unique_label_back(leaf.trained_label), dataset.index_to_value)
 
     def get_stats(self):

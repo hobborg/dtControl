@@ -15,7 +15,7 @@ class MultiOutputDataset(Dataset):
         self.check_loaded()
         if len(y_pred[y_pred is None]) != 0:
             return None
-        tuple_labels = self.get_tuple_labels()
+        tuple_labels = self.get_unique_labels(self.Y_train)
         num_correct = 0
         for i in range(len(y_pred)):
             pred = y_pred[i]
@@ -95,6 +95,11 @@ class MultiOutputDataset(Dataset):
     def map_tuple_label_back(self, label):
         return self.index_to_tuple[label]
 
+    def get_unique_labels(self):
+        if self.unique_labels is None:
+            self.unique_labels = self.get_unique_labels(self.Y_train)
+        return self.unique_labels
+
     '''
     eg. 
     [[2 0 0]
@@ -108,9 +113,9 @@ class MultiOutputDataset(Dataset):
                       3: [(1, 3), (-1, -1), (-1, -1)], 
                       4: [(3, 3), ( 3,  6), ( 1,  3)]}
     '''
-    def get_unique_labels(self):
+    def get_unique_labels(self, y):
         if self.unique_labels is None:
-            self.unique_labels, nondetid_to_list = self._get_unique_labels(self.get_tuple_labels(self.y_train))
+            self.unique_labels, nondetid_to_list = self._get_unique_labels(self.get_tuple_labels(y))
             self.unique_mapping = {l: [self.map_tuple_label_back(i) for i in nondetid_to_list[l]] for l in self.unique_labels}
         return self.unique_labels
 
@@ -123,7 +128,6 @@ class MultiOutputDataset(Dataset):
     where ctrl_idx is the control input index, inp_enc is the control input integer encoding and
     freq is the number of times the respective control input has occurred as the ctrl_idx'th component
     '''
-
     def _get_ranks(self, y):
         ranks = []
         for ctrl_idx in range(y.shape[0]):
@@ -209,7 +213,7 @@ class MultiOutputDataset(Dataset):
                     valid_row = row[row != -1]
                     determinized = determinized & (valid_row.size == 1)
         valid_y = np.array([np.array([yyy[yyy!=-1] for yyy in yy]) for yy in y])
-        return self.get_unique_labels()
+        return self.get_unique_labels(valid_y)
 
     def map_determinized_labels_back(self, labels):
         return self.map_unique_label_back(labels)
