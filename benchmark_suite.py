@@ -3,7 +3,6 @@ import json
 import os
 import time
 import webbrowser
-from collections import defaultdict
 from os import makedirs
 from os.path import join, exists, isfile
 
@@ -59,6 +58,9 @@ class BenchmarkSuite:
             exclude = []
         if not multiout:
             multiout = []
+        if include is not None and len(set(include) & set(exclude)) > 0:
+            print('A dataset cannot be both included and excluded.\nAborting.')
+            return
         self.datasets = []
         for path in paths:
             for file in self.get_files(path):
