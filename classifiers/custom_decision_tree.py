@@ -1,7 +1,7 @@
 import pickle
 import sys
 from abc import ABC, abstractmethod
-
+from collections.abc import Iterable
 import numpy as np
 from sklearn.base import BaseEstimator
 
@@ -24,9 +24,12 @@ class CustomDecisionTree(ABC, BaseEstimator):
             if tree.trained_label is not None:
                 tree.mapped_label = leaf_fun(tree)
                 # the mapped label can be either a list of labels or a single label
-                try:
-                    tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
-                except TypeError:
+                if isinstance(tree.mapped_label, Iterable):
+                    if isinstance(tree.mapped_label[0], Iterable):
+                        tree.actual_label = [(index_to_value[i], index_to_value[j]) for (i, j) in tree.mapped_label if i != -1]
+                    else:
+                        tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
+                else:
                     tree.actual_label = index_to_value[tree.mapped_label]
             _visit_leaves(tree.left)
             _visit_leaves(tree.right)
