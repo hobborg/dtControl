@@ -1,6 +1,6 @@
-from dataset.dataset_loader import DatasetLoader
 import numpy as np
-from functools import reduce
+
+from dataset.dataset_loader import DatasetLoader
 
 """
 @author: pushpakjagpushpaktap
@@ -14,46 +14,37 @@ class ScotsDatasetLoader(DatasetLoader):
         state_eta = []
         for i in range(state_dim):
             state_eta = state_eta+[float(lines[8+i])]
-        # print(state_eta)
 
         state_lb = []
         for i in range(state_dim):
             state_lb = state_lb+[float(lines[11+state_dim+i])]
-        # print(state_lb)
 
         state_ub = []
         for i in range(state_dim):
             state_ub = state_ub+[float(lines[14+2*state_dim+i])]
-        # print(state_ub)
 
         n_state_grid = []
         for i in range(state_dim):
-            n_state_grid = n_state_grid+[int((state_ub[i]-state_lb[i])/state_eta[i]+1)]
-        # print(n_state_grid)
+            n_state_grid = n_state_grid + [int(round((state_ub[i] - state_lb[i]) / state_eta[i], 6)) + 1]
 
         input_dim = int(lines[18+3*state_dim])
         linenum = 18+3*state_dim
-        # print(input_dim)
 
         input_eta = []
         for i in range(input_dim):
             input_eta = input_eta+[float(lines[3+linenum+i])]
-        # print(input_eta)
 
         input_lb = []
         for i in range(input_dim):
             input_lb = input_lb+[float(lines[6+linenum+input_dim+i])]
-        # print(input_lb)
 
         input_ub = []
         for i in range(input_dim):
             input_ub = input_ub+[float(lines[9+linenum+2*input_dim+i])]
-        # print(input_ub)
 
         n_input_grid = []
         for i in range(input_dim):
-            n_input_grid = n_input_grid+[int((input_ub[i]-input_lb[i])/input_eta[i]+1)]
-        # print(n_input_grid)
+            n_input_grid = n_input_grid + [int(round((input_ub[i] - input_lb[i]) / input_eta[i], 6) + 1)]
 
         controller_start = 14+linenum+3*input_dim
         max_non_det = max([len(line.split())-1 for line in lines[controller_start:-2]])
@@ -89,12 +80,13 @@ class ScotsDatasetLoader(DatasetLoader):
             idx = idxu[0, 0]
             k = state_dim - 1
             x = np.zeros(state_dim)
-            while k >= 0:
-                num = int(idx/x_NN[k])
-                idx = idx % x_NN[k]
+            while k > 0:
+                num = int(idx/x_NN[k])  # j
+                idx = idx % x_NN[k]  # i
                 x[k] = state_lb[k] + num*state_eta[k]
                 k = k-1
             num = idx
+            x[0] = state_lb[0] + num*state_eta[0]
             
             x_train[i - controller_start] = x
             # creating input variables
@@ -111,14 +103,19 @@ class ScotsDatasetLoader(DatasetLoader):
                 idu = idxu[0, j]
                 kk = input_dim-1
                 u = np.zeros(input_dim)
-                while kk >= 0:
+                while kk > 0:
                     u_idx[0, kk] = int(idu/u_NN[kk])
                     idu = idu % u_NN[kk]
-                    u[kk] = input_lb[kk] + u_idx[0,kk]*input_eta[kk]
+                    u[kk] = input_lb[kk] + u_idx[0, kk]*input_eta[kk]
                     if u[kk] not in float_to_unique_label.keys():
                         float_to_unique_label[u[kk]] = len(float_to_unique_label) + 1
                     y_train[kk][i - controller_start][j - 1] = float_to_unique_label[u[kk]]
                     kk = kk-1
+                u_idx[0, 0] = idu
+                u[0] = input_lb[0] + u_idx[0, 0]*input_eta[0]
+                if u[0] not in float_to_unique_label.keys():
+                    float_to_unique_label[u[0]] = len(float_to_unique_label) + 1
+                y_train[0][i - controller_start][j - 1] = float_to_unique_label[u[0]]
         
         # inverse map
         unique_label_to_float = {y: x for (x, y) in float_to_unique_label.items()}

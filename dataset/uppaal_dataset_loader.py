@@ -1,10 +1,15 @@
 import re
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 from dataset.dataset_loader import DatasetLoader
 
+
 class UppaalDatasetLoader(DatasetLoader):
+    '''
+    Assumption is that all controllable states are named *.Choose
+    '''
     def _load_dataset(self, filename):
         f = open(filename)
         print("Reading from %s" % filename)
@@ -17,12 +22,18 @@ class UppaalDatasetLoader(DatasetLoader):
         # Extract numeric features
         numeric_features = re.findall('(\w+)=\-?[0-9]+', lines[7])
 
-        # Extract actions
+        # Extract actions and controllable components
         action_set = set()
+        controllable_states = set()
         for line in lines:
+            if line.startswith('State: '):
+                ctrl = re.findall(r'(\w+\.Choose)', line)
+                if ctrl:
+                    controllable_states.update(ctrl)
             if line.startswith('When'):
                 action_set.add(line[line.index(' take transition ')+17:].rstrip())
         actions = dict(zip(list(action_set), range(1, len(action_set)+1)))
+        controllable_states = list(controllable_states)
 
         # Figure out the assignments in each action and extract
         # the assigned value. The assigned variable is extracted
@@ -41,8 +52,19 @@ class UppaalDatasetLoader(DatasetLoader):
         total_state_actions = 0
         for line in lines[7:]:
             if line.startswith("State:"):
-                ignore_current = False
-                numeric_vals = re.findall('\w+=([^\ ]+)', line)
+                # find if the state is controllable, and if so, then make that position 1 in categorical vals
+                controllable = False
+                cat_vals = [0 for i in range(len(controllable_states))]
+                for i in range(len(controllable_states)):
+                    if controllable_states[i] in line:
+                        cat_vals[i] = 1
+                        controllable = True
+                if not controllable:
+                    ignore_current = True
+                    continue
+                else:
+                    ignore_current = False
+                    numeric_vals = re.findall('\w+=([^\ ]+)', line)
             elif ignore_current:
                 continue
             elif line.startswith("When"):
@@ -53,7 +75,7 @@ class UppaalDatasetLoader(DatasetLoader):
                 ignore_current = True
             elif line.strip() == "":
                 if not ignore_current:
-                    row_num_vals.append(numeric_vals)
+                    row_num_vals.append(cat_vals + numeric_vals)
                     row_actions.append(current_actions)
                     total_rows += 1
                     total_state_actions += len(current_actions)
@@ -66,8 +88,8 @@ class UppaalDatasetLoader(DatasetLoader):
         print(f"Done reading {total_rows} states with \na total of {total_state_actions} state-action pairs.")
 
         # Project onto measurable variables, the strategy should not depend on the gua variables coming from euler
-        projection_variables = list(filter(lambda x: 'gua' not in x, numeric_features))
-        num_df = pd.DataFrame(row_num_vals, columns=numeric_features, dtype='float32')
+        projection_variables = controllable_states + list(filter(lambda x: 'gua' not in x, numeric_features))
+        num_df = pd.DataFrame(row_num_vals, columns=controllable_states + numeric_features, dtype='float32')
         num_df = num_df[projection_variables]
 
         grouped = num_df.groupby(projection_variables)
