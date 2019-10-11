@@ -13,7 +13,7 @@ class MultiOutputDataset(Dataset):
         self.list_id_to_list = None
         self.zipped = None
 
-    def compute_accuracy(self, y_pred):  # TODO: double-check that this works
+    def compute_accuracy(self, y_pred):
         self.check_loaded()
         num_correct = 0
         for i in range(len(y_pred)):
@@ -76,7 +76,7 @@ class MultiOutputDataset(Dataset):
         # default
         tuple_to_index = {(-1, -1): -1}
 
-        self.tuple_ids = np.full((stacked_y_train.shape[0], stacked_y_train.shape[1]), -1)
+        self.tuple_ids = np.full((stacked_y_train.shape[0], stacked_y_train.shape[1]), -1)  # TODO: this doesnt work if we have more than 2 control inputs
 
         # first axis: datapoints
         # second axis: non-det

@@ -14,7 +14,9 @@ classifiers = [  # CartCustomDecisionTree(),
     MaxCartDecisionTree(),
                #MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
                #OC1Wrapper(num_restarts=20, num_jumps=5),
-    # MaxEveryNodeMultiDecisionTree()
+               #MaxEveryNodeMultiDecisionTree()
                ]
 #suite.delete_dataset_results('cruise-latest')
 suite.benchmark(classifiers)
+
+# TODO Mathias: two trees for det multiinput, check whether dataset is multiinput in is_applicable. Integrate this check into loaders?

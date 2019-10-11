@@ -26,7 +26,8 @@ class CustomDecisionTree(ABC, BaseEstimator):
                 # the mapped label can be either a list of labels or a single label
                 if isinstance(tree.mapped_label, Iterable):
                     if isinstance(tree.mapped_label[0], Iterable):
-                        tree.actual_label = [(index_to_value[i], index_to_value[j]) for (i, j) in tree.mapped_label]
+                        tree.actual_label = [(index_to_value[i], index_to_value[j]) for (i, j) in
+                                             tree.mapped_label]  # TODO: this doesnt work if we have more than 2 control inputs
                     else:
                         tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
                 else:
@@ -123,8 +124,10 @@ class Node(ABC):
         pass
 
     def fit_children(self, X, y, mask):
-        left_labels = np.array([i[mask] for i in y]) if len(y.shape) == 3 else y[mask]  # TODO
-        right_labels = np.array([i[~mask] for i in y]) if len(y.shape) == 3 else y[~mask]
+        if len(y.shape) == 3:
+            left_labels, right_labels = y[:, mask, :], y[:, ~mask, :]
+        else:
+            left_labels, right_labels = y[mask], y[~mask]
         self.left.fit(X[mask], left_labels)
         self.right.fit(X[~mask], right_labels)
         self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
