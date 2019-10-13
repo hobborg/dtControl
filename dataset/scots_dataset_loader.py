@@ -1,5 +1,5 @@
 import numpy as np
-
+from tqdm import tqdm
 from dataset.dataset_loader import DatasetLoader
 
 """
@@ -119,7 +119,7 @@ class ScotsDatasetLoader(DatasetLoader):
         for i in range(controller_start):
             f.readline()
 
-        for i in range(0, controller_lines):
+        for i in tqdm(range(controller_lines)):
             line = f.readline()
             idxu = np.matrix(line)
             idx = idxu[0, 0]
