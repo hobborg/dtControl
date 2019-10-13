@@ -1,7 +1,7 @@
 import numpy as np
 
 from dataset.dataset_loader import DatasetLoader
-
+from tqdm import tqdm
 """
 @author: pushpakjagpushpaktap
 """
@@ -110,7 +110,7 @@ class ScotsDatasetLoader(DatasetLoader):
         controller_lines = sum(1 for line in f) - 1
 
         x_train = np.empty((controller_lines, state_dim), dtype=np.float32)
-        y_train = np.full((input_dim, controller_lines, max_non_det), -1, dtype=np.int16)
+        y_train = np.full((input_dim, controller_lines, max_non_det), -1, dtype=np.int32)
 
         f.seek(0)
 
@@ -119,10 +119,11 @@ class ScotsDatasetLoader(DatasetLoader):
         for i in range(controller_start):
             f.readline()
 
-        for i in range(0, controller_lines):
-            line = f.readline()
-            idxu = np.matrix(line)
-            idx = idxu[0, 0]
+        for i, line in enumerate(tqdm(f, total=controller_lines)):
+            if i == controller_lines:
+                break
+            idxu = np.fromstring(line, dtype=np.int32, sep=' ')
+            idx = idxu[0]
             k = state_dim - 1
             x = np.zeros(state_dim)
             while k > 0:
@@ -133,9 +134,9 @@ class ScotsDatasetLoader(DatasetLoader):
             num = idx
             x[0] = state_lb[0] + num * state_eta[0]
 
-            x_train[i - controller_start] = x
+            x_train[i] = x
             # creating input variables
-            u_idx = np.empty((1, input_dim), dtype=np.int32)
+            u_idx = np.empty(input_dim, dtype=np.int32)
             t2 = 0
             for t2 in range(input_dim):
                 t2 += 1
@@ -144,23 +145,23 @@ class ScotsDatasetLoader(DatasetLoader):
             for tt in range(input_dim):
                 tt += 1
                 globals()["u" + str(tt)] = [[]]
-            for j in range(1, idxu.size):
-                idu = idxu[0, j]
+            for j in range(1, idxu.shape[0]):
+                idu = idxu[j]
                 kk = input_dim - 1
-                u = np.zeros(input_dim)
+                u = np.empty(input_dim, dtype=np.float32)
                 while kk > 0:
-                    u_idx[0, kk] = int(idu / u_NN[kk])
+                    u_idx[kk] = int(idu / u_NN[kk])
                     idu = idu % u_NN[kk]
-                    u[kk] = input_lb[kk] + u_idx[0, kk] * input_eta[kk]
+                    u[kk] = input_lb[kk] + u_idx[kk] * input_eta[kk]
                     if u[kk] not in float_to_unique_label.keys():
                         float_to_unique_label[u[kk]] = len(float_to_unique_label) + 1
-                    y_train[kk][i - controller_start][j - 1] = float_to_unique_label[u[kk]]
+                    y_train[kk][i][j - 1] = float_to_unique_label[u[kk]]
                     kk = kk - 1
-                u_idx[0, 0] = idu
-                u[0] = input_lb[0] + u_idx[0, 0] * input_eta[0]
+                u_idx[0] = idu
+                u[0] = input_lb[0] + u_idx[0] * input_eta[0]
                 if u[0] not in float_to_unique_label.keys():
                     float_to_unique_label[u[0]] = len(float_to_unique_label) + 1
-                y_train[0][i - controller_start][j - 1] = float_to_unique_label[u[0]]
+                y_train[0][i][j - 1] = float_to_unique_label[u[0]]
 
         # inverse map
         unique_label_to_float = {y: x for (x, y) in float_to_unique_label.items()}
