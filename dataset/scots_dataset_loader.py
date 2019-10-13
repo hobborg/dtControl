@@ -1,5 +1,5 @@
 import numpy as np
-
+from tqdm import tqdm
 from dataset.dataset_loader import DatasetLoader
 from tqdm import tqdm
 """
