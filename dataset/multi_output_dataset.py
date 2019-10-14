@@ -3,6 +3,7 @@ from operator import itemgetter
 from dataset.dataset import Dataset
 from util import make_set
 
+
 class MultiOutputDataset(Dataset):
     def __init__(self, filename):
         super().__init__(filename)
@@ -20,7 +21,7 @@ class MultiOutputDataset(Dataset):
             pred = y_pred[i]
             if pred is None:
                 return None
-            correct_tuples = set([(x,y) for x,y in self.get_zipped()[i] if x != -1])
+            correct_tuples = set([tuple(l) for l in self.get_zipped()[i] if l[0] != -1])
             if set.issubset(make_set(pred), correct_tuples):
                 num_correct += 1
         return num_correct / len(y_pred)
@@ -74,9 +75,11 @@ class MultiOutputDataset(Dataset):
         stacked_y_train = self.get_zipped()
 
         # default
-        tuple_to_index = {(-1, -1): -1}
+        tuple_to_index = {tuple(-1 for i in range(stacked_y_train.shape[2])): -1}
 
-        self.tuple_ids = np.full((stacked_y_train.shape[0], stacked_y_train.shape[1]), -1)  # TODO: this doesnt work if we have more than 2 control inputs
+        # TODO: this doesnt work if we have more than 2 control inputs
+        # TODO: I think I have fixed it by changing the tuple_to_index initialization
+        self.tuple_ids = np.full((stacked_y_train.shape[0], stacked_y_train.shape[1]), -1)
 
         # first axis: datapoints
         # second axis: non-det
@@ -194,7 +197,7 @@ class MultiOutputDataset(Dataset):
             # for each row, if it contains input_encoding, then change the remaining into -1
             # make the same -1 changes for rest of the control inputs
             for i in range(y.shape[1]):
-                row = y[ctrl_idx, i]
+                row = y[ctrl_idx, i] #TODO: Fails when all actions are possible on all states; eventually ctrl_idx is set to None
                 if inp_enc in row:
                     for j in range(y.shape[2]):
                         if row[j] != inp_enc:

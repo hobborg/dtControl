@@ -26,8 +26,7 @@ class CustomDecisionTree(ABC, BaseEstimator):
                 # the mapped label can be either a list of labels or a single label
                 if isinstance(tree.mapped_label, Iterable):
                     if isinstance(tree.mapped_label[0], Iterable):
-                        tree.actual_label = [(index_to_value[i], index_to_value[j]) for (i, j) in
-                                             tree.mapped_label]  # TODO: this doesnt work if we have more than 2 control inputs
+                        tree.actual_label = [tuple(map(lambda x: index_to_value[x], tup)) for tup in tree.mapped_label]
                     else:
                         tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
                 else:
