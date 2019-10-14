@@ -18,6 +18,6 @@ class VectorDatasetLoader(DatasetLoader):
         l = []
         for row in labels:
             values = list(np.nonzero(row)[0] + 1)
-            filler = [0] * (m - len(values))
+            filler = [-1] * (m - len(values))
             l.append(values + filler)
         return np.array(l)
