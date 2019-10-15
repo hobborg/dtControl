@@ -47,13 +47,13 @@ class CustomDecisionTree(ABC, BaseEstimator):
 
     #Needs to know the number of inputs, because it has to define how many inputs the hardware component has in the "entity" block
     def export_vhdl(self, numInputs, file=None):
-        entitystr = "entity controller is\nport (\n"
+        entitystr = "entity controller is\n\tport (\n"
         allInputs = ""
         for i in range(0,numInputs):
-            entitystr += "\tx" + str(i) + ": in <type>;\n" #todo: get type from dataset :(
+            entitystr += "\t\tx" + str(i) + ": in <type>;\n" #todo: get type from dataset :(
             allInputs += "x" + str(i) + ","
-        entitystr += "\ty: out <type>\n);\nend entity;\n\n" #no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
-        architecture = "architecture v1 of controller is\nbegin\nprocess(" + allInputs[:-1] + ")\nbegin\n" + self.root.export_vhdl() + "\nend process;\nend architecture;"
+        entitystr += "\t\ty: out <type>\n\t);\nend entity;\n\n" #no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
+        architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + allInputs[:-1] + ")\n\tbegin\n" + self.root.export_vhdl() + "\n\tend process;\nend architecture;"
         if file:
             with open(file, 'w+') as outfile:
                 outfile.write(entitystr+architecture)
@@ -210,7 +210,7 @@ class Node(ABC):
         return self._export_if_then_else(0,'c')
 
     def export_vhdl(self):
-        return self._export_if_then_else(1, 'vhdl')
+        return self._export_if_then_else(2, 'vhdl')
         
     #This handles both the c and vhdl export of nodes, as they both have the if-then-else structure and differ only in details
     #Type can be 'c' or 'vhdl', currently
