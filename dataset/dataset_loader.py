@@ -40,7 +40,8 @@ class DatasetLoader(ABC):
         if not exists(folder):
             makedirs(folder)
         X_train, X_vars, Y_train, index_to_value = self.loaded_datasets[filename]
-        pd.to_pickle(pd.DataFrame(X_train, columns=X_vars), join(folder, 'X_train.pickle'))
+        columns = None if not X_vars else X_vars
+        pd.to_pickle(pd.DataFrame(X_train, columns=columns), join(folder, 'X_train.pickle'))
         np.save(join(folder, 'Y_train.npy'), Y_train)
         with open(join(folder, 'index_to_value.pickle'), 'wb+') as outfile:
             pickle.dump(index_to_value, outfile)
