@@ -180,11 +180,13 @@ class BenchmarkSuite:
         self.save_to_disk()
 
     def delete_classifier_results(self, classifier_name):
+        self.load_results()
         if classifier_name in self.results:
             del self.results[classifier_name]
         self.save_to_disk()
 
     def delete_cell(self, dataset_name, classifier_name):
+        self.load_results()
         if classifier_name in self.results:
             datasets = self.results[classifier_name]
             if dataset_name in datasets:
