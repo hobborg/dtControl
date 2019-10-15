@@ -53,20 +53,18 @@ class BenchmarkSuite:
         self.save_folder = save_folder
         self.table_controller = TableController(self.html_file, self.output_folder)
 
-    def add_datasets(self, paths, include=None, exclude=None, multiout=None):
+    def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
             exclude = []
-        if not multiout:
-            multiout = []
         if include is not None and len(set(include) & set(exclude)) > 0:
             print('A dataset cannot be both included and excluded.\nAborting.')
             return
         self.datasets = []
         for path in paths:
             for file in self.get_files(path):
-                name, _ = get_filename_and_ext(file)
+                name, ext = get_filename_and_ext(file)
                 if ((not include) or name in include) and name not in exclude:
-                    if name in multiout:
+                    if self.is_multiout(file, ext):
                         ds = MultiOutputDataset(file)
                     else:
                         ds = SingleOutputDataset(file)
@@ -196,3 +194,20 @@ class BenchmarkSuite:
     def save_to_disk(self):
         with open(self.json_file, 'w+') as outfile:
             json.dump(self.results, outfile, indent=2)
+
+    @staticmethod
+    def is_multiout(filename, ext):
+        if "scs" not in ext:
+            return False
+        # if scs, then
+        f = open(filename)
+        # Read input dim from scs file
+        for i in range(5):
+            f.readline()
+        state_dim = int(f.readline())
+        for i in range(12):
+            f.readline()
+        for i in range(3*state_dim):
+            f.readline()
+        input_dim = int(f.readline())
+        return True if input_dim > 1 else False

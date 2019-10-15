@@ -7,6 +7,7 @@ from dataset.scots_dataset_loader import ScotsDatasetLoader
 from dataset.uppaal_dataset_loader import UppaalDatasetLoader
 from util import get_filename_and_ext
 
+
 class Dataset(ABC):
     def __init__(self, filename):
         self.filename = filename
@@ -18,7 +19,6 @@ class Dataset(ABC):
         }
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
-
         self.X_train = None
         self.X_vars = None
         self.Y_train = None

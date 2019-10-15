@@ -6,8 +6,8 @@ suite = BenchmarkSuite(timeout=60*60*2, save_folder='saved_classifiers', benchma
 suite.add_datasets(['../dumps'],
                    include=["tworooms-safe-6"],
                    exclude=[
-                            ],
-                   multiout=['vehicle', 'aircraft', '10rooms'])
+                            ]
+                   )
 classifiers = [  # CartCustomDecisionTree(),
                #LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
                #LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
