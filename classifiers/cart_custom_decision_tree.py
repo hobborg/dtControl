@@ -1,6 +1,7 @@
 from sklearn.tree import DecisionTreeClassifier
 
 from classifiers.custom_decision_tree import CustomDecisionTree, Node
+from collections.abc import Iterable
 
 class CartCustomDecisionTree(CustomDecisionTree):
     def __init__(self):
@@ -44,9 +45,27 @@ class CartCustomNode(Node):
 
     def get_c_label(self):
         if self.actual_label is not None:
-            return f'return {self.actual_label};'
+            if isinstance(self.get_determinized_label(), Iterable):
+                return "return {" + ','.join([str(i) for i in self.get_determinized_label()]) + "}"
+            else:
+                return f'return {self.get_determinized_label()}'
         tree = self.dt.tree_
         return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
+        
+    def get_vhdl_label(self):
+        if self.actual_label is not None:
+            label = self.get_determinized_label()
+            if isinstance(label, Iterable):
+                i=0
+                result=""
+                for controlInput in label:
+                    result += f'y{str(i)} <= {str(controlInput)}; '
+                    i+=1
+                return result
+            else:
+                return f'y <= {str(label)};'
+        tree = self.dt.tree_
+        return f'x{tree.feature[0]} <= {round(tree.threshold[0], 4)}'
 
     def print_dot_red(self):
         return False

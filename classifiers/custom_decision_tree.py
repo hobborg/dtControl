@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import numpy as np
 from sklearn.base import BaseEstimator
+from collections.abc import Iterable
 
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
@@ -68,6 +69,21 @@ class CustomDecisionTree(ABC, BaseEstimator):
                 outfile.write(c)
         else:
             return c
+
+    #Needs to know the number of inputs, because it has to define how many inputs the hardware component has in the "entity" block
+    def export_vhdl(self, numInputs, file=None):
+        entitystr = "entity controller is\nport (\n"
+        allInputs = ""
+        for i in range(0,numInputs):
+            entitystr += "\tx" + str(i) + ": in <type>;\n" #todo: get type from dataset :(
+            allInputs += "x" + str(i) + ","
+        entitystr += "\ty: out <type>\n);\nend entity;\n\n" #no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
+        architecture = "architecture v1 of controller is\nbegin\nprocess(" + allInputs[:-1] + ")\nbegin\n" + self.root.export_vhdl() + "\nend process;\nend architecture;"
+        if file:
+            with open(file, 'w+') as outfile:
+                outfile.write(entitystr+architecture)
+        else:
+            return entitystr+architecture
 
     def save(self, filename):
         with open(filename, 'wb') as outfile:
@@ -183,6 +199,12 @@ class Node(ABC):
     def export_c(self):
         return self._export_c(0)
 
+    #This handles both the c and vhdl export of nodes, as they both have the if-then-else structure and differ only in details
+    #Type can be 'c' or 'vhdl', currently
+    def _export_if_then_else(self, indent_index, type):
+        return
+
+
     def _export_c(self, indent_index):
         # If leaf node
         if not self.left and not self.right:
@@ -203,6 +225,49 @@ class Node(ABC):
 
         return text
 
+    def export_vhdl(self):
+        return self._export_vhdl(1)
+       
+    def _export_vhdl(self, indent_index):
+        # If leaf node
+        if not self.left and not self.right:
+            return "\t" * indent_index + str(self.get_vhdl_label())
+
+        text = ""
+        text += "\t" * indent_index + f"if {self.get_vhdl_label()} then\n"
+        if self.left:
+            text += f"{self.left._export_vhdl(indent_index + 1)}\n"
+        else:
+            text += "\t" * (indent_index + 1) + ";\n"
+        #text += "\t" * indent_index + "end if;\n"
+
+        if self.right:
+            text += "\t" * indent_index + "else \n"
+            text += f"{self.right._export_vhdl(indent_index + 1)}\n"
+            text += "\t" * indent_index + "end if;"
+
+        return text
+
+    def get_determinized_label(self):
+        if isinstance(self.actual_label,list): #list of things, i.e. nondeterminsm present, need to determinise by finding max norm (could use other ideas as well)
+            maxNorm = self.actual_label[0]
+            for i in self.actual_label:
+                maxNorm = maxNorm if (self.norm(maxNorm) >= self.norm(i)) else i
+            return maxNorm
+        else: #just an int or a tuple, easy; note that we have to use list and not iterable in the above if, because tuples (multi control input) are also iterable
+            return self.actual_label 
+                    
+    # If tup is an int, return abs of that number; if it is a tuple, return sum of absolutes of contents
+    # Used by get_determinized_label
+    def norm(self, tup):
+        if isinstance(tup, Iterable): #if this is iterable, it is a tuple (multi control input setting, and we want sum of abs)
+            result = 0
+            for i in tup:
+                result += i*i
+            return result
+        else: # if it is not iterable, then it was a single number, return abs of that
+            return abs(tup)
+            
     @abstractmethod
     def get_dot_label(self):
         pass

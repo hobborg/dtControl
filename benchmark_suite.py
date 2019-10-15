@@ -142,6 +142,8 @@ class BenchmarkSuite:
                 classifier.export_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
                 classifier.export_c(c_filename)
+                vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
+                classifier.export_vhdl(len(dataset.X_vars),vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:

@@ -90,3 +90,6 @@ class OC1Wrapper:
 
     def export_c(self, file=None):
         pass
+        
+    def export_vhdl(self, file=None):
+        pass

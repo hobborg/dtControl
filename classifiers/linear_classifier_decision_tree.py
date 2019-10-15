@@ -5,6 +5,7 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.tree import DecisionTreeClassifier
 
 from classifiers.custom_decision_tree import CustomDecisionTree, Node
+from collections.abc import Iterable
 
 # SVM sometimes does not converge and clutters the output with warnings
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
@@ -117,7 +118,10 @@ class LinearClassifierOrAxisAlignedNode(Node):
 
     def get_c_label(self):
         if self.actual_label is not None:
-            return f'return {self.actual_label}'
+            if isinstance(self.get_determinized_label(), Iterable):
+                return "return {" + ','.join([str(i) for i in self.get_determinized_label()]) + "}"
+            else:
+                return f'return {self.get_determinized_label()}'
         if self.is_axis_aligned():
             tree = self.classifier.tree_
             return f'X[{tree.feature[0]}] <= {tree.threshold[0]}'
@@ -128,6 +132,31 @@ class LinearClassifierOrAxisAlignedNode(Node):
             line = []
             for i in range(0, len(coef_)):
                 line.append(f"{coef_[i]}*X[{i}]")
+            line.append(f"{intercept_}")
+            hyperplane = "+".join(line) + " >= 0"
+            return hyperplane
+            
+    def get_vhdl_label(self):
+        if self.actual_label is not None:
+            label = self.get_determinized_label()
+            if isinstance(label, Iterable):
+                i=0
+                result=""
+                for controlInput in label:
+                    result += f'y{str(i)} <= {str(controlInput)}; '
+                    i+=1
+                return result
+            return label
+        if self.is_axis_aligned():
+            tree = self.classifier.tree_
+            return f'x{tree.feature[0]} <= {tree.threshold[0]}'
+        else:
+            # this implicitly assumes n_classes == 2
+            coef_ = self.classifier.coef_[0]
+            intercept_ = self.classifier.intercept_[0]
+            line = []
+            for i in range(0, len(coef_)):
+                line.append(f"{coef_[i]}*x{i}")
             line.append(f"{intercept_}")
             hyperplane = "+".join(line) + " >= 0"
             return hyperplane
