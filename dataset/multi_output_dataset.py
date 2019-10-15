@@ -187,8 +187,8 @@ class MultiOutputDataset(Dataset):
             ctrl_idx = None
             inp_enc = None
             for (ctr, inp, _) in ranks:
-                if inp not in already_considered:
-                    already_considered.add(inp)
+                if (ctr, inp) not in already_considered:
+                    already_considered.add((ctr, inp))
                     ctrl_idx = ctr
                     inp_enc = inp
                     break
@@ -197,7 +197,7 @@ class MultiOutputDataset(Dataset):
             # for each row, if it contains input_encoding, then change the remaining into -1
             # make the same -1 changes for rest of the control inputs
             for i in range(y.shape[1]):
-                row = y[ctrl_idx, i] #TODO: Fails when all actions are possible on all states; eventually ctrl_idx is set to None
+                row = y[ctrl_idx, i]
                 if inp_enc in row:
                     for j in range(y.shape[2]):
                         if row[j] != inp_enc:
