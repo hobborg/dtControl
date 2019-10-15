@@ -202,56 +202,46 @@ class Node(ABC):
 
         return last_number, text
 
-    def export_c(self):
-        return self._export_c(0)
+    @abstractmethod
+    def is_axis_aligned(self):
+        pass
 
+    def export_c(self):
+        return self._export_if_then_else(0,'c')
+
+    def export_vhdl(self):
+        return self._export_if_then_else(1, 'vhdl')
+        
     #This handles both the c and vhdl export of nodes, as they both have the if-then-else structure and differ only in details
     #Type can be 'c' or 'vhdl', currently
     def _export_if_then_else(self, indent_index, type):
-        return
-
-
-    def _export_c(self, indent_index):
+        # get label depending on type
+        if type == 'c':
+            label = self.get_c_label()
+        elif type == 'vhdl':
+            label = self.get_vhdl_label()
+        else:
+            raise Exception(f'Unkown type {type} in _export_if_then_else') # do this type check once; from now on, else always means vhdl
         # If leaf node
         if not self.left and not self.right:
-            return "\t" * indent_index + self.get_c_label()
-
+            return "\t" * indent_index + str(label)
+            
+        #if inner node
         text = ""
-        text += "\t" * indent_index + f"if ({self.get_c_label()}) {{\n"
+        text += "\t" * indent_index + (f"if ({self.get_c_label()}) {{\n" if type == 'c' else f"if {self.get_vhdl_label()} then\n")
+        
         if self.left:
-            text += f"{self.left._export_c(indent_index + 1)}\n"
+            text += f"{self.left._export_if_then_else(indent_index + 1,type)}\n"
         else:
             text += "\t" * (indent_index + 1) + ";\n"
-        text += "\t" * indent_index + "}\n"
-
-        if self.right:
-            text += "\t" * indent_index + "else {\n"
-            text += f"{self.right._export_c(indent_index + 1)}\n"
+        if type == 'c':
             text += "\t" * indent_index + "}\n"
 
-        return text
-
-    def export_vhdl(self):
-        return self._export_vhdl(1)
-       
-    def _export_vhdl(self, indent_index):
-        # If leaf node
-        if not self.left and not self.right:
-            return "\t" * indent_index + str(self.get_vhdl_label())
-
-        text = ""
-        text += "\t" * indent_index + f"if {self.get_vhdl_label()} then\n"
-        if self.left:
-            text += f"{self.left._export_vhdl(indent_index + 1)}\n"
-        else:
-            text += "\t" * (indent_index + 1) + ";\n"
-        #text += "\t" * indent_index + "end if;\n"
-
         if self.right:
-            text += "\t" * indent_index + "else \n"
-            text += f"{self.right._export_vhdl(indent_index + 1)}\n"
-            text += "\t" * indent_index + "end if;"
-
+            text += "\t" * indent_index + ("else {\n" if type == 'c' else "else \n") 
+            text += f"{self.right._export_if_then_else(indent_index + 1,type)}\n" 
+            text += "\t" * indent_index + ("}" if type == 'c' else "end if;")
+                
         return text
 
     def get_determinized_label(self):
@@ -282,7 +272,47 @@ class Node(ABC):
     def print_dot_red(self):
         pass
 
-    @abstractmethod
     def get_c_label(self):
-        # if non-leaf, return test condition; else return class
-        pass
+        return self._get_label('c')
+        
+    def get_vhdl_label(self):
+        return self._get_label('vhdl')
+        
+    def _get_label(self,type):
+        # if leaf, return class; determinize if necessary, and handle multi output printing
+        if self.actual_label is not None: 
+            label = self.get_determinized_label() 
+            if isinstance(label, Iterable):
+                if type == 'c':
+                    return "return {" + ','.join([str(i) for i in self.get_determinized_label()]) + "}"
+                else:
+                    i=0
+                    result=""
+                    for controlInput in label:
+                        result += f'y{str(i)} <= {str(controlInput)}; '
+                        i+=1
+                    return result
+            else:
+                if type == 'c':
+                    return f'return {self.get_determinized_label()}'
+                else:
+                    return f'y <= {str(label)};'
+        # else, print predicate in correct format
+        
+        if self.is_axis_aligned():
+            try: #the guy keeping track of the tree is called differently depending on subclass. This ain't nice, but it works.
+                tree = self.dt.tree_
+            except:
+                tree = self.classifier.tree_
+            l = f'X[{tree.feature[0]}]' if type == 'c' else f'x{tree.feature[0]}'
+            return f'{l} <= {round(tree.threshold[0], 4)}'
+        else:
+            # this implicitly assumes n_classes == 2
+            coef_ = self.classifier.coef_[0]
+            intercept_ = self.classifier.intercept_[0]
+            line = []
+            for i in range(0, len(coef_)):
+                line.append(f"{coef_[i]}*X[{i}]" if type == 'c' else f"{coef_[i]}*x{i}")
+            line.append(f"{intercept_}")
+            hyperplane = "+".join(line) + " >= 0"
+            return hyperplane
