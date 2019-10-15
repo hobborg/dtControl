@@ -43,10 +43,11 @@ class BenchmarkSuite:
         classifier.export_c(file) saves a C-representation of the classifier to a file
     """
 
-    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None):
+    def __init__(self, save_file='benchmark', load_file=None, timeout=100, output_folder='decision_trees', save_folder=None):
         self.datasets = []
-        self.json_file = f'{benchmark_file}.json'
-        self.html_file = f'{benchmark_file}.html'
+        self.json_file = f'{save_file}.json'
+        self.html_file = f'{save_file}.html'
+        self.load_file = load_file
         self.results = {}
         self.timeout = timeout
         self.output_folder = output_folder
@@ -72,7 +73,10 @@ class BenchmarkSuite:
         self.datasets.sort(key=lambda ds: ds.name)
 
     def get_files(self, path):
-        return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump')) + glob.glob(join(path, '*.vector'))
+        if isfile(path):
+            return [path]
+        else:
+            return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump')) + glob.glob(join(path, '*.vector'))
 
     def display_html(self):
         display(HTML(f'<html><a href="{self.html_file}" target="_blank">View table</a></html>'))
@@ -167,8 +171,8 @@ class BenchmarkSuite:
         self.save_to_disk()
 
     def load_results(self):
-        if not exists(self.json_file) or not isfile(self.json_file): return
-        with open(self.json_file, 'r') as infile:
+        if not self.load_file or not exists(self.load_file) or not isfile(self.load_file): return
+        with open(self.load_file, 'r') as infile:
             self.results = json.load(infile)
 
     def delete_dataset_results(self, dataset_name):

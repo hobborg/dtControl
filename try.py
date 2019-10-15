@@ -1,10 +1,10 @@
 from benchmark_suite import BenchmarkSuite
 from classifiers.max_every_node_decision_tree import MaxCartDecisionTree
 
-suite = BenchmarkSuite(timeout=60*60*2, save_folder='saved_classifiers', benchmark_file='benchmark_tmp')
+suite = BenchmarkSuite(timeout=60*60*2, save_folder='saved_classifiers', save_file='benchmark_tmp')
 suite.delete_classifier_results('MaxEveryNodeDT')
-suite.add_datasets(['../XYdatasets', '../dumps'],
-                   include=["traffic_1m"],
+suite.add_datasets(['../XYdatasets', '../dumps/cruise-latest.dump'],
+                   include=["cruise-latest"],
                    exclude=[
                             ]
                    )
