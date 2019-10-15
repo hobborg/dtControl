@@ -95,17 +95,6 @@ class ScotsDatasetLoader(DatasetLoader):
         for i in range(1, input_dim):
             u_NN = u_NN + [u_NN[i - 1] * n_input_grid[i - 1]]
 
-        # creating input variables
-        t = 0
-        for t in range(state_dim):
-            t += 1
-            globals()["x" + str(t)] = []
-
-        t1 = 0
-        for t1 in range(input_dim):
-            t1 += 1
-            globals()["y" + str(t1)] = []
-
         # Get the number of lines describing the controller
         controller_lines = sum(1 for line in f) - 1
 
@@ -137,14 +126,7 @@ class ScotsDatasetLoader(DatasetLoader):
             x_train[i] = x
             # creating input variables
             u_idx = np.empty(input_dim, dtype=np.int32)
-            t2 = 0
-            for t2 in range(input_dim):
-                t2 += 1
-                globals()["yy" + str(t2)] = [[]]
-            tt = 0
-            for tt in range(input_dim):
-                tt += 1
-                globals()["u" + str(tt)] = [[]]
+
             for j in range(1, idxu.shape[0]):
                 idu = idxu[j]
                 kk = input_dim - 1
