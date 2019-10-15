@@ -14,40 +14,15 @@ class CustomDecisionTree(ABC, BaseEstimator):
     def is_applicable(self, dataset):
         pass
 
+    def set_labels(self, leaf_fun, index_to_value):
+        self.root.set_labels(leaf_fun, index_to_value)
+
     @abstractmethod
     def fit(self, dataset):
         pass
 
-    def set_labels(self, leaf_fun, index_to_value):
-        def _visit_leaves(tree):
-            if tree is None:
-                return
-            if tree.trained_label is not None:
-                tree.mapped_label = leaf_fun(tree)
-                # the mapped label can be either a list of labels or a single label
-                if isinstance(tree.mapped_label, Iterable):
-                    if isinstance(tree.mapped_label[0], Iterable):
-                        tree.actual_label = [tuple(map(lambda x: index_to_value[x], tup)) for tup in tree.mapped_label]
-                    else:
-                        tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
-                else:
-                    tree.actual_label = index_to_value[tree.mapped_label]
-            _visit_leaves(tree.left)
-            _visit_leaves(tree.right)
-
-        _visit_leaves(self.root)
-
     def predict(self, dataset):
-        pred = []
-        for row in np.array(dataset.X_train):
-            pred.append(self.classify_instance(row.reshape(1, -1)))
-        return pred
-
-    def classify_instance(self, features):
-        node = self.root
-        while node.left:
-            node = node.left if node.test_condition(features) else node.right
-        return node.mapped_label
+        return self.root.predict(dataset.X_train)
 
     def get_stats(self):
         return {
@@ -102,6 +77,37 @@ class Node(ABC):
         self.actual_label = None  # the actual float label
         self.depth = depth
         self.num_nodes = 0
+
+    def set_labels(self, leaf_fun, index_to_value):
+        def _visit_leaves(tree):
+            if tree is None:
+                return
+            if tree.trained_label is not None:
+                tree.mapped_label = leaf_fun(tree)
+                # the mapped label can be either a list of labels or a single label
+                if isinstance(tree.mapped_label, Iterable):
+                    if isinstance(tree.mapped_label[0], Iterable):
+                        tree.actual_label = [tuple(map(lambda x: index_to_value[x], tup)) for tup in tree.mapped_label]
+                    else:
+                        tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
+                else:
+                    tree.actual_label = index_to_value[tree.mapped_label]
+            _visit_leaves(tree.left)
+            _visit_leaves(tree.right)
+
+        _visit_leaves(self)
+
+    def predict(self, X):
+        pred = []
+        for row in np.array(X):
+            pred.append(self.predict_one(row.reshape(1, -1)))
+        return pred
+
+    def predict_one(self, features):
+        node = self
+        while node.left:
+            node = node.left if node.test_condition(features) else node.right
+        return node.mapped_label
 
     @abstractmethod
     def test_condition(self, x):

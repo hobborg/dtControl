@@ -7,40 +7,38 @@ from dataset.dataset_loader import DatasetLoader
 
 
 class UppaalDatasetLoader(DatasetLoader):
-    '''
-    Assumption is that all controllable states are named *.Choose
-    '''
     def _load_dataset(self, filename):
+
+        # Assumption is that all controllable states are named *.Choose
+
         f = open(filename)
         print("Reading from %s" % filename)
 
-        lines = f.readlines()
-
-        # Extract categorical_features
-        categorical_features = re.findall('(\w+)\.\w+', lines[1])
-
-        # Extract numeric features
-        numeric_features = re.findall('(\w+)=\-?[0-9]+', lines[7])
-
-        # Extract actions and controllable components
         action_set = set()
-        controllable_states = set()
-        for line in lines:
+        controllable_state_set = set()
+
+        for i, line in enumerate(f):
+            if i == 7:
+                # Extract numeric features
+                numeric_features = re.findall(r'(\w+)=-?[0-9]+', line)
+
+            # Extract actions and controllable components
             if line.startswith('State: '):
                 ctrl = re.findall(r'(\w+\.Choose)', line)
                 if ctrl:
-                    controllable_states.update(ctrl)
+                    controllable_state_set.update(ctrl)
             if line.startswith('When'):
-                action_set.add(line[line.index(' take transition ')+17:].rstrip())
-        actions = dict(zip(list(action_set), range(1, len(action_set)+1)))
-        controllable_states = list(controllable_states)
+                action_set.add(line[line.index(' take transition ') + 17:].rstrip())
+
+        actions = dict(zip(list(action_set), range(1, len(action_set) + 1)))
+        controllable_states = list(controllable_state_set)
 
         # Figure out the assignments in each action and extract
         # the assigned value. The assigned variable is extracted
         # too, but not used anywhere as of now.
         index_to_value = dict()
         for (action, index) in actions.items():
-            _, var, val = re.findall(r"((\w+) \:\= (-?[0-9]+))", action)[0]
+            _, var, val = re.findall(r"((\w+) := (-?[0-9]+))", action)[0]
             index_to_value[index] = val
 
         row_num_vals = []
@@ -50,7 +48,13 @@ class UppaalDatasetLoader(DatasetLoader):
         current_actions = []
         total_rows = 0
         total_state_actions = 0
-        for line in lines[7:]:
+
+        f.seek(0)
+
+        for i in range(7):
+            f.readline()
+
+        for i, line in enumerate(f):
             if line.startswith("State:"):
                 # find if the state is controllable, and if so, then make that position 1 in categorical vals
                 controllable = False
@@ -64,11 +68,11 @@ class UppaalDatasetLoader(DatasetLoader):
                     continue
                 else:
                     ignore_current = False
-                    numeric_vals = re.findall('\w+=([^\ ]+)', line)
+                    numeric_vals = re.findall(r'\w+=([^\ ]+)', line)
             elif ignore_current:
                 continue
             elif line.startswith("When"):
-                action_str = line[line.index(' take transition ')+17:].rstrip()
+                action_str = line[line.index(' take transition ') + 17:].rstrip()
                 current_actions.append(actions[action_str])
             elif line.startswith("While"):
                 # We implicityly assume that transitions starting with 'While' are mapped to wait.
@@ -83,7 +87,6 @@ class UppaalDatasetLoader(DatasetLoader):
                 current_actions = []
             else:
                 raise Exception("ERROR: Unhandled line in input")
-                break
 
         print(f"Done reading {total_rows} states with \na total of {total_state_actions} state-action pairs.")
 
@@ -103,13 +106,14 @@ class UppaalDatasetLoader(DatasetLoader):
                 conservative_actions = set(actions.values()).copy()
                 for idx in indices:
                     conservative_actions &= set(row_actions[idx])
-                assert len(conservative_actions) > 0, "Stategy for picking safe action doesn't work. Deeper analysis needed."
+                assert len(
+                    conservative_actions) > 0, "Stategy for picking safe action doesn't work. Deeper analysis needed."
                 Y[i][0:len(conservative_actions)] = list(sorted(conservative_actions))
             else:
                 X[i] = group
                 Y[i][0:len(row_actions[indices[0]])] = sorted(row_actions[indices[0]])
-            i = i+1
-            
+            i = i + 1
+
         print("\nConstructed training set with %s datapoints" % X.shape[0])
 
         return (X, projection_variables, Y, index_to_value)
