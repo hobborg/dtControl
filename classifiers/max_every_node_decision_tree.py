@@ -13,10 +13,10 @@ class MaxCartDecisionTree(CartCustomDecisionTree):
     def fit(self, dataset):
         self.root = MaxCartNode()
         if isinstance(dataset, SingleOutputDataset):
-            self.root.fit(dataset.X_train, dataset.Y_train)  # single output case
+            self.root.fit(dataset.X_train, dataset.Y_train)
             self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
         else:
-            self.root.fit(dataset.X_train, dataset.get_tuple_ids())  # single output case
+            self.root.fit(dataset.X_train, dataset.get_tuple_ids())
             self.set_labels(lambda leaf: dataset.map_tuple_id_back(leaf.trained_label), dataset.index_to_value)
 
     def __str__(self):
