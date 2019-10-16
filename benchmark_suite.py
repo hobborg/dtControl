@@ -3,6 +3,8 @@ import json
 import os
 import time
 import webbrowser
+import sys
+import logging
 from os import makedirs
 from os.path import join, exists, isfile
 
@@ -54,6 +56,7 @@ class BenchmarkSuite:
         self.output_folder = output_folder
         self.save_folder = save_folder
         self.table_controller = TableController(self.html_file, self.output_folder)
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
@@ -94,16 +97,18 @@ class BenchmarkSuite:
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
+                print(f"{step}/{num_steps}: Attempting to run {classifier.name} on {ds.name}.")
                 cell, computed = self.compute_cell(ds, classifier)
                 row.append(cell)
                 if computed:
                     self.save_result(classifier.name, ds.name, cell)
                     step += 1
-                    msg = '{}/{}: Evaluated {} on {} in {}'.format(step, num_steps, classifier.name, ds.name,
-                                                                   cell['time'])
+
                     if cell == 'timeout':
-                        msg += ' (Timeout)'
-                    print('{}.'.format(msg))
+                        msg = f"{step}/{num_steps}: Timed out when evaluating {classifier.name} on {ds.name}."
+                    else:
+                        msg = f"{step}/{num_steps}: Evaluated {classifier.name} on {ds.name} in {cell['time']}."
+                    print(msg)
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)

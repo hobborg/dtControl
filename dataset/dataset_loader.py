@@ -27,7 +27,7 @@ class DatasetLoader(ABC):
     def load_converted_dataset(self, filename):
         folder = self.get_converted_folder(filename)
         assert exists(folder)
-        print("Loading existing pickled dataset...")
+        print("Loading existing pickled dataset...", end=' ')
         df = pd.read_pickle(join(folder, 'X_train.pickle'))
         X_train = np.array(df)
         X_vars = list(df.columns)
@@ -36,7 +36,7 @@ class DatasetLoader(ABC):
             extra_data = pickle.load(infile)
             index_to_value = extra_data["index_to_value"]
             num_decimals = extra_data["num_decimals"]
-        print("Done loading.")
+        print("done loading.")
         return X_train, X_vars, Y_train, index_to_value, num_decimals
 
     def save_converted_dataset(self, filename):

@@ -1,9 +1,11 @@
 import re
+import logging
 
 import numpy as np
 import pandas as pd
 
 from dataset.dataset_loader import DatasetLoader
+from tqdm import tqdm
 
 
 class UppaalDatasetLoader(DatasetLoader):
@@ -18,14 +20,19 @@ class UppaalDatasetLoader(DatasetLoader):
         action_set = set()
         controllable_state_set = set()
 
-        for i, line in enumerate(f):
-            if i == 7:
+        num_lines = sum(1 for line in f)
+
+        f.seek(0)
+
+        logging.info("Extracting actions and controllable components from UPPPAL dump")
+        for i, line in enumerate(tqdm(f, total=num_lines)):
+            if i == 1:
                 # Extract numeric features
                 numeric_features = re.findall(r'(\w+)=-?[0-9]+', line)
 
             # Extract actions and controllable components
             if line.startswith('State: '):
-                ctrl = re.findall(r'(\w+\.Choose)', line)
+                ctrl = [word for word in line.split() if "Choose" in word]
                 if ctrl:
                     controllable_state_set.update(ctrl)
             if line.startswith('When'):
@@ -40,7 +47,7 @@ class UppaalDatasetLoader(DatasetLoader):
         index_to_value = dict()
         for (action, index) in actions.items():
             _, var, val = re.findall(r"((\w+) := (-?[0-9]+))", action)[0]
-            index_to_value[index] = val
+            index_to_value[index] = int(val)
 
         row_num_vals = []
         row_actions = []
@@ -55,7 +62,8 @@ class UppaalDatasetLoader(DatasetLoader):
         for i in range(7):
             f.readline()
 
-        for i, line in enumerate(f):
+        logging.info("Extracting state-action pairs from UPPAAL dump")
+        for i, line in enumerate(tqdm(f, total=num_lines)):
             if line.startswith("State:"):
                 # find if the state is controllable, and if so, then make that position 1 in categorical vals
                 controllable = False
@@ -69,7 +77,7 @@ class UppaalDatasetLoader(DatasetLoader):
                     continue
                 else:
                     ignore_current = False
-                    numeric_vals = re.findall(r'\w+=([^\ ]+)', line)
+                    numeric_vals = [word.split("=")[1] for word in line.split() if "=" in word]
             elif ignore_current:
                 continue
             elif line.startswith("When"):
@@ -89,7 +97,7 @@ class UppaalDatasetLoader(DatasetLoader):
             else:
                 raise Exception("ERROR: Unhandled line in input")
 
-        print(f"Done reading {total_rows} states with \na total of {total_state_actions} state-action pairs.")
+        logging.info(f"Done reading {total_rows} states with \na total of {total_state_actions} state-action pairs.")
 
         # Project onto measurable variables, the strategy should not depend on the gua variables coming from euler
         projection_variables = controllable_states + list(filter(lambda x: 'gua' not in x, numeric_features))
@@ -115,6 +123,6 @@ class UppaalDatasetLoader(DatasetLoader):
                 Y[i][0:len(row_actions[indices[0]])] = sorted(row_actions[indices[0]])
             i = i + 1
 
-        print("\nConstructed training set with %s datapoints" % X.shape[0])
+        print("Constructed training set with %s datapoints" % X.shape[0])
 
         return (X, projection_variables, Y, index_to_value, max_decimals)

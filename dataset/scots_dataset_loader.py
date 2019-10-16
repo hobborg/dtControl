@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from tqdm import tqdm
 from dataset.dataset_loader import DatasetLoader
@@ -112,11 +114,13 @@ class ScotsDatasetLoader(DatasetLoader):
         for i in range(controller_start):
             f.readline()
 
+        logging.info("Extracting states and control inputs from SCOTS dump")
         for i, line in enumerate(tqdm(f, total=controller_lines)):
             if i == controller_lines:
                 break
             idxu = np.fromstring(line, dtype=np.int32, sep=' ')
             idx = idxu[0]
+
             k = state_dim - 1
             x = np.zeros(state_dim)
             while k > 0:
@@ -128,9 +132,9 @@ class ScotsDatasetLoader(DatasetLoader):
             x[0] = state_lb[0] + num * state_eta[0]
 
             x_train[i] = x
-            # creating input variables
-            u_idx = np.empty(input_dim, dtype=np.int32)
 
+            # creating input variables
+            u_idx = np.empty(input_dim, dtype=np.int16)
             for j in range(1, idxu.shape[0]):
                 idu = idxu[j]
                 kk = input_dim - 1
@@ -155,5 +159,7 @@ class ScotsDatasetLoader(DatasetLoader):
         # if only single control input, do not wrap it in another array
         if y_train.shape[0] == 1:
             y_train = y_train[0]
+
+        print("Constructed training set with %s datapoints" % x_train.shape[0])
 
         return (x_train, [], y_train, unique_label_to_float, max_decimals)
