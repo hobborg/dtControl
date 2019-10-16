@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 README
 
@@ -166,7 +168,7 @@ def get_classifiers(methods, det_strategies):
             continue
 
         if 'all' in det_strategies:
-                classifiers.extend(method_map[method].values())
+                classifiers.extend([classifier for cls_group in method_map[method].values() for classifier in cls_group])
         else:
             for det_strategy in det_strategies:
                 if det_strategy not in method_map[method]:
@@ -176,7 +178,7 @@ def get_classifiers(methods, det_strategies):
                 classifiers.extend(method_map[method][det_strategy])
 
     # returns a flattened list
-    return [cls for classifier in classifiers for cls in classifier]
+    return classifiers
 
 
 if __name__ == "__main__":
