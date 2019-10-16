@@ -13,6 +13,7 @@ from timeout import call_with_timeout
 from ui.table_controller import TableController
 from util import format_seconds, get_filename_and_ext
 
+
 class BenchmarkResults:
     """
     The benchmark results store the benchmark data in a table format (dataset x classifier -> results).
@@ -26,6 +27,7 @@ class BenchmarkResults:
         self.row_names = row_names
         self.column_names = column_names
         self.table = table
+
 
 class BenchmarkSuite:
     """
@@ -43,11 +45,10 @@ class BenchmarkSuite:
         classifier.export_c(file) saves a C-representation of the classifier to a file
     """
 
-    def __init__(self, save_file='benchmark', load_file=None, timeout=100, output_folder='decision_trees', save_folder=None):
+    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None):
         self.datasets = []
-        self.json_file = f'{save_file}.json'
-        self.html_file = f'{save_file}.html'
-        self.load_file = load_file
+        self.json_file = f'{benchmark_file}.json'
+        self.html_file = f'{benchmark_file}.html'
         self.results = {}
         self.timeout = timeout
         self.output_folder = output_folder
@@ -155,6 +156,7 @@ class BenchmarkSuite:
             cell = 'timeout'
         return cell
 
+    @staticmethod
     def get_filename(self, folder, dataset, classifier, extension, unique=False):
         dir = join(folder, classifier.name, dataset.name)
         if not exists(dir):
@@ -172,8 +174,8 @@ class BenchmarkSuite:
         self.save_to_disk()
 
     def load_results(self):
-        if not self.load_file or not exists(self.load_file) or not isfile(self.load_file): return
-        with open(self.load_file, 'r') as infile:
+        if not self.json_file or not exists(self.json_file) or not isfile(self.json_file): return
+        with open(self.json_file, 'r') as infile:
             self.results = json.load(infile)
 
     def delete_dataset_results(self, dataset_name):
