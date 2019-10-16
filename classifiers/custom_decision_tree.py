@@ -2,9 +2,9 @@ import pickle
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+
 import numpy as np
 from sklearn.base import BaseEstimator
-from collections.abc import Iterable
 
 class CustomDecisionTree(ABC, BaseEstimator):
     def __init__(self):
