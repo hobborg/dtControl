@@ -47,21 +47,24 @@ Usage: dtcontrol [-h] [-v] [--input INPUT [INPUT ...]] [--output OUTPUT]
 
 
 Example:
-dtcontrol --input controller.scs --output controller.c --method maxcart
+dtcontrol --input controller.scs --output decision_trees --method maxcart
 
-will read controller.scs and use maxcart on it to obtain controller.c
+will read controller.scs and use maxcart on it and print the c, dot, vhdl files
+into the decision_trees folder
 
 
-dtcontrol --input controller1.scs controller2.scs --output out
+dtcontrol --input controller1.scs controller2.scs --output decision_trees --benchmark_file benchmarks.json
 
 will read controller1.scs and controller2.scs, try out all methods and save the
-results in out; moreover print a table summarizing all the results
+results in decision_trees; moreover save the run and tree statistics in
+benchmark.json and a nice HTML table in benchmark.html
 
 
-dtcontrol --input dumps --output out --method cart --save_results res
+dtcontrol --input dumps --output decision_trees --method all -determinize maxfreq minnorm
 
-will read all valid controllers in dumps, run cart on them and print both dot
-and c files in out; and store stats in res
+will read all valid controllers in dumps, run the determinized variants (using the maxfreq
+ and minnorm determinization strategies) of all methods on them and save the decision
+trees in decision_trees
 
 """
 
