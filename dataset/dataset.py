@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from dataset.vector_dataset_loader import VectorDatasetLoader
 from dataset.scots_dataset_loader import ScotsDatasetLoader
 from dataset.uppaal_dataset_loader import UppaalDatasetLoader
+from dataset.vector_dataset_loader import VectorDatasetLoader
 from util import get_filename_and_ext
 
 
@@ -23,15 +23,12 @@ class Dataset(ABC):
         self.X_vars = None
         self.Y_train = None
         self.index_to_value = {}
+        self.num_decimals = 0
 
     def load_if_necessary(self):
         if self.X_train is None:
-            X_train, X_vars, Y_train, index_to_value = self.extension_to_loader[self.extension] \
-                .load_dataset(self.filename)
-            self.X_train = X_train
-            self.X_vars = X_vars
-            self.Y_train = Y_train
-            self.index_to_value = index_to_value
+            self.X_train, self.X_vars, self.Y_train, self.index_to_value, self.num_decimals = self.extension_to_loader[
+                self.extension].load_dataset(self.filename)
 
     def check_loaded(self):
         if self.X_train is None:
@@ -53,6 +50,7 @@ class Dataset(ABC):
     Computes unique labels of a 2d label array by mapping every unique inner array to an int. Returns the unique labels
     and the int mapping.
     """
+
     @staticmethod
     def _get_unique_labels(labels):
         l = []

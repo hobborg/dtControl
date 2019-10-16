@@ -32,21 +32,23 @@ class DatasetLoader(ABC):
         X_train = np.array(df)
         X_vars = list(df.columns)
         Y_train = np.load(join(folder, 'Y_train.npy'))
-        with open(join(folder, 'index_to_value.pickle'), 'rb') as infile:
-            index_to_value = pickle.load(infile)
+        with open(join(folder, 'extra_data.pickle'), 'rb') as infile:
+            extra_data = pickle.load(infile)
+            index_to_value = extra_data["index_to_value"]
+            num_decimals = extra_data["num_decimals"]
         print("Done loading.")
-        return X_train, X_vars, Y_train, index_to_value
+        return X_train, X_vars, Y_train, index_to_value, num_decimals
 
     def save_converted_dataset(self, filename):
         folder = self.get_converted_folder(filename)
         if not exists(folder):
             makedirs(folder)
-        X_train, X_vars, Y_train, index_to_value = self.loaded_datasets[filename]
+        X_train, X_vars, Y_train, index_to_value, num_decimals = self.loaded_datasets[filename]
         columns = None if not X_vars else X_vars
         pd.to_pickle(pd.DataFrame(X_train, columns=columns), join(folder, 'X_train.pickle'))
         np.save(join(folder, 'Y_train.npy'), Y_train)
-        with open(join(folder, 'index_to_value.pickle'), 'wb+') as outfile:
-            pickle.dump(index_to_value, outfile)
+        with open(join(folder, 'extra_data.pickle'), 'wb+') as outfile:
+            pickle.dump({"index_to_value": index_to_value, "num_decimals": num_decimals}, outfile)
 
     def get_converted_folder(self, filename):
         directory, name = split(filename)

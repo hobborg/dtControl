@@ -8,8 +8,9 @@ from dataset.dataset_loader import DatasetLoader
 
 class UppaalDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
-
         # Assumption is that all controllable states are named *.Choose
+        # Another assumption is that uppaal only works on integer domains
+        max_decimals = 0
 
         f = open(filename)
         print("Reading from %s" % filename)
@@ -116,4 +117,4 @@ class UppaalDatasetLoader(DatasetLoader):
 
         print("\nConstructed training set with %s datapoints" % X.shape[0])
 
-        return (X, projection_variables, Y, index_to_value)
+        return (X, projection_variables, Y, index_to_value, max_decimals)
