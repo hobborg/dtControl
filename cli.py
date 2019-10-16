@@ -34,7 +34,8 @@ Usage: dtcontrol [-h] [-v] [--input INPUT [INPUT ...]] [--output OUTPUT]
                         of control inputs is treated uniquely.
                 --benchmark-file,-b <filename>
                         Saves statistics pertaining the construction of the decision trees and their
-                        sizes into <filename>.json, and additionally allow to view it via <filename>.html
+                        sizes into <filename>, and additionally allow to view it via an html file with
+                        the same name.
                 --rerun, -r
                         Rerun the experiment for all input-method combinations. Overrides the default
                         behaviour of not running benchmarks for combinations which are already present
@@ -67,6 +68,8 @@ and c files in out; and store stats in res
 import argparse
 import re
 import sys
+import logging
+
 from os import makedirs
 from os.path import exists, isfile, splitext
 
@@ -79,6 +82,8 @@ from classifiers.linear_classifier_decision_tree import LinearClassifierDecision
 from classifiers.max_every_node_decision_tree import MaxCartDecisionTree
 from classifiers.max_every_node_lc_decision_tree import MaxLCDecisionTree
 from classifiers.max_every_node_multi_decision_tree import MaxEveryNodeMultiDecisionTree
+from classifiers.norm_single_output_decision_tree import NormSingleOutputDecisionTree
+from classifiers.norm_multi_output_decision_tree import NormMultiOutputDecisionTree
 from classifiers.oc1_wrapper import OC1Wrapper
 
 
@@ -127,121 +132,120 @@ def get_classifiers(methods, det_strategies):
     """
     method_map = {
         'cart': {
-            'nondet': CartCustomDecisionTree(),
-            'maxnorm': MaxCartDecisionTree(),
-            'minnorm': MaxCartDecisionTree(),
-            'maxfreq': MaxCartDecisionTree(),
-            'multimaxfreq': MaxEveryNodeMultiDecisionTree(),
+            'nondet': [CartCustomDecisionTree()],
+            'maxnorm': [NormSingleOutputDecisionTree(max), NormMultiOutputDecisionTree(max)],
+            'minnorm': [NormSingleOutputDecisionTree(min), NormMultiOutputDecisionTree(min)],
+            'maxfreq': [MaxCartDecisionTree()],
+            'multimaxfreq': [MaxEveryNodeMultiDecisionTree()],
         },
         'linsvm': {
-            'nondet': LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
-            'maxnorm': MaxLCDecisionTree(LinearSVC, max_iter=5000),
-            'minnorm': MaxLCDecisionTree(LinearSVC, max_iter=5000),
-            'maxfreq': MaxLCDecisionTree(LinearSVC, max_iter=5000),
+            'nondet': [LinearClassifierDecisionTree(LinearSVC, max_iter=5000)],
+            'maxfreq': [MaxLCDecisionTree(LinearSVC, max_iter=5000)],
         },
         'logreg': {
-            'nondet': LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
-            'maxnorm': MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
-            'minnorm': MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
-            'maxfreq': MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
+            'nondet': [LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')],
+            'maxfreq': [MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')],
         },
         'oc1': {
-            None: OC1Wrapper(num_restarts=20, num_jumps=5)
+            'nondet': [OC1Wrapper(num_restarts=20, num_jumps=5)]
         }
     }
 
-    if not methods:
-        return [method[strat] for method in method_map for strat in det_strategies]
+    # construct all possible method - determinization strategy combinations
+    classifiers = []
 
     if 'all' in methods:
-        return [cls for strats in method_map.values() for cls in strats.values()]
+        methods = method_map.keys()
 
     for method in methods:
-        if not method in method_map.keys():
-            parser.print_help()
-            sys.exit("Invalid method provided")
+        if method not in method_map:
+            logging.warning(f"No method '{method}' exists. Skipping...")
+            continue
 
-    if not det_strategies:
-        return [method_map[method]['nondet'] for method in methods]
+        if 'all' in det_strategies:
+                classifiers.extend(method_map[method].values())
+        else:
+            for det_strategy in det_strategies:
+                if det_strategy not in method_map[method]:
+                    logging.warning(f"Method '{method}' and determinization strategy '{det_strategy}' "
+                                    f"don't work together (yet). Skipping...")
+                    continue
+                classifiers.extend(method_map[method][det_strategy])
+
+    # returns a flattened list
+    return [cls for classifier in classifiers for cls in classifier]
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="dtcontrol")
+
+    parser.add_argument("-v", "--version", action='version', version='%(prog)s 1.0')
+
+    parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
+                        help="The input switch takes in one or more space separated file names or "
+                             "a folder name which contains valid controllers (.scs, .vector or .dump)")
+
+    parser.add_argument("--output", "-o", type=str,
+                        help="The output switch takes in a path to a folder where the constructed controller "
+                             "representation would be saved (c, dot and vhdl)")
+
+    parser.add_argument("--method", "-m", default=['all'], nargs="+",
+                        help="The method switch takes in one or more space separated method names as "
+                             "arguments. Available methods are: 'cart', 'linsvm', 'logreg', 'oc1'. Running "
+                             "with --method 'all' will run all possible methods. For description about each method, "
+                             "refer manual. If this switch is omitted, defaults to 'all'")
+
+    parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['nondet'],
+                        help="In case of non-deterministic controllers, specify, if necessary the determinization "
+                             "strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'")
+
+    parser.add_argument("--timeout", "-t", type=str,
+                        help="Sets a timeout for each method. Can be specified in seconds, minutes "
+                             "or hours (eg. 300s, 7m or 3h)")
+
+    parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
+                        help="Saves statistics pertaining the construction of the decision trees and their "
+                             "sizes into a JSON file, and additionally allow to view it via an HTML file.")
+
+    parser.add_argument("--rerun", "-r", action='store_true',
+                        help="Rerun the experiment for all input-method combinations. Overrides the default "
+                             "behaviour of not running benchmarks for combinations which are already present"
+                             "in the benchmark file.")
+
+    args = parser.parse_args()
+
+    kwargs = dict()
+
+    dataset = []
+    if args.input:
+        dataset = args.input
     else:
-        classifiers = []
-        for method in methods:
-            if 'all' in det_strategies:
-                classifiers.append(method_map[method].values())
-            else:
-                for strat in det_strategies:
-                    try:
-                        classifiers.append(method_map[method][strat])
-                    except KeyError:
-                        parser.print_help()
-                        sys.exit("Invalid determinization strategy provided")
-        return classifiers
+        parser.print_help()
+        sys.exit("Input files/folders missing")
 
-parser = argparse.ArgumentParser(prog="dtcontrol")
+    kwargs["timeout"] = 2 * 60 * 60
+    if args.timeout:
+        kwargs["timeout"] = parse_timeout(args.timeout)
 
-parser.add_argument("-v", "--version", action='version', version='%(prog)s 1.0')
+    if args.benchmark_file:
+        filename, file_extension = splitext(args.benchmark_file)
+        kwargs["benchmark_file"] = filename
 
-parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
-                    help="The input switch takes in one or more space separated file names or "
-                         "a folder name which contains valid controllers (.scs, .vector or .dump)")
+    if args.output:
+        try:
+            makedirs(args.output, exist_ok=True)
+            kwargs["output_folder"] = args.output
+        except PermissionError:
+            sys.exit("Ensure permission exists to create output directory")
 
-parser.add_argument("--output", "-o", type=str,
-                    help="The output switch takes in a path to a folder where the constructed controller "
-                         "representation would be saved (c, dot and vhdl)")
+    kwargs["rerun"] = args.rerun
 
-parser.add_argument("--method", "-m", default=['all'], nargs="+",
-                    help="The method switch takes in one or more space separated method names as "
-                         "arguments. Available methods are: 'cart', 'linsvm', 'logreg', 'oc1'. Running "
-                         "with --method 'all' will run all possible methods. For description about each method, "
-                         "refer manual. If this switch is omitted, defaults to 'all'")
+    classifiers = get_classifiers(args.method, args.determinize)
 
-parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default='nondet',
-                    help="In case of non-deterministic controllers, specify, if necessary the determinization "
-                         "strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'")
+    if not classifiers:
+        sys.exit("Cound not find any valid method - determinization strategy combinations. "
+                 "Please read the manual for valid combinations and try again.")
 
-parser.add_argument("--timeout", "-t", type=str,
-                    help="Sets a timeout for each method. Can be specified in seconds, minutes "
-                         "or hours (eg. 300s, 7m or 3h)")
-
-parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
-                    help="Saves statistics pertaining the construction of the decision trees and their "
-                         "sizes into a JSON file, and additionally allow to view it via an HTML file.")
-
-parser.add_argument("--rerun", "-r", action='store_true',
-                    help="Rerun the experiment for all input-method combinations. Overrides the default "
-                         "behaviour of not running benchmarks for combinations which are already present"
-                         "in the benchmark file.")
-
-args = parser.parse_args()
-
-kwargs = dict()
-
-dataset = []
-if args.input:
-    dataset = args.input
-else:
-    parser.print_help()
-    sys.exit("Input files/folders missing")
-
-kwargs["timeout"] = 2 * 60 * 60
-if args.timeout:
-    kwargs["timeout"] = parse_timeout(args.timeout)
-
-if args.benchmark_file:
-    filename, file_extension = splitext(args.benchmark_file)
-    kwargs["benchmark_file"] = filename
-
-if args.output:
-    try:
-        makedirs(args.output, exist_ok=True)
-        kwargs["output_folder"] = args.output
-    except PermissionError:
-        sys.exit("Ensure permission exists to create output directory")
-
-kwargs["rerun"] = args.rerun
-
-classifiers = get_classifiers(args.method, args.determinize)
-
-suite = BenchmarkSuite(**kwargs)
-suite.add_datasets(dataset)
-suite.benchmark(classifiers)
+    suite = BenchmarkSuite(**kwargs)
+    suite.add_datasets(dataset)
+    suite.benchmark(classifiers)

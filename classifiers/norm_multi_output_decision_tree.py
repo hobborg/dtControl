@@ -3,7 +3,12 @@ import numpy as np
 from classifiers.cart_custom_decision_tree import CartCustomDecisionTree, CartCustomNode
 from dataset.multi_output_dataset import MultiOutputDataset
 
+
 class NormMultiOutputDecisionTree(CartCustomDecisionTree):
+    """
+    :param comp: The comparison function to be used (either max or min)
+    """
+
     def __init__(self, comp):
         super().__init__()
         self.name = f'NormMultiOutputDT({"Max" if comp == max else "Min"})'

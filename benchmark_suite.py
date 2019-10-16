@@ -45,7 +45,7 @@ class BenchmarkSuite:
         classifier.export_c(file) saves a C-representation of the classifier to a file
     """
 
-    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None):
+    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None, rerun=False):
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
         self.html_file = f'{benchmark_file}.html'
@@ -157,7 +157,7 @@ class BenchmarkSuite:
         return cell
 
     @staticmethod
-    def get_filename(self, folder, dataset, classifier, extension, unique=False):
+    def get_filename(folder, dataset, classifier, extension, unique=False):
         dir = join(folder, classifier.name, dataset.name)
         if not exists(dir):
             makedirs(dir)
