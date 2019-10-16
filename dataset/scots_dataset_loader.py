@@ -7,6 +7,9 @@ from tqdm import tqdm
 """
 class ScotsDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
+        precision = 10
+        max_decimals = 0
+
         f = open(filename)
         print(f"Reading from {filename}")
 
@@ -22,7 +25,8 @@ class ScotsDatasetLoader(DatasetLoader):
         state_eta = []
         for i in range(state_dim):
             line = f.readline()
-            state_eta = state_eta + [float(line)]
+            state_eta.append(round(float(line), precision))
+            max_decimals = max(len(str(state_eta[-1]).split(".")[1]), max_decimals)
 
         for i in range(3):
             f.readline()
@@ -30,7 +34,7 @@ class ScotsDatasetLoader(DatasetLoader):
         state_lb = []
         for i in range(state_dim):
             line = f.readline()
-            state_lb = state_lb + [float(line)]
+            state_lb.append(round(float(line), precision))
 
         for i in range(3):
             f.readline()
@@ -38,17 +42,16 @@ class ScotsDatasetLoader(DatasetLoader):
         state_ub = []
         for i in range(state_dim):
             line = f.readline()
-            state_ub = state_ub + [float(line)]
+            state_ub.append(round(float(line), precision))
 
         n_state_grid = []
         for i in range(state_dim):
-            n_state_grid = n_state_grid + [int(round((state_ub[i] - state_lb[i]) / state_eta[i], 6)) + 1]
+            n_state_grid.append(int(round((state_ub[i] - state_lb[i]) / state_eta[i], precision)) + 1)
 
         for i in range(4):
             f.readline()
 
-        line = f.readline()
-        input_dim = int(line)
+        input_dim = int(f.readline())
 
         for i in range(2):
             f.readline()
@@ -56,7 +59,8 @@ class ScotsDatasetLoader(DatasetLoader):
         input_eta = []
         for i in range(input_dim):
             line = f.readline()
-            input_eta = input_eta + [float(line)]
+            input_eta.append(round(float(line), precision))
+            max_decimals = max(len(str(input_eta[-1]).split(".")[1]), max_decimals)
 
         for i in range(3):
             f.readline()
@@ -64,7 +68,7 @@ class ScotsDatasetLoader(DatasetLoader):
         input_lb = []
         for i in range(input_dim):
             line = f.readline()
-            input_lb = input_lb + [float(line)]
+            input_lb.append(round(float(line), precision))
 
         for i in range(3):
             f.readline()
@@ -72,11 +76,11 @@ class ScotsDatasetLoader(DatasetLoader):
         input_ub = []
         for i in range(input_dim):
             line = f.readline()
-            input_ub = input_ub + [float(line)]
+            input_ub.append(float(line))
 
         n_input_grid = []
         for i in range(input_dim):
-            n_input_grid = n_input_grid + [int(round((input_ub[i] - input_lb[i]) / input_eta[i], 6) + 1)]
+            n_input_grid.append(int(round((input_ub[i] - input_lb[i]) / input_eta[i], precision) + 1))
 
         for i in range(4):
             f.readline()
@@ -89,11 +93,11 @@ class ScotsDatasetLoader(DatasetLoader):
 
         x_NN = [1]
         for i in range(1, state_dim):
-            x_NN = x_NN + [x_NN[i - 1] * n_state_grid[i - 1]]
+            x_NN.append(x_NN[i - 1] * n_state_grid[i - 1])
 
         u_NN = [1]
         for i in range(1, input_dim):
-            u_NN = u_NN + [u_NN[i - 1] * n_input_grid[i - 1]]
+            u_NN.append(u_NN[i - 1] * n_input_grid[i - 1])
 
         # Get the number of lines describing the controller
         controller_lines = sum(1 for line in f) - 1
@@ -151,5 +155,5 @@ class ScotsDatasetLoader(DatasetLoader):
         # if only single control input, do not wrap it in another array
         if y_train.shape[0] == 1:
             y_train = y_train[0]
-        
-        return (x_train, [], y_train, unique_label_to_float)
+
+        return (x_train, [], y_train, unique_label_to_float, max_decimals)
