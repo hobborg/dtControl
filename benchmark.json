@@ -5,11 +5,6 @@
         "num_nodes": 271905
       }
     },
-    "cartpole": {
-      "stats": {
-        "num_nodes": 253
-      }
-    },
     "cruise-latest": {
       "stats": {
         "num_nodes": 1003
@@ -35,6 +30,12 @@
       "stats": {
         "num_nodes": 13229
       }
+    },
+    "cartpole": {
+      "stats": {
+        "num_nodes": 253
+      },
+      "time": "00:00:00.169"
     }
   },
   "LinearClassifierDT(LogisticRegression)": {

@@ -37,6 +37,9 @@
                         {% if 'accuracy' in cell %}
                             accuracy: {{ cell['accuracy'] }}<br>
                         {% endif %}
+                        {% if 'time' in cell %}
+                            <span style="color: #ecc30b">time: {{ cell['time'] }}<br></span>
+                        {% endif %}
                         {% if 'dot_link' in links %}
                             <a href="{{ links['dot_link'] }}" target="_blank">View dot file</a>
                         {% endif %}

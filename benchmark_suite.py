@@ -93,13 +93,13 @@ class BenchmarkSuite:
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                cell, computed, time = self.compute_cell(ds, classifier)
+                cell, computed = self.compute_cell(ds, classifier)
                 row.append(cell)
                 if computed:
                     self.save_result(classifier.name, ds.name, cell)
                     step += 1
                     msg = '{}/{}: Evaluated {} on {} in {}'.format(step, num_steps, classifier.name, ds.name,
-                                                                   format_seconds(time))
+                                                                   cell['time'])
                     if cell == 'timeout':
                         msg += ' (Timeout)'
                     print('{}.'.format(msg))
@@ -118,7 +118,6 @@ class BenchmarkSuite:
         return num_steps
 
     def compute_cell(self, dataset, classifier):
-        time = None
         if self.already_computed(dataset, classifier):
             computed = False
             cell = self.results[classifier.name][dataset.name]
@@ -128,8 +127,8 @@ class BenchmarkSuite:
         else:
             computed = True
             dataset.load_if_necessary()
-            cell, time = self.train_and_get_cell(dataset, classifier)
-        return cell, computed, time
+            cell = self.train_and_get_cell(dataset, classifier)
+        return cell, computed
 
     def already_computed(self, dataset, classifier):
         return classifier.name in self.results and dataset.name in self.results[classifier.name]
@@ -141,7 +140,7 @@ class BenchmarkSuite:
             if acc is None:
                 cell = 'failed to fit'
             else:
-                cell = {'stats': classifier.get_stats()}
+                cell = {'stats': classifier.get_stats(), 'time': format_seconds(time)}
                 dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
                 classifier.export_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
@@ -154,7 +153,7 @@ class BenchmarkSuite:
                     classifier.save(self.get_filename(self.save_folder, dataset, classifier, '.saved', unique=True))
         else:
             cell = 'timeout'
-        return cell, time
+        return cell
 
     def get_filename(self, folder, dataset, classifier, extension, unique=False):
         dir = join(folder, classifier.name, dataset.name)
@@ -215,7 +214,7 @@ class BenchmarkSuite:
         state_dim = int(f.readline())
         for i in range(12):
             f.readline()
-        for i in range(3*state_dim):
+        for i in range(3 * state_dim):
             f.readline()
         input_dim = int(f.readline())
         return True if input_dim > 1 else False
