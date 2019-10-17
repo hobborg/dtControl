@@ -93,7 +93,7 @@ class BenchmarkSuite:
 
     def benchmark(self, classifiers):
         self.load_results()
-        num_steps = len(classifiers)
+        num_steps = len(classifiers) * len(self.datasets)
         if num_steps > 0:
             logging.info('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
         table = []
@@ -113,7 +113,10 @@ class BenchmarkSuite:
                         msg = f"{step}/{num_steps}: Evaluated {classifier.name} on {ds.name} in {cell['time']}."
                     logging.info(msg)
                 else:
-                    logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
+                    if cell == 'not applicable':
+                        logging.info(f"{step}/{num_steps}: {classifier.name} is not applicable for {ds.name}.")
+                    else:
+                        logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
@@ -157,7 +160,7 @@ class BenchmarkSuite:
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
                 classifier.export_c(c_filename)
                 vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                classifier.export_vhdl(len(dataset.X_vars),vhdl_filename)
+                classifier.export_vhdl(len(dataset.X_metadata["variables"]),vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:

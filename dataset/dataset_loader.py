@@ -28,34 +28,35 @@ class DatasetLoader(ABC):
         folder = self.get_converted_folder(filename)
         assert exists(folder)
         print("Loading existing pickled dataset...", end=' ')
-        df = pd.read_pickle(join(folder, 'X_train.pickle'))
-        X_train = np.array(df)
-        X_vars = list(df.columns)
+        X_train = np.load(join(folder, 'X_train.npy'))
         Y_train = np.load(join(folder, 'Y_train.npy'))
         with open(join(folder, 'extra_data.pickle'), 'rb') as infile:
             extra_data = pickle.load(infile)
             index_to_value = extra_data["index_to_value"]
-            num_decimals = extra_data["num_decimals"]
+            X_metadata = extra_data["X_metadata"]
+            Y_metadata = extra_data["Y_metadata"]
         print("done loading.")
-        return X_train, X_vars, Y_train, index_to_value, num_decimals
+        return X_train, X_metadata, Y_train, Y_metadata, index_to_value
 
     def save_converted_dataset(self, filename):
         folder = self.get_converted_folder(filename)
         if not exists(folder):
             makedirs(folder)
-        X_train, X_vars, Y_train, index_to_value, num_decimals = self.loaded_datasets[filename]
-        columns = None if not X_vars else X_vars
-        pd.to_pickle(pd.DataFrame(X_train, columns=columns), join(folder, 'X_train.pickle'))
+        X_train, X_metadata, Y_train, Y_metadata, index_to_value = self.loaded_datasets[filename]
+        np.save(join(folder, 'X_train.npy'), X_train)
         np.save(join(folder, 'Y_train.npy'), Y_train)
         with open(join(folder, 'extra_data.pickle'), 'wb+') as outfile:
-            pickle.dump({"index_to_value": index_to_value, "num_decimals": num_decimals}, outfile)
+            pickle.dump({"index_to_value": index_to_value,
+                         "X_metadata": X_metadata,
+                         "Y_metadata": Y_metadata},
+                        outfile)
 
     def get_converted_folder(self, filename):
         directory, name = split(filename)
         return join(directory, self.PATH, f'{name}_{getmtime(filename)}')
 
     """
-    Loads a dataset and returns X_train, X_vars, Y_train, index_to_value
+    Loads a dataset and returns X_train, X_metadata, Y_train, Y_metadata, index_to_value
     """
 
     @abstractmethod
