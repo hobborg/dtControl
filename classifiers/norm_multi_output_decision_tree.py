@@ -15,7 +15,7 @@ class NormMultiOutputDecisionTree(CartCustomDecisionTree):
         self.comp = comp
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, MultiOutputDataset)
+        return isinstance(dataset, MultiOutputDataset) and not dataset.is_deterministic
 
     def fit(self, dataset):
         if dataset.tuple_to_tuple_id is None:  # TODO: refactor stuff like this with something like dataset.get_tuple_to_tuple_ids()

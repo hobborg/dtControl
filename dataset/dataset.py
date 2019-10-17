@@ -24,6 +24,7 @@ class Dataset(ABC):
         self.Y_train = None
         self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
         self.index_to_value = {}
+        self.is_deterministic = None
 
     def load_if_necessary(self):
         if self.X_train is None:

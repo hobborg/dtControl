@@ -1,4 +1,6 @@
 from os.path import basename, splitext
+import numpy as np
+
 
 def format_seconds(sec):
     m, s = divmod(sec, 60)
@@ -9,9 +11,11 @@ def format_seconds(sec):
         return pattern % (h, m, s)
     return ('%d days, ' + pattern) % (d, h, m, s)
 
+
 def get_filename_and_ext(filename):
     path, ext = splitext(filename)
     return basename(path), ext
+
 
 def make_set(v):
     if isinstance(v, tuple):
@@ -20,3 +24,12 @@ def make_set(v):
         return set(v)
     except TypeError:
         return {v}
+
+
+def objround(obj, precision):
+    if isinstance(obj, list) or isinstance(obj, np.ndarray):
+        return [objround(o, precision) for o in obj]
+    if isinstance(obj, tuple):
+        return tuple(round(o, precision) for o in obj)
+    # if just a float
+    return round(obj, precision)

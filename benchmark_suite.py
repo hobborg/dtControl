@@ -77,6 +77,9 @@ class BenchmarkSuite:
                         ds = MultiOutputDataset(file)
                     else:
                         ds = SingleOutputDataset(file)
+
+                    # check if dataset is deterministic
+                    ds.is_deterministic = self.is_deterministic(file, ext)
                     self.datasets.append(ds)
         self.datasets.sort(key=lambda ds: ds.name)
 
@@ -227,9 +230,26 @@ class BenchmarkSuite:
         for i in range(5):
             f.readline()
         state_dim = int(f.readline())
-        for i in range(12):
-            f.readline()
-        for i in range(3 * state_dim):
+        for i in range(12 + 3 * state_dim):
             f.readline()
         input_dim = int(f.readline())
-        return True if input_dim > 1 else False
+        return input_dim > 1
+
+    @staticmethod
+    def is_deterministic(filename, ext):
+        if "scs" not in ext:
+            return False  # UPPAAL is always non-deterministic
+        # if scs, then
+        f = open(filename)
+        # Read input dim from scs file
+        for i in range(5):
+            f.readline()
+        state_dim = int(f.readline())
+        for i in range(12+3 * state_dim):
+            f.readline()
+        input_dim = int(f.readline())
+        for i in range(12+3*input_dim):
+            f.readline()
+
+        non_det = int(f.readline().split(":")[1].split()[1])
+        return non_det == 1

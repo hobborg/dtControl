@@ -197,7 +197,7 @@ class Node(ABC):
             last_right_number, right_text = self.right._export_dot(number_for_right)
             text += right_text
             label = 'False' if starting_number == 0 else ''
-            text += '{} -> {} [label="{}"];\n'.format(starting_number, number_for_right, label)
+            text += '{} -> {} [style="dashed", label="{}"];\n'.format(starting_number, number_for_right, label)
             last_number = last_right_number
 
         return last_number, text
@@ -221,7 +221,7 @@ class Node(ABC):
         elif type == 'vhdl':
             label = self.get_vhdl_label()
         else:
-            raise Exception(f'Unkown type {type} in _export_if_then_else') # do this type check once; from now on, else always means vhdl
+            raise Exception(f'Unknown type {type} in _export_if_then_else') # do this type check once; from now on, else always means vhdl
         # If leaf node
         if not self.left and not self.right:
             return "\t" * indent_index + str(label)
@@ -300,7 +300,7 @@ class Node(ABC):
         # else, print predicate in correct format
         
         if self.is_axis_aligned():
-            try: #the guy keeping track of the tree is called differently depending on subclass. This ain't nice, but it works.
+            try:  # the guy keeping track of the tree is called differently depending on subclass. This ain't nice, but it works.
                 tree = self.dt.tree_
             except:
                 tree = self.classifier.tree_

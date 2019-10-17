@@ -8,7 +8,7 @@ class MaxCartForest():
         self.name = 'MaxCARTForest'
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, MultiOutputDataset)
+        return isinstance(dataset, MultiOutputDataset) and not dataset.is_deterministic
 
     def fit(self, dataset):  # TODO: extend to do max at every node (currently only at root node)
         if dataset.tuple_to_tuple_id is None:

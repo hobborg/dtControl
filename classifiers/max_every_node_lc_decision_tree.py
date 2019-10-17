@@ -8,7 +8,7 @@ class MaxLCDecisionTree(LinearClassifierDecisionTree):
         self.name = 'MaxEveryNodeLCDT({})'.format(classifier_class.__name__)
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, SingleOutputDataset)
+        return isinstance(dataset, SingleOutputDataset) and not dataset.is_deterministic
 
     def fit(self, dataset):
         self.root = MaxLCNode(self.classifier_class, **self.kwargs)

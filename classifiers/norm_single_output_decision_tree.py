@@ -14,7 +14,7 @@ class NormSingleOutputDecisionTree(CartCustomDecisionTree):
         self.comp = comp
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, SingleOutputDataset)
+        return isinstance(dataset, SingleOutputDataset) and not dataset.is_deterministic
 
     def fit(self, dataset):
         self.root = NormSingleOutputNode(dataset.index_to_value, self.comp)
