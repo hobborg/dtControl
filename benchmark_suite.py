@@ -121,7 +121,7 @@ class BenchmarkSuite:
                     else:
                         logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
-        print('Done.')
+        logging.info('All benchmarks completed. Shutting down dtControl.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
         self.table_controller.update_and_save(results)
 
