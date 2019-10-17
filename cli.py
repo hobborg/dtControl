@@ -30,13 +30,13 @@ Usage: dtcontrol [-h] [-v] [--input INPUT [INPUT ...]] [--output OUTPUT]
                             all         - runs all of the above methods
                         If absent, defaults to --methods all
                 --determinize,-d <determinization_strategies>...
-                        In case of non-deterministic controllers, specify, if necessary the determinization
+                        In case of non-deterministic controllers, specify, if desired, the determinization
                         strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'.
                         If no determinization strategy is provided, then each set non-deterministic set
                         of control inputs is treated uniquely.
                 --benchmark-file,-b <filename>
                         Saves statistics pertaining the construction of the decision trees and their
-                        sizes into <filename>, and additionally allow to view it via an html file with
+                        sizes into <filename>, and additionally allows to view it via an html file with
                         the same name.
                 --rerun, -r
                         Rerun the experiment for all input-method combinations. Overrides the default
@@ -168,7 +168,7 @@ def get_classifiers(methods, det_strategies):
             continue
 
         if 'all' in det_strategies:
-                classifiers.extend([classifier for cls_group in method_map[method].values() for classifier in cls_group])
+            classifiers.extend([classifier for cls_group in method_map[method].values() for classifier in cls_group])
         else:
             for det_strategy in det_strategies:
                 if det_strategy not in method_map[method]:
@@ -182,6 +182,8 @@ def get_classifiers(methods, det_strategies):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+
     parser = argparse.ArgumentParser(prog="dtcontrol")
 
     parser.add_argument("-v", "--version", action='version', version='%(prog)s 1.0')
@@ -198,10 +200,10 @@ if __name__ == "__main__":
                         help="The method switch takes in one or more space separated method names as "
                              "arguments. Available methods are: 'cart', 'linsvm', 'logreg', 'oc1'. Running "
                              "with --method 'all' will run all possible methods. For description about each method, "
-                             "refer manual. If this switch is omitted, defaults to 'all'")
+                             "see manual. If this switch is omitted, defaults to 'all'")
 
     parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['nondet'],
-                        help="In case of non-deterministic controllers, specify, if necessary the determinization "
+                        help="In case of non-deterministic controllers, specify, if desired, the determinization "
                              "strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'")
 
     parser.add_argument("--timeout", "-t", type=str,
@@ -210,12 +212,12 @@ if __name__ == "__main__":
 
     parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
                         help="Saves statistics pertaining the construction of the decision trees and their "
-                             "sizes into a JSON file, and additionally allow to view it via an HTML file.")
+                             "sizes into a JSON file, and additionally allows to view it via an HTML file.")
 
     parser.add_argument("--rerun", "-r", action='store_true',
                         help="Rerun the experiment for all input-method combinations. Overrides the default "
                              "behaviour of not running benchmarks for combinations which are already present"
-                             "in the benchmark file.")
+                             " in the benchmark file.")
 
     args = parser.parse_args()
 
@@ -235,6 +237,9 @@ if __name__ == "__main__":
     if args.benchmark_file:
         filename, file_extension = splitext(args.benchmark_file)
         kwargs["benchmark_file"] = filename
+    else:
+        kwargs["benchmark_file"] = 'benchmark' # TODO best practise to set default?
+        logging.warning("--benchmark-file/-b was not set. Defaulting to use 'benchmark.json'")
 
     if args.output:
         try:
@@ -244,6 +249,8 @@ if __name__ == "__main__":
             sys.exit("Ensure permission exists to create output directory")
 
     kwargs["rerun"] = args.rerun
+    if not args.rerun and isfile(kwargs["benchmark_file"]):
+        logging.warning(f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' would not be re-run. Use the --rerun flag if this is what is desired.")
 
     classifiers = get_classifiers(args.method, args.determinize)
 

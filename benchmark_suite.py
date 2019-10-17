@@ -48,6 +48,7 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None, rerun=False):
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
         self.html_file = f'{benchmark_file}.html'
@@ -55,14 +56,17 @@ class BenchmarkSuite:
         self.timeout = timeout
         self.output_folder = output_folder
         self.save_folder = save_folder
+        self.rerun = rerun
         self.table_controller = TableController(self.html_file, self.output_folder)
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
+        logging.info(f"Constructed trees will be written to {self.output_folder}.")
 
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
             exclude = []
         if include is not None and len(set(include) & set(exclude)) > 0:
-            print('A dataset cannot be both included and excluded.\nAborting.')
+            logging.error('A dataset cannot be both included and excluded.\nAborting.')
             return
         self.datasets = []
         for path in paths:
@@ -89,26 +93,27 @@ class BenchmarkSuite:
 
     def benchmark(self, classifiers):
         self.load_results()
-        num_steps = self.count_num_steps(classifiers)
+        num_steps = len(classifiers)
         if num_steps > 0:
-            print('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
+            logging.info('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
         table = []
         step = 0
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                print(f"{step}/{num_steps}: Attempting to run {classifier.name} on {ds.name}.")
+                step += 1
+                logging.info(f"{step}/{num_steps}: Evaluating {classifier.name} on {ds.name}... ")
                 cell, computed = self.compute_cell(ds, classifier)
                 row.append(cell)
                 if computed:
                     self.save_result(classifier.name, ds.name, cell)
-                    step += 1
-
                     if cell == 'timeout':
-                        msg = f"{step}/{num_steps}: Timed out when evaluating {classifier.name} on {ds.name}."
+                        msg = f"{step}/{num_steps}: {classifier.name} on {ds.name} timed out after {format_seconds(self.timeout)}"
                     else:
                         msg = f"{step}/{num_steps}: Evaluated {classifier.name} on {ds.name} in {cell['time']}."
-                    print(msg)
+                    logging.info(msg)
+                else:
+                    logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
         print('Done.')
         results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
@@ -124,7 +129,7 @@ class BenchmarkSuite:
         return num_steps
 
     def compute_cell(self, dataset, classifier):
-        if self.already_computed(dataset, classifier):
+        if self.already_computed(dataset, classifier) and not self.rerun:
             computed = False
             cell = self.results[classifier.name][dataset.name]
         elif not classifier.is_applicable(dataset):

@@ -1,12 +1,10 @@
 import logging
 
 import numpy as np
-from tqdm import tqdm
 from dataset.dataset_loader import DatasetLoader
 from tqdm import tqdm
-"""
-@author: pushpakjagpushpaktap
-"""
+
+
 class ScotsDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
         precision = 10
