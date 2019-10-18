@@ -77,8 +77,6 @@ class MultiOutputDataset(Dataset):
         # default
         tuple_to_index = {tuple(-1 for i in range(stacked_y_train.shape[2])): -1}
 
-        # TODO: this doesnt work if we have more than 2 control inputs
-        # TODO: I think I have fixed it by changing the tuple_to_index initialization
         self.tuple_ids = np.full((stacked_y_train.shape[0], stacked_y_train.shape[1]), -1)
 
         # first axis: datapoints

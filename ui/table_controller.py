@@ -7,6 +7,7 @@ GRAPHVIZ_URL = 'https://dreampuf.github.io/GraphvizOnline/#'
 file_loader = FileSystemLoader('.')
 env = Environment(loader=file_loader)
 
+
 class TableController:
     def __init__(self, html_file, output_folder):
         self.html_file = html_file
@@ -15,13 +16,13 @@ class TableController:
     def update_and_save(self, results):
         template = env.get_template('ui/table.html')
         with open(self.html_file, 'w+') as out:
-            out.write(template.render(column_names=results.column_names, row_names=results.row_names,
+            out.write(template.render(column_names=results.column_names, row_metadata=results.row_metadata,
                                       table=results.table, links_table=self.get_dot_and_c_links(results)))
 
     def get_dot_and_c_links(self, results):
         links_table = []
-        for i in range(len(results.row_names)):
-            dataset = results.row_names[i]
+        for i in range(len(results.row_metadata)):
+            dataset = results.row_metadata[i]["name"]
             l = []
             for j in range(len(results.column_names)):
                 classifier = results.column_names[j]

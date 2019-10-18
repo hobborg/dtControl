@@ -8,7 +8,7 @@ class MaxCartDecisionTree(CartCustomDecisionTree):
         self.name = 'MaxEveryNodeDT'
 
     def is_applicable(self, dataset):
-        return True
+        return not dataset.is_deterministic
 
     def fit(self, dataset):
         self.root = MaxCartNode()

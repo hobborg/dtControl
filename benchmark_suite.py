@@ -25,8 +25,8 @@ class BenchmarkResults:
     :param table: a two-dimensional array of result dictionaries
     """
 
-    def __init__(self, row_names, column_names, table):
-        self.row_names = row_names
+    def __init__(self, row_metadata, column_names, table):
+        self.row_metadata = row_metadata
         self.column_names = column_names
         self.table = table
 
@@ -48,6 +48,7 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None, rerun=False):
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
         self.html_file = f'{benchmark_file}.html'
@@ -55,14 +56,17 @@ class BenchmarkSuite:
         self.timeout = timeout
         self.output_folder = output_folder
         self.save_folder = save_folder
+        self.rerun = rerun
         self.table_controller = TableController(self.html_file, self.output_folder)
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
+        logging.info(f"Constructed trees will be written to {self.output_folder}.")
 
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
             exclude = []
         if include is not None and len(set(include) & set(exclude)) > 0:
-            print('A dataset cannot be both included and excluded.\nAborting.')
+            logging.error('A dataset cannot be both included and excluded.\nAborting.')
             return
         self.datasets = []
         for path in paths:
@@ -73,6 +77,9 @@ class BenchmarkSuite:
                         ds = MultiOutputDataset(file)
                     else:
                         ds = SingleOutputDataset(file)
+
+                    # check if dataset is deterministic
+                    ds.is_deterministic = self.is_deterministic(file, ext)
                     self.datasets.append(ds)
         self.datasets.sort(key=lambda ds: ds.name)
 
@@ -89,29 +96,33 @@ class BenchmarkSuite:
 
     def benchmark(self, classifiers):
         self.load_results()
-        num_steps = self.count_num_steps(classifiers)
+        num_steps = len(classifiers) * len(self.datasets)
         if num_steps > 0:
-            print('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
+            logging.info('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
         table = []
         step = 0
         for ds in self.datasets:
             row = []
             for classifier in classifiers:
-                print(f"{step}/{num_steps}: Attempting to run {classifier.name} on {ds.name}.")
+                step += 1
+                logging.info(f"{step}/{num_steps}: Evaluating {classifier.name} on {ds.name}... ")
                 cell, computed = self.compute_cell(ds, classifier)
                 row.append(cell)
                 if computed:
                     self.save_result(classifier.name, ds.name, cell)
-                    step += 1
-
                     if cell == 'timeout':
-                        msg = f"{step}/{num_steps}: Timed out when evaluating {classifier.name} on {ds.name}."
+                        msg = f"{step}/{num_steps}: {classifier.name} on {ds.name} timed out after {format_seconds(self.timeout)}"
                     else:
                         msg = f"{step}/{num_steps}: Evaluated {classifier.name} on {ds.name} in {cell['time']}."
-                    print(msg)
+                    logging.info(msg)
+                else:
+                    if cell == 'not applicable':
+                        logging.info(f"{step}/{num_steps}: {classifier.name} is not applicable for {ds.name}.")
+                    else:
+                        logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
-        print('Done.')
-        results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
+        logging.info('All benchmarks completed. Shutting down dtControl.')
+        results = BenchmarkResults([{"name": ds.name, "size": ds.X_train.shape[0]} for ds in self.datasets], [c.name for c in classifiers], table)
         self.table_controller.update_and_save(results)
 
     def count_num_steps(self, classifiers):
@@ -124,7 +135,7 @@ class BenchmarkSuite:
         return num_steps
 
     def compute_cell(self, dataset, classifier):
-        if self.already_computed(dataset, classifier):
+        if self.already_computed(dataset, classifier) and not self.rerun:
             computed = False
             cell = self.results[classifier.name][dataset.name]
         elif not classifier.is_applicable(dataset):
@@ -152,7 +163,7 @@ class BenchmarkSuite:
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
                 classifier.export_c(c_filename)
                 vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                classifier.export_vhdl(len(dataset.X_vars),vhdl_filename)
+                classifier.export_vhdl(len(dataset.X_metadata["variables"]),vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
@@ -219,9 +230,26 @@ class BenchmarkSuite:
         for i in range(5):
             f.readline()
         state_dim = int(f.readline())
-        for i in range(12):
-            f.readline()
-        for i in range(3 * state_dim):
+        for i in range(12 + 3 * state_dim):
             f.readline()
         input_dim = int(f.readline())
-        return True if input_dim > 1 else False
+        return input_dim > 1
+
+    @staticmethod
+    def is_deterministic(filename, ext):
+        if "scs" not in ext:
+            return False  # UPPAAL is always non-deterministic
+        # if scs, then
+        f = open(filename)
+        # Read input dim from scs file
+        for i in range(5):
+            f.readline()
+        state_dim = int(f.readline())
+        for i in range(12+3 * state_dim):
+            f.readline()
+        input_dim = int(f.readline())
+        for i in range(12+3*input_dim):
+            f.readline()
+
+        non_det = int(f.readline().split(":")[1].split()[1])
+        return non_det == 1

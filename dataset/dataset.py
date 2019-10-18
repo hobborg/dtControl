@@ -20,14 +20,15 @@ class Dataset(ABC):
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
         self.X_train = None
-        self.X_vars = None
+        self.X_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
         self.Y_train = None
+        self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
         self.index_to_value = {}
-        self.num_decimals = 0
+        self.is_deterministic = None
 
     def load_if_necessary(self):
         if self.X_train is None:
-            self.X_train, self.X_vars, self.Y_train, self.index_to_value, self.num_decimals = self.extension_to_loader[
+            self.X_train, self.X_metadata, self.Y_train, self.Y_metadata, self.index_to_value = self.extension_to_loader[
                 self.extension].load_dataset(self.filename)
 
     def check_loaded(self):

@@ -10,9 +10,15 @@ from tqdm import tqdm
 
 class UppaalDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
-        # Assumption is that all controllable states are named *.Choose
-        # Another assumption is that uppaal only works on integer domains
-        max_decimals = 0
+        """
+            Some assumptions regarding the Uppaal dataset
+            1. All controllable states are named *.Choose
+            2. Uppaal only works on integer domains (specifically np.int16)
+            3. Actions are single-dimensional. However, if multiple components
+               may have the .Choose state, they are added as categorical variables
+               in X_train
+            4. Step sizes for all state variables is 1
+        """
 
         f = open(filename)
         print("Reading from %s" % filename)
@@ -45,8 +51,9 @@ class UppaalDatasetLoader(DatasetLoader):
         # the assigned value. The assigned variable is extracted
         # too, but not used anywhere as of now.
         index_to_value = dict()
+        action_var = None
         for (action, index) in actions.items():
-            _, var, val = re.findall(r"((\w+) := (-?[0-9]+))", action)[0]
+            _, action_var, val = re.findall(r"((\w+) := (-?[0-9]+))", action)[0]
             index_to_value[index] = int(val)
 
         row_num_vals = []
@@ -101,12 +108,12 @@ class UppaalDatasetLoader(DatasetLoader):
 
         # Project onto measurable variables, the strategy should not depend on the gua variables coming from euler
         projection_variables = controllable_states + list(filter(lambda x: 'gua' not in x, numeric_features))
-        num_df = pd.DataFrame(row_num_vals, columns=controllable_states + numeric_features, dtype='float32')
+        num_df = pd.DataFrame(row_num_vals, columns=controllable_states + numeric_features, dtype=np.int16)
         num_df = num_df[projection_variables]
 
         grouped = num_df.groupby(projection_variables)
-        X = np.empty((len(grouped), len(projection_variables)))
-        Y = np.full((len(grouped), max([len(y) for y in row_actions])), -1)
+        X = np.empty((len(grouped), len(projection_variables)), dtype=np.int16)
+        Y = np.full((len(grouped), max([len(y) for y in row_actions])), -1, dtype=np.int16)
 
         i = 0
         for (group, indices) in grouped.indices.items():
@@ -125,4 +132,21 @@ class UppaalDatasetLoader(DatasetLoader):
 
         print("Constructed training set with %s datapoints" % X.shape[0])
 
-        return (X, projection_variables, Y, index_to_value, max_decimals)
+        # construct metadata
+        # assumption is that UPPAAL only works with integers
+        X_metadata = dict()
+        X_metadata["variables"] = projection_variables
+        X_metadata["min"] = np.amin(X, axis=0)
+        X_metadata["max"] = np.amax(X, axis=0)
+        X_metadata["step_size"] = [1 for _ in range(len(projection_variables))]
+
+        Y_metadata = dict()
+        Y_metadata["variables"] = [action_var]
+        Y_metadata["min"] = [min(index_to_value.values())]
+        Y_metadata["max"] = [max(index_to_value.values())]
+        Y_metadata["step_size"] = int((Y_metadata["max"][0] - Y_metadata["min"][0])/(len(index_to_value) - 1))  # step_size may actually be greater than 1, but this suffices
+
+        logging.debug(X_metadata)
+        logging.debug(Y_metadata)
+
+        return (X, X_metadata, Y, Y_metadata, index_to_value)

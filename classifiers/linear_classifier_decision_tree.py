@@ -1,4 +1,5 @@
 import warnings
+import util
 
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
@@ -101,18 +102,18 @@ class LinearClassifierOrAxisAlignedNode(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return self.actual_label
+            return str(util.objround(self.actual_label, 6))  # TODO get precision from flag?
         if self.is_axis_aligned():
             tree = self.classifier.tree_
-            return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
+            return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 6)}'  # TODO get precision from flag?
         else:
             # this implicitly assumes n_classes == 2
             coef_ = self.classifier.coef_[0]
             intercept_ = self.classifier.intercept_[0]
             line = []
             for i in range(len(coef_)):
-                line.append(f"{round(coef_[i], 4)}*X[{i}]")
-            line.append(f"{round(intercept_, 4)}")
+                line.append(f"{round(coef_[i], 6)}*X[{i}]")  # TODO get precision from flag?
+            line.append(f"{round(intercept_, 6)}")  # TODO get precision from flag?
             hyperplane = "\n+".join(line) + " <= 0"
             return hyperplane.replace('+-', '-')
 

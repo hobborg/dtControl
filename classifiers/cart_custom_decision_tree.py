@@ -1,7 +1,6 @@
+import util
 from sklearn.tree import DecisionTreeClassifier
-
 from classifiers.custom_decision_tree import CustomDecisionTree, Node
-from collections.abc import Iterable
 
 class CartCustomDecisionTree(CustomDecisionTree):
     def __init__(self):
@@ -39,9 +38,9 @@ class CartCustomNode(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return self.actual_label
+            return str(util.objround(self.actual_label, 6))  # TODO get precision from flag?
         tree = self.dt.tree_
-        return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 4)}'
+        return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 6)}'  # TODO get precision from flag?
 
     def print_dot_red(self):
         return False

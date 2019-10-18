@@ -1,16 +1,13 @@
 import logging
 
 import numpy as np
-from tqdm import tqdm
 from dataset.dataset_loader import DatasetLoader
 from tqdm import tqdm
-"""
-@author: pushpakjagpushpaktap
-"""
+
+
 class ScotsDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
         precision = 10
-        max_decimals = 0
 
         f = open(filename)
         print(f"Reading from {filename}")
@@ -28,7 +25,6 @@ class ScotsDatasetLoader(DatasetLoader):
         for i in range(state_dim):
             line = f.readline()
             state_eta.append(round(float(line), precision))
-            max_decimals = max(len(str(state_eta[-1]).split(".")[1]), max_decimals)
 
         for i in range(3):
             f.readline()
@@ -62,7 +58,6 @@ class ScotsDatasetLoader(DatasetLoader):
         for i in range(input_dim):
             line = f.readline()
             input_eta.append(round(float(line), precision))
-            max_decimals = max(len(str(input_eta[-1]).split(".")[1]), max_decimals)
 
         for i in range(3):
             f.readline()
@@ -162,4 +157,17 @@ class ScotsDatasetLoader(DatasetLoader):
 
         print("Constructed training set with %s datapoints" % x_train.shape[0])
 
-        return (x_train, [], y_train, unique_label_to_float, max_decimals)
+        # construct metadata
+        x_metadata = dict()
+        x_metadata["variables"] = [f"x_{i}" for i in range(len(state_lb))]
+        x_metadata["min"] = state_lb
+        x_metadata["max"] = state_ub
+        x_metadata["step_size"] = state_eta
+
+        y_metadata = dict()
+        y_metadata["variables"] = [f"u_{i}" for i in range(len(input_lb))]
+        y_metadata["min"] = input_lb
+        y_metadata["max"] = input_ub
+        y_metadata["step_size"] = input_eta
+
+        return (x_train, x_metadata, y_train, y_metadata, unique_label_to_float)

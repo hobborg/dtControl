@@ -5,6 +5,7 @@ from os.path import splitext
 
 # This class enables us to load the datasets we have already converted to the XY (vector) format
 class VectorDatasetLoader(DatasetLoader):
+    # TODO fix this so that it returns X_train, X_metadata, Y_train, Y_metadata, index_to_value
     def _load_dataset(self, filename):
         path, _ = splitext(filename)
         X_train = pd.read_pickle(filename)
