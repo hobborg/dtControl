@@ -73,6 +73,11 @@ class Dataset(ABC):
                 self.extension].load_dataset(self.filename)
             self.X_metadata['num_rows'] = len(self.X_train)
 
+    def load_metadata_from_json(self, json):
+        metadata = json['metadata']
+        self.X_metadata = metadata['X_metadata']
+        self.Y_metadata = metadata['Y_metadata']
+
     def check_loaded(self):
         if self.X_train is None:
             raise RuntimeError('Dataset is not loaded.')

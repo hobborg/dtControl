@@ -5,19 +5,19 @@
         "stats": {
           "num_nodes": 253
         },
-        "time": "00:00:00.218"
+        "time": "00:00:00.191"
       },
       "MaxEveryNodeDT": {
         "stats": {
           "num_nodes": 11
         },
-        "time": "00:00:00.084"
+        "time": "00:00:00.083"
       },
       "NormSingleOutputDT(Max)": {
         "stats": {
           "num_nodes": 39
         },
-        "time": "00:00:00.119"
+        "time": "00:00:00.117"
       }
     },
     "metadata": {

@@ -120,7 +120,7 @@ class BenchmarkSuite:
                             f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
         logging.info('All benchmarks completed. Shutting down dtControl.')
-        results = BenchmarkResults([{"name": ds.name, "size": ds.X_train.shape[0]} for ds in self.datasets],
+        results = BenchmarkResults([{"name": ds.name, "size": ds.X_metadata['num_rows']} for ds in self.datasets],
                                    [c.name for c in classifiers], table)
         self.table_controller.update_and_save(results)
 
@@ -189,6 +189,9 @@ class BenchmarkSuite:
             return
         with open(self.json_file, 'r') as infile:
             self.results = json.load(infile)
+        for ds in self.datasets:
+            if ds.name in self.results:
+                ds.load_metadata_from_json(self.results[ds.name])
 
     def delete_dataset_results(self, dataset_name):
         self.load_results()
