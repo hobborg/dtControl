@@ -97,8 +97,6 @@ class BenchmarkSuite:
     def benchmark(self, classifiers):
         self.load_results()
         num_steps = len(classifiers) * len(self.datasets)
-        if num_steps > 0:
-            logging.info('Maximum wait time: {}.'.format(format_seconds(num_steps * self.timeout)))
         table = []
         step = 0
         for ds in self.datasets:
@@ -124,15 +122,6 @@ class BenchmarkSuite:
         logging.info('All benchmarks completed. Shutting down dtControl.')
         results = BenchmarkResults([{"name": ds.name, "size": ds.X_train.shape[0]} for ds in self.datasets], [c.name for c in classifiers], table)
         self.table_controller.update_and_save(results)
-
-    def count_num_steps(self, classifiers):
-        num_steps = 0
-        for ds in self.datasets:
-            for classifier in classifiers:
-                if not self.already_computed(ds, classifier) and \
-                        classifier.is_applicable(ds):
-                    num_steps += 1
-        return num_steps
 
     def compute_cell(self, dataset, classifier):
         if self.already_computed(dataset, classifier) and not self.rerun:
