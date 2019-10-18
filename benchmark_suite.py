@@ -25,8 +25,8 @@ class BenchmarkResults:
     :param table: a two-dimensional array of result dictionaries
     """
 
-    def __init__(self, row_names, column_names, table):
-        self.row_names = row_names
+    def __init__(self, row_metadata, column_names, table):
+        self.row_metadata = row_metadata
         self.column_names = column_names
         self.table = table
 
@@ -122,7 +122,7 @@ class BenchmarkSuite:
                         logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
         logging.info('All benchmarks completed. Shutting down dtControl.')
-        results = BenchmarkResults([ds.name for ds in self.datasets], [c.name for c in classifiers], table)
+        results = BenchmarkResults([{"name": ds.name, "size": ds.X_train.shape[0]} for ds in self.datasets], [c.name for c in classifiers], table)
         self.table_controller.update_and_save(results)
 
     def count_num_steps(self, classifiers):
