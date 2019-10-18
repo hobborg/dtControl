@@ -1,237 +1,59 @@
 {
-  "CART": {
-    "aircraft": {
-      "stats": {
-        "num_nodes": 271905
-      }
-    },
-    "cruise-latest": {
-      "stats": {
-        "num_nodes": 1003
+  "cartpole": {
+    "classifiers": {
+      "CART": {
+        "stats": {
+          "num_nodes": 253
+        },
+        "time": "00:00:00.218"
       },
-      "accuracy": 0.9999763489542859
-    },
-    "cruise-medium-latest": {
-      "stats": {
-        "num_nodes": 289
-      }
-    },
-    "cruise-small-latest": {
-      "stats": {
-        "num_nodes": 109
-      }
-    },
-    "tworooms_large": {
-      "stats": {
-        "num_nodes": 1059
-      }
-    },
-    "vehicle": {
-      "stats": {
-        "num_nodes": 13229
-      }
-    },
-    "cartpole": {
-      "stats": {
-        "num_nodes": 253
+      "MaxEveryNodeDT": {
+        "stats": {
+          "num_nodes": 11
+        },
+        "time": "00:00:00.084"
       },
-      "time": "00:00:00.169"
-    }
-  },
-  "LinearClassifierDT(LogisticRegression)": {
-    "aircraft": {
-      "stats": {
-        "num_nodes": 256581,
-        "num_not_aa": 10393
+      "NormSingleOutputDT(Max)": {
+        "stats": {
+          "num_nodes": 39
+        },
+        "time": "00:00:00.119"
       }
     },
-    "cartpole": {
-      "stats": {
-        "num_nodes": 199,
-        "num_not_aa": 22
-      }
-    },
-    "cruise-latest": {
-      "stats": {
-        "num_nodes": 773,
-        "num_not_aa": 180
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "x_0",
+          "x_1"
+        ],
+        "min": [
+          2.24,
+          -2.0
+        ],
+        "max": [
+          4.08,
+          2.0
+        ],
+        "step_size": [
+          0.08,
+          0.1
+        ],
+        "num_rows": 271
       },
-      "accuracy": 0.9999864851167348
-    },
-    "cruise-medium-latest": {
-      "stats": {
-        "num_nodes": 255,
-        "num_not_aa": 59
+      "Y_metadata": {
+        "variables": [
+          "u_0"
+        ],
+        "min": [
+          -4.0
+        ],
+        "max": [
+          4.0
+        ],
+        "step_size": [
+          0.1
+        ]
       }
-    },
-    "cruise-small-latest": {
-      "stats": {
-        "num_nodes": 89,
-        "num_not_aa": 22
-      }
-    },
-    "tworooms_large": {
-      "stats": {
-        "num_nodes": 29,
-        "num_not_aa": 11
-      }
-    },
-    "vehicle": {
-      "stats": {
-        "num_nodes": 10387,
-        "num_not_aa": 1299
-      }
-    }
-  },
-  "LinearClassifierDT(LinearSVC)": {
-    "aircraft": "timeout",
-    "cartpole": {
-      "stats": {
-        "num_nodes": 251,
-        "num_not_aa": 3
-      }
-    },
-    "cruise-latest": {
-      "stats": {
-        "num_nodes": 1251,
-        "num_not_aa": 136
-      },
-      "accuracy": 0.9999864851167348
-    },
-    "cruise-medium-latest": {
-      "stats": {
-        "num_nodes": 133,
-        "num_not_aa": 20
-      }
-    },
-    "cruise-small-latest": {
-      "stats": {
-        "num_nodes": 69,
-        "num_not_aa": 9
-      }
-    },
-    "tworooms_large": {
-      "stats": {
-        "num_nodes": 979,
-        "num_not_aa": 25
-      }
-    },
-    "vehicle": {
-      "stats": {
-        "num_nodes": 13167,
-        "num_not_aa": 151
-      }
-    }
-  },
-  "MaxEveryNodeDT": {
-    "aircraft": "not applicable",
-    "cartpole": {
-      "stats": {
-        "num_nodes": 11
-      }
-    },
-    "cruise-latest": {
-      "stats": {
-        "num_nodes": 3
-      }
-    },
-    "cruise-medium-latest": {
-      "stats": {
-        "num_nodes": 9
-      }
-    },
-    "cruise-small-latest": {
-      "stats": {
-        "num_nodes": 11
-      }
-    },
-    "tworooms_large": {
-      "stats": {
-        "num_nodes": 9
-      }
-    },
-    "vehicle": "not applicable"
-  },
-  "MaxEveryNodeLCDT(LogisticRegression)": {
-    "aircraft": "not applicable",
-    "cartpole": {
-      "stats": {
-        "num_nodes": 13,
-        "num_not_aa": 5
-      }
-    },
-    "cruise-latest": {
-      "stats": {
-        "num_nodes": 3,
-        "num_not_aa": 0
-      }
-    },
-    "cruise-medium-latest": {
-      "stats": {
-        "num_nodes": 31,
-        "num_not_aa": 7
-      }
-    },
-    "cruise-small-latest": {
-      "stats": {
-        "num_nodes": 15,
-        "num_not_aa": 5
-      }
-    },
-    "tworooms_large": {
-      "stats": {
-        "num_nodes": 9,
-        "num_not_aa": 2
-      }
-    },
-    "vehicle": "not applicable"
-  },
-  "OC1": {
-    "aircraft": {
-      "stats": {
-        "num_nodes": 923,
-        "num_not_aa": 40
-      },
-      "accuracy": 0.504
-    },
-    "cartpole": {
-      "stats": {
-        "num_nodes": 183,
-        "num_not_aa": 13
-      }
-    },
-    "cruise-latest": {
-      "stats": {
-        "num_nodes": 797,
-        "num_not_aa": 270
-      },
-      "accuracy": 0.9999864851167348
-    },
-    "cruise-medium-latest": {
-      "stats": {
-        "num_nodes": 147,
-        "num_not_aa": 50
-      }
-    },
-    "cruise-small-latest": {
-      "stats": {
-        "num_nodes": 57,
-        "num_not_aa": 18
-      }
-    },
-    "tworooms_large": {
-      "stats": {
-        "num_nodes": 191,
-        "num_not_aa": 63
-      },
-      "accuracy": 0.99998
-    },
-    "vehicle": {
-      "stats": {
-        "num_nodes": 957,
-        "num_not_aa": 110
-      },
-      "accuracy": 0.4608
     }
   }
 }

@@ -21,7 +21,7 @@
     <tbody>
     {% for i in range(row_metadata|length) %}
         <tr>
-            <th scope="row" style="text-align:center">{{ row_metadata[i]["name"] }}<br />(original_size: {{ row_metadata[i]["size"] }})</th>
+            <th scope="row" style="text-align:center">{{ row_metadata[i]["name"] }}<br />(#state-action pairs: {{ row_metadata[i]["size"] }})</th>
             {% for j in range(table[i]|length) %}
                 {% set cell = table[i][j] %}
                 {% set links = links_table[i][j] %}
