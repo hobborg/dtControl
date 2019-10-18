@@ -15,7 +15,6 @@ from timeout import call_with_timeout
 from ui.table_controller import TableController
 from util import format_seconds, get_filename_and_ext
 
-
 class BenchmarkResults:
     """
     The benchmark results store the benchmark data in a table format (dataset x classifier -> results).
@@ -29,7 +28,6 @@ class BenchmarkResults:
         self.row_metadata = row_metadata
         self.column_names = column_names
         self.table = table
-
 
 class BenchmarkSuite:
     """
@@ -47,7 +45,8 @@ class BenchmarkSuite:
         classifier.export_c(file) saves a C-representation of the classifier to a file
     """
 
-    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None, rerun=False):
+    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None,
+                 rerun=False):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
@@ -87,7 +86,7 @@ class BenchmarkSuite:
         if isfile(path):
             return [path]
         else:
-            return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump')) + glob.glob(join(path, '*.vector'))
+            return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump'))
 
     def display_html(self):
         display(HTML(f'<html><a href="{self.html_file}" target="_blank">View table</a></html>'))
@@ -107,7 +106,7 @@ class BenchmarkSuite:
                 cell, computed = self.compute_cell(ds, classifier)
                 row.append(cell)
                 if computed:
-                    self.save_result(classifier.name, ds.name, cell)
+                    self.save_result(classifier.name, ds, cell)
                     if cell == 'timeout':
                         msg = f"{step}/{num_steps}: {classifier.name} on {ds.name} timed out after {format_seconds(self.timeout)}"
                     else:
@@ -117,16 +116,18 @@ class BenchmarkSuite:
                     if cell == 'not applicable':
                         logging.info(f"{step}/{num_steps}: {classifier.name} is not applicable for {ds.name}.")
                     else:
-                        logging.info(f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
+                        logging.info(
+                            f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
             table.append(row)
         logging.info('All benchmarks completed. Shutting down dtControl.')
-        results = BenchmarkResults([{"name": ds.name, "size": ds.X_train.shape[0]} for ds in self.datasets], [c.name for c in classifiers], table)
+        results = BenchmarkResults([{"name": ds.name, "size": ds.X_metadata['num_rows']} for ds in self.datasets],
+                                   [c.name for c in classifiers], table)
         self.table_controller.update_and_save(results)
 
     def compute_cell(self, dataset, classifier):
         if self.already_computed(dataset, classifier) and not self.rerun:
             computed = False
-            cell = self.results[classifier.name][dataset.name]
+            cell = self.results[dataset.name]['classifiers'][classifier.name]
         elif not classifier.is_applicable(dataset):
             computed = False
             cell = 'not applicable'
@@ -137,7 +138,7 @@ class BenchmarkSuite:
         return cell, computed
 
     def already_computed(self, dataset, classifier):
-        return classifier.name in self.results and dataset.name in self.results[classifier.name]
+        return dataset.name in self.results and classifier.name in self.results[dataset.name]['classifiers']
 
     def train_and_get_cell(self, dataset, classifier):
         classifier, success, time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
@@ -152,7 +153,7 @@ class BenchmarkSuite:
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
                 classifier.export_c(c_filename)
                 vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                classifier.export_vhdl(len(dataset.X_metadata["variables"]),vhdl_filename)
+                classifier.export_vhdl(len(dataset.X_metadata["variables"]), vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
@@ -172,37 +173,46 @@ class BenchmarkSuite:
         name += extension
         return join(dir, name)
 
-    def save_result(self, classifier_name, dataset_name, result):
-        if classifier_name not in self.results:
-            self.results[classifier_name] = {}
-        self.results[classifier_name][dataset_name] = result
+    def save_result(self, classifier_name, dataset, result):
+        if dataset.name not in self.results:
+            self.results[dataset.name] = {'classifiers': {},
+                                          'metadata': {
+                                              'X_metadata': dataset.X_metadata,
+                                              'Y_metadata': dataset.Y_metadata
+                                          }
+                                          }
+        self.results[dataset.name]['classifiers'][classifier_name] = result
         self.save_to_disk()
 
     def load_results(self):
-        if not self.json_file or not exists(self.json_file) or not isfile(self.json_file): return
+        if not self.json_file or not exists(self.json_file) or not isfile(self.json_file):
+            return
         with open(self.json_file, 'r') as infile:
             self.results = json.load(infile)
+        for ds in self.datasets:
+            if ds.name in self.results:
+                ds.load_metadata_from_json(self.results[ds.name])
 
     def delete_dataset_results(self, dataset_name):
         self.load_results()
-        for classifier in self.results:
-            datasets = self.results[classifier]
-            if dataset_name in datasets:
-                del datasets[dataset_name]
+        if dataset_name in self.results:
+            del self.results[dataset_name]
         self.save_to_disk()
 
     def delete_classifier_results(self, classifier_name):
         self.load_results()
-        if classifier_name in self.results:
-            del self.results[classifier_name]
+        for dataset in self.results:
+            classifiers = self.results[dataset]['classifiers']
+            if classifier_name in classifiers:
+                del classifiers[classifier_name]
         self.save_to_disk()
 
     def delete_cell(self, dataset_name, classifier_name):
         self.load_results()
-        if classifier_name in self.results:
-            datasets = self.results[classifier_name]
-            if dataset_name in datasets:
-                del datasets[dataset_name]
+        if dataset_name in self.results:
+            classifiers = self.results[dataset_name]['classifiers']
+            if classifier_name in classifiers:
+                del classifiers[classifier_name]
         self.save_to_disk()
 
     def save_to_disk(self):
@@ -234,10 +244,10 @@ class BenchmarkSuite:
         for i in range(5):
             f.readline()
         state_dim = int(f.readline())
-        for i in range(12+3 * state_dim):
+        for i in range(12 + 3 * state_dim):
             f.readline()
         input_dim = int(f.readline())
-        for i in range(12+3*input_dim):
+        for i in range(12 + 3 * input_dim):
             f.readline()
 
         non_det = int(f.readline().split(":")[1].split()[1])

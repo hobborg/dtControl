@@ -1,17 +1,17 @@
+from classifiers.cart_custom_dt import CartDT, CartNode
 from dataset.dataset import Dataset
 from dataset.single_output_dataset import SingleOutputDataset
-from classifiers.cart_custom_decision_tree import CartCustomDecisionTree, CartCustomNode
 
-class MaxCartDecisionTree(CartCustomDecisionTree):
-    def __init__(self,):
+class MaxFreqDT(CartDT):
+    def __init__(self, ):
         super().__init__()
-        self.name = 'MaxEveryNodeDT'
+        self.name = 'MaxFreqDT'
 
     def is_applicable(self, dataset):
         return not dataset.is_deterministic
 
     def fit(self, dataset):
-        self.root = MaxCartNode()
+        self.root = MaxFreqNode()
         if isinstance(dataset, SingleOutputDataset):
             self.root.fit(dataset.X_train, dataset.Y_train)
             self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
@@ -19,15 +19,12 @@ class MaxCartDecisionTree(CartCustomDecisionTree):
             self.root.fit(dataset.X_train, dataset.get_tuple_ids())
             self.set_labels(lambda leaf: dataset.map_tuple_id_back(leaf.trained_label), dataset.index_to_value)
 
-    def __str__(self):
-        return 'MaxEveryNodeDecisionTree'
-
-class MaxCartNode(CartCustomNode):
+class MaxFreqNode(CartNode):
     def __init__(self, depth=0):
         super().__init__(depth)
 
     def create_child_node(self):
-        return MaxCartNode(self.depth + 1)
+        return MaxFreqNode(self.depth + 1)
 
     def find_split(self, X, y):
         return super().find_split(X, Dataset._get_max_labels(y))

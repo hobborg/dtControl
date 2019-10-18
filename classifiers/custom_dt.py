@@ -6,9 +6,10 @@ from collections.abc import Iterable
 import numpy as np
 from sklearn.base import BaseEstimator
 
-class CustomDecisionTree(ABC, BaseEstimator):
+class CustomDT(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
+        self.name = None
 
     @abstractmethod
     def is_applicable(self, dataset):
@@ -64,9 +65,8 @@ class CustomDecisionTree(ABC, BaseEstimator):
         with open(filename, 'wb') as outfile:
             pickle.dump(self, outfile)
 
-    @abstractmethod
     def __str__(self):
-        pass
+        return self.name
 
 class Node(ABC):
     def __init__(self, depth=0):

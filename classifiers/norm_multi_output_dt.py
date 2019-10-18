@@ -1,16 +1,16 @@
 import numpy as np
 
-from classifiers.cart_custom_decision_tree import CartCustomDecisionTree, CartCustomNode
+from classifiers.cart_custom_dt import CartDT, CartNode
 from dataset.multi_output_dataset import MultiOutputDataset
 
-class NormMultiOutputDecisionTree(CartCustomDecisionTree):
+class NormMultiOutputDT(CartDT):
     """
     :param comp: The comparison function to be used (either max or min)
     """
 
     def __init__(self, comp):
         super().__init__()
-        self.name = f'NormMultiOutputDT({"Max" if comp == max else "Min"})'
+        self.name = f'{"Max" if comp == max else "Min"}NormMultiOutputDT'
         self.comp = comp
 
     def is_applicable(self, dataset):
@@ -19,7 +19,7 @@ class NormMultiOutputDecisionTree(CartCustomDecisionTree):
     def fit(self, dataset):
         if dataset.tuple_to_tuple_id is None:  # TODO: refactor stuff like this with something like dataset.get_tuple_to_tuple_ids()
             dataset.get_unique_labels()
-        self.root = CartCustomNode()
+        self.root = CartNode()
         self.root.fit(dataset.X_train, self.determinize(dataset))
         self.set_labels(lambda leaf: dataset.map_tuple_id_back(leaf.trained_label), dataset.index_to_value)
 
@@ -32,6 +32,3 @@ class NormMultiOutputDecisionTree(CartCustomDecisionTree):
                                     key=lambda t: sum(dataset.index_to_value[i] ** 2 for i in t)))
             i += 1
         return np.array([dataset.tuple_to_tuple_id[tuple(t)] for t in result])
-
-    def __str__(self):
-        return 'NormMultiOutputDT'
