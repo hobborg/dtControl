@@ -9,6 +9,47 @@ from util import get_filename_and_ext
 
 
 class Dataset(ABC):
+    """
+    Attributes:
+        X_train: the training data of shape (num_states, num_state_dims)
+        Y_train:
+            Multi-output: the training labels of shape (num_input_dims, num_states, max_non_determinism)
+                For example:  [ [[1  2 -1]  [[4  5 -1]
+                                [2  3 -1]   [4  6 -1]
+                                [1  2  3]   [4  6  6]
+                                [1 -1 -1]]  [5 -1 -1]] ]
+                has the shape (2, 4, 3) as there are two control inputs, 4 states and
+                at most 3 non-deterministic choices for each state.
+
+                The Y_train in the above example can be thought of a list [y1, y2]
+                where y1 gives the values for the first control input and y2 gives
+                the values for the second control input. Let us for example see
+                which inputs are allowed for the 2nd state.
+
+                y1[1] = [2  3 -1] and y2[1] = [4  6 -1]
+
+                This means that the allowed control inputs for the 2nd state are
+                (2, 4) and (3, 6). The -1 is a filler just to make the length of
+                the lists  = max_non_determinism.
+
+                Use np.stack(Y_train, axis=2) in order to get an array of the form
+                [[[1  4], [ 2  5], [-1 -1]],
+                 [[2  4], [ 3  6], [-1 -1]]
+                 [[1  4], [ 2  6], [ 3  6]]
+                 [[1  5], [-1 -1], [-1 -1]]
+
+                from which it is easier to extract control actions as tuples.
+            Single-output: the training labels of shape (num_states, max_non_determinism)
+                For example:   [[1  2 -1]
+                                [2  3 -1]
+                                [1  2  3]
+                                [1 -1 -1]]
+                has the shape (4, 3) as there are 4 states and at most 3 non-deterministic
+                choices for each state.
+
+                Y_train[i] gives the allowed control inputs for the ith state. -1 is a
+                filler just to make the length of the lists  = max_non_determinism.
+    """
     def __init__(self, filename):
         self.filename = filename
         self.name, self.extension = get_filename_and_ext(filename)
