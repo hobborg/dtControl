@@ -48,7 +48,7 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None, rerun=False):
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+        logging.basicConfig(level=logging.INFO, format='%(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
         self.html_file = f'{benchmark_file}.html'

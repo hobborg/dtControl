@@ -182,7 +182,7 @@ def get_classifiers(methods, det_strategies):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     parser = argparse.ArgumentParser(prog="dtcontrol")
 
