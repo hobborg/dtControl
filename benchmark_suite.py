@@ -147,7 +147,9 @@ class BenchmarkSuite:
             if acc is None:
                 cell = 'failed to fit'
             else:
-                cell = {'stats': classifier.get_stats(), 'time': format_seconds(time)}
+                stats = classifier.get_stats()
+                stats.update(classifier.analyze())
+                cell = {'stats': stats, 'time': format_seconds(time)}
                 dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
                 classifier.export_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')

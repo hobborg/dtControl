@@ -25,7 +25,7 @@ class LinearClassifierDT(CustomDT):
         self.root.fit(dataset.X_train, dataset.get_unique_labels())
         self.set_labels(lambda leaf: dataset.map_unique_label_back(leaf.trained_label), dataset.index_to_value)
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         return {
             'num_nodes': self.root.num_nodes,
             'num_not_aa': self.root.num_not_axis_aligned

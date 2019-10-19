@@ -37,7 +37,7 @@ class OC1Wrapper:
     def is_applicable(self, dataset):
         return isinstance(dataset, SingleOutputDataset)
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         return {
             'num_nodes': self.num_nodes,
             'num_not_aa': self.num_oblique

@@ -27,7 +27,7 @@ class MaxCartForest():
     def predict(self, dataset):
         return list(zip(*[self.trees[i].predict(dataset.X_train) for i in range(len(self.trees))]))
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         stats = {}
         for i in range(len(self.trees)):
             stats[f'num_nodes_{i}'] = self.trees[i].num_nodes
