@@ -15,7 +15,7 @@ class LinearClassifierDT(CustomDT):
         super().__init__()
         self.kwargs = kwargs
         self.classifier_class = classifier_class
-        self.name = 'LinearClassifierDT({})'.format(classifier_class.__name__)
+        self.name = 'LinearClassifierDT-{}'.format(classifier_class.__name__)
 
     def is_applicable(self, dataset):
         return True
@@ -27,8 +27,9 @@ class LinearClassifierDT(CustomDT):
 
     def get_stats(self) -> dict:
         return {
-            'num_nodes': self.root.num_nodes,
-            'num_not_aa': self.root.num_not_axis_aligned
+            'nodes': self.root.num_nodes,
+            'oblique': self.root.num_not_axis_aligned,
+            'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1)/2)))
         }
 
 class LinearClassifierOrAxisAlignedNode(Node):

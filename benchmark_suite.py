@@ -11,6 +11,7 @@ from os.path import join, exists, isfile
 from IPython.display import HTML, display
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
+from classifiers.oc1_wrapper import OC1Wrapper
 from timeout import call_with_timeout
 from ui.table_controller import TableController
 from util import format_seconds, get_filename_and_ext
@@ -148,14 +149,14 @@ class BenchmarkSuite:
                 cell = 'failed to fit'
             else:
                 stats = classifier.get_stats()
-                stats.update(classifier.analyze())
                 cell = {'stats': stats, 'time': format_seconds(time)}
                 dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
                 classifier.export_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
                 classifier.export_c(c_filename)
-                vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                classifier.export_vhdl(len(dataset.X_metadata["variables"]), vhdl_filename)
+                if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
+                    vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
+                    classifier.export_vhdl(len(dataset.X_metadata["variables"]), vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:

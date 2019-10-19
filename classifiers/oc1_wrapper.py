@@ -29,7 +29,7 @@ class OC1Wrapper:
         self.num_jumps = num_jumps
         self.num_nodes = None
         self.num_oblique = None
-        self.oc1_root: OC1Node = None
+        self.root: OC1Node = None
 
         if not os.path.exists('oc1_tmp'):
             os.mkdir('oc1_tmp')
@@ -39,8 +39,9 @@ class OC1Wrapper:
 
     def get_stats(self) -> dict:
         return {
-            'num_nodes': self.num_nodes,
-            'num_not_aa': self.num_oblique
+            'nodes': self.num_nodes,
+            'oblique': self.num_oblique,
+            'bandwidth': int(np.ceil(np.log2((self.num_nodes + 1) / 2)))
         }
 
     def get_fit_command(self, dataset):
@@ -53,8 +54,8 @@ class OC1Wrapper:
 
     def fit_command_called(self):
         self.parse_fit_output()
-        self.oc1_root: OC1Node = self.parse_dt()
-        self.oc1_root.set_labels(lambda x: self.map_unique_label_back(x.trained_label), self.index_to_value)
+        self.root: OC1Node = self.parse_dt()
+        self.root.set_labels(lambda x: self.map_unique_label_back(x.trained_label), self.index_to_value)
 
     def fit(self, dataset):
         command = self.get_fit_command(dataset)
@@ -146,7 +147,7 @@ class OC1Wrapper:
         copyfile(self.dt_file, filename)
 
     def export_dot(self, file=None):
-        dot = self.oc1_root.export_dot()
+        dot = self.root.export_dot()
         if file:
             with open(file, 'w+') as outfile:
                 outfile.write(dot)

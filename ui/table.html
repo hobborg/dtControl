@@ -16,6 +16,7 @@
             crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css"
           rel="stylesheet">
+    <link href="ui/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
     <meta charset="UTF-8">
     <title>Benchmark results</title>
@@ -42,7 +43,7 @@
         <tr>
             <td></td>
             {% for c in column_names %}
-                <th scope="col" style="text-align: center; vertical-align: middle; max-width: 200px; word-wrap:break-word;">{{ c }}</th>
+            <th class="rotate" scope="col"><div><span>{{ c }}</span></div></th>
             {% endfor %}
         </tr>
         </thead>

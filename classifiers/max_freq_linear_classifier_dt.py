@@ -5,7 +5,7 @@ from classifiers.linear_classifier_dt import LinearClassifierDT, LinearClassifie
 class MaxFreqLinearClassifierDT(LinearClassifierDT):
     def __init__(self, classifier_class, **kwargs):
         super().__init__(classifier_class, **kwargs)
-        self.name = 'MaxFreqLinearClassifierDT({})'.format(classifier_class.__name__)
+        self.name = 'MaxFreq-LinearClassifierDT-{}'.format(classifier_class.__name__)
 
     def is_applicable(self, dataset):
         return isinstance(dataset, SingleOutputDataset) and not dataset.is_deterministic

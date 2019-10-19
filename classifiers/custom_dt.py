@@ -28,54 +28,9 @@ class CustomDT(ABC, BaseEstimator):
 
     def get_stats(self) -> dict:
         return {
-            'num_nodes': self.root.num_nodes
+            'nodes': self.root.num_nodes,
+            'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
         }
-
-    def analyze(self):
-        """
-        Analyzes the constructed tree and returns
-        1. forward_bandwidth - minimum number of state information bits which need to be transmitted to the controller;
-        2. backward_bandwidth - minimum number of control input bits which need to be transmitted back to the system;
-        3. decision_nodes - number of decision nodes in the tree; and
-        4. leaf_nodes - number of leaf nodes in the tree
-        :returns: a dictionary with the 4 statistics
-        """
-
-        def visit(node):
-            # Initialize
-            u_predicates = set()
-            u_leaves = set()
-            d_nodes = 0
-            l_nodes = 0
-
-            # Visit left
-            if node.left:
-                u_p, u_l, d_n, l_n = visit(node.left)
-                u_predicates.update(u_p)
-                u_leaves.update(u_l)
-                d_nodes += d_n
-                l_nodes += l_n
-
-            # Visit right
-            if node.right:
-                u_p, u_l, d_n, l_n = visit(node.right)
-                u_predicates.update(u_p)
-                u_leaves.update(u_l)
-                d_nodes += d_n
-                l_nodes += l_n
-
-            if not node.left and not node.right:  # If leaf
-                u_leaves.add(node.get_dot_label())
-                l_nodes += 1
-            else:  # If not leaf
-                u_predicates.add(node.get_dot_label())
-                d_nodes += 1
-
-            return u_predicates, u_leaves, d_nodes, l_nodes
-
-        unique_predicates, unique_leaves, decision_nodes, leaf_nodes = visit(self.root)
-        return {"forward_bandwidth": len(unique_predicates), "backward_bandwidth": len(unique_leaves),
-                "decision_nodes": decision_nodes, "leaf_nodes": leaf_nodes}
 
     def export_dot(self, file=None):
         dot = self.root.export_dot()

@@ -4,7 +4,7 @@ from dataset.multi_output_dataset import MultiOutputDataset
 class MaxFreqMultiLinearClassifierDT(LinearClassifierDT):
     def __init__(self, classifier_class, **kwargs):
         super().__init__(classifier_class, **kwargs)
-        self.name = 'MaxFreqMultiLinearClassifierDT'
+        self.name = 'MaxFreqMulti-LinearClassifierDT'
 
     def is_applicable(self, dataset):
         return isinstance(dataset, MultiOutputDataset) and not dataset.is_deterministic
