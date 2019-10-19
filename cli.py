@@ -82,13 +82,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from benchmark_suite import BenchmarkSuite
-from classifiers.cart_custom_decision_tree import CartCustomDecisionTree
-from classifiers.linear_classifier_decision_tree import LinearClassifierDecisionTree
-from classifiers.max_every_node_decision_tree import MaxCartDecisionTree
-from classifiers.max_every_node_lc_decision_tree import MaxLCDecisionTree
-from classifiers.max_every_node_multi_decision_tree import MaxEveryNodeMultiDecisionTree
-from classifiers.norm_single_output_decision_tree import NormSingleOutputDecisionTree
-from classifiers.norm_multi_output_decision_tree import NormMultiOutputDecisionTree
+from classifiers.cart_custom_dt import CartDT
+from classifiers.linear_classifier_dt import LinearClassifierDT
+from classifiers.max_freq_dt import MaxFreqDT
+from classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
+from classifiers.max_freq_multi_dt import MaxFreqMultiDT
+from classifiers.norm_single_output_dt import NormSingleOutputDT
+from classifiers.norm_multi_output_dt import NormMultiOutputDT
 from classifiers.oc1_wrapper import OC1Wrapper
 
 
@@ -137,19 +137,19 @@ def get_classifiers(methods, det_strategies):
     """
     method_map = {
         'cart': {
-            'nondet': [CartCustomDecisionTree()],
-            'maxnorm': [NormSingleOutputDecisionTree(max), NormMultiOutputDecisionTree(max)],
-            'minnorm': [NormSingleOutputDecisionTree(min), NormMultiOutputDecisionTree(min)],
-            'maxfreq': [MaxCartDecisionTree()],
-            'multimaxfreq': [MaxEveryNodeMultiDecisionTree()],
+            'nondet': [CartDT()],
+            'maxnorm': [NormSingleOutputDT(max), NormMultiOutputDT(max)],
+            'minnorm': [NormSingleOutputDT(min), NormMultiOutputDT(min)],
+            'maxfreq': [MaxFreqDT()],
+            'multimaxfreq': [MaxFreqMultiDT()],
         },
         'linsvm': {
-            'nondet': [LinearClassifierDecisionTree(LinearSVC, max_iter=5000)],
-            'maxfreq': [MaxLCDecisionTree(LinearSVC, max_iter=5000)],
+            'nondet': [LinearClassifierDT(LinearSVC, max_iter=5000)],
+            'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
         },
         'logreg': {
-            'nondet': [LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')],
-            'maxfreq': [MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none')],
+            'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
+            'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
         },
         'oc1': {
             'nondet': [OC1Wrapper(num_restarts=20, num_jumps=5)]
@@ -182,7 +182,7 @@ def get_classifiers(methods, det_strategies):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     parser = argparse.ArgumentParser(prog="dtcontrol")
 

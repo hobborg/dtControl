@@ -6,9 +6,11 @@ from collections.abc import Iterable
 import numpy as np
 from sklearn.base import BaseEstimator
 
-class CustomDecisionTree(ABC, BaseEstimator):
+
+class CustomDT(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
+        self.name = None
 
     @abstractmethod
     def is_applicable(self, dataset):
@@ -24,10 +26,56 @@ class CustomDecisionTree(ABC, BaseEstimator):
     def predict(self, dataset):
         return self.root.predict(dataset.X_train)
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         return {
             'num_nodes': self.root.num_nodes
         }
+
+    def analyze(self):
+        """
+        Analyzes the constructed tree and returns
+        1. forward_bandwidth - minimum number of state information bits which need to be transmitted to the controller;
+        2. backward_bandwidth - minimum number of control input bits which need to be transmitted back to the system;
+        3. decision_nodes - number of decision nodes in the tree; and
+        4. leaf_nodes - number of leaf nodes in the tree
+        :returns: a dictionary with the 4 statistics
+        """
+
+        def visit(node):
+            # Initialize
+            u_predicates = set()
+            u_leaves = set()
+            d_nodes = 0
+            l_nodes = 0
+
+            # Visit left
+            if node.left:
+                u_p, u_l, d_n, l_n = visit(node.left)
+                u_predicates.update(u_p)
+                u_leaves.update(u_l)
+                d_nodes += d_n
+                l_nodes += l_n
+
+            # Visit right
+            if node.right:
+                u_p, u_l, d_n, l_n = visit(node.right)
+                u_predicates.update(u_p)
+                u_leaves.update(u_l)
+                d_nodes += d_n
+                l_nodes += l_n
+
+            if not node.left and not node.right:  # If leaf
+                u_leaves.add(node.get_dot_label())
+                l_nodes += 1
+            else:  # If not leaf
+                u_predicates.add(node.get_dot_label())
+                d_nodes += 1
+
+            return u_predicates, u_leaves, d_nodes, l_nodes
+
+        unique_predicates, unique_leaves, decision_nodes, leaf_nodes = visit(self.root)
+        return {"forward_bandwidth": len(unique_predicates), "backward_bandwidth": len(unique_leaves),
+                "decision_nodes": decision_nodes, "leaf_nodes": leaf_nodes}
 
     def export_dot(self, file=None):
         dot = self.root.export_dot()
@@ -45,28 +93,29 @@ class CustomDecisionTree(ABC, BaseEstimator):
         else:
             return c
 
-    #Needs to know the number of inputs, because it has to define how many inputs the hardware component has in the "entity" block
+    # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in the "entity" block
     def export_vhdl(self, numInputs, file=None):
         entitystr = "entity controller is\n\tport (\n"
         allInputs = ""
-        for i in range(0,numInputs):
-            entitystr += "\t\tx" + str(i) + ": in <type>;\n" #todo: get type from dataset :(
+        for i in range(0, numInputs):
+            entitystr += "\t\tx" + str(i) + ": in <type>;\n"  # todo: get type from dataset :(
             allInputs += "x" + str(i) + ","
-        entitystr += "\t\ty: out <type>\n\t);\nend entity;\n\n" #no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
-        architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + allInputs[:-1] + ")\n\tbegin\n" + self.root.export_vhdl() + "\n\tend process;\nend architecture;"
+        entitystr += "\t\ty: out <type>\n\t);\nend entity;\n\n"  # no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
+        architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + allInputs[
+                                                                               :-1] + ")\n\tbegin\n" + self.root.export_vhdl() + "\n\tend process;\nend architecture;"
         if file:
             with open(file, 'w+') as outfile:
-                outfile.write(entitystr+architecture)
+                outfile.write(entitystr + architecture)
         else:
-            return entitystr+architecture
+            return entitystr + architecture
 
     def save(self, filename):
         with open(filename, 'wb') as outfile:
             pickle.dump(self, outfile)
 
-    @abstractmethod
     def __str__(self):
-        pass
+        return self.name
+
 
 class Node(ABC):
     def __init__(self, depth=0):
@@ -207,13 +256,13 @@ class Node(ABC):
         pass
 
     def export_c(self):
-        return self._export_if_then_else(0,'c')
+        return self._export_if_then_else(0, 'c')
 
     def export_vhdl(self):
         return self._export_if_then_else(2, 'vhdl')
-        
-    #This handles both the c and vhdl export of nodes, as they both have the if-then-else structure and differ only in details
-    #Type can be 'c' or 'vhdl', currently
+
+    # This handles both the c and vhdl export of nodes, as they both have the if-then-else structure and differ only in details
+    # Type can be 'c' or 'vhdl', currently
     def _export_if_then_else(self, indent_index, type):
         # get label depending on type
         if type == 'c':
@@ -221,49 +270,54 @@ class Node(ABC):
         elif type == 'vhdl':
             label = self.get_vhdl_label()
         else:
-            raise Exception(f'Unknown type {type} in _export_if_then_else') # do this type check once; from now on, else always means vhdl
+            raise Exception(
+                f'Unknown type {type} in _export_if_then_else')  # do this type check once; from now on, else always means vhdl
         # If leaf node
         if not self.left and not self.right:
             return "\t" * indent_index + str(label)
-            
-        #if inner node
+
+        # if inner node
         text = ""
-        text += "\t" * indent_index + (f"if ({self.get_c_label()}) {{\n" if type == 'c' else f"if {self.get_vhdl_label()} then\n")
-        
+        text += "\t" * indent_index + (
+            f"if ({self.get_c_label()}) {{\n" if type == 'c' else f"if {self.get_vhdl_label()} then\n")
+
         if self.left:
-            text += f"{self.left._export_if_then_else(indent_index + 1,type)}\n"
+            text += f"{self.left._export_if_then_else(indent_index + 1, type)}\n"
         else:
             text += "\t" * (indent_index + 1) + ";\n"
         if type == 'c':
             text += "\t" * indent_index + "}\n"
 
         if self.right:
-            text += "\t" * indent_index + ("else {\n" if type == 'c' else "else \n") 
-            text += f"{self.right._export_if_then_else(indent_index + 1,type)}\n" 
+            text += "\t" * indent_index + ("else {\n" if type == 'c' else "else \n")
+            text += f"{self.right._export_if_then_else(indent_index + 1, type)}\n"
             text += "\t" * indent_index + ("}" if type == 'c' else "end if;")
-                
+
         return text
 
     def get_determinized_label(self):
-        if isinstance(self.actual_label,list): #list of things, i.e. nondeterminsm present, need to determinise by finding max norm (could use other ideas as well)
+        if isinstance(self.actual_label,
+                      list):  # list of things, i.e. nondeterminsm present, need to determinise by finding max norm (could use other ideas as well)
             maxNorm = self.actual_label[0]
             for i in self.actual_label:
                 maxNorm = maxNorm if (self.norm(maxNorm) >= self.norm(i)) else i
             return maxNorm
-        else: #just an int or a tuple, easy; note that we have to use list and not iterable in the above if, because tuples (multi control input) are also iterable
-            return self.actual_label 
-                    
-    # If tup is an int, return abs of that number; if it is a tuple, return sum of absolutes of contents
+        else:  # just an int or a tuple, easy; note that we have to use list and not iterable in the above if, because tuples (multi control input) are also iterable
+            return self.actual_label
+
+            # If tup is an int, return abs of that number; if it is a tuple, return sum of absolutes of contents
+
     # Used by get_determinized_label
     def norm(self, tup):
-        if isinstance(tup, Iterable): #if this is iterable, it is a tuple (multi control input setting, and we want sum of abs)
+        if isinstance(tup,
+                      Iterable):  # if this is iterable, it is a tuple (multi control input setting, and we want sum of abs)
             result = 0
             for i in tup:
-                result += i*i
+                result += i * i
             return result
-        else: # if it is not iterable, then it was a single number, return abs of that
+        else:  # if it is not iterable, then it was a single number, return abs of that
             return abs(tup)
-            
+
     @abstractmethod
     def get_dot_label(self):
         pass
@@ -274,23 +328,23 @@ class Node(ABC):
 
     def get_c_label(self):
         return self._get_label('c')
-        
+
     def get_vhdl_label(self):
         return self._get_label('vhdl')
-        
-    def _get_label(self,type):
+
+    def _get_label(self, type):
         # if leaf, return class; determinize if necessary, and handle multi output printing
-        if self.actual_label is not None: 
-            label = self.get_determinized_label() 
+        if self.actual_label is not None:
+            label = self.get_determinized_label()
             if isinstance(label, Iterable):
                 if type == 'c':
                     return "return {" + ','.join([str(i) for i in self.get_determinized_label()]) + "}"
                 else:
-                    i=0
-                    result=""
+                    i = 0
+                    result = ""
                     for controlInput in label:
                         result += f'y{str(i)} <= {str(controlInput)}; '
-                        i+=1
+                        i += 1
                     return result
             else:
                 if type == 'c':
@@ -298,7 +352,7 @@ class Node(ABC):
                 else:
                     return f'y <= {str(label)};'
         # else, print predicate in correct format
-        
+
         if self.is_axis_aligned():
             try:  # the guy keeping track of the tree is called differently depending on subclass. This ain't nice, but it works.
                 tree = self.dt.tree_

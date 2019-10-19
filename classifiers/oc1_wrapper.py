@@ -1,9 +1,15 @@
+import ast
 import os
+import re
 import subprocess
 from shutil import copyfile
 
 import numpy as np
+
+import util
+from classifiers.custom_dt import Node
 from dataset.single_output_dataset import SingleOutputDataset
+
 
 class OC1Wrapper:
     """
@@ -23,6 +29,7 @@ class OC1Wrapper:
         self.num_jumps = num_jumps
         self.num_nodes = None
         self.num_oblique = None
+        self.oc1_root: OC1Node = None
 
         if not os.path.exists('oc1_tmp'):
             os.mkdir('oc1_tmp')
@@ -30,13 +37,15 @@ class OC1Wrapper:
     def is_applicable(self, dataset):
         return isinstance(dataset, SingleOutputDataset)
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         return {
             'num_nodes': self.num_nodes,
             'num_not_aa': self.num_oblique
         }
 
     def get_fit_command(self, dataset):
+        self.map_unique_label_back = dataset.map_unique_label_back
+        self.index_to_value = dataset.index_to_value
         self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()], last_column_is_label=True)
         command = './{} -t {} -D {} -p0 -i{} -j{} -l {}' \
             .format(self.oc1_path, self.data_file, self.dt_file, self.num_restarts, self.num_jumps, self.log_file)
@@ -44,6 +53,8 @@ class OC1Wrapper:
 
     def fit_command_called(self):
         self.parse_fit_output()
+        self.oc1_root: OC1Node = self.parse_dt()
+        self.oc1_root.set_labels(lambda x: self.map_unique_label_back(x.trained_label), self.index_to_value)
 
     def fit(self, dataset):
         command = self.get_fit_command(dataset)
@@ -57,6 +68,55 @@ class OC1Wrapper:
                     self.num_nodes = int(line.split(': ')[1])
                 elif line.startswith('Number of oblique'):
                     self.num_oblique = int(line.split(': ')[1])
+
+    def parse_dt(self):
+        """
+        Parses the OC1 generated DT file
+        :return OC1Node object pointing to the root
+        """
+        f = open(self.dt_file)
+        dim = int(re.findall(r"Dimensions: ([0-9]+)", f.readline())[0])
+        for line in f:
+            if "Hyperplane" in line:
+                path, left, right = self.parse_node(line)
+                expr_line = f.readline()
+                coeff, intercept = self.parse_expression(expr_line, dim)
+                if "Root" in path:
+                    if self.is_leaf(left) and self.is_leaf(right):
+                        root = OC1Node(None, None, depth=0)
+                        assert self.get_leaf_class(left) == self.get_leaf_class(right)
+                        root.trained_label = self.get_leaf_class(left)
+                    else:
+                        root = OC1Node(coeff, intercept, depth=0)
+                        if self.is_leaf(left):
+                            root.left = OC1Node(None, None, depth=1)
+                            root.left.trained_label = self.get_leaf_class(left)
+                        if self.is_leaf(right):
+                            root.right = OC1Node(None, None, depth=1)
+                            root.right.trained_label = self.get_leaf_class(right)
+                    continue
+
+                current_node = root
+                depth = 0
+                for direction in path:
+                    depth += 1
+                    if direction == "l":
+                        if not current_node.left:
+                            current_node.left = OC1Node(coeff, intercept, depth=depth)
+                        current_node = current_node.left
+                    elif direction == "r":
+                        if not current_node.right:
+                            current_node.right = OC1Node(coeff, intercept, depth=depth)
+                        current_node = current_node.right
+
+                if self.is_leaf(left):
+                    current_node.left = OC1Node(None, None, depth=depth)
+                    current_node.left.trained_label = self.get_leaf_class(left)
+                if self.is_leaf(right):
+                    current_node.right = OC1Node(None, None, depth=depth)
+                    current_node.right.trained_label = self.get_leaf_class(right)
+
+        return root
 
     def predict(self, dataset):
         self.save_data_to_file(dataset.X_train)
@@ -86,10 +146,85 @@ class OC1Wrapper:
         copyfile(self.dt_file, filename)
 
     def export_dot(self, file=None):
-        pass
+        dot = self.oc1_root.export_dot()
+        if file:
+            with open(file, 'w+') as outfile:
+                outfile.write(dot)
+        else:
+            return dot
 
     def export_c(self, file=None):
         pass
-        
+
     def export_vhdl(self, file=None):
+        pass
+
+    @staticmethod
+    def parse_expression(line, dim):
+        # remove the " = 0" part and the split
+        summands = line[:-5].split(' + ')
+
+        intercept = round(float(summands[-1]), 6)
+
+        j = 0
+        coeffs = []
+        for i in range(1, dim + 1):
+            if f"x[{i}]" in summands[j]:
+                coeffs.append(round(float(summands[j].split()[0]), 6))
+                j = j + 1
+            else:
+                coeffs.append(0)
+        return coeffs, intercept
+
+    @staticmethod
+    def is_leaf(list_):
+        return len(list_) - list_.count(0) == 1
+
+    @staticmethod
+    def get_leaf_class(leaf):
+        for i in range(len(leaf)):
+            if leaf[i] != 0:
+                return (i + 1)
+
+    @staticmethod
+    def parse_node(line):
+        decision_path, _, _, _, left, _, _, right = line.split()
+        return decision_path, ast.literal_eval(left[:-1]), ast.literal_eval(right)
+
+
+class OC1Node(Node):
+    def __init__(self, coeff, intercept, depth=0):
+        super().__init__(depth)
+        self.dt = None
+        self.coeff = coeff
+        self.intercept = intercept
+
+    def test_condition(self, x):
+        """
+        :param x: [row of X_train]; shape (1, num_features)
+        :return true if go left
+        """
+        pass
+
+    def create_child_node(self):
+        pass
+
+    def find_split(self, X, y):
+        pass
+
+    def get_dot_label(self):
+        if self.actual_label is not None:
+            return str(util.objround(self.actual_label, 6))  # TODO get precision from flag?
+        else:
+            line = []
+            for i in range(len(self.coeff)):
+                line.append(f"{round(self.coeff[i], 6)}*X[{i}]")  # TODO get precision from flag?
+            line.append(f"{round(self.intercept, 6)}")  # TODO get precision from flag?
+            hyperplane = "\n+".join(line) + " <= 0"
+            return hyperplane.replace('+-', '-')
+
+    def print_dot_red(self):
+        pass
+
+    def is_axis_aligned(self):
         pass

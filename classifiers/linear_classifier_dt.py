@@ -1,17 +1,16 @@
 import warnings
-import util
 
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.tree import DecisionTreeClassifier
 
-from classifiers.custom_decision_tree import CustomDecisionTree, Node
-from collections.abc import Iterable
+import util
+from classifiers.custom_dt import CustomDT, Node
 
 # SVM sometimes does not converge and clutters the output with warnings
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-class LinearClassifierDecisionTree(CustomDecisionTree):
+class LinearClassifierDT(CustomDT):
     def __init__(self, classifier_class, **kwargs):
         super().__init__()
         self.kwargs = kwargs
@@ -26,14 +25,11 @@ class LinearClassifierDecisionTree(CustomDecisionTree):
         self.root.fit(dataset.X_train, dataset.get_unique_labels())
         self.set_labels(lambda leaf: dataset.map_unique_label_back(leaf.trained_label), dataset.index_to_value)
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         return {
             'num_nodes': self.root.num_nodes,
             'num_not_aa': self.root.num_not_axis_aligned
         }
-
-    def __str__(self):
-        return 'LinearClassifierDecisionTree'
 
 class LinearClassifierOrAxisAlignedNode(Node):
     def __init__(self, classifier_class, depth=0, **kwargs):

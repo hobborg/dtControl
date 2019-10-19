@@ -1,5 +1,5 @@
 from dataset.multi_output_dataset import MultiOutputDataset
-from classifiers.cart_custom_decision_tree import CartCustomNode
+from classifiers.cart_custom_dt import CartNode
 import numpy as np
 
 class MaxCartForest():
@@ -19,7 +19,7 @@ class MaxCartForest():
         self.trees = []
         num_outputs = len(dataset.Y_train)
         for i in range(num_outputs):
-            tree = CartCustomNode()
+            tree = CartNode()
             tree.fit(dataset.X_train, Y_det_tuples[:, i])
             tree.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
             self.trees.append(tree)
@@ -27,7 +27,7 @@ class MaxCartForest():
     def predict(self, dataset):
         return list(zip(*[self.trees[i].predict(dataset.X_train) for i in range(len(self.trees))]))
 
-    def get_stats(self):
+    def get_stats(self) -> dict:
         stats = {}
         for i in range(len(self.trees)):
             stats[f'num_nodes_{i}'] = self.trees[i].num_nodes

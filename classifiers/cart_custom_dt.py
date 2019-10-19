@@ -1,8 +1,8 @@
 import util
 from sklearn.tree import DecisionTreeClassifier
-from classifiers.custom_decision_tree import CustomDecisionTree, Node
+from classifiers.custom_dt import CustomDT, Node
 
-class CartCustomDecisionTree(CustomDecisionTree):
+class CartDT(CustomDT):
     def __init__(self):
         super().__init__()
         self.name = 'CART'
@@ -11,14 +11,11 @@ class CartCustomDecisionTree(CustomDecisionTree):
         return True
 
     def fit(self, dataset):
-        self.root = CartCustomNode()
+        self.root = CartNode()
         self.root.fit(dataset.X_train, dataset.get_unique_labels())
         self.set_labels(lambda leaf: dataset.map_unique_label_back(leaf.trained_label), dataset.index_to_value)
 
-    def __str__(self):
-        return 'CART'
-
-class CartCustomNode(Node):
+class CartNode(Node):
     def __init__(self, depth=0):
         super().__init__(depth)
         self.dt = None
@@ -28,7 +25,7 @@ class CartCustomNode(Node):
         return x[:, tree.feature[0]][0] <= tree.threshold[0]
 
     def create_child_node(self):
-        return CartCustomNode(self.depth + 1)
+        return CartNode(self.depth + 1)
 
     def find_split(self, X, y):
         self.dt = DecisionTreeClassifier(max_depth=1, criterion='entropy')
