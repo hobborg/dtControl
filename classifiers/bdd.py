@@ -4,7 +4,8 @@ import math
 import itertools
 
 from dataset.single_output_dataset import SingleOutputDataset
-#from dd import cudd as _bdd
+from dataset.multi_output_dataset import MultiOutputDataset
+# from dd import cudd as _bdd
 from dd import autoref as _bdd  # TODO: Might use cudd
 
 
@@ -39,16 +40,16 @@ class BDD:
     def predict_state(self, row, X_vars, Y_vars):
         # Get bit_repr of all states vars
         state_bit_values = dict()
-        for i in range (0, len(X_vars)):
+        for i in range(0, len(X_vars)):
             var_name = X_vars[i]
             value = row[i]
             num_bits, precision_multiplier, signed = self.bb_table[var_name]
             if signed and value < 0:
-                state_bit_values[var_name + str(num_bits-1)] = 1
+                state_bit_values[var_name + str(num_bits - 1)] = 1
                 value = value * -1
                 num_bits -= 1  # do not consider the most significant bit anymore
             value = math.floor(value * precision_multiplier)  # use the decimal approach (described below)
-            for i in range(0,num_bits):
+            for i in range(0, num_bits):
                 if value - math.pow(2, i) >= 0:
                     state_bit_values[var_name + str(i)] = True
                     value -= math.pow(2, i)
@@ -56,7 +57,7 @@ class BDD:
                     state_bit_values[var_name + str(i)] = False
 
         allowed_actions = set()
-        #try all combinations for Y_vars, remember those that return true
+        # try all combinations for Y_vars, remember those that return true
         # TODO: This is too much work right now.
 
     def check_result(self, state_bit_values, node):
@@ -102,7 +103,7 @@ class BDD:
         # initialize bdd and name2node based on bb_table
         for var in self.bb_table.keys():
             for i in range(0, self.bb_table[var][0]):
-                blasted_name=var+str(i)
+                blasted_name = var + str(i)
                 self.bdd.declare(blasted_name)
                 self.name2node[blasted_name] = self.bdd.var(blasted_name)
         self.reorder_randomly()
@@ -111,32 +112,44 @@ class BDD:
         # Then construct subresult_sa_pair as OR_{action in allowed_actions} sub_result_state AND action
         # Then or this with the whole result
         row_num = -1
+        total = len(dataset.X_train)
         for row in dataset.X_train:
             row_num += 1
+            if row_num % 1000 == 0:
+                print(f"fitting row {row_num}/{total}")
             # This assumes that the variables in X_train are in the same order as X_vars
             sub_result_state = self.make_sub_result_state(row, dataset.X_metadata["variables"])
 
-            sa_initialized = False  # need this to initalize sub_result_sa
-            for i in range(0, len(dataset.Y_train[row_num])):
-                action = dataset.Y_train[row_num][i]
-                if action == -1:
-                    continue # -1 does not represent a playable action
-                if sa_initialized:
-                    sub_result_sa = \
-                        self.bdd.apply('or', sub_result_sa,
-                            (self.bdd.apply('and', sub_result_state,
-                                self.bdd_for(dataset.index_to_value[action], dataset.Y_metadata["variables"][0]))))
-                    # TODO: The 0 in the call to Yvars is hardcoded and needs to be changed for multi output controllers
+            sub_result_nondet_initialized = False  # need this to initalize sub_result_sa
+            multi = isinstance(dataset, MultiOutputDataset)
+            # for every nondeterministic choice
+            for i in range(0, len(dataset.Y_train[row_num]) if not multi else len(dataset.Y_train[0][row_num])):
+                for j in range(0, len(dataset.Y_metadata["variables"])):
+                    action_to_add = dataset.Y_train[row_num][i] if not multi else dataset.Y_train[j][row_num][i]
+                    if action_to_add == -1:
+                        continue  # -1 does not represent a playable action
+
+                    # and all the actions (or the single action if not multi output) to sub_result_state
+                    if j == 0:
+                        sub_result_action = self.bdd.apply('and', sub_result_state,
+                                                           self.bdd_for(dataset.index_to_value[action_to_add],
+                                                                        dataset.Y_metadata["variables"][j]))
+                    else:
+                        sub_result_action = self.bdd.apply('and', sub_result_action,
+                                                           self.bdd_for(dataset.index_to_value[action_to_add],
+                                                                        dataset.Y_metadata["variables"][j]))
+
+                # Now sub_result_action represents the and of all actions for a single nondet choice and the state
+                if not sub_result_nondet_initialized:
+                    sub_result_nondet = sub_result_action
+                    sub_result_nondet_initialized = True
                 else:
-                    sub_result_sa = self.bdd.apply('and', sub_result_state,
-                                self.bdd_for(dataset.index_to_value[action], dataset.Y_metadata["variables"][0]))
-                    sa_initialized = True
+                    sub_result_nondet = self.bdd.apply('or', sub_result_nondet, sub_result_action)
 
             if row_num == 0:
-                self.result = sub_result_sa
-                break
+                self.result = sub_result_nondet
             else:
-                self.result = self.bdd.apply('or', self.result, sub_result_sa)
+                self.result = self.bdd.apply('or', self.result, sub_result_nondet)
 
         # collect garbage and reorder heuristics
         print("Before collecting garbage: result %s, BDD %s" % (len(self.result), len(self.bdd)))
@@ -144,7 +157,7 @@ class BDD:
         print("After: result %s, BDD %s" % (len(self.result), len(self.bdd)))
 
         # reorder with dd until convergence
-        i=0
+        i = 0
         while True:
             print(str(i) + ": result %s, BDD %s" % (len(self.result), len(self.bdd)))
             i += 1
@@ -153,7 +166,6 @@ class BDD:
             if bdd_size == len(self.bdd):
                 print("Reordering did not change size, local optimum BDD computed.")
                 break
-
 
     """
     Returns a dict of the form
@@ -176,6 +188,7 @@ class BDD:
     get integer represented by bits
     divide by precision_multiplier to get actual number (up to necessary precision)
     """
+
     def add_to_bb_table(self, metadata):
         for i in range(0, len(metadata["variables"])):
             name = metadata["variables"][i]
@@ -188,13 +201,13 @@ class BDD:
             largest_number = max(math.fabs(metadata["min"][i]), math.fabs(metadata["max"][i]))
             if largest_number == 0 or precision_multiplier == 0:  # catch some weird corner cases
                 num_bits = 1 + (1 if signed else 0)
-            else: # Need the 1+ in the beginning, off-by-1 error. Try it for 8 and 10, you will see.
-                num_bits = 1 + int(math.log(largest_number*precision_multiplier, 2) + (1 if signed else 0))
+            else:  # Need the 1+ in the beginning, off-by-1 error. Try it for 8 and 10, you will see.
+                num_bits = 1 + int(math.log(largest_number * precision_multiplier, 2) + (1 if signed else 0))
             self.bb_table[metadata["variables"][i]] = (num_bits, precision_multiplier, signed)
 
     # This assumes that the variables in X_train are in the same order as X_vars
     def make_sub_result_state(self, row, X_vars):
-        for i in range (0,len(X_vars)):
+        for i in range(0, len(X_vars)):
             sub_result = self.bdd_for(row[i], X_vars[i]) if i == 0 else \
                 self.bdd.apply('and', sub_result, self.bdd_for(row[i], X_vars[i]))
         return sub_result
@@ -205,20 +218,21 @@ class BDD:
 
         # go over value in reverse order, set bits in BDD
         for i in reversed(range(0, num_bits)):
-            bit_varname = varname + str (i)
+            bit_varname = varname + str(i)
             # handle corner case signed: then most significant bit (num_bits-1) is treated separately
-            if signed and i == num_bits-1:
-                sub_result = self.name2node[bit_varname] if value < 0 else self.bdd.apply('not', self.name2node[bit_varname])
-                remainder = remainder*-1 if remainder < 0 else remainder
+            if signed and i == num_bits - 1:
+                sub_result = self.name2node[bit_varname] if value < 0 else self.bdd.apply('not',
+                                                                                          self.name2node[bit_varname])
+                remainder = remainder * -1 if remainder < 0 else remainder
                 continue
             # check whether the i-th bit is set by subtracting 2^{its exponent}
 
             if remainder - pow(2, i) >= 0:
                 remainder -= pow(2, i)
                 # if first bit, initialize subres; else 'and' subres and new thing
-                sub_result = self.name2node[bit_varname] if i == num_bits -1 \
+                sub_result = self.name2node[bit_varname] if i == num_bits - 1 \
                     else self.bdd.apply('and', sub_result, self.name2node[bit_varname])
-            else: # Same as above, but with a not in front of the node
+            else:  # Same as above, but with a not in front of the node
                 sub_result = self.bdd.apply('not', self.name2node[bit_varname]) if i == num_bits - 1 \
                     else self.bdd.apply('and', sub_result, self.bdd.apply('not', self.name2node[bit_varname]))
 
@@ -257,7 +271,9 @@ class BDD:
         pass
 
 
-ds = SingleOutputDataset("../dumps/cruise-small-latest.dump")
+#ds = SingleOutputDataset("../dumps/cruise-small-latest.dump")
+#ds = MultiOutputDataset("../XYdatasets/10rooms.scs")
+ds = SingleOutputDataset("../XYdatasets/cartpole.scs")
 ds.load_if_necessary()
 bdd_classifier = BDD()
 bdd_classifier.fit(ds)
