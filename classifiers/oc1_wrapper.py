@@ -7,7 +7,7 @@ from shutil import copyfile
 import numpy as np
 
 import util
-from classifiers.custom_decision_tree import Node
+from classifiers.custom_dt import Node
 from dataset.single_output_dataset import SingleOutputDataset
 
 
