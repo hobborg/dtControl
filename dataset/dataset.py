@@ -61,9 +61,9 @@ class Dataset(ABC):
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
         self.X_train = None
-        self.X_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None}
+        self.X_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
         self.Y_train = None
-        self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
+        self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None, 'num_flattened': None}
         self.index_to_value = {}
         self.is_deterministic = None
 
@@ -71,7 +71,8 @@ class Dataset(ABC):
         if self.X_train is None:
             self.X_train, self.X_metadata, self.Y_train, self.Y_metadata, self.index_to_value = self.extension_to_loader[
                 self.extension].load_dataset(self.filename)
-            self.X_metadata['num_rows'] = len(self.X_train)
+            self.Y_metadata['num_rows'] = len(self.X_train)
+            self.Y_metadata['num_flattened'] = sum(1 for row in self.Y_train for y in row)
 
     def load_metadata_from_json(self, json):
         metadata = json['metadata']

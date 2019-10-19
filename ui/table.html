@@ -39,19 +39,19 @@
         <div class="col-sm-4"></div>
     </div>
     <table class="table table-bordered table-hover mt-4">
+        <caption>#(s, a) refers to the number of state-action pairs (or state-input pairs). #doc refers to the size of the domain of controller.</caption>
         <thead>
         <tr>
             <td></td>
             {% for c in column_names %}
-            <th class="rotate" scope="col"><div><span>{{ c }}</span></div></th>
+            <th scope="col"><div><span>{{ c }}</span></div></th>
             {% endfor %}
         </tr>
         </thead>
         <tbody>
         {% for i in range(row_metadata|length) %}
             <tr>
-                <th scope="row" style="text-align:center">{{ row_metadata[i]["name"] }}<br/>(#state-action
-                    pairs: {{ row_metadata[i]["size"] }})
+                <th scope="row">{{ row_metadata[i]["name"] }}<br />#(s, a): {{ row_metadata[i]["state_action_pairs"] }}<br />#doc: {{ row_metadata[i]["domain_of_controller"] }}
                 </th>
                 {% for j in range(table[i]|length) %}
                     {% set cell = table[i][j] %}
@@ -69,7 +69,7 @@
                                 accuracy: {{ cell['accuracy'] }}<br>
                             {% endif %}
                             {% if 'time' in cell %}
-                                <span style="color: #ecc30b">time: {{ cell['time'] }}<br></span>
+                                <span class="time">time: {{ cell['time'] }}<br></span>
                             {% endif %}
                             {% if 'dot_link' in links %}
                                 <a href="{{ links['dot_link'] }}" target="_blank">View dot file</a>

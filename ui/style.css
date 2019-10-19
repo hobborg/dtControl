@@ -1,10 +1,17 @@
-thead {
-  height: 160px;
-  border: 0px
+table {
+  font-size: smaller;
 }
 
-th.rotate > div {
-  height: 20px;
-  transform: translate(0px, -60px) rotate(270deg); /* translate(-30px, -20px) rotate(310deg); */
-  word-wrap: normal;
+thead > tr > th {
+  text-align: center;
+  text-wrap: normal;
+}
+
+tbody > tr > th {
+  text-align: left;
+  text-wrap: normal;
+}
+
+.time {
+  color: #ecc30b;
 }
