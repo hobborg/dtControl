@@ -144,7 +144,7 @@ class UppaalDatasetLoader(DatasetLoader):
         Y_metadata["variables"] = [action_var]
         Y_metadata["min"] = [min(index_to_value.values())]
         Y_metadata["max"] = [max(index_to_value.values())]
-        Y_metadata["step_size"] = int((Y_metadata["max"][0] - Y_metadata["min"][0])/(len(index_to_value) - 1))  # step_size may actually be greater than 1, but this suffices
+        Y_metadata["step_size"] = [int((Y_metadata["max"][0] - Y_metadata["min"][0])/(len(index_to_value) - 1))]
 
         logging.debug(X_metadata)
         logging.debug(Y_metadata)
