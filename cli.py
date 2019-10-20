@@ -87,8 +87,10 @@ from classifiers.linear_classifier_dt import LinearClassifierDT
 from classifiers.max_freq_dt import MaxFreqDT
 from classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
 from classifiers.max_freq_multi_dt import MaxFreqMultiDT
+from classifiers.norm_multi_output_linear_classifier_dt import NormMultiOutputLinearClassifierDT
 from classifiers.norm_single_output_dt import NormSingleOutputDT
 from classifiers.norm_multi_output_dt import NormMultiOutputDT
+from classifiers.norm_single_output_linear_classifier_dt import NormSingleOutputLinearClassifierDT
 from classifiers.oc1_wrapper import OC1Wrapper
 
 
@@ -140,15 +142,19 @@ def get_classifiers(methods, det_strategies):
             'nondet': [CartDT()],
             'maxnorm': [NormSingleOutputDT(max), NormMultiOutputDT(max)],
             'minnorm': [NormSingleOutputDT(min), NormMultiOutputDT(min)],
-            'maxfreq': [MaxFreqDT()],
+            'maxfreq': [MaxFreqDT(), MaxFreqMultiDT()],
             'multimaxfreq': [MaxFreqMultiDT()],
         },
         'linsvm': {
             'nondet': [LinearClassifierDT(LinearSVC, max_iter=5000)],
+            # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(max, LinearSVC, max_iter=5000)],
+            # 'minnorm': [NormSingleOutputLinearClassifierDT(min, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(min, LinearSVC, max_iter=5000)],
             'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
         },
         'logreg': {
             'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
+            'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
+            'minnorm': [NormSingleOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
             'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
         },
         'oc1': {
