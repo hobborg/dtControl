@@ -35,7 +35,7 @@ class OC1Wrapper:
             os.mkdir('oc1_tmp')
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, SingleOutputDataset)
+        return True
 
     def get_stats(self) -> dict:
         return {
