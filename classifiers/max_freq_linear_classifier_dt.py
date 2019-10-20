@@ -8,12 +8,16 @@ class MaxFreqLinearClassifierDT(LinearClassifierDT):
         self.name = 'MaxFreq-LinearClassifierDT-{}'.format(classifier_class.__name__)
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, SingleOutputDataset) and not dataset.is_deterministic
+        return not dataset.is_deterministic
 
     def fit(self, dataset):
         self.root = MaxFreqLinearClassifierNode(self.classifier_class, **self.kwargs)
-        self.root.fit(dataset.X_train, dataset.Y_train)
-        self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
+        if isinstance(dataset, SingleOutputDataset):
+            self.root.fit(dataset.X_train, dataset.Y_train)
+            self.set_labels(lambda leaf: leaf.trained_label, dataset.index_to_value)
+        else:
+            self.root.fit(dataset.X_train, dataset.get_tuple_ids())
+            self.set_labels(lambda leaf: dataset.map_tuple_id_back(leaf.trained_label), dataset.index_to_value)
 
 class MaxFreqLinearClassifierNode(LinearClassifierOrAxisAlignedNode):
     def __init__(self, classifier_class, depth=0, **kwargs):
