@@ -1,17 +1,17 @@
 import glob
 import json
+import logging
 import os
 import time
 import webbrowser
-import sys
-import logging
 from os import makedirs
 from os.path import join, exists, isfile
 
 from IPython.display import HTML, display
+
+from classifiers.oc1_wrapper import OC1Wrapper
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
-from classifiers.oc1_wrapper import OC1Wrapper
 from timeout import call_with_timeout
 from ui.table_controller import TableController
 from util import format_seconds, get_filename_and_ext
@@ -47,7 +47,7 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None,
-                 rerun=False):
+                 rerun=False, use_multiprocessing=True):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
@@ -57,6 +57,7 @@ class BenchmarkSuite:
         self.output_folder = output_folder
         self.save_folder = save_folder
         self.rerun = rerun
+        self.use_multiprocessing = use_multiprocessing
         self.table_controller = TableController(self.html_file, self.output_folder)
 
         logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
@@ -142,14 +143,20 @@ class BenchmarkSuite:
         return dataset.name in self.results and classifier.name in self.results[dataset.name]['classifiers']
 
     def train_and_get_cell(self, dataset, classifier):
-        classifier, success, time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
+        if self.use_multiprocessing:
+            classifier, success, run_time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
+        else:
+            start = time.time()
+            classifier.fit(dataset)
+            run_time = time.time() - start
+            success = True
         if success:
             acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:
                 cell = 'failed to fit'
             else:
                 stats = classifier.get_stats()
-                cell = {'stats': stats, 'time': format_seconds(time)}
+                cell = {'stats': stats, 'time': format_seconds(run_time)}
                 dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
                 classifier.export_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')

@@ -210,6 +210,12 @@ if __name__ == "__main__":
                         help="Sets a timeout for each method. Can be specified in seconds, minutes "
                              "or hours (eg. 300s, 7m or 3h)")
 
+    parser.add_argument("--no-multiprocessing", action='store_true',
+                        help="Prevents the usage of the multiprocessing python module which is used to "
+                             "terminate tree induction if it takes longer than timeout. This switch is "
+                             "useful when spawning of child processes is not desired. Note that the timeout "
+                             "option is ignored when this switch is specified.")
+
     parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
                         help="Saves statistics pertaining the construction of the decision trees and their "
                              "sizes into a JSON file, and additionally allows to view it via an HTML file.")
@@ -251,6 +257,8 @@ if __name__ == "__main__":
     kwargs["rerun"] = args.rerun
     if not args.rerun and isfile(kwargs["benchmark_file"]):
         logging.warning(f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' would not be re-run. Use the --rerun flag if this is what is desired.")
+
+    kwargs["use_multiprocessing"] = not args.no_multiprocessing
 
     classifiers = get_classifiers(args.method, args.determinize)
 
