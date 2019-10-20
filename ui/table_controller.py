@@ -7,25 +7,53 @@ GRAPHVIZ_URL = 'https://dreampuf.github.io/GraphvizOnline/#'
 file_loader = FileSystemLoader('.')
 env = Environment(loader=file_loader)
 
-
 class TableController:
     def __init__(self, html_file, output_folder):
         self.html_file = html_file
         self.output_folder = output_folder
 
-    def update_and_save(self, results):
+    def update_and_save(self, results, last_run_datasets, last_run_classifiers):
         template = env.get_template('ui/table.html')
+        with open('ui/table.js') as infile:
+            script = infile.read()
+        table, row_metadata, column_names = self.get_table_data(results)
         with open(self.html_file, 'w+') as out:
-            out.write(template.render(column_names=results.column_names, row_metadata=results.row_metadata,
-                                      table=results.table, links_table=self.get_dot_and_c_links(results)))
+            out.write(template.render(
+                column_names=column_names,
+                row_metadata=row_metadata,
+                table=table,
+                links_table=self.get_dot_and_c_links(row_metadata, column_names),
+                last_run_datasets=last_run_datasets,
+                last_run_classifiers=last_run_classifiers,
+                script=script
+            ))
 
-    def get_dot_and_c_links(self, results):
+    def get_table_data(self, results):
+        row_names = sorted(list(results.keys()))
+        column_names = set()
+        for dataset in results:
+            column_names.update(results[dataset]['classifiers'].keys())
+        column_names = sorted(list(column_names))
+        table = []
+        for dataset in row_names:
+            row = []
+            for classifier in column_names:
+                if classifier in results[dataset]['classifiers']:
+                    cell = results[dataset]['classifiers'][classifier]
+                else:
+                    cell = 'not yet computed'
+                row.append(cell)
+            table.append(row)
+        row_metadata = [{'name': r, 'num_rows': results[r]['metadata']['X_metadata']['num_rows']} for r in row_names]
+        return table, row_metadata, column_names
+
+    def get_dot_and_c_links(self, row_metadata, column_names):
         links_table = []
-        for i in range(len(results.row_metadata)):
-            dataset = results.row_metadata[i]["name"]
+        for i in range(len(row_metadata)):
+            dataset = row_metadata[i]["name"]
             l = []
-            for j in range(len(results.column_names)):
-                classifier = results.column_names[j]
+            for j in range(len(column_names)):
+                classifier = column_names[j]
                 d = {}
                 path = join(self.output_folder, classifier, dataset, classifier)
                 if exists(path + '.dot'):

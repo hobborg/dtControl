@@ -1,33 +1,19 @@
 import glob
 import json
+import logging
 import os
 import time
 import webbrowser
-import sys
-import logging
 from os import makedirs
 from os.path import join, exists, isfile
 
 from IPython.display import HTML, display
+
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
 from timeout import call_with_timeout
 from ui.table_controller import TableController
 from util import format_seconds, get_filename_and_ext
-
-class BenchmarkResults:
-    """
-    The benchmark results store the benchmark data in a table format (dataset x classifier -> results).
-
-    :param row_names: the names of the datasets
-    :param column_names: the names of the classifiers
-    :param table: a two-dimensional array of result dictionaries
-    """
-
-    def __init__(self, row_metadata, column_names, table):
-        self.row_metadata = row_metadata
-        self.column_names = column_names
-        self.table = table
 
 class BenchmarkSuite:
     """
@@ -96,15 +82,12 @@ class BenchmarkSuite:
     def benchmark(self, classifiers):
         self.load_results()
         num_steps = len(classifiers) * len(self.datasets)
-        table = []
         step = 0
         for ds in self.datasets:
-            row = []
             for classifier in classifiers:
                 step += 1
                 logging.info(f"{step}/{num_steps}: Evaluating {classifier.name} on {ds.name}... ")
                 cell, computed = self.compute_cell(ds, classifier)
-                row.append(cell)
                 if computed:
                     self.save_result(classifier.name, ds, cell)
                     if cell == 'timeout':
@@ -114,15 +97,14 @@ class BenchmarkSuite:
                     logging.info(msg)
                 else:
                     if cell == 'not applicable':
+                        self.save_result(classifier.name, ds, cell)
                         logging.info(f"{step}/{num_steps}: {classifier.name} is not applicable for {ds.name}.")
                     else:
                         logging.info(
                             f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
-            table.append(row)
         logging.info('All benchmarks completed. Shutting down dtControl.')
-        results = BenchmarkResults([{"name": ds.name, "size": ds.X_metadata['num_rows']} for ds in self.datasets],
-                                   [c.name for c in classifiers], table)
-        self.table_controller.update_and_save(results)
+        self.table_controller.update_and_save(self.results, [ds.name for ds in self.datasets],
+                                              [cl.name for cl in classifiers])
 
     def compute_cell(self, dataset, classifier):
         if self.already_computed(dataset, classifier) and not self.rerun:
