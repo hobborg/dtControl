@@ -1,6 +1,14 @@
 import multiprocessing
+import signal
 import subprocess
 import time
+import os
+
+def is_windows():
+    return os.name == 'nt'
+
+def use_multiprocessing():
+    return is_windows()
 
 def _call_and_return_in_list(obj, method, return_list, *args):
     getattr(obj, method)(*args)
@@ -30,14 +38,29 @@ def call_with_timeout(obj, method, *args, timeout=60):
         getattr(obj, '{}_command_called'.format(method))()
         return obj, True, time.time() - start
     else:
-        with multiprocessing.Manager() as manager:
-            return_list = manager.list(range(1))
-            p = multiprocessing.Process(target=_call_and_return_in_list, args=(obj, method, return_list, *args))
+        if use_multiprocessing():
+            with multiprocessing.Manager() as manager:
+                return_list = manager.list(range(1))
+                p = multiprocessing.Process(target=_call_and_return_in_list, args=(obj, method, return_list, *args))
+                start = time.time()
+                p.start()
+                p.join(timeout)
+                if p.is_alive():
+                    p.terminate()
+                    p.join()
+                    return obj, False, time.time() - start
+                return return_list[0], True, time.time() - start
+        else:
+            def raise_timeout(signum, frame):
+                raise TimeoutError
+
+            signal.signal(signal.SIGALRM, raise_timeout)
+            signal.alarm(timeout)
             start = time.time()
-            p.start()
-            p.join(timeout)
-            if p.is_alive():
-                p.terminate()
-                p.join()
+            try:
+                getattr(obj, method)(*args)
+                return obj, True, time.time() - start
+            except TimeoutError:
                 return obj, False, time.time() - start
-            return return_list[0], True, time.time() - start
+            finally:
+                signal.signal(signal.SIGALRM, signal.SIG_IGN)
