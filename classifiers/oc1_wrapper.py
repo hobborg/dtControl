@@ -124,9 +124,8 @@ class OC1Wrapper:
         command = './{} -T {} -u -D {} -l {}'.format(self.oc1_path, self.data_file, self.dt_file, self.log_file)
         self.execute_command(command)
         output = self.parse_predict_output()
-        output = np.reshape(output, (-1, 1))
-        return np.apply_along_axis(lambda x: dataset.map_unique_label_back(x[0]), axis=1,
-                                   arr=output)  # TODO: represent tree in python
+        result = [dataset.map_unique_label_back(x) for x in output]
+        return result
 
     def parse_predict_output(self):
         data = np.loadtxt('{}.classified'.format(self.data_file), delimiter='\t')
