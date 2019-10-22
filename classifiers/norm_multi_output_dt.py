@@ -10,7 +10,7 @@ class NormMultiOutputDT(CartDT):
 
     def __init__(self, comp):
         super().__init__()
-        self.name = f'{"Max" if comp == max else "Min"}Norm-MultiOutputDT'
+        self.name = f'{"Max" if comp == max else "Min"}NormDT'
         self.comp = comp
 
     def is_applicable(self, dataset):

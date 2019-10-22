@@ -71,10 +71,9 @@ trees in decision_trees
 """
 
 import argparse
+import logging
 import re
 import sys
-import logging
-
 from os import makedirs
 from os.path import exists, isfile, splitext
 
@@ -87,9 +86,9 @@ from classifiers.linear_classifier_dt import LinearClassifierDT
 from classifiers.max_freq_dt import MaxFreqDT
 from classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
 from classifiers.max_freq_multi_dt import MaxFreqMultiDT
+from classifiers.norm_multi_output_dt import NormMultiOutputDT
 from classifiers.norm_multi_output_linear_classifier_dt import NormMultiOutputLinearClassifierDT
 from classifiers.norm_single_output_dt import NormSingleOutputDT
-from classifiers.norm_multi_output_dt import NormMultiOutputDT
 from classifiers.norm_single_output_linear_classifier_dt import NormSingleOutputLinearClassifierDT
 from classifiers.oc1_wrapper import OC1Wrapper
 
@@ -154,7 +153,8 @@ def get_classifiers(methods, det_strategies):
         'logreg': {
             'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
             # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
-            'minnorm': [NormSingleOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
+            'minnorm': [NormSingleOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none'),
+                        NormMultiOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
             'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
         },
         'oc1': {
@@ -222,6 +222,12 @@ if __name__ == "__main__":
                              "useful when spawning of child processes is not desired. Note that the timeout "
                              "option is ignored when this switch is specified.")
 
+    parser.add_argument("--artifact", action='store_true',
+                        help="Makes the tool 'repeatability evaluation' friendly - providing artifact reviewers "
+                             "results in a tabular form which is easy to compare to Table 1 of the paper. Please "
+                             "do not use the --artifact switch if you desire to use dtControl on a controller that is "
+                             "not listed in Table 1")
+
     parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
                         help="Saves statistics pertaining the construction of the decision trees and their "
                              "sizes into a JSON file, and additionally allows to view it via an HTML file.")
@@ -250,7 +256,7 @@ if __name__ == "__main__":
         filename, file_extension = splitext(args.benchmark_file)
         kwargs["benchmark_file"] = filename
     else:
-        kwargs["benchmark_file"] = 'benchmark' # TODO best practise to set default?
+        kwargs["benchmark_file"] = 'benchmark'  # TODO best practise to set default?
         logging.warning("--benchmark-file/-b was not set. Defaulting to use 'benchmark.json'")
 
     if args.output:
@@ -262,9 +268,12 @@ if __name__ == "__main__":
 
     kwargs["rerun"] = args.rerun
     if not args.rerun and isfile(kwargs["benchmark_file"]):
-        logging.warning(f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' would not be re-run. Use the --rerun flag if this is what is desired.")
+        logging.warning(
+            f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' would not be re-run. Use the --rerun flag if this is what is desired.")
 
     kwargs["use_multiprocessing"] = not args.no_multiprocessing
+
+    kwargs["is_artifact"] = args.artifact
 
     classifiers = get_classifiers(args.method, args.determinize)
 

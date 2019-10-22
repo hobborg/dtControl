@@ -9,15 +9,19 @@ env = Environment(loader=file_loader)
 
 
 class TableController:
-    def __init__(self, html_file, output_folder):
+    def __init__(self, html_file, output_folder, is_artifact):
         self.html_file = html_file
         self.output_folder = output_folder
+        self.is_artifact = is_artifact
 
     def update_and_save(self, results, last_run_datasets, last_run_classifiers):
         template = env.get_template('ui/table.html')
         with open('ui/table.js') as infile:
             script = infile.read()
-        table, row_metadata, column_names = self.get_table_data(results)
+        if self.is_artifact:
+            table, row_metadata, column_names = self.get_table_data_artifact(results)
+        else:
+            table, row_metadata, column_names = self.get_table_data(results)
         with open(self.html_file, 'w+') as out:
             out.write(template.render(
                 column_names=column_names,
@@ -50,6 +54,45 @@ class TableController:
                         for r in row_names]
         return table, row_metadata, column_names
 
+    def get_table_data_artifact(self, results):
+        row_names = [
+            'cartpole',
+            'tworooms',
+            'helicopter',
+            'cruise',
+            'dcdc',
+            '10rooms',
+            'truck_trailer',
+            'traffic_1m',
+            'traffic_10m',
+            'traffic_30m',
+            'vehicle',
+            'aircraft'
+        ]
+        column_names = ['CART',
+                        'LinearClassifierDT-LinearSVC',
+                        'LinearClassifierDT-LogisticRegression',
+                        'OC1',
+                        'MaxFreqDT',
+                        'MaxFreq-LinearClassifierDT-LogisticRegression',
+                        'MinNormDT',
+                        'MinNorm-LinearClassifierDT',
+                        'BDD'
+                        ]
+        table = []
+        for dataset in row_names:
+            row = []
+            for classifier in column_names:
+                try:
+                    cell = results[dataset]['classifiers'][classifier]
+                except KeyError:
+                    cell = 'not yet computed'
+                row.append(cell)
+            table.append(row)
+        row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'] if r in results else "unknown",
+                         'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened']  if r in results else "unknown"} for r in row_names]
+        return table, row_metadata, column_names
+
     def get_dot_and_c_links(self, row_metadata, column_names):
         links_table = []
         for i in range(len(row_metadata)):
@@ -60,9 +103,12 @@ class TableController:
                 d = {}
                 path = join(self.output_folder, classifier, dataset, classifier)
                 if exists(path + '.dot'):
-                    d['dot_link'] = self.get_dot_link(path + '.dot')
+                    if not self.is_artifact:
+                        d['dot_link'] = self.get_dot_link(path + '.dot')
+                    else:
+                        d['dot_link'] = self.get_file_link(path + '.dot')
                 if exists(path + '.c'):
-                    d['c_link'] = self.get_c_link(path + '.c')
+                    d['c_link'] = self.get_file_link(path + '.c')
                 l.append(d)
             links_table.append(l)
         return links_table
@@ -72,5 +118,5 @@ class TableController:
             dot = infile.read()
         return GRAPHVIZ_URL + quote(dot)
 
-    def get_c_link(self, file):
+    def get_file_link(self, file):
         return f'file://{abspath(file)}'

@@ -34,7 +34,7 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None,
-                 rerun=False, use_multiprocessing=True):
+                 rerun=False, use_multiprocessing=True, is_artifact=False):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
@@ -45,7 +45,8 @@ class BenchmarkSuite:
         self.save_folder = save_folder
         self.rerun = rerun
         self.use_multiprocessing = use_multiprocessing
-        self.table_controller = TableController(self.html_file, self.output_folder)
+        self.is_artifact = is_artifact
+        self.table_controller = TableController(self.html_file, self.output_folder, self.is_artifact)
 
         logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
         logging.info(f"Constructed trees will be written to {self.output_folder}.")

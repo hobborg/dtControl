@@ -10,7 +10,7 @@ class NormSingleOutputLinearClassifierDT(LinearClassifierDT):
 
     def __init__(self, comp, classifier_class, **kwargs):
         super().__init__(classifier_class, **kwargs)
-        self.name = f'{"Max" if comp == max else "Min"}Norm-SingleOutput-LinearClassifierDT'
+        self.name = f'{"Max" if comp == max else "Min"}Norm-LinearClassifierDT'
         self.comp = comp
 
     def is_applicable(self, dataset):

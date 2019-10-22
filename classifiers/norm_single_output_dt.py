@@ -10,7 +10,7 @@ class NormSingleOutputDT(CartDT):
 
     def __init__(self, comp):
         super().__init__()
-        self.name = f'{"Max" if comp == max else "Min"}Norm-SingleOutputDT'
+        self.name = f'{"Max" if comp == max else "Min"}NormDT'
         self.comp = comp
 
     def is_applicable(self, dataset):
