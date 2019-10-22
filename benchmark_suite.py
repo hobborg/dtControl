@@ -10,6 +10,7 @@ from os.path import join, exists, isfile
 from IPython.display import HTML, display
 
 from classifiers.oc1_wrapper import OC1Wrapper
+from classifiers.bdd import BDD
 from dataset.multi_output_dataset import MultiOutputDataset
 from dataset.single_output_dataset import SingleOutputDataset
 from timeout import call_with_timeout
@@ -151,6 +152,10 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
+            if isinstance(classifier, BDD):  # bdd cannot predict yet
+                stats = classifier.get_stats()
+                cell = {'stats': stats, 'time': format_seconds(run_time)}
+                return cell
             acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:
                 cell = 'failed to fit'

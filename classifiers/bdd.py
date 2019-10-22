@@ -1,7 +1,7 @@
 import pickle
 import random
 import math
-import itertools
+from tqdm import tqdm
 
 from dataset.single_output_dataset import SingleOutputDataset
 from dataset.multi_output_dataset import MultiOutputDataset
@@ -28,7 +28,7 @@ class BDD:
         # TODO: Add support for multi sets
 
     def get_stats(self):
-        print("result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        return {"nodes": len(self.result)}
 
     def predict(self, dataset):
         # TODO
@@ -113,10 +113,8 @@ class BDD:
         # Then or this with the whole result
         row_num = -1
         total = len(dataset.X_train)
-        for row in dataset.X_train:
+        for row in tqdm(dataset.X_train):
             row_num += 1
-            if row_num % 1000 == 0:
-                print(f"fitting row {row_num}/{total}")
             # This assumes that the variables in X_train are in the same order as X_vars
             sub_result_state = self.make_sub_result_state(row, dataset.X_metadata["variables"])
 
@@ -273,7 +271,7 @@ class BDD:
 
 #ds = SingleOutputDataset("../dumps/cruise-small-latest.dump")
 #ds = MultiOutputDataset("../XYdatasets/10rooms.scs")
-ds = SingleOutputDataset("../XYdatasets/cartpole.scs")
-ds.load_if_necessary()
-bdd_classifier = BDD()
-bdd_classifier.fit(ds)
+# ds = SingleOutputDataset("../XYdatasets/cartpole.scs")
+# ds.load_if_necessary()
+# bdd_classifier = BDD()
+# bdd_classifier.fit(ds)

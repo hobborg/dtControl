@@ -2,10 +2,23 @@ from benchmark_suite import BenchmarkSuite
 from classifiers.oc1_wrapper import OC1Wrapper
 from classifiers.cart_custom_dt import CartDT
 from classifiers.max_freq_dt import MaxFreqDT
+from classifiers.bdd import BDD
 
 suite = BenchmarkSuite(timeout=60*60*2, save_folder='saved_classifiers', benchmark_file='benchmark_tmp')
 suite.add_datasets(['../XYdatasets', '../dumps'],
-                   include=["cartpole"],
+                   include=[# "cartpole",
+                            # "tworooms",
+                            # "helicopter",
+                            # "cruise",
+                            # "dcdc",
+                            # "10rooms",
+                            # "truck_trailer",
+                            # "traffic_1m",
+                            # "traffic_10m",
+                            # "traffic_30m",
+                            # "vehicle",
+                            # "aircraft"
+                            ],
                    exclude=[
                    ]
                    )
@@ -15,7 +28,8 @@ classifiers = [
     # LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
     # MaxFreqDT(),
     # MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
-    OC1Wrapper(num_restarts=20, num_jumps=5),
+    # OC1Wrapper(num_restarts=20, num_jumps=5),
+    # BDD()
     # MaxEveryNodeMultiDecisionTree()
 ]
 suite.benchmark(classifiers)

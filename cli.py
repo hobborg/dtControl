@@ -142,7 +142,7 @@ def get_classifiers(methods, det_strategies):
             'nondet': [CartDT()],
             'maxnorm': [NormSingleOutputDT(max), NormMultiOutputDT(max)],
             'minnorm': [NormSingleOutputDT(min), NormMultiOutputDT(min)],
-            'maxfreq': [MaxFreqDT(), MaxFreqMultiDT()],
+            'maxfreq': [MaxFreqDT()],
             'multimaxfreq': [MaxFreqMultiDT()],
         },
         'linsvm': {
@@ -153,7 +153,7 @@ def get_classifiers(methods, det_strategies):
         },
         'logreg': {
             'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-            'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
+            # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
             'minnorm': [NormSingleOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
             'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
         },
