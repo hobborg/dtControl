@@ -24,7 +24,7 @@ class BDD:
 
     @staticmethod
     def is_applicable(dataset):
-        return isinstance(dataset, SingleOutputDataset)
+        return True
         # TODO: Add support for multi sets
 
     def get_stats(self):
