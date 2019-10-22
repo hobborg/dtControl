@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
     <link rel="stylesheet"
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
           crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-            crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
             integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
             crossorigin="anonymous"></script>
@@ -18,7 +17,9 @@
           rel="stylesheet">
     <link href="ui/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
-    <meta charset="UTF-8">
+    <script type="text/javascript">
+        {{ script }}
+    </script>
     <title>Benchmark results</title>
 </head>
 <body>
@@ -32,8 +33,8 @@
         <div class="col-sm-2 text-center">
             <label for="cDetStrat">Determinization strategy used in C files:</label>
             <select class="custom-select" id="cDetStrat">
-                <option selected value="1">Max norm</option>
-                <option value="2">Min norm</option>
+                <option selected value="1">Min norm</option>
+                <option value="2">Max norm</option>
             </select>
         </div>
         <div class="col-sm-4"></div>
@@ -44,24 +45,47 @@
         <tr>
             <td></td>
             {% for c in column_names %}
-            <th scope="col"><div><span>{{ c }}</span></div></th>
+                <th scope="col"
+                    style="text-align: center; vertical-align: middle; max-width: 200px; word-wrap:break-word;"
+                        {% if c not in last_run_classifiers %}
+                    class="not_last_run"
+                        {% endif %}
+                >
+                    {{ c }}
+                </th>
             {% endfor %}
         </tr>
         </thead>
         <tbody>
         {% for i in range(row_metadata|length) %}
+            {% set r = row_metadata[i]["name"] %}
+            {% set n_sa = row_metadata[i]["state_action_pairs"] %}
+            {% set n_doc = row_metadata[i]["domain_of_controller"] %}
             <tr>
-                <th scope="row">{{ row_metadata[i]["name"] }}<br />#(s, a): {{ row_metadata[i]["state_action_pairs"] }}<br />#doc: {{ row_metadata[i]["domain_of_controller"] }}
+                <th scope="row"
+                    style="text-align:center"
+                        {% if r not in last_run_datasets %}
+                    class="not_last_run"
+                        {% endif %}
+                >
+                    {{ r }}
+                    <br/>
+                    #(s, a): {{ n_sa }}
+                    <br/>
+                    #doc: {{ n_doc }}
                 </th>
                 {% for j in range(table[i]|length) %}
+                    {% set not_last_run = r not in last_run_datasets or column_names[j] not in last_run_classifiers %}
                     {% set cell = table[i][j] %}
                     {% set links = links_table[i][j] %}
                     {% if cell is string %}
-                        <td style="text-align: center{{ '; background-color:#ff5733' if cell == 'timeout' or cell=='failed to fit' else '' }}">
+                        <td class="{{ 'not_last_run' if not_last_run else '' }}"
+                            style="text-align: center{{ '; background-color:#ff5733' if cell == 'timeout' or cell=='failed to fit' else '' }}; vertical-align: middle">
                             <span>{{ cell }}</span>
                         </td>
                     {% else %}
-                        <td style="text-align: center{{ ';background-color:#ff5733' if 'accuracy' in cell else '' }}">
+                        <td class="{{ 'not_last_run' if not_last_run else '' }}"
+                            style="text-align: center{{ ';background-color:#ff5733' if 'accuracy' in cell else '' }}; vertical-align: middle">
                             {% for k,v in cell['stats'].items() %}
                                 {{ k }}: {{ v }}<br>
                             {% endfor %}
@@ -84,6 +108,11 @@
         {% endfor %}
         </tbody>
     </table>
+    <div style="position: absolute;top: 40%;left:48%;display: none" id="spinner">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
 </div>
 </body>
 </html>
