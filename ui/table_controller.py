@@ -57,8 +57,8 @@ class TableController:
     def get_table_data_artifact(self, results):
         row_names = [
             'cartpole',
-            'tworooms',
-            'cruise',
+            'tworooms-noneuler-latest',
+            'cruise-latest',
             'dcdc',
             'truck_trailer',
             '10rooms',
