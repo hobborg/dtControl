@@ -1,4 +1,4 @@
-from os.path import join, exists, abspath
+from os.path import join, exists, abspath, getsize
 from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader
@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader
 GRAPHVIZ_URL = 'https://dreampuf.github.io/GraphvizOnline/#'
 file_loader = FileSystemLoader('.')
 env = Environment(loader=file_loader)
-
 
 class TableController:
     def __init__(self, html_file, output_folder, is_artifact):
@@ -89,8 +88,10 @@ class TableController:
                     cell = 'not yet computed'
                 row.append(cell)
             table.append(row)
-        row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'] if r in results else "unknown",
-                         'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened']  if r in results else "unknown"} for r in row_names]
+        row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata'][
+            'num_rows'] if r in results else "unknown",
+                         'state_action_pairs': results[r]['metadata']['Y_metadata'][
+                             'num_flattened'] if r in results else "unknown"} for r in row_names]
         return table, row_metadata, column_names
 
     def get_dot_and_c_links(self, row_metadata, column_names):
@@ -103,10 +104,7 @@ class TableController:
                 d = {}
                 path = join(self.output_folder, classifier, dataset, classifier)
                 if exists(path + '.dot'):
-                    if not self.is_artifact:
-                        d['dot_link'] = self.get_dot_link(path + '.dot')
-                    else:
-                        d['dot_link'] = self.get_file_link(path + '.dot')
+                    d['dot_link'] = self.get_dot_link(path + '.dot')
                 if exists(path + '.c'):
                     d['c_link'] = self.get_file_link(path + '.c')
                 l.append(d)
@@ -114,6 +112,8 @@ class TableController:
         return links_table
 
     def get_dot_link(self, file):
+        if getsize(file) > 1e6:
+            return self.get_file_link(file)
         with open(file) as infile:
             dot = infile.read()
         return GRAPHVIZ_URL + quote(dot)

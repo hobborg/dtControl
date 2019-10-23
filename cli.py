@@ -86,10 +86,8 @@ from classifiers.linear_classifier_dt import LinearClassifierDT
 from classifiers.max_freq_dt import MaxFreqDT
 from classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
 from classifiers.max_freq_multi_dt import MaxFreqMultiDT
-from classifiers.norm_multi_output_dt import NormMultiOutputDT
-from classifiers.norm_multi_output_linear_classifier_dt import NormMultiOutputLinearClassifierDT
-from classifiers.norm_single_output_dt import NormSingleOutputDT
-from classifiers.norm_single_output_linear_classifier_dt import NormSingleOutputLinearClassifierDT
+from classifiers.norm_dt import NormDT
+from classifiers.norm_linear_classifier_dt import NormLinearClassifierDT
 from classifiers.oc1_wrapper import OC1Wrapper
 from classifiers.random_dt import RandomDT
 
@@ -139,9 +137,9 @@ def get_classifiers(methods, det_strategies):
     """
     method_map = {
         'cart': {
-            'nondet': [CartDT()],
-            'maxnorm': [NormSingleOutputDT(max), NormMultiOutputDT(max)],
-            'minnorm': [NormSingleOutputDT(min), NormMultiOutputDT(min)],
+            'nondet': [CartDT()],  # TODO: remove lists and directly map to classifiers
+            'maxnorm': [NormDT(max)],
+            'minnorm': [NormDT(min)],
             'maxfreq': [MaxFreqDT()],
             'random': [RandomDT()],
             'multimaxfreq': [MaxFreqMultiDT()],
@@ -151,12 +149,12 @@ def get_classifiers(methods, det_strategies):
             # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(max, LinearSVC, max_iter=5000)],
             # 'minnorm': [NormSingleOutputLinearClassifierDT(min, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(min, LinearSVC, max_iter=5000)],
             'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
+            'minnorm': [NormLinearClassifierDT(min, LinearSVC, max_iter=5000)],
         },
         'logreg': {
             'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
             # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
-            'minnorm': [NormSingleOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none'),
-                        NormMultiOutputLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
+            'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
             'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
         },
         'oc1': {
