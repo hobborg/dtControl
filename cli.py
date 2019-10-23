@@ -91,6 +91,7 @@ from classifiers.norm_multi_output_linear_classifier_dt import NormMultiOutputLi
 from classifiers.norm_single_output_dt import NormSingleOutputDT
 from classifiers.norm_single_output_linear_classifier_dt import NormSingleOutputLinearClassifierDT
 from classifiers.oc1_wrapper import OC1Wrapper
+from classifiers.random_dt import RandomDT
 
 
 def is_valid_file_or_folder(parser, arg):
@@ -142,6 +143,7 @@ def get_classifiers(methods, det_strategies):
             'maxnorm': [NormSingleOutputDT(max), NormMultiOutputDT(max)],
             'minnorm': [NormSingleOutputDT(min), NormMultiOutputDT(min)],
             'maxfreq': [MaxFreqDT()],
+            'random': [RandomDT()],
             'multimaxfreq': [MaxFreqMultiDT()],
         },
         'linsvm': {
