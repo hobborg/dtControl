@@ -12,7 +12,7 @@ def run(benchmark_file):
     suite = BenchmarkSuite(timeout=60 * 60 * 3, save_folder=f'saved_classifiers_{benchmark_file}', benchmark_file=benchmark_file,
                            is_artifact=True)
     suite.add_datasets(['../XYdatasets', '../dumps'],
-                       include=['cartpole', 'tworooms-noneuler-latest', '10rooms', 'helicopter', 'vehicle', 'aircraft'],
+                       include=['cartpole', 'tworooms-noneuler-latest', '10rooms', 'helicopter', 'vehicle'],  # aircraft
                        exclude=[
                            'truck_trailer'
                        ]
