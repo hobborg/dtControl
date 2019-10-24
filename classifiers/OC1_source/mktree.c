@@ -55,12 +55,12 @@ int no_of_stagnant_perturbations, no_of_missing_values = 0;
 int no_of_train_points = 0, no_of_test_points = 0;
 int stop_splitting ();
 
-float compute_impurity ();
-float *coeff_array, *modified_coeff_array, *best_coeff_array;
-float prune_portion = 0.1;
-float myabs (), ap_bias = 1.0;
-float zeroing_tendency = 0.1;
-float *attribute_min, *attribute_avg, *attribute_sdev;
+double compute_impurity ();
+double *coeff_array, *modified_coeff_array, *best_coeff_array;
+double prune_portion = 0.1;
+double myabs (), ap_bias = 1.0;
+double zeroing_tendency = 0.1;
+double *attribute_min, *attribute_avg, *attribute_sdev;
 double* temp_val;
 
 void srand48 ();
@@ -111,7 +111,7 @@ char* argv[];
     int i, j, no_of_correctly_classified_test_points;
     struct tree_node *root = NULL, *build_tree (), *read_tree ();
     struct test_outcome result;
-    float accuracy;
+    double accuracy;
 
     strcpy (train_data, "\0");
     strcpy (test_data, "\0");
@@ -646,17 +646,22 @@ int cur_no_of_points;
     struct tree_node *build_subtree (), *create_tree_node ();
     POINT **lpoints = NULL, **rpoints = NULL;
     int i, lindex, rindex, lpt, rpt;
-    float oblique_split (), axis_parallel_split (), cart_split ();
-    float initial_impurity, cur_impurity;
+    double oblique_split (), axis_parallel_split (), cart_split ();
+    double initial_impurity, cur_impurity;
     char lnode_str[MAX_DT_DEPTH], rnode_str[MAX_DT_DEPTH];
     int usesOblique = FALSE;
 
     /* Validation checks */
     if (cur_no_of_points <= TOO_SMALL_FOR_ANY_SPLIT) return (NULL);
+    if (strlen (node_str) + 1 > 100)
+    {
+        fprintf (stdout, "> 100. \n");
+        fprintf (stdout, "MAX_DEPTH > 100.\n");
+    }
     if (strlen (node_str) + 1 > MAX_DT_DEPTH)
     {
-        fprintf (stderr, "Tree growing aborted along this branch. \n");
-        fprintf (stderr, "Depth cannot be more than MAX_DT_DEPTH, set in oc1.h.\n");
+        fprintf (stdout, "Tree growing aborted along this branch. \n");
+        fprintf (stdout, "Depth cannot be more than MAX_DT_DEPTH, set in oc1.h.\n");
         return (NULL);
     }
 
@@ -677,7 +682,7 @@ int cur_no_of_points;
 
         if (cur_impurity && oblique && cur_no_of_points > TOO_SMALL_FOR_OBLIQUE_SPLIT) // TAG: if (oblique)
         {
-            float *ap_coeff_array, oblique_impurity;
+            double *ap_coeff_array, oblique_impurity;
 
             ap_coeff_array = vector (1, no_of_coeffs);
             for (i = 1; i <= no_of_coeffs; i++)
@@ -814,13 +819,13 @@ int cur_no_of_points;
 /* Is called by modules : build_subtree                                 */
 /* Remarks : See the CART book for a description of the algorithm.      */
 /************************************************************************/
-float cart_split (cur_points, cur_no_of_points, cur_label) POINT** cur_points;
+double cart_split (cur_points, cur_no_of_points, cur_label) POINT** cur_points;
 int cur_no_of_points;
 char* cur_label;
 {
     int cur_coeff;
-    float cur_error, new_error, prev_impurity, myabs ();
-    float cart_perturb (), cart_perturb_constant ();
+    double cur_error, new_error, prev_impurity, myabs ();
+    double cart_perturb (), cart_perturb_constant ();
 
     /*Starts with the best axis parallel hyperplane. */
     write_hyperplane (animationfile, cur_label);
@@ -932,7 +937,7 @@ struct tree_node* create_tree_node ()
 /*			perturb_randomly (perturb.c)			*/
 /* Is called by modules :	build_subtree				*/
 /************************************************************************/
-float oblique_split (cur_points, cur_no_of_points, cur_label) POINT** cur_points;
+double oblique_split (cur_points, cur_no_of_points, cur_label) POINT** cur_points;
 int cur_no_of_points;
 char* cur_label;
 {
@@ -940,10 +945,10 @@ char* cur_label;
     int i, j, old_nsp, restart_count = 1;
     int alter_coefficients ();
     int cur_coeff, improved_in_this_cycle, best_coeff_to_improve;
-    float perturb_randomly ();
-    float cur_error, old_cur_error, best_cur_error, least_error;
-    float x, changeinval;
-    float new_error, suggest_perturbation ();
+    double perturb_randomly ();
+    double cur_error, old_cur_error, best_cur_error, least_error;
+    double x, changeinval;
+    double new_error, suggest_perturbation ();
 
     /*Start with the best axis parallel hyperplane if axis_parallel is true.
       Otherwise start with a random hyperplane. */
@@ -975,7 +980,7 @@ char* cur_label;
                 if (cur_error == 0.0) break;
                 cur_coeff = 0;
                 while (!cur_coeff)
-                    cur_coeff = (int)myrandom (1.0, (float)(no_of_coeffs + 1));
+                    cur_coeff = (int)myrandom (1.0, (double)(no_of_coeffs + 1));
 
                 new_error = suggest_perturbation (cur_points, cur_no_of_points, cur_coeff, cur_error);
                 if (new_error <= cur_error && alter_coefficients (cur_points, cur_no_of_points))
@@ -1175,12 +1180,12 @@ int cur_no_of_points;
 /*			compute_impurity (compute_impurity.c)		*/
 /* Is called by modules :	build_subtree				*/
 /************************************************************************/
-float axis_parallel_split (cur_points, cur_no_of_points) POINT** cur_points; // TAG: axis_parallel_split
+double axis_parallel_split (cur_points, cur_no_of_points) POINT** cur_points; // TAG: axis_parallel_split
 int cur_no_of_points;
 {
     int i, j, cur_coeff, best_coeff;
-    float cur_error, best_error, best_coeff_split_at;
-    float linear_split ();
+    double cur_error, best_error, best_coeff_split_at;
+    double linear_split ();
 
     for (i = 1; i <= no_of_coeffs; i++)
         coeff_array[i] = 0;
@@ -1193,7 +1198,7 @@ int cur_no_of_points;
             candidates[j].value = cur_points[j]->dimension[cur_coeff];
             candidates[j].cat = cur_points[j]->category;
         }
-        coeff_array[no_of_coeffs] = -1.0 * (float)linear_split (cur_no_of_points);
+        coeff_array[no_of_coeffs] = -1.0 * (double)linear_split (cur_no_of_points);
 
         coeff_modified = TRUE;
         find_values (cur_points, cur_no_of_points);
@@ -1567,7 +1572,7 @@ normalize_data (points, no_of_points) struct point** points;
 int no_of_points;
 {
     int i, j;
-    float *temp, average (), sdev (), min ();
+    double *temp, average (), sdev (), min ();
 
     temp = vector (1, no_of_points);
 

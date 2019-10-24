@@ -280,13 +280,13 @@ measure being used, simply change this constant and re-compile.
 To use a customized impurity measure "mymeasure", do the following.
 
 1. Add a function "mymeasure()" to the file "impurity_measures.c", that takes
-   no arguments and returns a float.
+   no arguments and returns a double.
 2. This function can use two integer arrays "left_count" and 
    "right_count", each of length "no_of_categories", specifying how many 
    points of each category lie on the left and right sides of the hyperplane.
    Note: These are declared as external variables in compute_impurity(). 
    Just use them as read-only global variables to compute the impurity.  
-3. "mymeasure" should explicitly return a float value, which is the
+3. "mymeasure" should explicitly return a double value, which is the
    impurity.  OC1 tries to find a location of the hyperplane that
    MINIMIZES this impurity.  Special care should be taken for measures
    like Information Gain that (in a sense) measure the "purity" of a

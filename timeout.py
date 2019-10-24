@@ -29,7 +29,7 @@ def call_with_timeout(obj, method, *args, timeout=60):
         command = getattr(obj, 'get_{}_command'.format(method))(*args)
         with open(obj.output_file, 'w+') as out:
             start = time.time()
-            p = subprocess.Popen(command.split(' '), stdout=out)
+            p = subprocess.Popen(command.split(' '), stdout=out, stderr=out)
             try:
                 p.wait(timeout=timeout)
             except subprocess.TimeoutExpired:

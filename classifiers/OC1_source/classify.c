@@ -51,7 +51,7 @@ struct tree_node* root;
 {
     FILE* outfile;
     int i, j;
-    float myrandom ();
+    double myrandom ();
     struct tree_node* cur_node;
     double sum;
 
