@@ -41,7 +41,8 @@ class OC1Wrapper:
         return {
             'nodes': self.num_nodes,
             'oblique': self.num_oblique,
-            'bandwidth': int(np.ceil(np.log2((self.num_nodes + 1) / 2)))
+            'bandwidth': int(np.ceil(np.log2((self.num_nodes + 1) / 2))),
+            'oc1_reported_acc': self.oc1_reported_acc
         }
 
     def get_fit_command(self, dataset):
@@ -69,6 +70,10 @@ class OC1Wrapper:
                     self.num_nodes = int(line.split(': ')[1])
                 elif line.startswith('Number of oblique'):
                     self.num_oblique = int(line.split(': ')[1])
+                elif line.startswith('acc.'):
+                    line = line.split('\t')[0]
+                    line = line.split(' = ')[1]
+                    self.oc1_reported_acc = float(line)
 
     def parse_dt(self):
         """
