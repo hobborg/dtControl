@@ -359,11 +359,11 @@ char* argv[];
         unsigned num_oblique = oblique_count (root);
         printf ("Number of oblique: %u\n", num_oblique);
 
-        print_dot (root, "tree.dot");
+        // print_dot (root, "tree.dot");
 
-        result = estimate_accuracy (train_points, no_of_train_points, root);
-        printf ("acc. on training set = %f\t#leaves = %.0f\tmax depth = %.0f\n", result.accuracy,
-                result.leaf_count, result.tree_depth);
+        //result = estimate_accuracy (train_points, no_of_train_points, root);
+        //printf ("acc. on training set = %f\t#leaves = %.0f\tmax depth = %.0f\n", result.accuracy,
+        //        result.leaf_count, result.tree_depth);
 
         if (verbose)
             for (i = 1; i <= no_of_categories; i++)

@@ -112,7 +112,7 @@ class TableController:
         return links_table
 
     def get_dot_link(self, file):
-        if getsize(file) > 1e6:
+        if getsize(file) > 500e3:
             return self.get_file_link(file)
         with open(file) as infile:
             dot = infile.read()
