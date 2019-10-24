@@ -44,7 +44,7 @@ class OC1Wrapper:
             'bandwidth': int(np.ceil(np.log2((self.num_nodes + 1) / 2)))
         }
 
-    def get_fit_command(self, dataset):  # TODO: segfault after number of oblique - dont compute accuracy
+    def get_fit_command(self, dataset):
         self.map_unique_label_back = dataset.map_unique_label_back
         self.index_to_value = dataset.index_to_value
         self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()], last_column_is_label=True)
