@@ -38,10 +38,10 @@ extern int no_of_categories,no_of_coeffs;
 /*				in oc1.h.				*/
 /************************************************************************/
 generate_random_hyperplane(coefficients)
-double *coefficients;
+float *coefficients;
 {
   int i;
-  double myrandom();
+  float myrandom();
  
   for (i=1;i<=no_of_coeffs;i++)
      coefficients[i] = myrandom(-MAX_COEFFICIENT, MAX_COEFFICIENT);

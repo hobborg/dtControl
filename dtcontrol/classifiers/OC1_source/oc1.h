@@ -54,7 +54,7 @@
 #define MAX_NO_OF_STAGNANT_PERTURBATIONS 10
 #define MAX_CART_CYCLES 100
 
-#define TOLERANCE 1e-30  // TODO: decrease tolerance and replace double by double?
+#define TOLERANCE 1e-10
 #define TOO_SMALL_THRESHOLD 2.0
 #define TOO_SMALL_FOR_ANY_SPLIT 1
 #define TOO_SMALL_FOR_OBLIQUE_SPLIT 2 * no_of_dimensions
@@ -71,7 +71,7 @@
 
 typedef struct point
 {
-    double* dimension;
+    float* dimension;
     int category;
     double val; /*Value obtained by substituting this point in the
                  equation of the hyperplane under consideration.
@@ -81,7 +81,7 @@ typedef struct point
 
 struct endpoint
 {
-    double x, y;
+    float x, y;
 };
 
 typedef struct edge
@@ -91,12 +91,12 @@ typedef struct edge
 
 struct tree_node
 {
-    double* coefficients;
+    float* coefficients;
     int *left_count, *right_count;
     struct tree_node *parent, *left, *right;
     int left_cat, right_cat;
     char label[MAX_DT_DEPTH];
-    double alpha; /* used only in error_complexity pruning. */
+    float alpha; /* used only in error_complexity pruning. */
     int no_of_points;
     int usesOblique;
     EDGE edge; /* used only in the display module. */
@@ -104,20 +104,20 @@ struct tree_node
 
 struct unidim
 {
-    double value;
+    float value;
     int cat;
 };
 
 struct test_outcome
 {
-    double leaf_count, tree_depth;
-    double accuracy;
+    float leaf_count, tree_depth;
+    float accuracy;
     int* class; /*For each class, store the number of correctly
                   classified examples and total number of examples */
 };
 
 void error (), free_ivector (), free_vector (), free_dvector ();
-double myrandom (), *vector ();
+float myrandom (), *vector ();
 double* dvector ();
 int* ivector ();
-double average (), sdev ();
+float average (), sdev ();

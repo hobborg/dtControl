@@ -51,7 +51,7 @@ struct tree_node* root;
 {
     FILE* outfile;
     int i, j;
-    double myrandom ();
+    float myrandom ();
     struct tree_node* cur_node;
     double sum;
 
@@ -59,6 +59,13 @@ struct tree_node* root;
 
     for (i = 1; i <= no_of_points; i++)
     {
+        // int debug = fabs (points[i]->dimension[1] - 1.230500) < 1e-4 && fabs (points[i]->dimension[2] - 5.492500) < 1e-4;
+        int debug = FALSE;
+        if (debug)
+        {
+            printf ("Found point: %f, %f\n", points[i]->dimension[1], points[i]->dimension[2]);
+            // printf("Category: %d\n", points[i]->category);
+        }
         cur_node = root;
         while (cur_node != NULL)
         {
@@ -67,20 +74,34 @@ struct tree_node* root;
                 sum += cur_node->coefficients[j] * points[i]->dimension[j];
             if (sum < 0)
             {
+                if(debug) {
+                    printf("l");
+                }
                 if (cur_node->left != NULL)
                     cur_node = cur_node->left;
                 else
                 {
+                    if (debug)
+                    {
+                        printf ("L Classified as %d\n", cur_node->left_cat);
+                    }
                     points[i]->category = cur_node->left_cat;
                     break;
                 }
             }
             else
             {
+                if(debug) {
+                    printf("r");
+                }
                 if (cur_node->right != NULL)
                     cur_node = cur_node->right;
                 else
                 {
+                    if (debug)
+                    {
+                        printf ("R Classified as %d\n", cur_node->right_cat);
+                    }
                     points[i]->category = cur_node->right_cat;
                     break;
                 }
@@ -173,21 +194,37 @@ struct tree_node* root;
 
     for (i = 1; i <= no_of_points; i++)
     {
+        // int debug = fabs (points[i]->dimension[1] - 1.230500) < 1e-4 && fabs (points[i]->dimension[2] - 5.492500) < 1e-4;
+        int debug = FALSE;
+        if (debug)
+        {
+            printf ("Found point: %f, %f\n", points[i]->dimension[1], points[i]->dimension[2]);
+            printf ("Category: %d\n", points[i]->category);
+        }
         cur_node = root;
         while (cur_node != NULL)
         {
-            sum = cur_node->coefficients[no_of_dimensions + 1];  // TAG: classification -- walking through the tree
+            sum = cur_node->coefficients[no_of_dimensions + 1]; // TAG: classification -- walking through the tree
             for (j = 1; j <= no_of_dimensions; j++)
                 sum += cur_node->coefficients[j] * points[i]->dimension[j];
 
             if (sum < 0)
             {
+                if(debug) {
+                    printf("l");
+                }
                 if (cur_node->left != NULL)
                     cur_node = cur_node->left;
                 else
                 {
                     if (cur_node->left_cat == points[i]->category)
+                    {
                         correct[points[i]->category]++;
+                        if (debug)
+                        {
+                            printf ("L Classified as %d\n", cur_node->left_cat);
+                        }
+                    }
                     else
                     {
                         incorrect[points[i]->category]++;
@@ -198,12 +235,21 @@ struct tree_node* root;
             }
             else
             {
+                if(debug) {
+                    printf("r");
+                }
                 if (cur_node->right != NULL)
                     cur_node = cur_node->right;
                 else
                 {
                     if (cur_node->right_cat == points[i]->category)
+                    {
                         correct[points[i]->category]++;
+                        if (debug)
+                        {
+                            printf ("R Classified as %d\n", cur_node->right_cat);
+                        }
+                    }
                     else
                     {
                         incorrect[points[i]->category]++;
@@ -226,8 +272,8 @@ struct tree_node* root;
         total_incorrects += incorrect[i];
     }
 
-    printf("total correct: %d\n", total_corrects);
-    printf("no points: %d\n", no_of_points);
+    printf ("total correct: %d\n", total_corrects);
+    printf ("no points: %d\n", no_of_points);
     result.accuracy = 100.0 * total_corrects / no_of_points;
 
     for (i = 1; i <= no_of_categories; i++)

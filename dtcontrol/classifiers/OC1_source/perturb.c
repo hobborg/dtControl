@@ -24,14 +24,14 @@ extern int no_of_coeffs;
 extern int no_of_dimensions, no_of_categories;
 extern int *left_count, *right_count;
 extern int coeff_modified;
-extern double* coeff_array;
-extern double* modified_coeff_array;
+extern float* coeff_array;
+extern float* modified_coeff_array;
 extern struct unidim* candidates;
 extern double* temp_val; /*Work area */
 
-double mygamma;
-double compute_impurity ();
-double myabs (), myrandom ();
+float mygamma;
+float compute_impurity ();
+float myabs (), myrandom ();
 double exp ();
 
 
@@ -55,14 +55,14 @@ double exp ();
 /* Important Variables used : gamma and lambda : see CART book, chapter */
 /*                            5 for a description.                      */
 /************************************************************************/
-double cart_perturb (cur_points, cur_no_of_points, cur_coeff, cur_error) POINT** cur_points;
-double cur_error;
+float cart_perturb (cur_points, cur_no_of_points, cur_coeff, cur_error) POINT** cur_points;
+float cur_error;
 int cur_no_of_points, cur_coeff;
 {
     int i, j, bestsplit, no_of_eff_points;
-    double d_dim_error;
-    double x, linear_split ();
-    double lambda, best_lambda, best_mygamma, best_impurity;
+    float d_dim_error;
+    float x, linear_split ();
+    float lambda, best_lambda, best_mygamma, best_impurity;
 
     for (i = 1; i <= no_of_coeffs; i++)
         modified_coeff_array[i] = coeff_array[i];
@@ -80,7 +80,7 @@ int cur_no_of_points, cur_coeff;
                 {
                     no_of_eff_points++;
                     candidates[no_of_eff_points].cat = cur_points[i]->category;
-                    x = (double)(cur_points[i]->val / (cur_points[i]->dimension[cur_coeff] + mygamma));
+                    x = (float)(cur_points[i]->val / (cur_points[i]->dimension[cur_coeff] + mygamma));
                     candidates[no_of_eff_points].value = x;
                 }
 
@@ -131,14 +131,14 @@ int cur_no_of_points, cur_coeff;
 /* Important Variables used :
 /* Remarks :
 /************************************************************************/
-double cart_perturb_constant (cur_points, cur_no_of_points, cur_error) POINT** cur_points;
-double cur_error;
+float cart_perturb_constant (cur_points, cur_no_of_points, cur_error) POINT** cur_points;
+float cur_error;
 int cur_no_of_points;
 {
     int i, j, bestsplit, no_of_eff_points;
-    double d_dim_error;
-    double x, linear_split ();
-    double lambda;
+    float d_dim_error;
+    float x, linear_split ();
+    float lambda;
 
     for (i = 1; i <= no_of_coeffs; i++)
         modified_coeff_array[i] = coeff_array[i];
@@ -149,7 +149,7 @@ int cur_no_of_points;
     {
         no_of_eff_points++;
         candidates[no_of_eff_points].cat = cur_points[i]->category;
-        candidates[no_of_eff_points].value = (double)cur_points[i]->val;
+        candidates[no_of_eff_points].value = (float)cur_points[i]->val;
     }
 
     lambda = linear_split (no_of_eff_points);
@@ -203,16 +203,16 @@ int cur_no_of_points;
 /* Remarks :	For a detailed description of the perturbation 		*/
 /*		algorithm, see Murthy et al's paper in AAAI-93.		*/
 /************************************************************************/
-double suggest_perturbation (cur_points, cur_no_of_points, cur_coeff, cur_error) POINT** cur_points;
-double cur_error;
+float suggest_perturbation (cur_points, cur_no_of_points, cur_coeff, cur_error) POINT** cur_points;
+float cur_error;
 int cur_no_of_points, cur_coeff;
 {
     extern int no_of_stagnant_perturbations;
     int i, j, lpt, rpt, bestsplit, no_of_eff_points = 0;
-    double d_dim_error;
-    double suggest_perturbation ();
-    double x, linear_split ();
-    double newval, changeinval;
+    float d_dim_error;
+    float suggest_perturbation ();
+    float x, linear_split ();
+    float newval, changeinval;
 
     for (i = 1; i <= no_of_coeffs; i++)
         modified_coeff_array[i] = coeff_array[i];
@@ -224,7 +224,7 @@ int cur_no_of_points, cur_coeff;
         {
             no_of_eff_points++;
             candidates[no_of_eff_points].cat = cur_points[i]->category;
-            candidates[no_of_eff_points].value = coeff_array[no_of_coeffs] - (double)cur_points[i]->val;
+            candidates[no_of_eff_points].value = coeff_array[no_of_coeffs] - (float)cur_points[i]->val;
         }
     else
         for (i = 1; i <= cur_no_of_points; i++)
@@ -232,7 +232,7 @@ int cur_no_of_points, cur_coeff;
             {
                 no_of_eff_points++;
                 candidates[no_of_eff_points].cat = cur_points[i]->category;
-                x = (double)(cur_points[i]->val / cur_points[i]->dimension[cur_coeff]);
+                x = (float)(cur_points[i]->val / cur_points[i]->dimension[cur_coeff]);
                 candidates[no_of_eff_points].value = coeff_array[cur_coeff] - x;
             }
 
@@ -301,16 +301,16 @@ int cur_no_of_points, cur_coeff;
 /*			free_vector (util.c)				*/
 /* Is called by modules : oblique_split (mktree.c)			*/
 /************************************************************************/
-double perturb_randomly (cur_points, cur_no_of_points, cur_error, cur_label) POINT** cur_points;
-double cur_error;
+float perturb_randomly (cur_points, cur_no_of_points, cur_error, cur_label) POINT** cur_points;
+float cur_error;
 int cur_no_of_points;
 char* cur_label;
 {
     extern int no_of_stagnant_perturbations;
     int i, j, no_of_eff_points = 0;
-    double d_dim_error;
-    double* rvector;
-    double alpha, linear_split ();
+    float d_dim_error;
+    float* rvector;
+    float alpha, linear_split ();
 
     for (i = 1; i <= no_of_coeffs; i++)
         modified_coeff_array[i] = coeff_array[i];
@@ -330,7 +330,7 @@ char* cur_label;
         {
             no_of_eff_points++;
             candidates[no_of_eff_points].cat = cur_points[i]->category;
-            candidates[no_of_eff_points].value = (double)(-1.0 * (cur_points[i]->val / temp_val[i]));
+            candidates[no_of_eff_points].value = (float)(-1.0 * (cur_points[i]->val / temp_val[i]));
         }
     }
 
@@ -394,7 +394,7 @@ char* cur_label;
 /************************************************************************/
 int compare (ptr1, ptr2) struct unidim *ptr1, *ptr2;
 {
-    double x;
+    float x;
 
     x = (*ptr1).value - (*ptr2).value;
 
@@ -429,11 +429,11 @@ Remarks :
        the "qsort" system call in this routine, and in the
        module "find_values".					*/
 /************************************************************************/
-double linear_split (no_of_eff_points) int no_of_eff_points; // TAG: linear_split
+float linear_split (no_of_eff_points) int no_of_eff_points; // TAG: linear_split
 {
     int i, j, from, to, bestsplit;
-    double temp, impurity_1d;
-    double newval;
+    float temp, impurity_1d;
+    float newval;
     int l1, l2, r1, r2;
     int compare ();
 

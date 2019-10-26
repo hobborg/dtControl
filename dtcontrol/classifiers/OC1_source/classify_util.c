@@ -159,7 +159,7 @@ FILE* dtree;
 struct tree_node* read_hp (dtree) FILE* dtree;
 {
     struct tree_node* cur_node;
-    double temp;
+    float temp;
     char c;
     int i;
 

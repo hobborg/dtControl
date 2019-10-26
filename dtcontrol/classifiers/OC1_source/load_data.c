@@ -30,8 +30,8 @@
 extern int no_of_dimensions;
 extern int no_of_categories;
 extern int no_of_missing_values,unlabeled;
-extern double *min_attribute_value,*avg_attribute_value;
-extern double *sdev_attribute_value;
+extern float *min_attribute_value,*avg_attribute_value;
+extern float *sdev_attribute_value;
 
 int *category_array = NULL;
 
@@ -137,9 +137,9 @@ int load_points(infile,points_ptr)
 		      for (i=1;i<=points_allocated;i++)
 			{
 			  array_name[i]->dimension += 1;
-			  array_name[i]->dimension = (double *)realloc
+			  array_name[i]->dimension = (float *)realloc
 			    (array_name[i]->dimension,
-			     no_of_dimensions * sizeof(double));
+			     no_of_dimensions * sizeof(float));
 			  array_name[i]->dimension -= 1;
 			}
 		      break;
@@ -366,7 +366,7 @@ shuffle_points(array_name,count)
   
   for (i=1;i<=count;i++)
     {
-      newposition = (int)myrandom(1.0,(double)count);
+      newposition = (int)myrandom(1.0,(float)count);
       /* shuffle position "i" with "newposition" */
       
       temp_point = array_name[i];
@@ -395,7 +395,7 @@ fill_missing_values(points,no_of_points)
      int no_of_points;
 {
   int i,j,count;
-  double avg,average(),*temp;
+  float avg,average(),*temp;
   
   temp = vector(1,no_of_points);
   

@@ -35,20 +35,20 @@
 /************************************************************************/
 /* Module name : MyLog2                                                  */
 /* Functionality : Computes the log-base-2 of a double, and returns      */
-/*                 a double.                                              */
+/*                 a float.                                              */
 /************************************************************************/
-double mylog2 (x) double x;
+float mylog2 (x) double x;
 {
     double log ();
 
-    return ((double)(log (x) / log ((double)2.0)));
+    return ((float) (log (x) / log ((double)2.0)));
 }
 
 /************************************************************************/
 /* Module name : MyAbs                                                  */
-/* Functionality : Computes the absolute value of a double.              */
+/* Functionality : Computes the absolute value of a float.              */
 /************************************************************************/
-double myabs (x) double x;
+float myabs (x) float x;
 {
     if (x < 0)
         return (-1.0 * x);
@@ -73,30 +73,30 @@ error (error_text) char error_text[];
 /*			scales it to given range.        		*/
 /* Parameters :	above, below : lower and upper limits, respectively on	*/
 /*		the random number to be generated.			*/
-/* Returns :	a doubleing point number.				*/
+/* Returns :	a floating point number.				*/
 /* Calls modules :	drand48 (C library call)			*/
 /* Remarks: If your system doesn't support drand48(), you can substitute*/
 /*          the call below with any good pseudo random number generator */
 /*          function call.                                              */
 /************************************************************************/
-double myrandom (above, below) double above, below;
+float myrandom (above, below) float above, below;
 {
     double drand48 ();
 
-    return ((double)(above + drand48 () * (below - above)));
+    return ((float)(above + drand48 () * (below - above)));
 }
 
 
 /************************************************************************/
 /* Module name : Average                                                */
-/* Functionality : Computes the average of a double array.               */
-/* Parameters: a: double array, indices in the range 1,n                 */
-/*             n: length of the double array.                            */
+/* Functionality : Computes the average of a float array.               */
+/* Parameters: a: float array, indices in the range 1,n                 */
+/*             n: length of the float array.                            */
 /************************************************************************/
-double average (a, n) double* a;
+float average (a, n) float* a;
 int n;
 {
-    double sum = 0;
+    float sum = 0;
     int i;
 
     for (i = 1; i <= n; i++)
@@ -106,14 +106,14 @@ int n;
 
 /************************************************************************/
 /* Module name : Min                                                    */
-/* Functionality : Returns the minimum entry of a double array           */
-/* Parameters: a: double array, indices in the range 1,n                 */
-/*             n: length of the double array.                            */
+/* Functionality : Returns the minimum entry of a float array           */
+/* Parameters: a: float array, indices in the range 1,n                 */
+/*             n: length of the float array.                            */
 /************************************************************************/
-double min (a, n) double* a;
+float min (a, n) float* a;
 int n;
 {
-    double xmin;
+    float xmin;
     int i;
 
     xmin = a[1];
@@ -124,16 +124,16 @@ int n;
 
 /************************************************************************/
 /* Module name : SDev                                                   */
-/* Functionality : Computes the standard deviation of a double array.    */
-/* Parameters: a: double array, indices in the range 1,n                 */
-/*             n: length of the double array.                            */
+/* Functionality : Computes the standard deviation of a float array.    */
+/* Parameters: a: float array, indices in the range 1,n                 */
+/*             n: length of the float array.                            */
 /* Calls Modules: Average                                               */
 /************************************************************************/
-double sdev (a, n) double* a;
+float sdev (a, n) float* a;
 int n;
 {
     int i;
-    double average (), mean;
+    float average (), mean;
     double sum = 0, sqrt ();
 
     mean = average (a, n);
@@ -142,7 +142,7 @@ int n;
 
     if (n > 1) sum = sum / (n - 1);
     sum = sqrt (sum);
-    return ((double)sum);
+    return ((float)sum);
 }
 
 /************************************************************************/
@@ -164,17 +164,17 @@ int *ivector (nl, nh) int nl, nh;
 
 /************************************************************************/
 /* Module name : vector							*/
-/* Functionality :	Allocates a 1-D double array, whose indices	*/
+/* Functionality :	Allocates a 1-D float array, whose indices	*/
 /*			range from "nl" through "nh", and returns a	*/
 /*			pointer to this array.				*/
 /* Parameters :	nl,nh : lowest and highest indices.			*/
 /* Calls modules :	error						*/
 /************************************************************************/
-double *vector (nl, nh) int nl, nh;
+float *vector (nl, nh) int nl, nh;
 {
-    double* v;
+    float* v;
 
-    v = (double*)malloc ((unsigned)(nh - nl + 1) * sizeof (double));
+    v = (float*)malloc ((unsigned)(nh - nl + 1) * sizeof (float));
     if (v == NULL) error ("Vector : Memory allocation failure.");
     return (v - nl);
 }
@@ -212,7 +212,7 @@ free_ivector (v, nl, nh) int* v, nl, nh;
 
 /************************************************************************/
 /* Module name : free_vector						*/
-/* Functionality :	Frees a 1-D double array. 			*/
+/* Functionality :	Frees a 1-D float array. 			*/
 /* Parameters :	v : pointer to the array				*/
 /*		nl,nh : lowest and highest indices.			*/
 /* Remarks: It is possible that the memory deallocation modules do not  */
@@ -220,7 +220,7 @@ free_ivector (v, nl, nh) int* v, nl, nh;
 /*          cases, however.                                             */
 /************************************************************************/
 free_vector (v, nl, nh) int nl, nh;
-double* v;
+float* v;
 {
     free ((char*)(v + nl));
 }
@@ -250,11 +250,11 @@ double* v;
 /* Is called by modules :	oblique_split (mktree.c)		*/
 /*				perturb_randomly (perturb.c)		*/
 /************************************************************************/
-generate_random_hyperplane (array_name, length, max_value) double* array_name, max_value;
+generate_random_hyperplane (array_name, length, max_value) float* array_name, max_value;
 int length;
 {
     int i;
-    double myrandom ();
+    float myrandom ();
 
     for (i = 1; i <= length; i++)
         array_name[i] = myrandom (-1.0 * max_value, max_value);

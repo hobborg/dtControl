@@ -23,7 +23,7 @@ extern int no_of_dimensions;
 extern int *left_count,*right_count;
 extern int no_of_categories;
 extern int coeff_modified;
-extern double *coeff_array;
+extern float *coeff_array;
 
 /************************************************************************/
 /* Module name : compute_impurity					*/
@@ -44,11 +44,11 @@ extern double *coeff_array;
 /*				perturb_randomly (perturb.c)		*/
 /*				linear_split (perturb.c)		*/
 /************************************************************************/
-double compute_impurity(cur_no_of_points)
+float compute_impurity(cur_no_of_points)
      int cur_no_of_points;
 {
   int i,j=0,stop_splitting();
-  double IMPURITY;
+  float IMPURITY;
   
   if (cur_no_of_points <= 1) return(0);
 

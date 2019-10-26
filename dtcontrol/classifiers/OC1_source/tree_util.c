@@ -156,7 +156,7 @@ struct tree_node *read_hp(dtree)
      FILE *dtree;
 {
   struct tree_node *cur_node;
-  double temp;
+  float temp;
   char c;
   int i;
 
@@ -436,8 +436,8 @@ write_hp(cur_node,dtree)
 
   for (i=1;i<=no_of_dimensions;i++)
     if (cur_node->coefficients[i])
-	  fprintf(dtree,"%f x[%d] + ",cur_node->coefficients[i],i);
-  fprintf(dtree,"%f = 0\n\n",cur_node->coefficients[no_of_dimensions+1]);
+	  fprintf(dtree,"%.9g x[%d] + ",cur_node->coefficients[i],i);
+  fprintf(dtree,"%.9g = 0\n\n",cur_node->coefficients[no_of_dimensions+1]);
 }
 
 /************************************************************************/
