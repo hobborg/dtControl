@@ -10,7 +10,7 @@ from os.path import join, exists, isfile
 # from IPython.display import HTML, display
 
 from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
-from dtcontrol.classifiers.bdd import BDD
+# from dtcontrol.classifiers.bdd import BDD
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.timeout import call_with_timeout
@@ -136,10 +136,10 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
-            if isinstance(classifier, BDD):  # bdd cannot predict yet
-                stats = classifier.get_stats()
-                cell = {'stats': stats, 'time': format_seconds(run_time)}
-                return cell
+            # if isinstance(classifier, BDD):  # bdd cannot predict yet
+            #     stats = classifier.get_stats()
+            #     cell = {'stats': stats, 'time': format_seconds(run_time)}
+            #     return cell
             acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:
                 cell = 'failed to fit'
@@ -220,34 +220,45 @@ class BenchmarkSuite:
 
     @staticmethod
     def is_multiout(filename, ext):
-        if "scs" not in ext:
+        if "scs" in ext:
+            # if scs, then
+            f = open(filename)
+            # Read input dim from scs file
+            for i in range(5):
+                f.readline()
+            state_dim = int(f.readline())
+            for i in range(12 + 3 * state_dim):
+                f.readline()
+            input_dim = int(f.readline())
+            return input_dim > 1
+        elif "csv" in ext:
+            # if scs, then
+            f = open(filename)
+            f.readline()
+            _, input_dim = map(int, f.readline().split("BEGIN")[1].split())
+            return input_dim > 1
+        else:
             return False
-        # if scs, then
-        f = open(filename)
-        # Read input dim from scs file
-        for i in range(5):
-            f.readline()
-        state_dim = int(f.readline())
-        for i in range(12 + 3 * state_dim):
-            f.readline()
-        input_dim = int(f.readline())
-        return input_dim > 1
 
     @staticmethod
     def is_deterministic(filename, ext):
-        if "scs" not in ext:
-            return False  # UPPAAL is always non-deterministic
-        # if scs, then
-        f = open(filename)
-        # Read input dim from scs file
-        for i in range(5):
-            f.readline()
-        state_dim = int(f.readline())
-        for i in range(12 + 3 * state_dim):
-            f.readline()
-        input_dim = int(f.readline())
-        for i in range(12 + 3 * input_dim):
-            f.readline()
+        if "scs" in ext:
+            f = open(filename)
+            # Read input dim from scs file
+            for i in range(5):
+                f.readline()
+            state_dim = int(f.readline())
+            for i in range(12 + 3 * state_dim):
+                f.readline()
+            input_dim = int(f.readline())
+            for i in range(12 + 3 * input_dim):
+                f.readline()
 
-        non_det = int(f.readline().split(":")[1].split()[1])
-        return non_det == 1
+            non_det = int(f.readline().split(":")[1].split()[1])
+            return non_det == 1
+        elif "csv" in ext:
+            f = open(filename)
+            is_det = "NON-PERMISSIVE" in f.readline()
+            return is_det
+        else:
+            return False  # UPPAAL is always non-deterministic
