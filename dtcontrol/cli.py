@@ -70,6 +70,7 @@ trees in decision_trees
 
 """
 
+import pkg_resources
 import argparse
 import logging
 import re
@@ -80,16 +81,16 @@ from os.path import exists, isfile, splitext
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
-from benchmark_suite import BenchmarkSuite
-from classifiers.cart_custom_dt import CartDT
-from classifiers.linear_classifier_dt import LinearClassifierDT
-from classifiers.max_freq_dt import MaxFreqDT
-from classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
-from classifiers.max_freq_multi_dt import MaxFreqMultiDT
-from classifiers.norm_dt import NormDT
-from classifiers.norm_linear_classifier_dt import NormLinearClassifierDT
-from classifiers.oc1_wrapper import OC1Wrapper
-from classifiers.random_dt import RandomDT
+from dtcontrol.benchmark_suite import BenchmarkSuite
+from dtcontrol.classifiers.cart_custom_dt import CartDT
+from dtcontrol.classifiers.linear_classifier_dt import LinearClassifierDT
+from dtcontrol.classifiers.max_freq_dt import MaxFreqDT
+from dtcontrol.classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
+from dtcontrol.classifiers.max_freq_multi_dt import MaxFreqMultiDT
+from dtcontrol.classifiers.norm_dt import NormDT
+from dtcontrol.classifiers.norm_linear_classifier_dt import NormLinearClassifierDT
+from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
+from dtcontrol.classifiers.random_dt import RandomDT
 
 
 def is_valid_file_or_folder(parser, arg):
@@ -187,12 +188,13 @@ def get_classifiers(methods, det_strategies):
     return classifiers
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     parser = argparse.ArgumentParser(prog="dtcontrol")
 
-    parser.add_argument("-v", "--version", action='version', version='%(prog)s 1.0')
+    version = pkg_resources.require("dtcontrol-tum")[0].version
+    parser.add_argument("-v", "--version", action='version', version=f'%(prog)s {version}')  # todo version from setup.py
 
     parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
                         help="The input switch takes in one or more space separated file names or "
@@ -246,7 +248,7 @@ if __name__ == "__main__":
         dataset = args.input
     else:
         parser.print_help()
-        sys.exit("Input files/folders missing")
+        sys.exit()
 
     kwargs["timeout"] = 2 * 60 * 60
     if args.timeout:
@@ -284,3 +286,7 @@ if __name__ == "__main__":
     suite = BenchmarkSuite(**kwargs)
     suite.add_datasets(dataset)
     suite.benchmark(classifiers)
+
+
+if __name__ == "__main__":
+    main()

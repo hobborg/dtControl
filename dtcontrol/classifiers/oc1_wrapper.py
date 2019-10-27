@@ -6,9 +6,9 @@ from shutil import copyfile
 
 import numpy as np
 
-import util
-from classifiers.custom_dt import Node
-from dataset.single_output_dataset import SingleOutputDataset
+import dtcontrol.util
+from dtcontrol.classifiers.custom_dt import Node
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 
 
 class OC1Wrapper:
@@ -219,7 +219,7 @@ class OC1Node(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return str(util.objround(self.actual_label, 6))  # TODO get precision from flag?
+            return str(dtcontrol.util.objround(self.actual_label, 6))  # TODO get precision from flag?
         else:
             line = []
             for i in range(len(self.coeff)):

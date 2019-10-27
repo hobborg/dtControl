@@ -1,5 +1,5 @@
-from dataset.dataset import Dataset
-from util import make_set
+from dtcontrol.dataset.dataset import Dataset
+from dtcontrol.util import make_set
 
 class SingleOutputDataset(Dataset):
     def __init__(self, filename):

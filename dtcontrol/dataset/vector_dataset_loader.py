@@ -1,4 +1,4 @@
-from dataset.dataset_loader import DatasetLoader
+from dtcontrol.dataset.dataset_loader import DatasetLoader
 import numpy as np
 import pandas as pd
 from os.path import splitext

@@ -3,8 +3,8 @@ import random
 import math
 from tqdm import tqdm
 
-from dataset.single_output_dataset import SingleOutputDataset
-from dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 # from dd import cudd as _bdd
 from dd import autoref as _bdd  # TODO: Might use cudd
 

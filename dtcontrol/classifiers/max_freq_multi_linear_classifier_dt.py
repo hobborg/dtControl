@@ -1,5 +1,5 @@
-from classifiers.linear_classifier_dt import LinearClassifierDT, LinearClassifierOrAxisAlignedNode
-from dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.classifiers.linear_classifier_dt import LinearClassifierDT, LinearClassifierOrAxisAlignedNode
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 
 class MaxFreqMultiLinearClassifierDT(LinearClassifierDT):
     def __init__(self, classifier_class, **kwargs):

@@ -1,5 +1,5 @@
-from dataset.multi_output_dataset import MultiOutputDataset
-from classifiers.cart_custom_dt import CartNode
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.classifiers.cart_custom_dt import CartNode
 import numpy as np
 
 class MaxCartForest():

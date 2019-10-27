@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from dataset.dataset_loader import DatasetLoader
+from dtcontrol.dataset.dataset_loader import DatasetLoader
 from tqdm import tqdm
 
 

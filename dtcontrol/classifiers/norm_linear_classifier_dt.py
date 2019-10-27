@@ -1,7 +1,7 @@
 import numpy as np
 
-from classifiers.linear_classifier_dt import LinearClassifierDT, LinearClassifierOrAxisAlignedNode
-from dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.classifiers.linear_classifier_dt import LinearClassifierDT, LinearClassifierOrAxisAlignedNode
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 
 class NormLinearClassifierDT(LinearClassifierDT):
     """

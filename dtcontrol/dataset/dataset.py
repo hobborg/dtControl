@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from dataset.scots_dataset_loader import ScotsDatasetLoader
-from dataset.uppaal_dataset_loader import UppaalDatasetLoader
-from dataset.vector_dataset_loader import VectorDatasetLoader
-from util import get_filename_and_ext
+from dtcontrol.dataset.scots_dataset_loader import ScotsDatasetLoader
+from dtcontrol.dataset.uppaal_dataset_loader import UppaalDatasetLoader
+from dtcontrol.dataset.vector_dataset_loader import VectorDatasetLoader
+from dtcontrol.util import get_filename_and_ext
 
 
 class Dataset(ABC):

@@ -1,7 +1,7 @@
 import numpy as np
 from operator import itemgetter
-from dataset.dataset import Dataset
-from util import make_set
+from dtcontrol.dataset.dataset import Dataset
+from dtcontrol.util import make_set
 
 
 class MultiOutputDataset(Dataset):

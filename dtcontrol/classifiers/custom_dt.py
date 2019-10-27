@@ -53,7 +53,7 @@ class CustomDT(ABC, BaseEstimator):
         entitystr = "entity controller is\n\tport (\n"
         allInputs = ""
         for i in range(0, numInputs):
-            entitystr += "\t\tx" + str(i) + ": in <type>;\n"  # todo: get type from dataset :(
+            entitystr += "\t\tx" + str(i) + ": in <type>;\n"  # todo: get type from dtcontrol.dataset :(
             allInputs += "x" + str(i) + ","
         entitystr += "\t\ty: out <type>\n\t);\nend entity;\n\n"  # no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
         architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + allInputs[

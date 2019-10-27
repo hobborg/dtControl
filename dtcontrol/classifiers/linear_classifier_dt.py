@@ -4,8 +4,8 @@ import numpy as np
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.tree import DecisionTreeClassifier
 
-import util
-from classifiers.custom_dt import CustomDT, Node
+import dtcontrol.util
+from dtcontrol.classifiers.custom_dt import CustomDT, Node
 
 # SVM sometimes does not converge and clutters the output with warnings
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
@@ -99,7 +99,7 @@ class LinearClassifierOrAxisAlignedNode(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return str(util.objround(self.actual_label, 6))  # TODO get precision from flag?
+            return str(dtcontrol.util.objround(self.actual_label, 6))  # TODO get precision from flag?
         if self.is_axis_aligned():
             tree = self.classifier.tree_
             return f'X[{tree.feature[0]}] <= {round(tree.threshold[0], 6)}'  # TODO get precision from flag?

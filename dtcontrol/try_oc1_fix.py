@@ -1,5 +1,5 @@
-from classifiers.oc1_wrapper import OC1Wrapper
-from dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 
 oc1 = OC1Wrapper()
 ds = SingleOutputDataset('../XYdatasets/tworooms_large.vector')

@@ -1,7 +1,7 @@
 import numpy as np
 
-from classifiers.cart_custom_dt import CartDT, CartNode
-from dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.classifiers.cart_custom_dt import CartDT, CartNode
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 
 class NormDT(CartDT):
     """

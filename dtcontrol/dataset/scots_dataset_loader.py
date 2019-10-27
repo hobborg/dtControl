@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-from dataset.dataset_loader import DatasetLoader
+from dtcontrol.dataset.dataset_loader import DatasetLoader
 from tqdm import tqdm
 
 

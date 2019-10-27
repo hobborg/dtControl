@@ -7,15 +7,15 @@ import webbrowser
 from os import makedirs
 from os.path import join, exists, isfile
 
-from IPython.display import HTML, display
+# from IPython.display import HTML, display
 
-from classifiers.oc1_wrapper import OC1Wrapper
-from classifiers.bdd import BDD
-from dataset.multi_output_dataset import MultiOutputDataset
-from dataset.single_output_dataset import SingleOutputDataset
-from timeout import call_with_timeout
-from ui.table_controller import TableController
-from util import format_seconds, get_filename_and_ext
+from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
+from dtcontrol.classifiers.bdd import BDD
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.timeout import call_with_timeout
+from dtcontrol.ui.table_controller import TableController
+from dtcontrol.util import format_seconds, get_filename_and_ext
 
 class BenchmarkSuite:
     """
@@ -79,7 +79,7 @@ class BenchmarkSuite:
             return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump'))
 
     def display_html(self):
-        display(HTML(f'<html><a href="{self.html_file}" target="_blank">View table</a></html>'))
+        # display(HTML(f'<html><a href="{self.html_file}" target="_blank">View table</a></html>'))
         url = f'file://{os.path.abspath(self.html_file)}'
         webbrowser.open(url)
 

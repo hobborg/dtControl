@@ -1,5 +1,5 @@
-from dataset.multi_output_dataset import MultiOutputDataset
-from classifiers.cart_custom_dt import CartDT, CartNode
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.classifiers.cart_custom_dt import CartDT, CartNode
 
 
 class MaxFreqMultiDT(CartDT):

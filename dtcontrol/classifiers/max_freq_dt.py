@@ -1,6 +1,6 @@
-from classifiers.cart_custom_dt import CartDT, CartNode
-from dataset.dataset import Dataset
-from dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.classifiers.cart_custom_dt import CartDT, CartNode
+from dtcontrol.dataset.dataset import Dataset
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 
 class MaxFreqDT(CartDT):
     def __init__(self, ):
