@@ -1,0 +1,10 @@
+venv
+.idea
+dtcontrol/oc1_tmp
+dtcontrol/decision_trees
+dtcontrol/classifiers/OC1_source/*.o
+dtcontrol/classifiers/OC1_source/mktree
+dtcontrol/benchmark_tmp.*
+dtcontrol/examples/.benchmark_suite
+dtcontrol/saved_classifiers
+__pycache__
