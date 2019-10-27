@@ -8,7 +8,6 @@ import numpy as np
 
 import dtcontrol.util
 from dtcontrol.classifiers.custom_dt import Node
-from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 
 
 class OC1Wrapper:

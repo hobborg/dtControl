@@ -7,15 +7,16 @@ import webbrowser
 from os import makedirs
 from os.path import join, exists, isfile
 
-# from IPython.display import HTML, display
-
-from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
 from dtcontrol.classifiers.bdd import BDD
+from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.timeout import call_with_timeout
 from dtcontrol.ui.table_controller import TableController
 from dtcontrol.util import format_seconds, get_filename_and_ext
+
+
+# from IPython.display import HTML, display
 
 class BenchmarkSuite:
     """

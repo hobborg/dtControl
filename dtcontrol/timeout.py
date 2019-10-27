@@ -1,18 +1,22 @@
 import multiprocessing
+import os
 import signal
 import subprocess
 import time
-import os
+
 
 def is_windows():
     return os.name == 'nt'
 
+
 def use_multiprocessing():
     return is_windows()
+
 
 def _call_and_return_in_list(obj, method, return_list, *args):
     getattr(obj, method)(*args)
     return_list[0] = obj
+
 
 def call_with_timeout(obj, method, *args, timeout=60):
     """

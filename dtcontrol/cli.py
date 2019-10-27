@@ -70,7 +70,6 @@ trees in decision_trees
 
 """
 
-import pkg_resources
 import argparse
 import logging
 import re
@@ -78,6 +77,7 @@ import sys
 from os import makedirs
 from os.path import exists, isfile, splitext
 
+import pkg_resources
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
@@ -93,108 +93,106 @@ from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
 from dtcontrol.classifiers.random_dt import RandomDT
 
 
-def is_valid_file_or_folder(parser, arg):
-    if not exists(arg):
-        parser.error(f"The file/folder {arg} does not exist")
-    else:
-        return arg
-
-
-def is_valid_file(parser, arg):
-    if not isfile(arg):
-        parser.error(f"The file {arg} does not exist. Give a valid JSON file path.")
-    else:
-        return arg
-
-
-def parse_timeout(timeout_string: str):
-    """
-    Parses the timeout string
-
-    :param timeout_string: string describing timeout - an integer suffixed with s, m or h
-    :return: timeout in seconds
-    """
-    # Default timeout set to 2 hours
-    unit_to_factor = {'s': 1, 'm': 60, 'h': 3600}
-    if re.match(r'^[0-9]+[smh]$', timeout_string):
-        factor = unit_to_factor[timeout_string[-1]]
-        timeout = int(args.timeout[:-1]) * factor
-    else:
-        # In case s, m or h is missing; then interpret number as timeout in seconds
-        try:
-            timeout = int(timeout_string)
-        except ValueError:
-            parser.error("Invalid value passed as timeout.")
-    return timeout
-
-
-def get_classifiers(methods, det_strategies):
-    """
-    Creates classifier objects for each method
-
-    :param methods: list of method strings
-    :param det_strategies: list of determinization strategies
-    :return: list of classifier objects
-    """
-    method_map = {
-        'cart': {
-            'nondet': [CartDT()],  # TODO: remove lists and directly map to classifiers
-            'maxnorm': [NormDT(max)],
-            'minnorm': [NormDT(min)],
-            'maxfreq': [MaxFreqDT()],
-            'random': [RandomDT()],
-            'multimaxfreq': [MaxFreqMultiDT()],
-        },
-        'linsvm': {
-            'nondet': [LinearClassifierDT(LinearSVC, max_iter=5000)],
-            # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(max, LinearSVC, max_iter=5000)],
-            # 'minnorm': [NormSingleOutputLinearClassifierDT(min, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(min, LinearSVC, max_iter=5000)],
-            'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
-            'minnorm': [NormLinearClassifierDT(min, LinearSVC, max_iter=5000)],
-        },
-        'logreg': {
-            'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-            # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
-            'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
-            'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-        },
-        'oc1': {
-            'nondet': [OC1Wrapper(num_restarts=20, num_jumps=5)]
-        }
-    }
-
-    # construct all possible method - determinization strategy combinations
-    classifiers = []
-
-    if 'all' in methods:
-        methods = method_map.keys()
-
-    for method in methods:
-        if method not in method_map:
-            logging.warning(f"No method '{method}' exists. Skipping...")
-            continue
-
-        if 'all' in det_strategies:
-            classifiers.extend([classifier for cls_group in method_map[method].values() for classifier in cls_group])
-        else:
-            for det_strategy in det_strategies:
-                if det_strategy not in method_map[method]:
-                    logging.warning(f"Method '{method}' and determinization strategy '{det_strategy}' "
-                                    f"don't work together (yet). Skipping...")
-                    continue
-                classifiers.extend(method_map[method][det_strategy])
-
-    # returns a flattened list
-    return classifiers
-
-
 def main():
+    def is_valid_file_or_folder(parser, arg):
+        if not exists(arg):
+            parser.error(f"The file/folder {arg} does not exist")
+        else:
+            return arg
+
+    def is_valid_file(parser, arg):
+        if not isfile(arg):
+            parser.error(f"The file {arg} does not exist. Give a valid JSON file path.")
+        else:
+            return arg
+
+    def parse_timeout(timeout_string: str):
+        """
+        Parses the timeout string
+
+        :param timeout_string: string describing timeout - an integer suffixed with s, m or h
+        :return: timeout in seconds
+        """
+        # Default timeout set to 2 hours
+        unit_to_factor = {'s': 1, 'm': 60, 'h': 3600}
+        if re.match(r'^[0-9]+[smh]$', timeout_string):
+            factor = unit_to_factor[timeout_string[-1]]
+            timeout = int(args.timeout[:-1]) * factor
+        else:
+            # In case s, m or h is missing; then interpret number as timeout in seconds
+            try:
+                timeout = int(timeout_string)
+            except ValueError:
+                parser.error("Invalid value passed as timeout.")
+        return timeout
+
+    def get_classifiers(methods, det_strategies):
+        """
+        Creates classifier objects for each method
+
+        :param methods: list of method strings
+        :param det_strategies: list of determinization strategies
+        :return: list of classifier objects
+        """
+        method_map = {
+            'cart': {
+                'nondet': [CartDT()],  # TODO: remove lists and directly map to classifiers
+                'maxnorm': [NormDT(max)],
+                'minnorm': [NormDT(min)],
+                'maxfreq': [MaxFreqDT()],
+                'random': [RandomDT()],
+                'multimaxfreq': [MaxFreqMultiDT()],
+            },
+            'linsvm': {
+                'nondet': [LinearClassifierDT(LinearSVC, max_iter=5000)],
+                # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(max, LinearSVC, max_iter=5000)],
+                # 'minnorm': [NormSingleOutputLinearClassifierDT(min, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(min, LinearSVC, max_iter=5000)],
+                'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
+                'minnorm': [NormLinearClassifierDT(min, LinearSVC, max_iter=5000)],
+            },
+            'logreg': {
+                'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
+                # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
+                'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
+                'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
+            },
+            'oc1': {
+                'nondet': [OC1Wrapper(num_restarts=20, num_jumps=5)]
+            }
+        }
+
+        # construct all possible method - determinization strategy combinations
+        classifiers = []
+
+        if 'all' in methods:
+            methods = method_map.keys()
+
+        for method in methods:
+            if method not in method_map:
+                logging.warning(f"No method '{method}' exists. Skipping...")
+                continue
+
+            if 'all' in det_strategies:
+                classifiers.extend(
+                    [classifier for cls_group in method_map[method].values() for classifier in cls_group])
+            else:
+                for det_strategy in det_strategies:
+                    if det_strategy not in method_map[method]:
+                        logging.warning(f"Method '{method}' and determinization strategy '{det_strategy}' "
+                                        f"don't work together (yet). Skipping...")
+                        continue
+                    classifiers.extend(method_map[method][det_strategy])
+
+        # returns a flattened list
+        return classifiers
+
     logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     parser = argparse.ArgumentParser(prog="dtcontrol")
 
     version = pkg_resources.require("dtcontrol-tum")[0].version
-    parser.add_argument("-v", "--version", action='version', version=f'%(prog)s {version}')  # todo version from setup.py
+    parser.add_argument("-v", "--version", action='version',
+                        version=f'%(prog)s {version}')  # todo version from setup.py
 
     parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
                         help="The input switch takes in one or more space separated file names or "

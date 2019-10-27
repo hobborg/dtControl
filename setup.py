@@ -11,7 +11,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://gitlab.lrz.de/pranavashok/dtcontrol",
     packages=['dtcontrol', 'dtcontrol.classifiers', 'dtcontrol.dataset', 'dtcontrol.ui'],
-    entry_points = {
+    entry_points={
         'console_scripts': ['dtcontrol=dtcontrol.cli:main'],
     },
     classifiers=[

@@ -7,6 +7,7 @@ GRAPHVIZ_URL = 'https://dreampuf.github.io/GraphvizOnline/#'
 file_loader = FileSystemLoader('.')
 env = Environment(loader=file_loader)
 
+
 class TableController:
     def __init__(self, html_file, output_folder, is_artifact):
         self.html_file = html_file
