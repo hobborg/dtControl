@@ -44,6 +44,7 @@ class UppaalDatasetLoader(DatasetLoader):
             if line.startswith('When'):
                 action_set.add(line[line.index(' take transition ') + 17:].rstrip())
 
+        action_set = {action for action in action_set if "Choose" in action}
         actions = dict(zip(list(action_set), range(1, len(action_set) + 1)))
         controllable_states = list(controllable_state_set)
 
