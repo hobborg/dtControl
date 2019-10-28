@@ -14,11 +14,22 @@ class TableController:
         self.output_folder = output_folder
         self.is_artifact = is_artifact
 
+    def load_from_ui(self, filename):
+        full_paths = [path + "/ui/" + filename for path in dtcontrol.__path__ if exists(path + "/ui/" + filename)]
+        with open(full_paths[0]) as infile:
+            script = infile.read()
+        return script
+
     def update_and_save(self, results, last_run_datasets, last_run_classifiers):
         template = env.get_template('table.html')
-        table_js = [path + "/ui/table.js" for path in dtcontrol.__path__ if exists(path + "/ui/table.js")]
-        with open(table_js[0]) as infile:
-            script = infile.read()
+        script_js = self.load_from_ui('table.js')
+        jquery_js = self.load_from_ui('jquery-3.4.1.min.js')
+        bootstrap_css = self.load_from_ui('bootstrap.min.css')
+        bootstrap_js = self.load_from_ui('bootstrap.min.js')
+        bootstrap_toggle_css = self.load_from_ui('bootstrap4-toggle.min.css')
+        bootstrap_toggle_js = self.load_from_ui('bootstrap4-toggle.min.js')
+        style_css = self.load_from_ui('style.css')
+
         if self.is_artifact:
             table, row_metadata, column_names = self.get_table_data_artifact(results)
         else:
@@ -31,7 +42,13 @@ class TableController:
                 links_table=self.get_dot_and_c_links(row_metadata, column_names),
                 last_run_datasets=last_run_datasets,
                 last_run_classifiers=last_run_classifiers,
-                script=script
+                script_js=script_js,
+                jquery_js=jquery_js,
+                bootstrap_css=bootstrap_css,
+                bootstrap_js=bootstrap_js,
+                bootstrap_toggle_css=bootstrap_toggle_css,
+                bootstrap_toggle_js=bootstrap_toggle_js,
+                style_css=style_css
             ))
 
     def get_table_data(self, results):
