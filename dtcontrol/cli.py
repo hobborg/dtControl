@@ -138,7 +138,7 @@ def main():
         """
         method_map = {
             'cart': {
-                'nondet': [CartDT()],  # TODO: remove lists and directly map to classifiers
+                'none': [CartDT()],  # TODO: remove lists and directly map to classifiers
                 'maxnorm': [NormDT(max)],
                 'minnorm': [NormDT(min)],
                 'maxfreq': [MaxFreqDT()],
@@ -146,20 +146,17 @@ def main():
                 'multimaxfreq': [MaxFreqMultiDT()],
             },
             'linsvm': {
-                'nondet': [LinearClassifierDT(LinearSVC, max_iter=5000)],
-                # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(max, LinearSVC, max_iter=5000)],
-                # 'minnorm': [NormSingleOutputLinearClassifierDT(min, LinearSVC, max_iter=5000), NormMultiOutputLinearClassifierDT(min, LinearSVC, max_iter=5000)],
+                'none': [LinearClassifierDT(LinearSVC, max_iter=5000)],
                 'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
                 'minnorm': [NormLinearClassifierDT(min, LinearSVC, max_iter=5000)],
             },
             'logreg': {
-                'nondet': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-                # 'maxnorm': [NormSingleOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none'), NormMultiOutputLinearClassifierDT(max, LogisticRegression, solver='lbfgs', penalty='none')],
+                'none': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
                 'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
                 'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
             },
             'oc1': {
-                'nondet': [OC1Wrapper(num_restarts=20, num_jumps=5)]
+                'none': [OC1Wrapper(num_restarts=20, num_jumps=5)]
             }
         }
 
@@ -210,7 +207,7 @@ def main():
                              "with --method 'all' will run all possible methods. For description about each method, "
                              "see manual. If this switch is omitted, defaults to 'all'")
 
-    parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['nondet'],
+    parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['none'],
                         help="In case of non-deterministic controllers, specify, if desired, the determinization "
                              "strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'")
 
