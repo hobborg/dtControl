@@ -13,7 +13,7 @@ setuptools.setup(
     url="https://gitlab.lrz.de/pranavashok/dtcontrol",
     packages=['dtcontrol', 'dtcontrol.classifiers', 'dtcontrol.dataset', 'dtcontrol.ui',
               'dtcontrol.classifiers.OC1_source',
-              #'dtcontrol.c_templates'
+              'dtcontrol.c_templates'
               ],
     entry_points={
         'console_scripts': ['dtcontrol=dtcontrol.cli:main'],
