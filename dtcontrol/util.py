@@ -33,3 +33,10 @@ def objround(obj, precision):
         return tuple(round(o, precision) for o in obj)
     # if just a float
     return round(obj, precision)
+
+
+def peek_line(file):
+    pos = file.tell()
+    line = file.readline()
+    file.seek(pos)
+    return line

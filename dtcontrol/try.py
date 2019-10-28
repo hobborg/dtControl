@@ -4,12 +4,12 @@ from dtcontrol.classifiers.cart_custom_dt import CartDT
 from dtcontrol.classifiers.max_freq_dt import MaxFreqDT
 from dtcontrol.classifiers.bdd import BDD
 
-suite = BenchmarkSuite(timeout=60*60*2, save_folder='saved_classifiers', benchmark_file='benchmark_22oct', is_artifact=True)
-suite.add_datasets(['../XYdatasets', '../dumps'],
-                   include=["cartpole",
-                            # "tworooms",
+suite = BenchmarkSuite(timeout=60 * 60 * 2, save_folder='saved_classifiers', benchmark_file='benchmark_tmp_2')
+suite.add_datasets(['examples'],
+                   include=[# "cartpole",
+                            # "tworooms-noneuler-latest",
                             # "helicopter",
-                            # "cruise",
+                            # "cruise-latest",
                             # "dcdc",
                             # "10rooms",
                             # "truck_trailer",
@@ -20,15 +20,16 @@ suite.add_datasets(['../XYdatasets', '../dumps'],
                             # "aircraft"
                             ],
                    exclude=[
+                       'aircraft', 'traffic_30m', 'truck_trailer'
                    ]
                    )
 classifiers = [
     # CartDT(),
     # LinearClassifierDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
     # LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
-    MaxFreqDT(),
+    # MaxFreqDT(),
     # MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
-    # OC1Wrapper(num_restarts=20, num_jumps=5),
+    OC1Wrapper(num_restarts=1, num_jumps=1),
     # BDD()
     # MaxEveryNodeMultiDecisionTree()
 ]
