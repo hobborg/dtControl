@@ -23,7 +23,8 @@ class OC1Node(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return str(dtcontrol.util.objround(self.actual_label, 6))  # TODO get precision from flag?
+            rounded = dtcontrol.util.objround(self.actual_label, 6)  # TODO get precision from flag?
+            return dtcontrol.util.split_into_lines(rounded)
         else:
             line = []
             for i in range(len(self.coeff)):

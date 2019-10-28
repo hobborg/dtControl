@@ -89,8 +89,10 @@ class Node(ABC):
             if tree.trained_label is not None:
                 tree.mapped_label = leaf_fun(tree)
                 # the mapped label can be either a list of labels or a single label
-                if isinstance(tree.mapped_label, Iterable):
-                    if isinstance(tree.mapped_label[0], Iterable):
+                if isinstance(tree.mapped_label, tuple):
+                    tree.actual_label = tuple([index_to_value[i] for i in tree.mapped_label if i != -1])
+                elif isinstance(tree.mapped_label, Iterable):
+                    if isinstance(tree.mapped_label[0], tuple):
                         tree.actual_label = [tuple(map(lambda x: index_to_value[x], tup)) for tup in tree.mapped_label]
                     else:
                         tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]

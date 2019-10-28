@@ -35,6 +35,16 @@ def objround(obj, precision):
     return round(obj, precision)
 
 
+def split_into_lines(l):
+    if not isinstance(l, list) or len(l) < 5:
+        return str(l)
+    i = 0
+    l2 = []
+    while i < len(l):
+        l2.append(','.join([str(j) for j in l[i:min(i+5, len(l))]]))
+        i += 5
+    return '[' + '\n'.join(l2) + ']'
+
 def peek_line(file):
     pos = file.tell()
     line = file.readline()
