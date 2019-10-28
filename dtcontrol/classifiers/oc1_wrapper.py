@@ -50,7 +50,6 @@ class OC1Wrapper:
         }
 
     def get_fit_command(self, dataset):
-        assert self.current_dataset is None
         self.current_dataset = dataset
         self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()])
         command = './{} -t {} -D {} -p0 -i{} -j{} -l {}' \
