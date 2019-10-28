@@ -9,29 +9,21 @@
     <script src="ui/bootstrap4-toggle.min.js"></script>
     <link href="ui/style.css" rel="stylesheet">
     <script type="text/javascript">
-        {{ script }}
+        {{script}}
     </script>
     <title>Benchmark results</title>
 </head>
 <body>
 <div class="container-fluid">
-    <div class="row mt-4">
-        <div class="col-sm-4"></div>
-        <div class="col-sm-2 text-center">
-            <label for="lastResultsToggle">Show only results from last run:</label>
-            <input type="checkbox" data-toggle="toggle" id="lastResultsToggle" data-width="100">
-        </div>
-        <div class="col-sm-2 text-center">
-            <label for="cDetStrat">Determinization strategy used in C files:</label>
-            <select class="custom-select" id="cDetStrat">
-                <option selected value="1">Min norm</option>
-                <option value="2">Max norm</option>
-            </select>
-        </div>
-        <div class="col-sm-4"></div>
+    <div class="text-center mt-4">
+        <label for="lastResultsToggle">Show only results from last run:</label>
+        <br>
+        <input type="checkbox" data-toggle="toggle" id="lastResultsToggle" data-width="100">
     </div>
     <table class="table table-bordered table-hover mt-4">
-        <caption>#(s, a) refers to the number of state-action pairs (or state-input pairs). #doc refers to the size of the domain of controller.</caption>
+        <caption>#(s, a) refers to the number of state-action pairs (or state-input pairs). #doc refers to the size of
+            the domain of controller.
+        </caption>
         <thead>
         <tr>
             <td></td>
