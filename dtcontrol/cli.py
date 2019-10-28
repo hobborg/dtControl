@@ -74,7 +74,9 @@ import argparse
 import logging
 import re
 import sys
-from os import makedirs
+import subprocess
+import dtcontrol
+from os import makedirs, getcwd, chdir
 from os.path import exists, isfile, splitext
 
 import pkg_resources

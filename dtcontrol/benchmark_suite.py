@@ -4,10 +4,10 @@ import logging
 import os
 import time
 import webbrowser
+import dtcontrol
 from os import makedirs
 from os.path import join, exists, isfile
 
-from dtcontrol.classifiers.bdd import BDD
 from dtcontrol.classifiers.oc1_wrapper import OC1Wrapper
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
@@ -137,10 +137,11 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
-            if isinstance(classifier, BDD):  # bdd cannot predict yet
-                stats = classifier.get_stats()
-                cell = {'stats': stats, 'time': format_seconds(run_time)}
-                return cell
+            # todo once BDD is working for all models
+            # if isinstance(classifier, BDD):  # bdd cannot predict yet
+            #     stats = classifier.get_stats()
+            #     cell = {'stats': stats, 'time': format_seconds(run_time)}
+            #     return cell
             acc = dataset.compute_accuracy(classifier.predict(dataset))
             if acc is None:
                 cell = 'failed to fit'

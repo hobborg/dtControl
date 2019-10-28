@@ -1,9 +1,9 @@
 import ast
 import re
 
-from classifiers.cart_custom_dt import CartNode
-from classifiers.oc1_node import OC1Node
-from util import peek_line
+from dtcontrol.classifiers.cart_custom_dt import CartNode
+from dtcontrol.classifiers.oc1_node import OC1Node
+from dtcontrol.util import peek_line
 
 class OC1Parser:
     def parse_dt(self, dt_file):

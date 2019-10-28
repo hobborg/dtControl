@@ -1,5 +1,5 @@
-import util
-from classifiers.custom_dt import Node
+import dtcontrol.util
+from dtcontrol.classifiers.custom_dt import Node
 import numpy as np
 
 class OC1Node(Node):

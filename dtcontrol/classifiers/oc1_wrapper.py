@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from collections import defaultdict
 from shutil import copyfile
@@ -6,10 +7,10 @@ from shutil import copyfile
 import numpy as np
 
 import dtcontrol.util
-from dtcontrol.classifiers.custom_dt import Node
 from dtcontrol.classifiers.cart_custom_dt import CartNode
 from dtcontrol.classifiers.oc1_node import OC1Node
 from dtcontrol.classifiers.oc1_parser import OC1Parser
+
 
 class OC1Wrapper:
     """
@@ -35,8 +36,24 @@ class OC1Wrapper:
         self.oc1_reported_acc = None  # The accuracy reported by OC1. Used for debugging.
         self.num_extended_nodes = 0  # The amount of nodes added after OC1 to ensure full overfitting.
 
+        if not os.path.exists(self.oc1_path):
+            self.compile_oc1()
+
         if not os.path.exists('oc1_tmp'):
             os.mkdir('oc1_tmp')
+
+    @staticmethod
+    def compile_oc1():
+        for path in dtcontrol.__path__:
+            oc1_src = f"{path}/classifiers/OC1_source"
+            if os.path.exists(oc1_src):
+                try:
+                    print(f"Compiling OC1...")
+                    subprocess.call("make", cwd=oc1_src)
+                    print("Compiled OC1\n")
+                except subprocess.CalledProcessError:
+                    print("Compiling OC1 failed")  # todo use logging
+                    sys.exit(-1)
 
     def is_applicable(self, dataset):
         return True
