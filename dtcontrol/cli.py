@@ -3,50 +3,7 @@
 """
 README
 
-Usage: dtcontrol [-h] [-v] [--input INPUT [INPUT ...]] [--output OUTPUT]
-                 [--method METHOD [METHOD ...]]
-                 [--determinize DETSTRATEGY [DETSTRATEGY ...]]
-                 [--timeout TIMEOUT] [--benchmark-file FILENAME] [--rerun]
-
-                --input,-i  (<input_files>... | <input_folder>)
-                        The input switch takes in one or more space separated file names
-                        or a folder name which contains valid controllers (.scs, .vector or .dump)
-
-                --output,-o  <output_folder>
-                        The output switch takes in a path to a folder where the constructed controller
-                        representation would be saved (c, dot and vhdl)
-
-                --method,-m  <method_names>...
-                        The method switch takes in one or more space separated method names as
-                        arguments
-                            cart        - the standard decision tree learning algorithm
-                            maxcart     - modified version of cart with smart determinization
-                            maxlc       - smart determinization with linear predicates
-                            linsvm      - decision tree where predicates are obtained through
-                                          LinearSVM
-                            logreg      - decision tree where predicates are obtained through
-                                          Logistic Regression
-                            oc1         - oblique decision tree algorithm with randomized splits
-                            all         - runs all of the above methods
-                        If absent, defaults to --methods all
-                --determinize,-d <determinization_strategies>...
-                        In case of non-deterministic controllers, specify, if desired, the determinization
-                        strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'.
-                        If no determinization strategy is provided, then each set non-deterministic set
-                        of control inputs is treated uniquely.
-                --benchmark-file,-b <filename>
-                        Saves statistics pertaining the construction of the decision trees and their
-                        sizes into <filename>, and additionally allows to view it via an html file with
-                        the same name.
-                --rerun, -r
-                        Rerun the experiment for all input-method combinations. Overrides the default
-                        behaviour of not running benchmarks for combinations which are already present
-                        in the benchmark file.
-
-                When multiple inputs with multiple methods and determinization strategies are passed,
-                dtControl tries to run every valid method-determinization strategy combination on each
-                input.
-
+Run dtcontrol --help to see usage. Some examples are given below.
 
 Example:
 dtcontrol --input controller.scs --output decision_trees --method maxcart
@@ -62,7 +19,7 @@ results in decision_trees; moreover save the run and tree statistics in
 benchmark.json and a nice HTML table in benchmark.html
 
 
-dtcontrol --input dumps --output decision_trees --method all -determinize maxfreq minnorm
+dtcontrol --input dumps --output decision_trees --method all --determinize maxfreq minnorm
 
 will read all valid controllers in dumps, run the determinized variants (using the maxfreq
  and minnorm determinization strategies) of all methods on them and save the decision
@@ -74,9 +31,7 @@ import argparse
 import logging
 import re
 import sys
-import subprocess
-import dtcontrol
-from os import makedirs, getcwd, chdir
+from os import makedirs
 from os.path import exists, isfile, splitext
 
 import pkg_resources
@@ -139,11 +94,9 @@ def main():
         method_map = {
             'cart': {
                 'none': [CartDT()],  # TODO: remove lists and directly map to classifiers
-                'maxnorm': [NormDT(max)],
-                'minnorm': [NormDT(min)],
                 'maxfreq': [MaxFreqDT()],
-                'random': [RandomDT()],
-                'multimaxfreq': [MaxFreqMultiDT()],
+                'minnorm': [NormDT(min)],
+                # 'random': [RandomDT()],
             },
             'linsvm': {
                 'none': [LinearClassifierDT(LinearSVC, max_iter=5000)],
@@ -152,8 +105,8 @@ def main():
             },
             'logreg': {
                 'none': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-                'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
                 'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
+                'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
             },
             'oc1': {
                 'none': [OC1Wrapper(num_restarts=20, num_jumps=5)]
@@ -191,15 +144,11 @@ def main():
 
     version = pkg_resources.require("dtcontrol-tum")[0].version
     parser.add_argument("-v", "--version", action='version',
-                        version=f'%(prog)s {version}')  # todo version from setup.py
+                        version=f'%(prog)s {version}')
 
     parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
                         help="The input switch takes in one or more space separated file names or "
-                             "a folder name which contains valid controllers (.scs, .vector or .dump)")
-
-    parser.add_argument("--output", "-o", type=str,
-                        help="The output switch takes in a path to a folder where the constructed controller "
-                             "representation would be saved (c, dot and vhdl)")
+                             "a folder name which contains valid controllers (.scs, .dump or .csv)")
 
     parser.add_argument("--method", "-m", default=['all'], nargs="+",
                         help="The method switch takes in one or more space separated method names as "
@@ -209,11 +158,26 @@ def main():
 
     parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['none'],
                         help="In case of non-deterministic controllers, specify, if desired, the determinization "
-                             "strategy. Possible options are 'maxnorm', 'minnorm', 'maxfreq' and 'multimaxfreq'")
+                             "strategy. Possible options are 'minnorm' and 'maxfreq'. If the option 'none' is passed, "
+                             "then the controller is not determinized. The shorthand '-d all' is equivalent to "
+                             "'-d none maxfreq minnorm'.")
 
     parser.add_argument("--timeout", "-t", type=str,
                         help="Sets a timeout for each method. Can be specified in seconds, minutes "
                              "or hours (eg. 300s, 7m or 3h)")
+
+    parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
+                        help="Saves statistics pertaining the construction of the decision trees and their "
+                             "sizes into a JSON file, and additionally allows to view it via an HTML file.")
+
+    parser.add_argument("--output", "-o", type=str,
+                        help="The output switch takes in a path to a folder where the constructed controller "
+                             "representation would be saved (c and dot)")
+
+    parser.add_argument("--rerun", "-r", action='store_true',
+                        help="Rerun the experiment for all input-method combinations. Overrides the default "
+                             "behaviour of not running benchmarks for combinations which are already present"
+                             " in the benchmark file.")
 
     parser.add_argument("--artifact", action='store_true',
                         help="Makes the tool 'repeatability evaluation' friendly - providing artifact reviewers "
@@ -221,20 +185,10 @@ def main():
                              "do not use the --artifact switch if you desire to use dtControl on a controller that is "
                              "not listed in Table 1")
 
-    parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
-                        help="Saves statistics pertaining the construction of the decision trees and their "
-                             "sizes into a JSON file, and additionally allows to view it via an HTML file.")
-
-    parser.add_argument("--rerun", "-r", action='store_true',
-                        help="Rerun the experiment for all input-method combinations. Overrides the default "
-                             "behaviour of not running benchmarks for combinations which are already present"
-                             " in the benchmark file.")
-
     args = parser.parse_args()
 
     kwargs = dict()
 
-    dataset = []
     if args.input:
         dataset = args.input
     else:
@@ -262,7 +216,8 @@ def main():
     kwargs["rerun"] = args.rerun
     if not args.rerun and isfile(kwargs["benchmark_file"]):
         logging.warning(
-            f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' would not be re-run. Use the --rerun flag if this is what is desired.")
+            f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' "
+            f"would not be re-run. Use the --rerun flag if this is what is desired.")
 
     kwargs["is_artifact"] = args.artifact
 
