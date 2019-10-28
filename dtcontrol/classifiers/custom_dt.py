@@ -2,16 +2,17 @@ import pickle
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-
+import dtcontrol
 import numpy as np
 from sklearn.base import BaseEstimator
 
 from jinja2 import FileSystemLoader, Environment
 
-file_loader = FileSystemLoader('.')
+file_loader = FileSystemLoader([path + "/c_templates" for path in dtcontrol.__path__])
 env = Environment(loader=file_loader)
-single_output_c_template = env.get_template('c_templates/single_output.c')
-multi_output_c_template = env.get_template('c_templates/multi_output.c')
+single_output_c_template = env.get_template('single_output.c')
+multi_output_c_template = env.get_template('multi_output.c')
+
 
 class CustomDT(ABC, BaseEstimator):
     def __init__(self):
