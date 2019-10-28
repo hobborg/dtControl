@@ -151,7 +151,8 @@ class BenchmarkSuite:
                 dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
                 classifier.export_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
-                classifier.export_c(c_filename)
+                num_outputs = 1 if len(dataset.Y_train.shape) <= 2 else len(dataset.Y_train)
+                classifier.export_c(num_outputs, f'{{{",".join(str(i) + "f" for i in dataset.X_train[0])}}}', c_filename)
                 if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
                     vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
                     classifier.export_vhdl(len(dataset.X_metadata["variables"]), vhdl_filename)

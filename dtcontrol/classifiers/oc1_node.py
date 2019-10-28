@@ -7,6 +7,7 @@ class OC1Node(Node):
         super().__init__(depth)
         self.coeff = coeff
         self.intercept = intercept
+        self.classifier = None
 
     def test_condition(self, x):
         """
@@ -37,4 +38,4 @@ class OC1Node(Node):
         pass
 
     def is_axis_aligned(self):
-        pass
+        return False
