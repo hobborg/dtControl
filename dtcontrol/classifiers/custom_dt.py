@@ -6,6 +6,12 @@ from collections.abc import Iterable
 import numpy as np
 from sklearn.base import BaseEstimator
 
+from jinja2 import FileSystemLoader, Environment
+
+file_loader = FileSystemLoader('.')
+env = Environment(loader=file_loader)
+single_output_c_template = env.get_template('c_templates/single_output.c')
+multi_output_c_template = env.get_template('c_templates/multi_output.c')
 
 class CustomDT(ABC, BaseEstimator):
     def __init__(self):
@@ -40,13 +46,15 @@ class CustomDT(ABC, BaseEstimator):
         else:
             return dot
 
-    def export_c(self, file=None):
-        c = self.root.export_c()
+    def export_c(self, num_outputs, example, file=None):
+        template = multi_output_c_template if num_outputs > 1 else single_output_c_template
+        code = self.root.export_c()
+        result = template.render(example=example, num_outputs=num_outputs, code=code)
         if file:
             with open(file, 'w+') as outfile:
-                outfile.write(c)
+                outfile.write(result)
         else:
-            return c
+            return result
 
     # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in the "entity" block
     def export_vhdl(self, numInputs, file=None):
@@ -71,7 +79,6 @@ class CustomDT(ABC, BaseEstimator):
     def __str__(self):
         return self.name
 
-
 class Node(ABC):
     def __init__(self, depth=0):
         self.left = None
@@ -89,8 +96,10 @@ class Node(ABC):
             if tree.trained_label is not None:
                 tree.mapped_label = leaf_fun(tree)
                 # the mapped label can be either a list of labels or a single label
-                if isinstance(tree.mapped_label, Iterable):
-                    if isinstance(tree.mapped_label[0], Iterable):
+                if isinstance(tree.mapped_label, tuple):
+                    tree.actual_label = tuple([index_to_value[i] for i in tree.mapped_label if i != -1])
+                elif isinstance(tree.mapped_label, Iterable):
+                    if isinstance(tree.mapped_label[0], tuple):
                         tree.actual_label = [tuple(map(lambda x: index_to_value[x], tup)) for tup in tree.mapped_label]
                     else:
                         tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
@@ -253,10 +262,7 @@ class Node(ABC):
     def get_determinized_label(self):
         if isinstance(self.actual_label,
                       list):  # list of things, i.e. nondeterminsm present, need to determinise by finding max norm (could use other ideas as well)
-            maxNorm = self.actual_label[0]
-            for i in self.actual_label:
-                maxNorm = maxNorm if (self.norm(maxNorm) >= self.norm(i)) else i
-            return maxNorm
+            return min(self.actual_label, key=lambda l: self.norm(l))
         else:  # just an int or a tuple, easy; note that we have to use list and not iterable in the above if, because tuples (multi control input) are also iterable
             return self.actual_label
 
@@ -264,12 +270,8 @@ class Node(ABC):
 
     # Used by get_determinized_label
     def norm(self, tup):
-        if isinstance(tup,
-                      Iterable):  # if this is iterable, it is a tuple (multi control input setting, and we want sum of abs)
-            result = 0
-            for i in tup:
-                result += i * i
-            return result
+        if isinstance(tup, tuple):
+            return sum([i * i for i in tup])
         else:  # if it is not iterable, then it was a single number, return abs of that
             return abs(tup)
 
@@ -293,7 +295,9 @@ class Node(ABC):
             label = self.get_determinized_label()
             if isinstance(label, Iterable):
                 if type == 'c':
-                    return "return {" + ','.join([str(i) for i in self.get_determinized_label()]) + "}"
+                    return ' '.join([
+                        f'result[{i}] = {round(label[i], 6)}f;' for i in range(len(label))
+                    ])
                 else:
                     i = 0
                     result = ""
@@ -303,7 +307,7 @@ class Node(ABC):
                     return result
             else:
                 if type == 'c':
-                    return f'return {self.get_determinized_label()}'
+                    return f'return {round(float(label), 6)}f;'
                 else:
                     return f'y <= {str(label)};'
         # else, print predicate in correct format
@@ -317,11 +321,15 @@ class Node(ABC):
             return f'{l} <= {round(tree.threshold[0], 4)}'
         else:
             # this implicitly assumes n_classes == 2
-            coef_ = self.classifier.coef_[0]
-            intercept_ = self.classifier.intercept_[0]
+            if self.classifier is not None:
+                coef_ = self.classifier.coef_[0]
+                intercept_ = self.classifier.intercept_[0]
+            else:  # OC1Node
+                coef_ = self.coeff
+                intercept_ = self.intercept
             line = []
             for i in range(0, len(coef_)):
                 line.append(f"{coef_[i]}*X[{i}]" if type == 'c' else f"{coef_[i]}*x{i}")
             line.append(f"{intercept_}")
-            hyperplane = "+".join(line) + " >= 0"
-            return hyperplane
+            hyperplane = "+".join(line) + " <= 0"
+            return hyperplane.replace('+-', '-')

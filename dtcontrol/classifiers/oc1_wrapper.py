@@ -11,6 +11,13 @@ from dtcontrol.classifiers.cart_custom_dt import CartNode
 from dtcontrol.classifiers.oc1_node import OC1Node
 from dtcontrol.classifiers.oc1_parser import OC1Parser
 
+from jinja2 import FileSystemLoader, Environment
+
+file_loader = FileSystemLoader('.')
+env = Environment(loader=file_loader)
+single_output_c_template = env.get_template('c_templates/single_output.c')
+multi_output_c_template = env.get_template('c_templates/multi_output.c')
+
 
 class OC1Wrapper:
     """
@@ -151,8 +158,15 @@ class OC1Wrapper:
         else:
             return dot
 
-    def export_c(self, file=None):
-        pass
+    def export_c(self, num_outputs, example, file=None):
+        template = multi_output_c_template if num_outputs > 1 else single_output_c_template
+        code = self.root.export_c()
+        result = template.render(example=example, num_outputs=num_outputs, code=code)
+        if file:
+            with open(file, 'w+') as outfile:
+                outfile.write(result)
+        else:
+            return result
 
     def export_vhdl(self, file=None):
         pass

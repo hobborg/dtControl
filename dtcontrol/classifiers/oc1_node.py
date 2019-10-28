@@ -7,6 +7,7 @@ class OC1Node(Node):
         super().__init__(depth)
         self.coeff = coeff
         self.intercept = intercept
+        self.classifier = None
 
     def test_condition(self, x):
         """
@@ -23,7 +24,8 @@ class OC1Node(Node):
 
     def get_dot_label(self):
         if self.actual_label is not None:
-            return str(dtcontrol.util.objround(self.actual_label, 6))  # TODO get precision from flag?
+            rounded = dtcontrol.util.objround(self.actual_label, 6)  # TODO get precision from flag?
+            return dtcontrol.util.split_into_lines(rounded)
         else:
             line = []
             for i in range(len(self.coeff)):
@@ -36,4 +38,4 @@ class OC1Node(Node):
         pass
 
     def is_axis_aligned(self):
-        pass
+        return False
