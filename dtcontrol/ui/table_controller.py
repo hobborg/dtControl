@@ -63,7 +63,10 @@ class TableController:
             for classifier in column_names:
                 if classifier in results[dataset]['classifiers']:
                     cell = results[dataset]['classifiers'][classifier]
-                    cell['stats']['paths'] = int((cell['stats']['nodes']+1)/2)
+                    try:
+                        cell['stats']['paths'] = int((cell['stats']['nodes']+1)/2)
+                    except (KeyError, TypeError):
+                        cell = 'not yet computed'
                 else:
                     cell = 'not yet computed'
                 row.append(cell)

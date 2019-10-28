@@ -1,13 +1,7 @@
 {
   "10rooms": {
     "classifiers": {
-      "CART": {
-        "stats": {
-          "nodes": 17297,
-          "bandwidth": 14
-        },
-        "time": "00:00:05.174"
-      }
+      "CART": "timeout"
     },
     "metadata": {
       "X_metadata": {
@@ -135,6 +129,67 @@
         ],
         "num_rows": 271,
         "num_flattened": 21951
+      }
+    }
+  },
+  "cruise-latest": {
+    "classifiers": {
+      "CART": "timeout"
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "Front.Choose",
+          "Ego.Choose",
+          "distance",
+          "velocityEgo",
+          "accelerationEgo",
+          "velocityFront",
+          "accelerationFront"
+        ],
+        "min": [
+          0,
+          1,
+          6,
+          -10,
+          -2,
+          -10,
+          -2
+        ],
+        "max": [
+          0,
+          1,
+          230,
+          20,
+          2,
+          20,
+          2
+        ],
+        "step_size": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "Y_metadata": {
+        "variables": [
+          "accelerationEgo"
+        ],
+        "min": [
+          -2
+        ],
+        "max": [
+          2
+        ],
+        "step_size": [
+          2
+        ],
+        "num_rows": 295615,
+        "num_flattened": 886845
       }
     }
   }
