@@ -78,7 +78,6 @@ class TableController:
                         'MaxFreq-LinearClassifierDT-LogisticRegression',
                         'MinNormDT',
                         'MinNorm-LinearClassifierDT',
-                        'BDD'
                         ]
         table = []
         for dataset in row_names:
