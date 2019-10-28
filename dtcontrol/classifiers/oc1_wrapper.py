@@ -8,18 +8,12 @@ import numpy as np
 
 import dtcontrol.util
 from dtcontrol.classifiers.cart_custom_dt import CartNode
+from dtcontrol.classifiers.custom_dt import CustomDT
 from dtcontrol.classifiers.oc1_node import OC1Node
 from dtcontrol.classifiers.oc1_parser import OC1Parser
 
-from jinja2 import FileSystemLoader, Environment
 
-file_loader = FileSystemLoader('.')
-env = Environment(loader=file_loader)
-single_output_c_template = env.get_template('c_templates/single_output.c')
-multi_output_c_template = env.get_template('c_templates/multi_output.c')
-
-
-class OC1Wrapper:
+class OC1Wrapper(CustomDT):
     """
     A wrapper for the OC1 C code.
 
@@ -27,6 +21,7 @@ class OC1Wrapper:
     """
 
     def __init__(self, num_restarts=40, num_jumps=20):
+        super().__init__()
         self.name = 'OC1'
         self.oc1_path = 'classifiers/OC1_source/mktree'
         self.output_file = 'oc1_tmp/oc1_output'
@@ -135,9 +130,6 @@ class OC1Wrapper:
                     line = line.split(' = ')[1]
                     self.oc1_reported_acc = float(line)
 
-    def predict(self, dataset):
-        return self.root.predict(dataset.X_train)
-
     def save_data_to_file(self, data):
         num_float_columns = data.shape[1] - 1
         np.savetxt(self.data_file, data, fmt=' '.join(['%f'] * num_float_columns + ['%d']), delimiter='\t')
@@ -150,23 +142,5 @@ class OC1Wrapper:
     def save(self, filename):
         copyfile(self.dt_file, filename)
 
-    def export_dot(self, file=None):
-        dot = self.root.export_dot()
-        if file:
-            with open(file, 'w+') as outfile:
-                outfile.write(dot)
-        else:
-            return dot
-
-    def export_c(self, num_outputs, example, file=None):
-        template = multi_output_c_template if num_outputs > 1 else single_output_c_template
-        code = self.root.export_c()
-        result = template.render(example=example, num_outputs=num_outputs, code=code)
-        if file:
-            with open(file, 'w+') as outfile:
-                outfile.write(result)
-        else:
-            return result
-
-    def export_vhdl(self, file=None):
+    def export_vhdl(self, numInputs, file=None):
         pass
