@@ -34,7 +34,7 @@ class BenchmarkSuite:
         classifier.export_c(file) saves a C-representation of the classifier to a file
     """
 
-    def __init__(self, benchmark_file='benchmark', timeout=100, output_folder='decision_trees', save_folder=None,
+    def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', save_folder=None,
                  rerun=False, use_multiprocessing=True, is_artifact=False):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         self.datasets = []
@@ -129,7 +129,7 @@ class BenchmarkSuite:
         return dataset.name in self.results and classifier.name in self.results[dataset.name]['classifiers']
 
     def train_and_get_cell(self, dataset, classifier):
-        if self.use_multiprocessing:
+        if self.timeout is not None:
             classifier, success, run_time = call_with_timeout(classifier, 'fit', dataset, timeout=self.timeout)
         else:
             start = time.time()
