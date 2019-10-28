@@ -101,7 +101,7 @@ class TableController:
             for classifier in column_names:
                 try:
                     cell = results[dataset]['classifiers'][classifier]
-                    cell['stats']['paths'] = int((int(cell['stats']['nodes'])+1)/2)
+                    cell['stats']['paths'] = int((cell['stats']['nodes']+1)/2)
                     if 'bandwidth' in cell['stats']:
                         del cell['stats']['bandwidth']
                     if 'nodes' in cell['stats']:
@@ -110,7 +110,7 @@ class TableController:
                         del cell['stats']['oblique']
                     if 'extended' in cell['stats']:
                         del cell['stats']['extended']
-                except KeyError:
+                except (KeyError, TypeError):
                     cell = 'not yet computed'
                 row.append(cell)
             table.append(row)
