@@ -46,6 +46,7 @@ class TableController:
             for classifier in column_names:
                 if classifier in results[dataset]['classifiers']:
                     cell = results[dataset]['classifiers'][classifier]
+                    cell['stats']['paths'] = int((cell['stats']['nodes']+1)/2)
                 else:
                     cell = 'not yet computed'
                 row.append(cell)
@@ -85,6 +86,15 @@ class TableController:
             for classifier in column_names:
                 try:
                     cell = results[dataset]['classifiers'][classifier]
+                    cell['stats']['paths'] = int((cell['stats']['nodes']+1)/2)
+                    if 'bandwidth' in cell['stats']:
+                        del cell['stats']['bandwidth']
+                    if 'nodes' in cell['stats']:
+                        del cell['stats']['nodes']
+                    if 'oblique' in cell['stats']:
+                        del cell['stats']['oblique']
+                    if 'extended' in cell['stats']:
+                        del cell['stats']['extended']
                 except KeyError:
                     cell = 'not yet computed'
                 row.append(cell)
