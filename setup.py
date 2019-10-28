@@ -5,11 +5,12 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dtcontrol-tum",
-    version="1.0.dev1",
+    version="1.0.0",
     description="A small tool which can convert automatically synthesised formally verified "
                 "controllers into concise decision trees.",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    license='MIT',
     url="https://gitlab.lrz.de/pranavashok/dtcontrol",
     packages=['dtcontrol', 'dtcontrol.classifiers', 'dtcontrol.dataset', 'dtcontrol.ui',
               'dtcontrol.classifiers.OC1_source',
@@ -19,7 +20,9 @@ setuptools.setup(
         'console_scripts': ['dtcontrol=dtcontrol.cli:main'],
     },
     classifiers=[
-        "Programming Language :: Python :: 3"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        'License :: OSI Approved :: MIT License'
     ],
     python_requires='>=3.6',
     install_requires=[
