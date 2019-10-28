@@ -16,8 +16,6 @@ from dtcontrol.ui.table_controller import TableController
 from dtcontrol.util import format_seconds, get_filename_and_ext
 
 
-# from IPython.display import HTML, display
-
 class BenchmarkSuite:
     """
     The benchmark suite runs the given classifiers on all datasets present in the XYdatasets folder and prints the
@@ -223,34 +221,44 @@ class BenchmarkSuite:
 
     @staticmethod
     def is_multiout(filename, ext):
-        if "scs" not in ext:
+        if "scs" in ext:
+            # if scs, then
+            f = open(filename)
+            # Read input dim from scs file
+            for i in range(5):
+                f.readline()
+            state_dim = int(f.readline())
+            for i in range(12 + 3 * state_dim):
+                f.readline()
+            input_dim = int(f.readline())
+            return input_dim > 1
+        elif "csv" in ext:
+            # if scs, then
+            f = open(filename)
+            f.readline()
+            _, input_dim = map(int, f.readline().split("BEGIN")[1].split())
+            return input_dim > 1
+        else:
             return False
-        # if scs, then
-        f = open(filename)
-        # Read input dim from scs file
-        for i in range(5):
-            f.readline()
-        state_dim = int(f.readline())
-        for i in range(12 + 3 * state_dim):
-            f.readline()
-        input_dim = int(f.readline())
-        return input_dim > 1
 
     @staticmethod
     def is_deterministic(filename, ext):
-        if "scs" not in ext:
+        if "scs" in ext:
+            f = open(filename)
+            # Read input dim from scs file
+            for i in range(5):
+                f.readline()
+            state_dim = int(f.readline())
+            for i in range(12 + 3 * state_dim):
+                f.readline()
+            input_dim = int(f.readline())
+            for i in range(12 + 3 * input_dim):
+                f.readline()
+            non_det = int(f.readline().split(":")[1].split()[1])
+            return non_det == 1
+        elif "csv" in ext:
+            f = open(filename)
+            is_det = "NON-PERMISSIVE" in f.readline()
+            return is_det
+        else:
             return False  # UPPAAL is always non-deterministic
-        # if scs, then
-        f = open(filename)
-        # Read input dim from scs file
-        for i in range(5):
-            f.readline()
-        state_dim = int(f.readline())
-        for i in range(12 + 3 * state_dim):
-            f.readline()
-        input_dim = int(f.readline())
-        for i in range(12 + 3 * input_dim):
-            f.readline()
-
-        non_det = int(f.readline().split(":")[1].split()[1])
-        return non_det == 1

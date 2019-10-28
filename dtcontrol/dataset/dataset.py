@@ -5,6 +5,7 @@ import numpy as np
 from dtcontrol.dataset.scots_dataset_loader import ScotsDatasetLoader
 from dtcontrol.dataset.uppaal_dataset_loader import UppaalDatasetLoader
 from dtcontrol.dataset.vector_dataset_loader import VectorDatasetLoader
+from dtcontrol.dataset.csv_dataset_loader import CSVDatasetLoader
 from dtcontrol.util import get_filename_and_ext
 
 
@@ -56,7 +57,8 @@ class Dataset(ABC):
         self.extension_to_loader = {
             '.vector': VectorDatasetLoader(),
             '.scs': ScotsDatasetLoader(),
-            '.dump': UppaalDatasetLoader()
+            '.dump': UppaalDatasetLoader(),
+            '.csv': CSVDatasetLoader(),
         }
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
