@@ -42,14 +42,17 @@ class OC1Wrapper:
         if not os.path.exists('oc1_tmp'):
             os.mkdir('oc1_tmp')
 
-    @staticmethod
-    def compile_oc1():
+    def compile_oc1(self):
         for path in dtcontrol.__path__:
             oc1_src = f"{path}/classifiers/OC1_source"
             if os.path.exists(oc1_src):
+                if os.path.exists(oc1_src + "/mktree"):
+                    self.oc1_path = oc1_src + "/mktree"
+                    return
                 try:
                     print(f"Compiling OC1...")
                     subprocess.call("make", cwd=oc1_src)
+                    self.oc1_path = oc1_src + "/mktree"
                     print("Compiled OC1\n")
                 except subprocess.CalledProcessError:
                     print("Compiling OC1 failed")  # todo use logging
@@ -69,7 +72,7 @@ class OC1Wrapper:
     def get_fit_command(self, dataset):
         self.current_dataset = dataset
         self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()])
-        command = './{} -t {} -D {} -p0 -i{} -j{} -l {}' \
+        command = '{} -t {} -D {} -p0 -i{} -j{} -l {}' \
             .format(self.oc1_path, self.data_file, self.dt_file, self.num_restarts, self.num_jumps, self.log_file)
         return command
 

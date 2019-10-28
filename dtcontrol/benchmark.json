@@ -86,13 +86,19 @@
     "classifiers": {
       "OC1": {
         "stats": {
-          "nodes": 55,
-          "oblique": 0,
-          "bandwidth": 5,
-          "oc1_reported_acc": 61.99262
+          "nodes": 185,
+          "oblique": 18,
+          "extended": 0,
+          "bandwidth": 7
         },
-        "time": "00:00:00.237",
-        "accuracy": 0.17712177121771217
+        "time": "00:00:00.836"
+      },
+      "CART": {
+        "stats": {
+          "nodes": 253,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.098"
       }
     },
     "metadata": {

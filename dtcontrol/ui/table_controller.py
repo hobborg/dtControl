@@ -1,10 +1,10 @@
 from os.path import join, exists, abspath, getsize
 from urllib.parse import quote
-
+import dtcontrol
 from jinja2 import Environment, FileSystemLoader
 
 GRAPHVIZ_URL = 'https://dreampuf.github.io/GraphvizOnline/#'
-file_loader = FileSystemLoader('.')
+file_loader = FileSystemLoader([path + "/ui" for path in dtcontrol.__path__])
 env = Environment(loader=file_loader)
 
 
@@ -15,8 +15,9 @@ class TableController:
         self.is_artifact = is_artifact
 
     def update_and_save(self, results, last_run_datasets, last_run_classifiers):
-        template = env.get_template('ui/table.html')
-        with open('ui/table.js') as infile:
+        template = env.get_template('table.html')
+        table_js = [path + "/ui/table.js" for path in dtcontrol.__path__ if exists(path + "/ui/table.js")]
+        with open(table_js[0]) as infile:
             script = infile.read()
         if self.is_artifact:
             table, row_metadata, column_names = self.get_table_data_artifact(results)
