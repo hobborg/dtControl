@@ -80,11 +80,11 @@ class TableController:
         row_names = [
             'cartpole',
             'tworooms-noneuler-latest',
+            'helicopter',
             'cruise-latest',
             'dcdc',
-            'truck_trailer',
             '10rooms',
-            'helicopter',
+            'truck_trailer',
             'traffic_30m',
             'vehicle',
             'aircraft'
