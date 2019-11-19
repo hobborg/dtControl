@@ -1,3 +1,7 @@
 decision_trees
 .benchmark_suite
 oc1_tmp
+benchmark.json
+benchmark.html
+benchmark_example.json
+benchmark_example.html
