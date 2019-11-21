@@ -1,3 +1,7 @@
+# docker build -t gitlab.lrz.de:5005/i7/dtcontrol:<num> .
+# docker push gitlab.lrz.de:5005/i7/dtcontrol
+# Update in .gitlab-ci.yml
+
 FROM alpine
 
 COPY req.txt /req.txt
