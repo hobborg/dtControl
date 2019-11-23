@@ -7,9 +7,7 @@ Test:
   stage: test
   script:
     - /usr/bin/python3 --version
-    - pwd
-    - ls
-    - cd dtcontrol
-    - pwd
+    - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
+    - cd dtcontrol/test
+    - /usr/bin/python3 integration_test.py IntegrationTest.test_medium
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
-    # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 dtcontrol/cli.py
