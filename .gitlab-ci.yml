@@ -14,7 +14,7 @@ Build:
     - unzip 10rooms.scs.zip
     - unzip vehicle.scs.zip
   artifacts:
-    - paths:
+    paths:
       - dtcontrol/examples/*.zip
 
 Test:
