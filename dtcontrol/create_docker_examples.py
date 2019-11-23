@@ -1,15 +1,24 @@
-import glob
 import os
 import shutil
-from os.path import join
 
-from src.dataset.single_output_dataset import SingleOutputDataset
+from src.benchmark_suite import BenchmarkSuite
 
-for file in glob.glob(join('examples', '*.scs')) + glob.glob(join('examples', '*.dump')):
-    ds = SingleOutputDataset(file)
+datasets = [
+    'cartpole',
+    'cruise-latest',
+    'dcdc',
+    '10rooms',
+    'vehicle'
+]
+
+bs = BenchmarkSuite()
+bs.add_datasets('examples', include=datasets)
+for ds in bs.datasets:
     ds.load_if_necessary()
 
 if os.path.exists('../docker/examples'):
     shutil.rmtree('../docker/examples')
 
 shutil.copytree('examples', '../docker/examples')
+
+# manual cleanup is required! Remove the zip files and all unwanted scs or dump files.
