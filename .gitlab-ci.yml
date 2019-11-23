@@ -15,7 +15,8 @@ Build:
     - unzip vehicle.scs.zip
   artifacts:
     paths:
-      - dtcontrol/examples/*.zip
+      - dtcontrol/examples/*.scs
+      - dtcontrol/examples/*.dump
 
 Test:
   stage: test
