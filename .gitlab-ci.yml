@@ -9,5 +9,5 @@ Test:
     - /usr/bin/python3 --version
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
     - cd dtcontrol/test
-    - /usr/bin/python3 integration_test.py IntegrationTest.test_medium
+    - /usr/bin/python3 integration_test.py IntegrationTest.test_small
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
