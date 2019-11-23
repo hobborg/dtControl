@@ -97,7 +97,7 @@ class IntegrationTest(unittest.TestCase):
         self.run_test(datasets, classifiers)
 
     def run_test(self, datasets, classifiers):
-        self.suite.add_datasets(['../examples'], include=datasets)
+        self.suite.add_datasets(['../examples', '/unzipped_examples'], include=datasets)
         self.suite.benchmark(classifiers)
         self.assert_results_almost_equal(self.expected_results, self.suite.results)
 
