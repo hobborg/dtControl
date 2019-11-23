@@ -1,16 +1,24 @@
 image: gitlab.lrz.de:5005/i7/dtcontrol:1
 
 stages:
+  - build
   - test
+
+Build:
+  stage: build
+  script:
+    - cd dtcontrol/examples
+    - unzip cartpole.scs.zip
+    - unzip cruise-latest.dump.zip
+    - unzip dcdc.scs.zip
+    - unzip 10rooms.scs.zip
+    - unzip vehicle.scs.zip
 
 Test:
   stage: test
   script:
     - /usr/bin/python3 --version
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
-    - cd dtcontrol/examples
-    - unzip 'cartpole.scs.zip cruise-latest.dump.zip dcdc.scs.zip 10rooms.scs.zip vehicle.scs.zip'
-    - ls
-    - cd ../test
+    - cd dtcontrol/test
     - /usr/bin/python3 integration_test.py IntegrationTest.test_medium
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
