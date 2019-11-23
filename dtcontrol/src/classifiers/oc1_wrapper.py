@@ -1,16 +1,16 @@
 import os
-import sys
 import subprocess
+import sys
 from collections import defaultdict
 from shutil import copyfile
 
 import numpy as np
 
+import dtcontrol
 from src.classifiers.cart_custom_dt import CartNode
 from src.classifiers.custom_dt import CustomDT
 from src.classifiers.oc1_node import OC1Node
 from src.classifiers.oc1_parser import OC1Parser
-
 
 class OC1Wrapper(CustomDT):
     """
@@ -19,7 +19,7 @@ class OC1Wrapper(CustomDT):
     Make sure that you have compiled the code ('make mktree' in OC1_source)!
     """
 
-    def __init__(self, num_restarts=40, num_jumps=20):
+    def __init__(self, num_restarts=30, num_jumps=15):
         super().__init__()
         self.name = 'OC1'
         self.oc1_path = 'classifiers/OC1_source/mktree'
@@ -45,7 +45,7 @@ class OC1Wrapper(CustomDT):
 
     def compile_oc1(self):
         for path in dtcontrol.__path__:
-            oc1_src = f"{path}/classifiers/OC1_source"
+            oc1_src = f"{path}/src/classifiers/OC1_source"
             if os.path.exists(oc1_src):
                 if os.path.exists(oc1_src + "/mktree"):
                     self.oc1_path = oc1_src + "/mktree"
