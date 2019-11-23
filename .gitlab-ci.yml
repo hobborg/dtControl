@@ -8,6 +8,10 @@ Test:
   script:
     - /usr/bin/python3 --version
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
-    - cd dtcontrol/test
+    - cd dtcontrol
+    - ls
+    - ls examples
+    - cd test
+    - ls ../examples
     - /usr/bin/python3 integration_test.py IntegrationTest.test_medium
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
