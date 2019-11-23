@@ -9,7 +9,7 @@ Test:
     - /usr/bin/python3 --version
     - pwd
     - ls
-    - cd test
+    - cd dtcontrol
     - pwd
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 dtcontrol/cli.py
