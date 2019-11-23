@@ -9,7 +9,7 @@ Test:
     - /usr/bin/python3 --version
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
     - cd dtcontrol/examples
-    - unzip cartpole.scs.zip cruise-latest.dump.zip dcdc.scs.zip 10rooms.scs.zip vehicle.scs.zip
+    - unzip 'cartpole.scs.zip cruise-latest.dump.zip dcdc.scs.zip 10rooms.scs.zip vehicle.scs.zip'
     - ls
     - cd ../test
     - /usr/bin/python3 integration_test.py IntegrationTest.test_medium
