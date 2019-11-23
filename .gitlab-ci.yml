@@ -1,11 +1,14 @@
 image: gitlab.lrz.de:5005/i7/dtcontrol:1
 
 stages:
-  - build
+  - test
 
-Build:
-  stage: build
+Test:
+  stage: test
   script:
     - /usr/bin/python3 --version
-    - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
-    - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 dtcontrol/cli.py
+    - pwd
+    - cd dtcontrol/test
+    - pwd
+    # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
+    # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 dtcontrol/cli.py
