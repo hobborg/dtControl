@@ -107,7 +107,9 @@ class IntegrationTest(unittest.TestCase):
                 if classifier not in expected[ds] or 'stats' not in actual[ds]['classifiers'][classifier]:
                     continue
                 expected_paths = expected[ds][classifier]
-                actual_paths = (actual[ds]['classifiers'][classifier]['stats']['nodes'] + 1) / 2
+                stats = actual[ds]['classifiers'][classifier]['stats']
+                self.assertFalse('accuracy' in stats, 'Accuracy not 1.0')
+                actual_paths = (stats['nodes'] + 1) / 2
                 tol = (tol_percent / 100) * expected_paths
                 tol = max(tol, 5)  # fix for small trees
                 self.assertTrue(expected_paths - tol <= actual_paths <= expected_paths + tol,
