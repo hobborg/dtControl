@@ -1,8 +1,9 @@
-import numpy as np
 from operator import itemgetter
+
+import numpy as np
+
 from src.dataset.dataset import Dataset
 from src.util import make_set
-
 
 class MultiOutputDataset(Dataset):
     def __init__(self, filename):
@@ -11,8 +12,10 @@ class MultiOutputDataset(Dataset):
         self.tuple_id_to_tuple = None
         self.tuple_to_tuple_id = None
         self.unique_labels = None
-        self.list_id_to_list = None
-        self.zipped = None
+        self.list_id_to_list = None  # maps ids of lists of tuple ids to the actual lists of tuple ids
+        # the data in a tuple (zipped) format where the outermost dimension becomes the innermost dimension
+        # i.e. the new dimensions are: num_examples x num_labels x num_outputs
+        self.tuples = None
 
     def compute_accuracy(self, y_pred):
         self.check_loaded()
@@ -21,21 +24,21 @@ class MultiOutputDataset(Dataset):
             pred = y_pred[i]
             if pred is None:
                 return None
-            correct_tuples = set([tuple(l) for l in self.get_zipped()[i] if l[0] != -1])
+            correct_tuples = set([tuple(l) for l in self.get_tuples()[i] if l[0] != -1])
             if set.issubset(make_set(pred), correct_tuples):
                 num_correct += 1
         return num_correct / len(y_pred)
 
-    '''
-        array([[[ 0, -1, -1],
-            [ 0, -1, -1],
-            [ 0, -1, -1],
-            [ 1,  2,  0]],
+    """
+        [[[ 0, -1, -1],
+          [ 0, -1, -1],
+          [ 0, -1, -1],
+          [ 1,  2,  0]],
     
-           [[ 0, -1, -1],
-            [ 0, -1, -1],
-            [ 0, -1, -1],
-            [ 0,  0,  0]]])
+         [[ 0, -1, -1],
+          [ 0, -1, -1],
+          [ 0, -1, -1],
+          [ 0,  0,  0]]]
 
         gets mapped to
         
@@ -54,25 +57,43 @@ class MultiOutputDataset(Dataset):
          [[ 1  0]
           [ 2  0]
           [ 0  0]]]
-    
-        gets mapped to
-        
-        [[2 0 0]
-         [2 0 0]
-         [2 0 0]
-         [3 4 2]]
-    '''
+    """
 
-    def get_zipped(self):
-        if self.zipped is None:
-            self.zipped = np.stack(self.Y_train, axis=2)
-        return self.zipped
+    def get_tuples(self):
+        if self.tuples is None:
+            self.tuples = np.stack(self.Y_train, axis=2)
+        return self.tuples
+
+    """
+    [[[ 0  0]
+      [-1 -1]
+      [-1 -1]]
+        
+     [[ 0  0]
+      [-1 -1]
+      [-1 -1]]
+        
+     [[ 0  0]
+      [-1 -1]
+      [-1 -1]]
+        
+     [[ 1  0]
+      [ 2  0]
+      [ 0  0]]]
+    
+     gets mapped to
+        
+     [[2 -1 -1]
+      [2 -1 -1]
+      [2 -1 -1]
+      [3  4  2]]
+    """
 
     def get_tuple_ids(self):
         if self.tuple_ids is not None:
             return self.tuple_ids
 
-        stacked_y_train = self.get_zipped()
+        stacked_y_train = self.get_tuples()
 
         # default
         tuple_to_index = {tuple(-1 for i in range(stacked_y_train.shape[2])): -1}
@@ -91,38 +112,30 @@ class MultiOutputDataset(Dataset):
                     # indexing from 1
                     tuple_to_index[action_tuple] = len(tuple_to_index) + 1
                 self.tuple_ids[i][j] = tuple_to_index[action_tuple]
-                j = j + 1
-            i = i + 1
+                j += 1
+            i += 1
 
         self.tuple_to_tuple_id = tuple_to_index
         self.tuple_id_to_tuple = {y: x for (x, y) in tuple_to_index.items()}
         return self.tuple_ids
 
-    '''
-    A list mapping tuple ids to list (float_id, float_id) tuples
-    eg. {-1: (-1, -1), 2: (1, 3), 3: (2, 4)}
-    '''
-
-    def map_tuple_id_back(self, label):
-        return self.tuple_id_to_tuple[label]
-
     def get_unique_labels(self):
         if self.unique_labels is None:
-            self.unique_labels, self.list_id_to_list = self._get_unique_labels(self.get_tuple_ids())
+            self.unique_labels, self.list_id_to_list = self.get_unique_labels_from_2d(self.get_tuple_ids())
         return self.unique_labels
 
     def map_unique_label_back(self, label):
         l = self.list_id_to_list[label]
         return [self.tuple_id_to_tuple[i] for i in l if i != -1]
 
-    '''
+    """
     Generate a list of tuples (ctrl_idx, inp_enc, freq)
     where ctrl_idx is the control input index, inp_enc is the control input integer encoding and
     freq is the number of times the respective control input has occurred as the ctrl_idx'th component
-    '''
+    """
 
     @staticmethod
-    def _get_ranks(y):
+    def get_ranks(y):
         ranks = []
         for ctrl_idx in range(y.shape[0]):
             flattended_control = y[ctrl_idx].flatten()
@@ -132,7 +145,7 @@ class MultiOutputDataset(Dataset):
             ranks.extend(idx_input_count)
         return sorted(ranks, key=itemgetter(2), reverse=True)
 
-    '''
+    """
     Given a y_train such as
     array([[[ 1,  2,  3],
             [ 1,  2,  1],
@@ -167,7 +180,7 @@ class MultiOutputDataset(Dataset):
             [3],
             [2],
             [3]]])
-    '''
+    """
 
     @staticmethod
     def determinize_max_over_all_inputs(y_original, tuple_to_tuple_id):
@@ -178,7 +191,7 @@ class MultiOutputDataset(Dataset):
         already_considered = set()
 
         while not determinized:
-            ranks = MultiOutputDataset._get_ranks(y)
+            ranks = MultiOutputDataset.get_ranks(y)
 
             # find the ctrl_idx and inp_enc which should be used in the next round of pruning
             # i.e. the first one from the ranking list whose input has not been already considered

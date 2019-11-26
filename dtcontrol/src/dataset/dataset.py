@@ -2,12 +2,11 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+from src.dataset.csv_dataset_loader import CSVDatasetLoader
 from src.dataset.scots_dataset_loader import ScotsDatasetLoader
 from src.dataset.uppaal_dataset_loader import UppaalDatasetLoader
 from src.dataset.vector_dataset_loader import VectorDatasetLoader
-from src.dataset.csv_dataset_loader import CSVDatasetLoader
 from src.util import get_filename_and_ext
-
 
 class Dataset(ABC):
     """
@@ -51,6 +50,7 @@ class Dataset(ABC):
                 Y_train[i] gives the allowed control inputs for the ith state. -1 is a
                 filler just to make the length of the lists  = max_non_determinism.
     """
+
     def __init__(self, filename):
         self.filename = filename
         self.name, self.extension = get_filename_and_ext(filename)
@@ -65,19 +65,20 @@ class Dataset(ABC):
         self.X_train = None
         self.X_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
         self.Y_train = None
-        self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None, 'num_flattened': None}
-        self.index_to_value = {}
+        self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None,
+                           'num_flattened': None}
+        self.index_to_value = {}  # mapping from arbitrary integer indices to the actual float labels
         self.is_deterministic = None
 
     def load_if_necessary(self):
         if self.X_train is None:
-            self.X_train, self.X_metadata, self.Y_train, self.Y_metadata, self.index_to_value = self.extension_to_loader[
-                self.extension].load_dataset(self.filename)
+            self.X_train, self.X_metadata, self.Y_train, self.Y_metadata, self.index_to_value = \
+                self.extension_to_loader[self.extension].load_dataset(self.filename)
             self.Y_metadata['num_rows'] = len(self.X_train)
             self.Y_metadata['num_flattened'] = sum(1 for row in self.Y_train for y in row)
 
-    def load_metadata_from_json(self, json):
-        metadata = json['metadata']
+    def load_metadata_from_json(self, json_object):
+        metadata = json_object['metadata']
         self.X_metadata = metadata['X_metadata']
         self.Y_metadata = metadata['Y_metadata']
 
@@ -101,9 +102,8 @@ class Dataset(ABC):
     Computes unique labels of a 2d label array by mapping every unique inner array to an int. Returns the unique labels
     and the int mapping.
     """
-
     @staticmethod
-    def _get_unique_labels(labels):
+    def get_unique_labels_from_2d(labels):
         l = []
         int_to_label = {}
         next_unused_int = 1  # OC1 expects labels starting with 1
