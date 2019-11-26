@@ -128,6 +128,21 @@ class MultiOutputDataset(Dataset):
         l = self.list_id_to_list[label]
         return [self.tuple_id_to_tuple[i] for i in l if i != -1]
 
+    def from_mask(self, mask):
+        subset = MultiOutputDataset(self.filename)
+        subset.copy_from_other_dataset(self)
+        subset.X_train = self.X_train[mask]
+        subset.Y_train = self.Y_train[mask]
+        if self.tuple_ids:
+            subset.tuple_ids = self.tuple_ids[mask]
+            subset.tuple_id_to_tuple = self.tuple_id_to_tuple
+            subset.tuple_to_tuple_id = self.tuple_to_tuple_id
+        if self.unique_labels:
+            subset.unique_labels = self.unique_labels[mask]
+            subset.list_id_to_list = self.list_id_to_list
+        if self.tuples:
+            subset.tuples = self.tuples[mask]
+
     """
     Generate a list of tuples (ctrl_idx, inp_enc, freq)
     where ctrl_idx is the control input index, inp_enc is the control input integer encoding and

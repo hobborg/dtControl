@@ -70,6 +70,14 @@ class Dataset(ABC):
         self.index_to_value = {}  # mapping from arbitrary integer indices to the actual float labels
         self.is_deterministic = None
 
+    def copy_from_other_dataset(self, ds):
+        self.X_train = ds.X_train
+        self.X_metadata = ds.X_metadata
+        self.Y_train = ds.Y_train
+        self.Y_metadata = ds.Y_metadata
+        self.index_to_value = ds.index_to_value
+        self.is_deterministic = ds.is_deterministic
+
     def load_if_necessary(self):
         if self.X_train is None:
             self.X_train, self.X_metadata, self.Y_train, self.Y_metadata, self.index_to_value = \
@@ -96,6 +104,25 @@ class Dataset(ABC):
 
     @abstractmethod
     def map_unique_label_back(self, label):
+        pass
+
+    """
+    Splits the dataset into two subsets, as indicated by the given mask.
+    :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
+    """
+
+    def split(self, mask):
+        left = self.from_mask(mask)
+        right = self.from_mask(~mask)
+        return left, right
+
+    """
+    Returns the subset given by the mask.
+    :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
+    """
+
+    @abstractmethod
+    def from_mask(self, mask):
         pass
 
     """

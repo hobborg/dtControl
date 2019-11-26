@@ -38,3 +38,12 @@ class SingleOutputDataset(Dataset):
 
     def map_unique_label_back(self, label):
         return self.unique_mapping[label]
+
+    def from_mask(self, mask):
+        subset = SingleOutputDataset(self.filename)
+        subset.copy_from_other_dataset(self)
+        subset.X_train = self.X_train[mask]
+        subset.Y_train = self.Y_train[mask]
+        if self.unique_labels:
+            subset.unique_labels = self.unique_labels[mask]
+            subset.unique_mapping = self.unique_mapping
