@@ -1,6 +1,7 @@
-import src.util
-from src.classifiers.custom_dt import Node
 import numpy as np
+
+import src.util
+from src.classifiers.decision_tree import Node
 
 class OC1Node(Node):
     def __init__(self, coeff, intercept, depth=0):

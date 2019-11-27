@@ -2,19 +2,19 @@ import pickle
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-import dtcontrol
+
 import numpy as np
+from jinja2 import FileSystemLoader, Environment
 from sklearn.base import BaseEstimator
 
-from jinja2 import FileSystemLoader, Environment
+import dtcontrol
 
 file_loader = FileSystemLoader([path + "/src/c_templates" for path in dtcontrol.__path__])
 env = Environment(loader=file_loader)
 single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
 
-
-class CustomDT(ABC, BaseEstimator):
+class DecisionTree(ABC, BaseEstimator):
     def __init__(self):
         self.root = None
         self.name = None

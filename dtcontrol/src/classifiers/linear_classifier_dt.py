@@ -5,12 +5,12 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.tree import DecisionTreeClassifier
 
 import src.util
-from src.classifiers.custom_dt import CustomDT, Node
+from src.classifiers.decision_tree import DecisionTree, Node
 
 # SVM sometimes does not converge and clutters the output with warnings
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-class LinearClassifierDT(CustomDT):
+class LinearClassifierDT(DecisionTree):
     def __init__(self, classifier_class, **kwargs):
         super().__init__()
         self.kwargs = kwargs

@@ -1,8 +1,9 @@
-import src.util
 from sklearn.tree import DecisionTreeClassifier
-from src.classifiers.custom_dt import CustomDT, Node
 
-class CartDT(CustomDT):
+import src.util
+from src.classifiers.decision_tree import DecisionTree, Node
+
+class CartDT(DecisionTree):
     def __init__(self):
         super().__init__()
         self.name = 'CART'

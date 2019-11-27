@@ -8,11 +8,11 @@ import numpy as np
 
 import dtcontrol
 from src.classifiers.cart_custom_dt import CartNode
-from src.classifiers.custom_dt import CustomDT
+from src.classifiers.decision_tree import DecisionTree
 from src.classifiers.oc1_node import OC1Node
 from src.classifiers.oc1_parser import OC1Parser
 
-class OC1Wrapper(CustomDT):
+class OC1Wrapper(DecisionTree):
     """
     A wrapper for the OC1 C code.
 
