@@ -1,6 +1,5 @@
 import pickle
 import sys
-from abc import ABC, abstractmethod
 from collections.abc import Iterable
 
 import numpy as np
@@ -8,32 +7,37 @@ from jinja2 import FileSystemLoader, Environment
 from sklearn.base import BaseEstimator
 
 import dtcontrol
+from src.dataset.multi_output_dataset import MultiOutputDataset
+from src.dataset.single_output_dataset import SingleOutputDataset
 
 file_loader = FileSystemLoader([path + "/src/c_templates" for path in dtcontrol.__path__])
 env = Environment(loader=file_loader)
 single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
 
-class DecisionTree(ABC, BaseEstimator):
-    def __init__(self):
+class DecisionTree(BaseEstimator):
+    def __init__(self, det_strategy, split_strategies):
         self.root = None
         self.name = None
+        self.check_combinable(det_strategy, split_strategies)
+        self.det_strategy = det_strategy
+        self.split_strategies = split_strategies
 
-    @abstractmethod
+    def check_combinable(self, det_strategy, split_strategies):
+        pass  # TODO
+
     def is_applicable(self, dataset):
-        pass
+        return isinstance(dataset, MultiOutputDataset) and self.det_strategy.is_only_multioutput() or \
+               isinstance(dataset, SingleOutputDataset) and not self.det_strategy.is_only_multioutput()
 
-    def set_labels(self, leaf_fun, index_to_value):
-        self.root.set_labels(leaf_fun, index_to_value)
-
-    @abstractmethod
     def fit(self, dataset):
-        pass
+        self.root = Node(self.det_strategy, self.split_strategies)
+        self.root.fit(dataset)
 
-    def predict(self, dataset):
-        return self.root.predict(dataset.X_train)
+    def predict(self, dataset, actual_values=True):
+        return self.root.predict(dataset.X_train, actual_values)
 
-    def get_stats(self) -> dict:
+    def get_stats(self):  # TODO: add entry for every splitting strategy if # > 2
         return {
             'nodes': self.root.num_nodes,
             'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
@@ -80,68 +84,47 @@ class DecisionTree(ABC, BaseEstimator):
     def __str__(self):
         return self.name
 
-class Node(ABC):
-    def __init__(self, depth=0):
-        self.left = None
-        self.right = None
-        self.trained_label = None  # the label from the training data the node sees (e.g. unique)
-        self.mapped_label = None  # the label corresponding to the actual int labels
-        self.actual_label = None  # the actual float label
+class Node:
+    def __init__(self, det_strategy, split_strategies, depth=0):
+        self.det_strategy = det_strategy
+        self.split_strategies = split_strategies
+        self.split = None
         self.depth = depth
         self.num_nodes = 0
+        self.left = None
+        self.right = None
+        # labels can be one of the following: a single label, a single tuple, a list of possible labels,
+        #                                     a list of tuples
+        self.index_label = None  # the label with int indices
+        self.actual_label = None  # the actual float label
 
-    def set_labels(self, leaf_fun, index_to_value):
-        def _visit_leaves(tree):
-            if tree is None:
-                return
-            if tree.trained_label is not None:
-                tree.mapped_label = leaf_fun(tree)
-                # the mapped label can be either a list of labels or a single label
-                if isinstance(tree.mapped_label, tuple):
-                    tree.actual_label = tuple([index_to_value[i] for i in tree.mapped_label if i != -1])
-                elif isinstance(tree.mapped_label, Iterable):
-                    if isinstance(tree.mapped_label[0], tuple):
-                        tree.actual_label = [tuple(map(lambda x: index_to_value[x], tup)) for tup in tree.mapped_label]
-                    else:
-                        tree.actual_label = [index_to_value[i] for i in tree.mapped_label if i != -1]
-                else:
-                    tree.actual_label = index_to_value[tree.mapped_label]
-            _visit_leaves(tree.left)
-            _visit_leaves(tree.right)
-
-        _visit_leaves(self)
-
-    def predict(self, X):
+    def predict(self, X, actual_values=True):
         pred = []
         for row in np.array(X):
-            pred.append(self.predict_one(row.reshape(1, -1)))
+            pred.append(self.predict_one(row.reshape(1, -1), actual_values))
         return pred
 
-    def predict_one(self, features):
+    def predict_one(self, features, actual_values=True):
         node = self
         while node.left:
             node = node.left if node.test_condition(features) else node.right
-        return node.mapped_label
+        return node.actual_label if actual_values else node.index_label
 
-    @abstractmethod
     def test_condition(self, x):
-        pass
+        return self.split.predict(x)
 
-    def fit(self, X, y):
-        if self.check_done(X, y):
+    def fit(self, dataset):
+        y = self.det_strategy.determinize(dataset)
+        if self.check_done(dataset.X_train, y):
             return
         mask = self.find_split(X, y)
         self.left = self.create_child_node()
         self.right = self.create_child_node()
         self.fit_children(X, y, mask)
 
-    @abstractmethod
-    def create_child_node(self):
-        pass
-
     def check_done(self, X, y):
         if self.depth >= 500:
-            print("Cannot find a good split.")
+            print("Aborting: depth >= 500.")
             return True
 
         unique_labels = np.unique(y)
@@ -149,10 +132,18 @@ class Node(ABC):
         unique_data = np.unique(X, axis=0)
         num_unique_data = len(unique_data)
         if num_unique_labels <= 1 or num_unique_data <= 1:
-            self.trained_label = y[0] if len(unique_labels) > 0 else None
+            if len(unique_labels) > 0:
+                self.index_label = self.actual_label = None
+            else:
+                self.index_label = self.det_strategy.get_index_label(y[0])
+            self.trained_label = y[0] if len(unique_labels) > 0 else None  # WIP
             self.num_nodes = 1
             return True
         return False
+
+    @abstractmethod
+    def create_child_node(self):
+        pass
 
     @abstractmethod
     def find_split(self, X, y):
