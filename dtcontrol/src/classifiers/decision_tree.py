@@ -1,5 +1,4 @@
 import pickle
-import sys
 from collections.abc import Iterable
 
 import numpy as np
@@ -16,12 +15,13 @@ single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
 
 class DecisionTree(BaseEstimator):
-    def __init__(self, det_strategy, split_strategies):
+    def __init__(self, det_strategy, split_strategies, impurity_measure):
         self.root = None
         self.name = None
         self.check_combinable(det_strategy, split_strategies)
         self.det_strategy = det_strategy
         self.split_strategies = split_strategies
+        self.impurity_measure = impurity_measure
 
     def check_combinable(self, det_strategy, split_strategies):
         pass  # TODO
@@ -31,7 +31,7 @@ class DecisionTree(BaseEstimator):
                isinstance(dataset, SingleOutputDataset) and not self.det_strategy.is_only_multioutput()
 
     def fit(self, dataset):
-        self.root = Node(self.det_strategy, self.split_strategies)
+        self.root = Node(self.det_strategy, self.split_strategies, self.impurity_measure)
         self.root.fit(dataset)
 
     def predict(self, dataset, actual_values=True):
@@ -85,9 +85,10 @@ class DecisionTree(BaseEstimator):
         return self.name
 
 class Node:
-    def __init__(self, det_strategy, split_strategies, depth=0):
+    def __init__(self, det_strategy, split_strategies, impurity_measure, depth=0):
         self.det_strategy = det_strategy
         self.split_strategies = split_strategies
+        self.impurity_measure = impurity_measure
         self.split = None
         self.depth = depth
         self.num_nodes = 0
@@ -117,10 +118,15 @@ class Node:
         y = self.det_strategy.determinize(dataset)
         if self.check_done(dataset.X_train, y):
             return
-        mask = self.find_split(X, y)
-        self.left = self.create_child_node()
-        self.right = self.create_child_node()
-        self.fit_children(X, y, mask)
+        splits = [strategy.find_split(dataset.X_train, y, self.impurity_measure) for strategy in self.split_strategies]
+        mask, self.split = min(splits, key=lambda mask, split: self.impurity_measure.calculate_impurity(y, mask))
+
+        left_data, right_data = dataset.split(mask)
+        self.left = Node(self.det_strategy, self.split_strategies, self.impurity_measure, self.depth + 1)
+        self.right = Node(self.det_strategy, self.split_strategies, self.impurity_measure, self.depth + 1)
+        self.left.fit(left_data)
+        self.right.fit(right_data)
+        self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
 
     def check_done(self, X, y):
         if self.depth >= 500:
@@ -136,43 +142,10 @@ class Node:
                 self.index_label = self.actual_label = None
             else:
                 self.index_label = self.det_strategy.get_index_label(y[0])
-            self.trained_label = y[0] if len(unique_labels) > 0 else None  # WIP
+                self.actual_label = self.det_strategy.get_actual_label(y[0])
             self.num_nodes = 1
             return True
         return False
-
-    @abstractmethod
-    def create_child_node(self):
-        pass
-
-    @abstractmethod
-    def find_split(self, X, y):
-        pass
-
-    def fit_children(self, X, y, mask):
-        if len(y.shape) == 3:
-            left_labels, right_labels = y[:, mask, :], y[:, ~mask, :]
-        else:
-            left_labels, right_labels = y[mask], y[~mask]
-        self.left.fit(X[mask], left_labels)
-        self.right.fit(X[~mask], right_labels)
-        self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
-
-    @staticmethod
-    def calculate_impurity(labels, mask):
-        left = labels[mask]
-        right = labels[~mask]
-        if len(left) == 0 or len(right) == 0: return sys.maxsize
-        num_labels = len(labels)
-        return (len(left) / num_labels) * Node.calculate_entropy(left) + \
-               (len(right) / num_labels) * Node.calculate_entropy(right)
-
-    @staticmethod
-    def calculate_entropy(labels):
-        num_labels = len(labels)
-        unique = np.unique(labels)
-        probs = [len(labels[labels == label]) / num_labels for label in unique]
-        return sum(-prob * np.log2(prob) for prob in probs)
 
     def export_dot(self):
         text = 'digraph {{\n{}\n}}'.format(self._export_dot(0)[1])

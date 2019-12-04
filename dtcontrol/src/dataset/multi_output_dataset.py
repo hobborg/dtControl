@@ -132,7 +132,7 @@ class MultiOutputDataset(Dataset):
         subset = MultiOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
         subset.X_train = self.X_train[mask]
-        subset.Y_train = self.Y_train[mask]
+        subset.Y_train = self.Y_train[:, mask, :]
         if self.tuple_ids:
             subset.tuple_ids = self.tuple_ids[mask]
             subset.tuple_id_to_tuple = self.tuple_id_to_tuple
