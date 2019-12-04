@@ -10,3 +10,15 @@ class Split(ABC):
     @abstractmethod
     def predict(self, features):
         pass
+
+    @abstractmethod
+    def print_dot(self):
+        pass
+
+    @abstractmethod
+    def print_c(self):
+        pass
+
+    @abstractmethod
+    def print_vhdl(self):
+        pass

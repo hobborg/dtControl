@@ -141,5 +141,5 @@ class OC1Wrapper(DecisionTree):
     def save(self, filename):
         copyfile(self.dt_file, filename)
 
-    def export_vhdl(self, numInputs, file=None):
+    def export_vhdl(self, num_inputs, file=None):
         pass

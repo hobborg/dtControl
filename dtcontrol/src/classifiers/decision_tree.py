@@ -61,21 +61,22 @@ class DecisionTree(BaseEstimator):
         else:
             return result
 
-    # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in the "entity" block
-    def export_vhdl(self, numInputs, file=None):
-        entitystr = "entity controller is\n\tport (\n"
-        allInputs = ""
-        for i in range(0, numInputs):
-            entitystr += "\t\tx" + str(i) + ": in <type>;\n"  # todo: get type from dtcontrol.dataset :(
-            allInputs += "x" + str(i) + ","
-        entitystr += "\t\ty: out <type>\n\t);\nend entity;\n\n"  # no semicolon after last declaration. todo: multi-output; probably just give dataset to this method...
-        architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + allInputs[
-                                                                               :-1] + ")\n\tbegin\n" + self.root.export_vhdl() + "\n\tend process;\nend architecture;"
+    # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in
+    # the "entity" block
+    def export_vhdl(self, num_inputs, file=None):  # TODO: multi-output; probably just give dataset to this method...
+        entity_str = "entity controller is\n\tport (\n"
+        all_inputs = ""
+        for i in range(0, num_inputs):
+            entity_str += "\t\tx" + str(i) + ": in <type>;\n"  # TODO: get type from dtcontrol.dataset :(
+            all_inputs += "x" + str(i) + ","
+        entity_str += "\t\ty: out <type>\n\t);\nend entity;\n\n"  # no semicolon after last declaration
+        architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + all_inputs[:-1] + ")\n\t \
+                        begin\n" + self.root.export_vhdl() + "\n\tend process;\nend architecture;"
         if file:
             with open(file, 'w+') as outfile:
-                outfile.write(entitystr + architecture)
+                outfile.write(entity_str + architecture)
         else:
-            return entitystr + architecture
+            return entity_str + architecture
 
     def save(self, filename):
         with open(filename, 'wb') as outfile:

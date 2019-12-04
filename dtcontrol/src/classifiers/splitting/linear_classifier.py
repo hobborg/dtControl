@@ -34,3 +34,26 @@ class LinearClassifierSplit(Split):
 
     def predict(self, features):
         return self.classifier.predict(features)[0] == -1
+
+    def print_dot(self):
+        return self.get_hyperplane_str(rounded=True, newlines=True)
+
+    def print_c(self):
+        return self.get_hyperplane_str()
+
+    def print_vhdl(self):  # WIP
+        hyperplane = self.get_hyperplane_str()
+        hyperplane.replace('X[', 'x')
+        hyperplane.replace(']', '')
+        return hyperplane
+
+    def get_hyperplane_str(self, rounded=False, newlines=False):
+        coef = self.classifier.coef_[0]
+        intercept = self.classifier.intercept_[0]
+        line = []
+        for i in range(len(coef)):
+            line.append(f"{round(coef[i], 6) if rounded else coef[i]}*X[{i}]")
+        line.append(f"{round(intercept, 6) if rounded else intercept}")
+        joiner = "\n+" if newlines else "+"
+        hyperplane = joiner.join(line) + " <= 0"
+        return hyperplane.replace('+-', '-')

@@ -16,3 +16,12 @@ class CartSplit(Split):
 
     def predict(self, features):
         return features[:, self.tree.feature[0]][0] <= self.tree.threshold[0]
+
+    def print_dot(self):
+        return self.print_c()
+
+    def print_c(self):
+        return f'X[{self.tree.feature[0]}] <= {round(self.tree.threshold[0], 6)}'
+
+    def print_vhdl(self):
+        return f'x{self.tree.feature[0]} <= {round(self.tree.threshold[0], 6)}'
