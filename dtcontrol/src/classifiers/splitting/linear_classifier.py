@@ -3,7 +3,7 @@ import numpy as np
 from src.classifiers.splitting.split import Split
 from src.classifiers.splitting.splitting_strategy import SplittingStrategy
 
-class LinearClassifier(SplittingStrategy):
+class LinearClassifierSplittingStrategy(SplittingStrategy):
     def __init__(self, classifier_class, **kwargs):
         self.classifier_class = classifier_class
         self.kwargs = kwargs
@@ -41,7 +41,7 @@ class LinearClassifierSplit(Split):
     def print_c(self):
         return self.get_hyperplane_str()
 
-    def print_vhdl(self):  # WIP
+    def print_vhdl(self):
         hyperplane = self.get_hyperplane_str()
         hyperplane.replace('X[', 'x')
         hyperplane.replace(']', '')

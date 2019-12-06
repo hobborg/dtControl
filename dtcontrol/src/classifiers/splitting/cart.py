@@ -3,7 +3,7 @@ from sklearn.tree import DecisionTreeClassifier
 from src.classifiers.splitting.split import Split
 from src.classifiers.splitting.splitting_strategy import SplittingStrategy
 
-class Cart(SplittingStrategy):
+class CartSplittingStrategy(SplittingStrategy):
     def find_split(self, X_train, y, impurity_measure):
         dt = DecisionTreeClassifier(max_depth=1, criterion='entropy')  # TODO: implement myself and use impurity measure
         dt.fit(X_train, y)

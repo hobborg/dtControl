@@ -6,6 +6,7 @@ from jinja2 import FileSystemLoader, Environment
 from sklearn.base import BaseEstimator
 
 import dtcontrol
+from src import util
 from src.dataset.multi_output_dataset import MultiOutputDataset
 from src.dataset.single_output_dataset import SingleOutputDataset
 
@@ -148,17 +149,18 @@ class Node:
             return True
         return False
 
+    def is_leaf(self):
+        return not self.left and not self.right
+
     def export_dot(self):
         text = 'digraph {{\n{}\n}}'.format(self._export_dot(0)[1])
         return text
 
     def _export_dot(self, starting_number):
-        if not self.left and not self.right:
-            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.get_dot_label())
+        if self.is_leaf():
+            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_label())
 
-        text = '{} [label=\"{}\"'.format(starting_number, self.get_dot_label())
-        if self.print_dot_red():
-            text += ', fillcolor=firebrick1, style=filled'
+        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot())
         text += "];\n"
 
         number_for_right = starting_number + 1
@@ -181,79 +183,78 @@ class Node:
 
         return last_number, text
 
-    @abstractmethod
-    def is_axis_aligned(self):
-        pass
-
     def export_c(self):
-        return self._export_if_then_else(0, 'c')
+        return self.export_if_then_else(0, 'c')
 
     def export_vhdl(self):
-        return self._export_if_then_else(2, 'vhdl')
+        return self.export_if_then_else(2, 'vhdl')
 
-    # This handles both the c and vhdl export of nodes, as they both have the if-then-else structure and differ only in details
-    # Type can be 'c' or 'vhdl', currently
-    def _export_if_then_else(self, indent_index, type):
-        # get label depending on type
-        if type == 'c':
-            label = self.get_c_label()
-        elif type == 'vhdl':
-            label = self.get_vhdl_label()
-        else:
-            raise Exception(
-                f'Unknown type {type} in _export_if_then_else')  # do this type check once; from now on, else always means vhdl
-        # If leaf node
-        if not self.left and not self.right:
-            return "\t" * indent_index + str(label)
+    def export_if_then_else(self, indentation_level, get_condition, get_label, parentheses=True, if_open='{',
+                            else_open='} else {',
+                            if_close='}'):
+        """
+        Prints the tree in an if-then-else format which can be customized using the parameters.
+        :param indentation_level: the (initial) indentation level
+        :param get_condition: the method returning the string representation of the split (e.g. self.split.print_c)
+        :param get_label: the method returning the label for a leaf node (e.g. self.get_c_label)
+        :param parentheses: boolean indicating if parentheses should be used for the if-condition
+        :param if_open: the opening string to begin an if-statement
+        :param else_open: the opening string to begin an else-statement
+        :param if_close: the closing string of an if-statement
+        :return: the if-then-else string
+        """
+        if self.is_leaf():
+            return "\t" * indentation_level + get_label()
 
-        # if inner node
-        text = ""
-        text += "\t" * indent_index + (
-            f"if ({self.get_c_label()}) {{\n" if type == 'c' else f"if {self.get_vhdl_label()} then\n")
+        text = "\t" * indentation_level
+        text += "if "
+        if parentheses:
+            text += "("
+        text += get_condition()
+        if parentheses:
+            text += ")"
+        text += " " + if_open + "\n"
 
         if self.left:
-            text += f"{self.left._export_if_then_else(indent_index + 1, type)}\n"
+            left_string = self.left.export_if_then_else(indentation_level + 1, get_condition, get_label, parentheses,
+                                                        if_open, else_open, if_close)
+            text += f"{left_string}\n"
         else:
-            text += "\t" * (indent_index + 1) + ";\n"
-        if type == 'c':
-            text += "\t" * indent_index + "}\n"
+            text += "\t" * (indentation_level + 1) + ";\n"
 
         if self.right:
-            text += "\t" * indent_index + ("else {\n" if type == 'c' else "else \n")
-            text += f"{self.right._export_if_then_else(indent_index + 1, type)}\n"
-            text += "\t" * indent_index + ("}" if type == 'c' else "end if;")
+            text += "\t" * indentation_level + else_open
+            right_string = self.right.export_if_then_else(indentation_level + 1, get_condition, get_label, parentheses,
+                                                          if_open, else_open, if_close)
+            text += f"{right_string}\n"
+            text += "\t" * indentation_level + if_close
 
         return text
 
     def get_determinized_label(self):
-        if isinstance(self.actual_label,
-                      list):  # list of things, i.e. nondeterminsm present, need to determinise by finding max norm (could use other ideas as well)
+        if isinstance(self.actual_label, list):
+            # nondeterminsm present, need to determinize by finding min norm
             return min(self.actual_label, key=lambda l: self.norm(l))
-        else:  # just an int or a tuple, easy; note that we have to use list and not iterable in the above if, because tuples (multi control input) are also iterable
+        else:
             return self.actual_label
 
-            # If tup is an int, return abs of that number; if it is a tuple, return sum of absolutes of contents
-
-    # Used by get_determinized_label
     def norm(self, tup):
         if isinstance(tup, tuple):
             return sum([i * i for i in tup])
-        else:  # if it is not iterable, then it was a single number, return abs of that
+        else:
             return abs(tup)
 
-    @abstractmethod
-    def get_dot_label(self):
+    def print_label(self):
+        if self.actual_label is None:
+            raise ValueError('print_label called although label is None.')
+        rounded = util.objround(self.actual_label, 6)
+        return util.split_into_lines(rounded)
+
+    def get_c_label():  # WIP
         pass
 
-    @abstractmethod
-    def print_dot_red(self):
+    def get_vhdl_label():
         pass
-
-    def get_c_label(self):
-        return self._get_label('c')
-
-    def get_vhdl_label(self):
-        return self._get_label('vhdl')
 
     def _get_label(self, type):
         # if leaf, return class; determinize if necessary, and handle multi output printing
@@ -277,25 +278,3 @@ class Node:
                 else:
                     return f'y <= {str(label)};'
         # else, print predicate in correct format
-
-        if self.is_axis_aligned():
-            try:  # the guy keeping track of the tree is called differently depending on subclass. This ain't nice, but it works.
-                tree = self.dt.tree_
-            except:
-                tree = self.classifier.tree_
-            l = f'X[{tree.feature[0]}]' if type == 'c' else f'x{tree.feature[0]}'
-            return f'{l} <= {round(tree.threshold[0], 4)}'
-        else:
-            # this implicitly assumes n_classes == 2
-            if self.classifier is not None:
-                coef_ = self.classifier.coef_[0]
-                intercept_ = self.classifier.intercept_[0]
-            else:  # OC1Node
-                coef_ = self.coeff
-                intercept_ = self.intercept
-            line = []
-            for i in range(0, len(coef_)):
-                line.append(f"{coef_[i]}*X[{i}]" if type == 'c' else f"{coef_[i]}*x{i}")
-            line.append(f"{intercept_}")
-            hyperplane = "+".join(line) + " <= 0"
-            return hyperplane.replace('+-', '-')
