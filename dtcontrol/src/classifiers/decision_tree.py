@@ -158,7 +158,7 @@ class Node:
 
     def _export_dot(self, starting_number):
         if self.is_leaf():
-            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_label())
+            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label())
 
         text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot())
         text += "];\n"
@@ -189,45 +189,27 @@ class Node:
     def export_vhdl(self):
         return self.export_if_then_else(2, 'vhdl')
 
-    def export_if_then_else(self, indentation_level, get_condition, get_label, parentheses=True, if_open='{',
-                            else_open='} else {',
-                            if_close='}'):
-        """
-        Prints the tree in an if-then-else format which can be customized using the parameters.
-        :param indentation_level: the (initial) indentation level
-        :param get_condition: the method returning the string representation of the split (e.g. self.split.print_c)
-        :param get_label: the method returning the label for a leaf node (e.g. self.get_c_label)
-        :param parentheses: boolean indicating if parentheses should be used for the if-condition
-        :param if_open: the opening string to begin an if-statement
-        :param else_open: the opening string to begin an else-statement
-        :param if_close: the closing string of an if-statement
-        :return: the if-then-else string
-        """
-        if self.is_leaf():
-            return "\t" * indentation_level + get_label()
+    def export_if_then_else(self, indentation_level, type):
+        if type not in ['c', 'vhdl']:
+            raise ValueError('Only c and vhdl printing is currently supported.')
 
-        text = "\t" * indentation_level
-        text += "if "
-        if parentheses:
-            text += "("
-        text += get_condition()
-        if parentheses:
-            text += ")"
-        text += " " + if_open + "\n"
+        if self.is_leaf():
+            return "\t" * indentation_level + (self.print_c_label() if type == 'c' else self.print_vhdl_label())
+
+        text = "\t" * indentation_level + (
+            f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
 
         if self.left:
-            left_string = self.left.export_if_then_else(indentation_level + 1, get_condition, get_label, parentheses,
-                                                        if_open, else_open, if_close)
-            text += f"{left_string}\n"
+            text += f"{self.left.export_if_then_else(indentation_level + 1, type)}\n"
         else:
             text += "\t" * (indentation_level + 1) + ";\n"
+        if type == 'c':
+            text += "\t" * indentation_level + "}\n"
 
         if self.right:
-            text += "\t" * indentation_level + else_open
-            right_string = self.right.export_if_then_else(indentation_level + 1, get_condition, get_label, parentheses,
-                                                          if_open, else_open, if_close)
-            text += f"{right_string}\n"
-            text += "\t" * indentation_level + if_close
+            text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
+            text += f"{self.right.export_if_then_else(indentation_level + 1, type)}\n"
+            text += "\t" * indentation_level + ("}" if type == 'c' else "end if;")
 
         return text
 
@@ -244,37 +226,29 @@ class Node:
         else:
             return abs(tup)
 
-    def print_label(self):
+    def print_dot_label(self):
         if self.actual_label is None:
-            raise ValueError('print_label called although label is None.')
+            raise ValueError('print_dot_label called although label is None.')
         rounded = util.objround(self.actual_label, 6)
         return util.split_into_lines(rounded)
 
-    def get_c_label():  # WIP
-        pass
+    def print_c_label(self):
+        if self.actual_label is None:
+            raise ValueError('print_c_label called although label is None.')
+        if isinstance(self.actual_label, Iterable):
+            return ' '.join([
+                f'result[{i}] = {round(self.actual_label[i], 6)}f;' for i in range(len(self.actual_label))
+            ])
+        return f'return {round(float(self.actual_label), 6)}f;'
 
-    def get_vhdl_label():
-        pass
-
-    def _get_label(self, type):
-        # if leaf, return class; determinize if necessary, and handle multi output printing
-        if self.actual_label is not None:
-            label = self.get_determinized_label()
-            if isinstance(label, Iterable):
-                if type == 'c':
-                    return ' '.join([
-                        f'result[{i}] = {round(label[i], 6)}f;' for i in range(len(label))
-                    ])
-                else:
-                    i = 0
-                    result = ""
-                    for controlInput in label:
-                        result += f'y{str(i)} <= {str(controlInput)}; '
-                        i += 1
-                    return result
-            else:
-                if type == 'c':
-                    return f'return {round(float(label), 6)}f;'
-                else:
-                    return f'y <= {str(label)};'
-        # else, print predicate in correct format
+    def print_vhdl_label(self):
+        if self.actual_label is None:
+            raise ValueError('print_vhdl_label called although label is None.')
+        if isinstance(self.actual_label, Iterable):
+            i = 0
+            result = ""
+            for controlInput in self.actual_label:
+                result += f'y{str(i)} <= {str(controlInput)}; '
+                i += 1
+            return result
+        return f'y <= {str(self.actual_label)};'
