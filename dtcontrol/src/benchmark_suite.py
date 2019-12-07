@@ -14,7 +14,6 @@ from src.timeout import call_with_timeout
 from src.ui.table_controller import TableController
 from src.util import format_seconds, get_filename_and_ext
 
-
 class BenchmarkSuite:
     """
     The benchmark suite runs the given classifiers on all datasets present in the XYdatasets folder and prints the
@@ -139,7 +138,7 @@ class BenchmarkSuite:
             #     stats = classifier.get_stats()
             #     cell = {'stats': stats, 'time': format_seconds(run_time)}
             #     return cell
-            acc = dataset.compute_accuracy(classifier.predict(dataset))
+            acc = dataset.compute_accuracy(classifier.predict(dataset, actual_values=False))
             if acc is None:
                 cell = 'failed to fit'
             else:

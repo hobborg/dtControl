@@ -131,17 +131,24 @@ class MultiOutputDataset(Dataset):
         l = self.list_id_to_list[label]
         return [self.tuple_id_to_tuple[i] for i in l if i != -1]
 
+    def map_tuple_id_back(self, tuple_id):
+        return self.tuple_id_to_tuple[tuple_id]
+
     def from_mask(self, mask):
         subset = MultiOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
         subset.X_train = self.X_train[mask]
-        subset.Y_train = self.Y_train[:, mask, :]
-        if self.tuple_ids:
+        if len(subset.Y_train.shape) == 3:
+            subset.Y_train = self.Y_train[:, mask, :]
+        else:  # if we only determinize once before tree construction
+            subset.Y_train = self.Y_train[mask]
+        if self.tuple_ids is not None:
             subset.tuple_ids = self.tuple_ids[mask]
             subset.tuple_id_to_tuple = self.tuple_id_to_tuple
             subset.tuple_to_tuple_id = self.tuple_to_tuple_id
-        if self.unique_labels:
+        if self.unique_labels is not None:
             subset.unique_labels = self.unique_labels[mask]
             subset.list_id_to_list = self.list_id_to_list
-        if self.tuples:
+        if self.tuples is not None:
             subset.tuples = self.tuples[mask]
+        return subset

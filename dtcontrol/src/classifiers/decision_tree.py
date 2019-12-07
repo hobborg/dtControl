@@ -7,7 +7,6 @@ from sklearn.base import BaseEstimator
 
 import dtcontrol
 from src import util
-from src.dataset.multi_output_dataset import MultiOutputDataset
 from src.dataset.single_output_dataset import SingleOutputDataset
 
 file_loader = FileSystemLoader([path + "/src/c_templates" for path in dtcontrol.__path__])
@@ -16,16 +15,15 @@ single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
 
 class DecisionTree(BaseEstimator):
-    def __init__(self, det_strategy, split_strategies, impurity_measure):
+    def __init__(self, det_strategy, split_strategies, impurity_measure, name):
         self.root = None
-        self.name = None
+        self.name = name
         self.det_strategy = det_strategy
         self.split_strategies = split_strategies
         self.impurity_measure = impurity_measure
 
     def is_applicable(self, dataset):
-        return isinstance(dataset, MultiOutputDataset) and self.det_strategy.is_only_multioutput() or \
-               isinstance(dataset, SingleOutputDataset) and not self.det_strategy.is_only_multioutput()
+        return not (self.det_strategy.is_only_multioutput() and isinstance(dataset, SingleOutputDataset))
 
     def fit(self, dataset):
         self.det_strategy.set_dataset(dataset)
@@ -124,7 +122,8 @@ class Node:
         if self.check_done(dataset.X_train, y):
             return
         splits = [strategy.find_split(dataset.X_train, y, self.impurity_measure) for strategy in self.split_strategies]
-        mask, self.split = min(splits, key=lambda mask, split: self.impurity_measure.calculate_impurity(y, mask))
+        mask, self.split = \
+            min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(y, mask_split[0]))
 
         left_data, right_data = dataset.split(mask)
         self.left = Node(self.det_strategy, self.split_strategies, self.impurity_measure, self.depth + 1)
@@ -144,10 +143,10 @@ class Node:
         num_unique_data = len(unique_data)
         if num_unique_labels <= 1 or num_unique_data <= 1:
             if len(unique_labels) > 0:
-                self.index_label = self.actual_label = None
-            else:
                 self.index_label = self.det_strategy.get_index_label(y[0])
                 self.actual_label = self.det_strategy.get_actual_label(y[0])
+            else:
+                self.index_label = self.actual_label = None
             self.num_nodes = 1
             return True
         return False
@@ -238,20 +237,22 @@ class Node:
     def print_c_label(self):
         if self.actual_label is None:
             raise ValueError('print_c_label called although label is None.')
-        if isinstance(self.actual_label, Iterable):
+        label = self.get_determinized_label()
+        if isinstance(label, Iterable):
             return ' '.join([
-                f'result[{i}] = {round(self.actual_label[i], 6)}f;' for i in range(len(self.actual_label))
+                f'result[{i}] = {round(label[i], 6)}f;' for i in range(len(label))
             ])
-        return f'return {round(float(self.actual_label), 6)}f;'
+        return f'return {round(float(label), 6)}f;'
 
     def print_vhdl_label(self):
         if self.actual_label is None:
             raise ValueError('print_vhdl_label called although label is None.')
-        if isinstance(self.actual_label, Iterable):
+        label = self.get_determinized_label()
+        if isinstance(label, Iterable):
             i = 0
             result = ""
-            for controlInput in self.actual_label:
+            for controlInput in label:
                 result += f'y{str(i)} <= {str(controlInput)}; '
                 i += 1
             return result
-        return f'y <= {str(self.actual_label)};'
+        return f'y <= {str(label)};'
