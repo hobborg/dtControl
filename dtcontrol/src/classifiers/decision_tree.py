@@ -7,6 +7,7 @@ from sklearn.base import BaseEstimator
 
 import dtcontrol
 from src import util
+from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
 from src.dataset.single_output_dataset import SingleOutputDataset
 
 file_loader = FileSystemLoader([path + "/src/c_templates" for path in dtcontrol.__path__])
@@ -23,7 +24,8 @@ class DecisionTree(BaseEstimator):
         self.impurity_measure = impurity_measure
 
     def is_applicable(self, dataset):
-        return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset))
+        return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
+               not (dataset.is_deterministic and not isinstance(self.determinizer, NondetDeterminizer))
 
     def fit(self, dataset):
         self.determinizer.set_dataset(dataset)
