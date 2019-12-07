@@ -72,7 +72,7 @@ class IntegrationTest(unittest.TestCase):
         self.logreg = DecisionTree(NondetDeterminizer(),
                                    [CartSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
         self.maxfreq_logreg = DecisionTree(MaxFreqDeterminizer(),
-                                           [CartSplittingStrategy(), logreg_strategy], Entropy(), 'logreg-maxfreq')
+                                           [CartSplittingStrategy(), logreg_strategy], Entropy(), 'maxfreq-logreg')
         self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
                                            [CartSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
         self.oc1 = None  # TODO
