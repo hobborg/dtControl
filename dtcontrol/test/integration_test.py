@@ -4,13 +4,13 @@ import unittest
 from sklearn.linear_model import LogisticRegression
 
 from src.benchmark_suite import BenchmarkSuite
-from src.classifiers.cart_custom_dt import CartDT
-from src.classifiers.linear_classifier_dt import LinearClassifierDT
-from src.classifiers.max_freq_dt import MaxFreqDT
-from src.classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
-from src.classifiers.norm_dt import NormDT
-from src.classifiers.norm_linear_classifier_dt import NormLinearClassifierDT
-from src.classifiers.oc1_wrapper import OC1Wrapper
+from src.classifiers.decision_tree import DecisionTree
+from src.classifiers.determinization.max_freq_determinizer import MaxFreqDeterminizer
+from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
+from src.classifiers.determinization.norm_determinizer import NormDeterminizer
+from src.classifiers.impurity.entropy import Entropy
+from src.classifiers.splitting.cart import CartSplittingStrategy
+from src.classifiers.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 class IntegrationTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -21,61 +21,70 @@ class IntegrationTest(unittest.TestCase):
         self.expected_results = {
             'cartpole': {
                 'CART': 127,
-                'LinearClassifierDT-LogisticRegression': 100,  # this is different from the table but apparently correct
+                'logreg': 100,  # this is different from the table but apparently correct
                 'OC1': 92,
-                'MaxFreqDT': 6,
-                'MaxFreq-LinearClassifierDT-LogisticRegression': 7,
-                'MinNormDT': 56,
-                'MinNorm-LinearClassifierDT-LogisticRegression': 16
+                'maxfreq': 6,
+                'maxfreq-logreg': 7,
+                'minnorm': 56,
+                'minnorm-logreg': 16
             },
             'cruise-latest': {
                 'CART': 494,
-                'LinearClassifierDT-LogisticRegression': 392,
+                'logreg': 392,
                 'OC1': 290,
-                'MaxFreqDT': 2,
-                'MaxFreq-LinearClassifierDT-LogisticRegression': 2,
-                'MinNormDT': 282,
-                'MinNorm-LinearClassifierDT-LogisticRegression': 197
+                'maxfreq': 2,
+                'maxfreq-logreg': 2,
+                'minnorm': 282,
+                'minnorm-logreg': 197
             },
             'dcdc': {
                 'CART': 136,
-                'LinearClassifierDT-LogisticRegression': 70,  # again different
-                'MaxFreqDT': 5,
-                'MaxFreq-LinearClassifierDT-LogisticRegression': 5,
-                'MinNormDT': 11,
-                'MinNorm-LinearClassifierDT-LogisticRegression': 125
+                'logreg': 70,  # again different
+                'maxfreq': 5,
+                'maxfreq-logreg': 5,
+                'minnorm': 11,
+                'minnorm-logreg': 125
             },
             '10rooms': {
                 'CART': 8649,
-                'LinearClassifierDT-LogisticRegression': 74,
+                'logreg': 74,
                 'OC1': 903,
-                'MaxFreqDT': 4,
-                'MaxFreq-LinearClassifierDT-LogisticRegression': 10,
-                'MinNormDT': 2704,
-                'MinNorm-LinearClassifierDT-LogisticRegression': 28
+                'maxfreq': 4,
+                'maxfreq-logreg': 10,
+                'minnorm': 2704,
+                'minnorm-logreg': 28
             },
             'vehicle': {
                 'CART': 6619,
-                'LinearClassifierDT-LogisticRegression': 5195,  # again different from table
+                'logreg': 5195,  # again different from table
                 'OC1': 4639
             }
         }
+        self.init_classifiers()
         if os.path.exists('test_benchmark.json'):
             os.remove('test_benchmark.json')
 
+    def init_classifiers(self):
+        self.cart = DecisionTree(NondetDeterminizer(), [CartSplittingStrategy()], Entropy(), 'CART')
+        self.maxfreq = DecisionTree(MaxFreqDeterminizer(), [CartSplittingStrategy()], Entropy(), 'maxfreq')
+        self.minnorm = DecisionTree(NormDeterminizer(min), [CartSplittingStrategy()], Entropy(), 'minnorm')
+        logreg_strategy = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+        self.logreg = DecisionTree(NondetDeterminizer(),
+                                   [CartSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
+        self.maxfreq_logreg = DecisionTree(MaxFreqDeterminizer(),
+                                           [CartSplittingStrategy(), logreg_strategy], Entropy(), 'logreg-maxfreq')
+        self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
+                                           [CartSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
+        self.oc1 = None  # TODO
+
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
-        classifiers = [CartDT(), MaxFreqDT(), NormDT(min)]
+        classifiers = [self.cart, self.maxfreq, self.minnorm]
         self.run_test(datasets, classifiers)
 
     def test_medium(self):  # takes about 4 min on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
-        classifiers = [CartDT(),
-                       LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none'),
-                       MaxFreqDT(),
-                       MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none'),
-                       NormDT(min)
-                       ]
+        classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm]
         self.run_test(datasets, classifiers)
 
     def test_slow(self):  # takes about 6h on my laptop
@@ -86,17 +95,12 @@ class IntegrationTest(unittest.TestCase):
             '10rooms',
             'vehicle'
         ]
-        classifiers = [CartDT(),
-                       LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none'),
-                       OC1Wrapper(),
-                       MaxFreqDT(),
-                       MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none'),
-                       NormDT(min),
-                       NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')
-                       ]
+        classifiers = [self.cart, self.logreg, self.oc1, self.maxfreq, self.maxfreq_logreg, self.minnorm,
+                       self.minnorm_logreg]
         self.run_test(datasets, classifiers)
 
     def run_test(self, datasets, classifiers):
+        # the unzipped_examples folder is used in docker
         self.suite.add_datasets(['../examples', '/unzipped_examples'], include=datasets)
         self.suite.benchmark(classifiers)
         self.assert_results_almost_equal(self.expected_results, self.suite.results)
