@@ -110,31 +110,29 @@ class Dataset(ABC):
         """
         pass
 
-    """
-    Splits the dataset into two subsets, as indicated by the given mask.
-    :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
-    """
-
     def split(self, mask):
+        """
+        Splits the dataset into two subsets, as indicated by the given mask.
+        :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
+        """
         left = self.from_mask(mask)
         right = self.from_mask(~mask)
         return left, right
 
-    """
-    Returns the subset given by the mask.
-    :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
-    """
-
     @abstractmethod
     def from_mask(self, mask):
+        """
+        Returns the subset given by the mask.
+        :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
+        """
         pass
 
-    """
-    Computes unique labels of a 2d label array by mapping every unique inner array to an int. Returns the unique labels
-    and the int mapping.
-    """
     @staticmethod
     def get_unique_labels_from_2d(labels):
+        """
+        Computes unique labels of a 2d label array by mapping every unique inner array to an int. Returns the unique labels
+        and the int mapping.
+        """
         l = []
         int_to_label = {}
         next_unused_int = 1  # OC1 expects labels starting with 1
