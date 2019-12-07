@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from src.benchmark_suite import BenchmarkSuite
 from src.classifiers.decision_tree import DecisionTree
 from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
+from src.classifiers.determinization.norm_determinizer import NormDeterminizer
 from src.classifiers.impurity.entropy import Entropy
 from src.classifiers.splitting.cart import CartSplittingStrategy
 from src.classifiers.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -27,13 +28,15 @@ suite.add_datasets(['examples'],
                        'aircraft', 'traffic_30m', 'truck_trailer'
                    ]
                    )
-logistic = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+
+cart = CartSplittingStrategy()
+logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 classifiers = [
-    DecisionTree(NondetDeterminizer(), [CartSplittingStrategy()], Entropy(), 'Cart'),
-    DecisionTree(NondetDeterminizer(), [CartSplittingStrategy(), logistic], Entropy(), 'Logistic'),
-    # DecisionTree(MaxFreqDeterminizer(), [CartSplittingStrategy()], Entropy(), 'MaxFreq'),
-    # DecisionTree(NormDeterminizer(min), [CartSplittingStrategy()], Entropy(), 'MinNorm'),
-    # DecisionTree(NormDeterminizer(min), [CartSplittingStrategy(), logistic], Entropy(), 'MinNormLogistic'),
+    DecisionTree(NondetDeterminizer(), [cart], Entropy(), 'CART'),
+    DecisionTree(NondetDeterminizer(), [cart, logreg], Entropy(), 'logreg'),
+    # DecisionTree(MaxFreqDeterminizer(), [cart], Entropy(), 'MaxFreq'),
+    # DecisionTree(NormDeterminizer(min), [cart], Entropy(), 'MinNorm'),
+    DecisionTree(NormDeterminizer(min), [cart, logreg], Entropy(), 'minnorm-logreg'),
     # LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
     # MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
     # OC1Wrapper(num_restarts=1, num_jumps=1),
