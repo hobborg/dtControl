@@ -15,7 +15,7 @@ class UppaalDatasetLoader(DatasetLoader):
             2. Uppaal only works on integer domains (specifically np.int16)
             3. Actions are single-dimensional. However, if multiple components
                may have the .Choose state, they are added as categorical variables
-               in X_train
+               in x
             4. Step sizes for all state variables is 1
         """
 
@@ -113,41 +113,41 @@ class UppaalDatasetLoader(DatasetLoader):
             num_df = num_df[projection_variables]
 
             grouped = num_df.groupby(projection_variables)
-            X = np.empty((len(grouped), len(projection_variables)), dtype=np.int16)
-            Y = np.full((len(grouped), max([len(y) for y in row_actions])), -1, dtype=np.int16)
+            x = np.empty((len(grouped), len(projection_variables)), dtype=np.int16)
+            y = np.full((len(grouped), max([len(y) for y in row_actions])), -1, dtype=np.int16)
 
             i = 0
             for (group, indices) in grouped.indices.items():
                 if len(indices) > 1:
-                    X[i] = group
+                    x[i] = group
                     conservative_actions = set(actions.values()).copy()
                     for idx in indices:
                         conservative_actions &= set(row_actions[idx])
                     assert len(
                         conservative_actions) > 0, "Stategy for picking safe action doesn't work. Deeper analysis needed."
-                    Y[i][0:len(conservative_actions)] = list(sorted(conservative_actions))
+                    y[i][0:len(conservative_actions)] = list(sorted(conservative_actions))
                 else:
-                    X[i] = group
-                    Y[i][0:len(row_actions[indices[0]])] = sorted(row_actions[indices[0]])
+                    x[i] = group
+                    y[i][0:len(row_actions[indices[0]])] = sorted(row_actions[indices[0]])
                 i = i + 1
 
-            print("Constructed training set with %s datapoints" % X.shape[0])
+            print("Constructed training set with %s datapoints" % x.shape[0])
 
             # construct metadata
             # assumption is that UPPAAL only works with integers
-            X_metadata = dict()
-            X_metadata["variables"] = projection_variables
-            X_metadata["min"] = [int(i) for i in np.amin(X, axis=0)]
-            X_metadata["max"] = [int(i) for i in np.amax(X, axis=0)]
-            X_metadata["step_size"] = [1 for _ in range(len(projection_variables))]
+            x_metadata = dict()
+            x_metadata["variables"] = projection_variables
+            x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
+            x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
+            x_metadata["step_size"] = [1 for _ in range(len(projection_variables))]
 
-            Y_metadata = dict()
-            Y_metadata["variables"] = [action_var]
-            Y_metadata["min"] = [min(index_to_value.values())]
-            Y_metadata["max"] = [max(index_to_value.values())]
-            Y_metadata["step_size"] = [int((Y_metadata["max"][0] - Y_metadata["min"][0]) / (len(index_to_value) - 1))]
+            y_metadata = dict()
+            y_metadata["variables"] = [action_var]
+            y_metadata["min"] = [min(index_to_value.values())]
+            y_metadata["max"] = [max(index_to_value.values())]
+            y_metadata["step_size"] = [int((y_metadata["max"][0] - y_metadata["min"][0]) / (len(index_to_value) - 1))]
 
-            logging.debug(X_metadata)
-            logging.debug(Y_metadata)
+            logging.debug(x_metadata)
+            logging.debug(y_metadata)
 
-            return (X, X_metadata, Y, Y_metadata, index_to_value)
+            return (x, x_metadata, y, y_metadata, index_to_value)

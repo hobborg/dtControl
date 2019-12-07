@@ -10,7 +10,7 @@ class NormDeterminizer(Determinizer):
 
     def determinize(self, dataset):
         if isinstance(dataset, SingleOutputDataset):
-            return self.choose_random_labels(dataset.Y_train)
+            return self.choose_random_labels(dataset.y)
         else:
             return self.choose_random_labels(dataset.get_tuple_ids())
 

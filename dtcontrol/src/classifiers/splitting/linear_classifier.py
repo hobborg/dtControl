@@ -8,7 +8,7 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
         self.classifier_class = classifier_class
         self.kwargs = kwargs
 
-    def find_split(self, X_train, y, impurity_measure):
+    def find_split(self, x, y, impurity_measure):
         label_to_impurity = {}
         label_to_classifier = {}
         for label in np.unique(y):
@@ -17,15 +17,15 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
             new_y[label_mask] = 1
             new_y[~label_mask] = -1
             classifier = self.classifier_class(**self.kwargs)
-            classifier.fit(X_train, new_y)
+            classifier.fit(x, new_y)
             label_to_classifier[label] = classifier
-            pred = classifier.predict(X_train)
+            pred = classifier.predict(x)
             impurity = impurity_measure.calculate_impurity(y, (pred == -1))
             label_to_impurity[label] = impurity
 
         label = min(label_to_impurity.items(), key=lambda x: x[1])[0]
         classifier = label_to_classifier[label]
-        mask = (classifier.predict(X_train) == -1)
+        mask = (classifier.predict(x) == -1)
         return mask, LinearClassifierSplit(classifier)
 
 class LinearClassifierSplit(Split):
@@ -43,7 +43,7 @@ class LinearClassifierSplit(Split):
 
     def print_vhdl(self):
         hyperplane = self.get_hyperplane_str()
-        hyperplane.replace('X[', 'x')
+        hyperplane.replace('[', '')
         hyperplane.replace(']', '')
         return hyperplane
 
@@ -52,7 +52,7 @@ class LinearClassifierSplit(Split):
         intercept = self.classifier.intercept_[0]
         line = []
         for i in range(len(coef)):
-            line.append(f"{round(coef[i], 6) if rounded else coef[i]}*X[{i}]")
+            line.append(f"{round(coef[i], 6) if rounded else coef[i]}*x[{i}]")
         line.append(f"{round(intercept, 6) if rounded else intercept}")
         joiner = "\n+" if newlines else "+"
         hyperplane = joiner.join(line) + " <= 0"

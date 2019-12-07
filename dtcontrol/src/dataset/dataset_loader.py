@@ -4,7 +4,6 @@ from os import makedirs
 from os.path import getmtime, split, exists, join
 
 import numpy as np
-import pandas as pd
 
 class DatasetLoader(ABC):
     def __init__(self):
@@ -28,37 +27,36 @@ class DatasetLoader(ABC):
         folder = self.get_converted_folder(filename)
         assert exists(folder)
         print("Loading existing pickled dataset...", end=' ')
-        X_train = np.load(join(folder, 'X_train.npy'))
-        Y_train = np.load(join(folder, 'Y_train.npy'))
+        x = np.load(join(folder, 'X_train.npy'))
+        y = np.load(join(folder, 'Y_train.npy'))
         with open(join(folder, 'extra_data.pickle'), 'rb') as infile:
             extra_data = pickle.load(infile)
             index_to_value = extra_data["index_to_value"]
-            X_metadata = extra_data["X_metadata"]
-            Y_metadata = extra_data["Y_metadata"]
+            x_metadata = extra_data["X_metadata"]
+            y_metadata = extra_data["Y_metadata"]
         print("done loading.")
-        return X_train, X_metadata, Y_train, Y_metadata, index_to_value
+        return x, x_metadata, y, y_metadata, index_to_value
 
     def save_converted_dataset(self, filename):
         folder = self.get_converted_folder(filename)
         if not exists(folder):
             makedirs(folder)
-        X_train, X_metadata, Y_train, Y_metadata, index_to_value = self.loaded_datasets[filename]
-        np.save(join(folder, 'X_train.npy'), X_train)
-        np.save(join(folder, 'Y_train.npy'), Y_train)
+        x, x_metadata, y, y_metadata, index_to_value = self.loaded_datasets[filename]
+        np.save(join(folder, 'X_train.npy'), x)
+        np.save(join(folder, 'Y_train.npy'), y)
         with open(join(folder, 'extra_data.pickle'), 'wb+') as outfile:
             pickle.dump({"index_to_value": index_to_value,
-                         "X_metadata": X_metadata,
-                         "Y_metadata": Y_metadata},
+                         "X_metadata": x_metadata,
+                         "Y_metadata": y_metadata},
                         outfile)
 
     def get_converted_folder(self, filename):
         directory, name = split(filename)
         return join(directory, self.PATH, f'{name}_{getmtime(filename)}')
 
-    """
-    Loads a dataset and returns X_train, X_metadata, Y_train, Y_metadata, index_to_value
-    """
-
     @abstractmethod
     def _load_dataset(self, filename):
+        """
+        Loads a dataset and returns x, x_metadata, y, y_metadata, index_to_value
+        """
         pass

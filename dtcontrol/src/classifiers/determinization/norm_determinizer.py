@@ -36,10 +36,10 @@ class NormDeterminizer(Determinizer):
     def determinize_single_output(self, dataset):
         return np.apply_along_axis(lambda x: self.comp(x[x != -1], key=lambda i: dataset.index_to_value[i] ** 2),
                                    axis=1,
-                                   arr=dataset.Y_train)
+                                   arr=dataset.y)
 
     def determinize_multi_output(self, dataset):
-        zipped = np.stack(dataset.Y_train, axis=2)
+        zipped = np.stack(dataset.y, axis=2)
         result = []
         i = 0
         for arr in zipped:

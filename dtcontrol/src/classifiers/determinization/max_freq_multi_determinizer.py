@@ -46,7 +46,7 @@ class MaxFreqMultiDeterminizer(Determinizer):
                 [2],
                 [3]]])
         """
-        y = np.copy(dataset.Y_train)
+        y = np.copy(dataset.y)
         determinized = False
 
         # list of tuples (ctrl_input_idx, input_encoding) which were already considered for keeping
@@ -86,7 +86,8 @@ class MaxFreqMultiDeterminizer(Determinizer):
         valid_y = np.array([np.array([yyy[yyy != -1] for yyy in yy]) for yy in y])
         zipped = np.stack(valid_y, axis=2)
         # [[[1,3], [1,3], [1,2], [3,3]]] -> [1,1,2,3] (tuple ids)
-        return np.apply_along_axis(lambda x: self.dataset.tuple_to_tuple_id[tuple(x)], axis=2, arr=zipped).flatten()
+        return np.apply_along_axis(lambda x: self.dataset.get_tuple_to_tuple_id()[tuple(x)], axis=2,
+                                   arr=zipped).flatten()
 
     def get_index_label(self, label):
         return self.dataset.map_tuple_id_back(label)

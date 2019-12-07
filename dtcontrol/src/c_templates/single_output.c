@@ -1,13 +1,13 @@
 #include <stdio.h>
 
-float classify(const float X[]);
+float classify(const float x[]);
 
 int main() {
-    float X[] = {{example}};
-    float result = classify(X);
+    float x[] = {{example}};
+    float result = classify(x);
     return 0;
 }
 
-float classify(const float X[]) {
+float classify(const float x[]) {
     {{code}}
 }

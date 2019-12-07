@@ -26,8 +26,8 @@ class BenchmarkSuite:
         classifier.get_stats() returns a dictionary of statistics to be displayed (e.g. the number of nodes in the tree)
         classifier.is_applicable(dataset) returns whether the classifier can be applied to the dataset
         classifier.save(file) saves the classifier to a file (for debugging purposes only)
-        classifier.export_dot(file) saves a dot-representation of the classifier to a file
-        classifier.export_c(file) saves a C-representation of the classifier to a file
+        classifier.print_dot(file) saves a dot-representation of the classifier to a file
+        classifier.print_c(file) saves a C-representation of the classifier to a file
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', save_folder=None,
@@ -145,13 +145,13 @@ class BenchmarkSuite:
                 stats = classifier.get_stats()
                 cell = {'stats': stats, 'time': format_seconds(run_time)}
                 dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
-                classifier.export_dot(dot_filename)
+                classifier.print_dot(dot_filename)
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
-                num_outputs = 1 if len(dataset.Y_train.shape) <= 2 else len(dataset.Y_train)
-                classifier.export_c(num_outputs, f'{{{",".join(str(i) + "f" for i in dataset.X_train[0])}}}', c_filename)
+                num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
+                classifier.print_c(num_outputs, f'{{{",".join(str(i) + "f" for i in dataset.x[0])}}}', c_filename)
                 if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
                     vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                    classifier.export_vhdl(len(dataset.X_metadata["variables"]), vhdl_filename)
+                    classifier.print_vhdl(len(dataset.x_metadata["variables"]), vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
@@ -175,8 +175,8 @@ class BenchmarkSuite:
         if dataset.name not in self.results:
             self.results[dataset.name] = {'classifiers': {},
                                           'metadata': {
-                                              'X_metadata': dataset.X_metadata,
-                                              'Y_metadata': dataset.Y_metadata
+                                              'X_metadata': dataset.x_metadata,
+                                              'Y_metadata': dataset.y_metadata
                                           }
                                           }
         self.results[dataset.name]['classifiers'][classifier_name] = result

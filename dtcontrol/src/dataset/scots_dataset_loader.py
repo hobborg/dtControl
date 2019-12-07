@@ -88,19 +88,19 @@ class ScotsDatasetLoader(DatasetLoader):
             # Controller starts now
             controller_start = 32 + 3 * (state_dim + input_dim)
 
-            x_NN = [1]
+            x_nn = [1]
             for i in range(1, state_dim):
-                x_NN.append(x_NN[i - 1] * n_state_grid[i - 1])
+                x_nn.append(x_nn[i - 1] * n_state_grid[i - 1])
 
-            u_NN = [1]
+            u_nn = [1]
             for i in range(1, input_dim):
-                u_NN.append(u_NN[i - 1] * n_input_grid[i - 1])
+                u_nn.append(u_nn[i - 1] * n_input_grid[i - 1])
 
             # Get the number of lines describing the controller
             controller_lines = sum(1 for line in f) - 1
 
-            x_train = np.empty((controller_lines, state_dim), dtype=np.float32)
-            y_train = np.full((input_dim, controller_lines, max_non_det), -1, dtype=np.int32)
+            x = np.empty((controller_lines, state_dim), dtype=np.float32)
+            y = np.full((input_dim, controller_lines, max_non_det), -1, dtype=np.int32)
 
             f.seek(0)
 
@@ -117,16 +117,16 @@ class ScotsDatasetLoader(DatasetLoader):
                 idx = idxu[0]
 
                 k = state_dim - 1
-                x = np.zeros(state_dim)
+                x2 = np.zeros(state_dim)
                 while k > 0:
-                    num = int(idx / x_NN[k])  # j
-                    idx = idx % x_NN[k]  # i
-                    x[k] = state_lb[k] + num * state_eta[k]
+                    num = int(idx / x_nn[k])  # j
+                    idx = idx % x_nn[k]  # i
+                    x2[k] = state_lb[k] + num * state_eta[k]
                     k = k - 1
                 num = idx
-                x[0] = state_lb[0] + num * state_eta[0]
+                x2[0] = state_lb[0] + num * state_eta[0]
 
-                x_train[i] = x
+                x[i] = x2
 
                 # creating input variables
                 u_idx = np.empty(input_dim, dtype=np.int16)
@@ -135,27 +135,27 @@ class ScotsDatasetLoader(DatasetLoader):
                     kk = input_dim - 1
                     u = np.empty(input_dim, dtype=np.float32)
                     while kk > 0:
-                        u_idx[kk] = int(idu / u_NN[kk])
-                        idu = idu % u_NN[kk]
+                        u_idx[kk] = int(idu / u_nn[kk])
+                        idu = idu % u_nn[kk]
                         u[kk] = input_lb[kk] + u_idx[kk] * input_eta[kk]
                         if u[kk] not in float_to_unique_label.keys():
                             float_to_unique_label[u[kk]] = len(float_to_unique_label) + 1
-                        y_train[kk][i][j - 1] = float_to_unique_label[u[kk]]
+                        y[kk][i][j - 1] = float_to_unique_label[u[kk]]
                         kk = kk - 1
                     u_idx[0] = idu
                     u[0] = input_lb[0] + u_idx[0] * input_eta[0]
                     if u[0] not in float_to_unique_label.keys():
                         float_to_unique_label[u[0]] = len(float_to_unique_label) + 1
-                    y_train[0][i][j - 1] = float_to_unique_label[u[0]]
+                    y[0][i][j - 1] = float_to_unique_label[u[0]]
 
             # inverse map
             unique_label_to_float = {y: x for (x, y) in float_to_unique_label.items()}
 
             # if only single control input, do not wrap it in another array
-            if y_train.shape[0] == 1:
-                y_train = y_train[0]
+            if y.shape[0] == 1:
+                y = y[0]
 
-            print("Constructed training set with %s datapoints" % x_train.shape[0])
+            print("Constructed training set with %s datapoints" % x.shape[0])
 
             # construct metadata
             x_metadata = dict()
@@ -170,4 +170,4 @@ class ScotsDatasetLoader(DatasetLoader):
             y_metadata["max"] = input_ub
             y_metadata["step_size"] = input_eta
 
-            return (x_train, x_metadata, y_train, y_metadata, unique_label_to_float)
+            return (x, x_metadata, y, y_metadata, unique_label_to_float)

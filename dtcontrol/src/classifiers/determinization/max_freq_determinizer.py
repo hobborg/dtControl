@@ -10,7 +10,7 @@ class MaxFreqDeterminizer(Determinizer):
 
     def determinize(self, dataset):
         if isinstance(dataset, SingleOutputDataset):
-            return self.get_max_freq_labels(dataset.Y_train)
+            return self.get_max_freq_labels(dataset.y)
         else:
             return self.get_max_freq_labels(dataset.get_tuple_ids())
 

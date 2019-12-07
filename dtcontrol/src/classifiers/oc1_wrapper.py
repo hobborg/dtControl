@@ -7,7 +7,6 @@ from shutil import copyfile
 import numpy as np
 
 import dtcontrol
-from src.classifiers.cart_custom_dt import CartNode
 from src.classifiers.decision_tree import DecisionTree
 from src.classifiers.oc1_node import OC1Node
 from src.classifiers.oc1_parser import OC1Parser
@@ -32,7 +31,7 @@ class OC1Wrapper(DecisionTree):
         self.num_nodes = None
         self.num_oblique = None
         self.current_dataset = None
-        self.root: OC1Node = None
+        self.root = None
         self.oc1_parser = OC1Parser()
         self.oc1_reported_acc = None  # The accuracy reported by OC1. Used for debugging.
         self.num_extended_nodes = 0  # The amount of nodes added after OC1 to ensure full overfitting.
@@ -62,7 +61,7 @@ class OC1Wrapper(DecisionTree):
     def is_applicable(self, dataset):
         return True
 
-    def get_stats(self) -> dict:
+    def get_stats(self):
         return {
             'nodes': self.num_nodes,
             'oblique': self.num_oblique,
@@ -72,7 +71,7 @@ class OC1Wrapper(DecisionTree):
 
     def get_fit_command(self, dataset):
         self.current_dataset = dataset
-        self.save_data_to_file(np.c_[dataset.X_train, dataset.get_unique_labels()])
+        self.save_data_to_file(np.c_[dataset.x, dataset.get_unique_labels()])
         command = '{} -t {} -D {} -p0 -i{} -j{} -l {}' \
             .format(self.oc1_path, self.data_file, self.dt_file, self.num_restarts, self.num_jumps, self.log_file)
         return command
@@ -89,8 +88,8 @@ class OC1Wrapper(DecisionTree):
         node_to_data = defaultdict(list)
         node_to_labels = defaultdict(list)
         nodes_to_extend = []
-        for i in range(len(self.current_dataset.X_train)):
-            row = self.current_dataset.X_train[i]
+        for i in range(len(self.current_dataset.x)):
+            row = self.current_dataset.x[i]
             label = self.current_dataset.get_unique_labels()[i]
             parent = None
             node = self.root
@@ -103,7 +102,8 @@ class OC1Wrapper(DecisionTree):
                 nodes_to_extend.append((node, parent))
 
         for node, parent in nodes_to_extend:
-            cart_node = CartNode(node.depth)
+            # cart_node = CartNode(node.depth)
+            cart_node = None  # TODO
             if parent.left == node:
                 parent.left = cart_node
             else:
@@ -141,5 +141,5 @@ class OC1Wrapper(DecisionTree):
     def save(self, filename):
         copyfile(self.dt_file, filename)
 
-    def export_vhdl(self, num_inputs, file=None):
+    def print_vhdl(self, num_inputs, file=None):
         pass

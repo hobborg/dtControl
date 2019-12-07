@@ -39,12 +39,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from src.benchmark_suite import BenchmarkSuite
-from src.classifiers.cart_custom_dt import CartDT
-from src.classifiers.linear_classifier_dt import LinearClassifierDT
-from src.classifiers.max_freq_dt import MaxFreqDT
-from src.classifiers.max_freq_linear_classifier_dt import MaxFreqLinearClassifierDT
-from src.classifiers.norm_dt import NormDT
-from src.classifiers.norm_linear_classifier_dt import NormLinearClassifierDT
 from src.classifiers.oc1_wrapper import OC1Wrapper
 
 def main():

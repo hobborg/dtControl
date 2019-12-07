@@ -35,30 +35,30 @@ class CSVDatasetLoader(DatasetLoader):
                 aggregate[state_dim + i] = aggregate[state_dim + i].apply(
                     lambda ls: ls + [-1 for i in range(max_non_det - len(ls))])
 
-            X_train = np.array(aggregate[[i for i in range(state_dim)]])
+            x = np.array(aggregate[[i for i in range(state_dim)]])
 
             if input_dim > 1:
-                Y_train = np.ndarray((input_dim, X_train.shape[0], max_non_det), dtype=np.int16)
+                y = np.ndarray((input_dim, x.shape[0], max_non_det), dtype=np.int16)
                 for i in range(input_dim):
-                    Y_train[i] = np.array(aggregate[state_dim + i].tolist())
+                    y[i] = np.array(aggregate[state_dim + i].tolist())
             else:  # input_dim = 1
-                Y_train = np.array(aggregate[state_dim].tolist())
+                y = np.array(aggregate[state_dim].tolist())
 
             # construct metadata
             # assumption is that UPPAAL only works with integers
-            X_metadata = dict()
-            X_metadata["variables"] = [f"x_{i}" for i in range(state_dim)]
-            X_metadata["min"] = [int(i) for i in np.amin(X_train, axis=0)]
-            X_metadata["max"] = [int(i) for i in np.amax(X_train, axis=0)]
-            X_metadata["step_size"] = None  # todo
+            x_metadata = dict()
+            x_metadata["variables"] = [f"x_{i}" for i in range(state_dim)]
+            x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
+            x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
+            x_metadata["step_size"] = None  # todo
 
-            Y_metadata = dict()
-            Y_metadata["variables"] = [f"u_{i}" for i in range(input_dim)]
-            Y_metadata["min"] = [min(index_to_value.values())]
-            Y_metadata["max"] = [max(index_to_value.values())]
-            Y_metadata["step_size"] = None  # todo
+            y_metadata = dict()
+            y_metadata["variables"] = [f"u_{i}" for i in range(input_dim)]
+            y_metadata["min"] = [min(index_to_value.values())]
+            y_metadata["max"] = [max(index_to_value.values())]
+            y_metadata["step_size"] = None  # todo
 
-            logging.debug(X_metadata)
-            logging.debug(Y_metadata)
+            logging.debug(x_metadata)
+            logging.debug(y_metadata)
 
-            return (X_train, X_metadata, Y_train, Y_metadata, index_to_value)
+            return (x, x_metadata, y, y_metadata, index_to_value)

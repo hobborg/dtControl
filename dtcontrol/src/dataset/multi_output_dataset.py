@@ -27,67 +27,65 @@ class MultiOutputDataset(Dataset):
                 num_correct += 1
         return num_correct / len(y_pred)
 
-    """
-        [[[ 0, -1, -1],
-          [ 0, -1, -1],
-          [ 0, -1, -1],
-          [ 1,  2,  0]],
-    
-         [[ 0, -1, -1],
-          [ 0, -1, -1],
-          [ 0, -1, -1],
-          [ 0,  0,  0]]]
+    def get_tuples(self):
+        """
+            [[[ 0, -1, -1],
+              [ 0, -1, -1],
+              [ 0, -1, -1],
+              [ 1,  2,  0]],
 
-        gets mapped to
-        
+             [[ 0, -1, -1],
+              [ 0, -1, -1],
+              [ 0, -1, -1],
+              [ 0,  0,  0]]]
+
+            gets mapped to
+
+            [[[ 0  0]
+              [-1 -1]
+              [-1 -1]]
+
+             [[ 0  0]
+              [-1 -1]
+              [-1 -1]]
+
+             [[ 0  0]
+              [-1 -1]
+              [-1 -1]]
+
+             [[ 1  0]
+              [ 2  0]
+              [ 0  0]]]
+        """
+        if self.tuples is None:
+            self.tuples = np.stack(self.y, axis=2)
+        return self.tuples
+
+    def get_tuple_ids(self):
+        """
         [[[ 0  0]
           [-1 -1]
           [-1 -1]]
-        
+
          [[ 0  0]
           [-1 -1]
           [-1 -1]]
-        
+
          [[ 0  0]
           [-1 -1]
           [-1 -1]]
-        
+
          [[ 1  0]
           [ 2  0]
           [ 0  0]]]
-    """
 
-    def get_tuples(self):
-        if self.tuples is None:
-            self.tuples = np.stack(self.Y_train, axis=2)
-        return self.tuples
+         gets mapped to
 
-    """
-    [[[ 0  0]
-      [-1 -1]
-      [-1 -1]]
-        
-     [[ 0  0]
-      [-1 -1]
-      [-1 -1]]
-        
-     [[ 0  0]
-      [-1 -1]
-      [-1 -1]]
-        
-     [[ 1  0]
-      [ 2  0]
-      [ 0  0]]]
-    
-     gets mapped to
-        
-     [[2 -1 -1]
-      [2 -1 -1]
-      [2 -1 -1]
-      [3  4  2]]
-    """
-
-    def get_tuple_ids(self):
+         [[2 -1 -1]
+          [2 -1 -1]
+          [2 -1 -1]
+          [3  4  2]]
+        """
         if self.tuple_ids is not None:
             return self.tuple_ids
 
@@ -137,11 +135,11 @@ class MultiOutputDataset(Dataset):
     def from_mask(self, mask):
         subset = MultiOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
-        subset.X_train = self.X_train[mask]
-        if len(subset.Y_train.shape) == 3:
-            subset.Y_train = self.Y_train[:, mask, :]
+        subset.x = self.x[mask]
+        if len(subset.y.shape) == 3:
+            subset.y = self.y[:, mask, :]
         else:  # if we only determinize once before tree construction
-            subset.Y_train = self.Y_train[mask]
+            subset.y = self.y[mask]
         if self.tuple_ids is not None:
             subset.tuple_ids = self.tuple_ids[mask]
             subset.tuple_id_to_tuple = self.tuple_id_to_tuple

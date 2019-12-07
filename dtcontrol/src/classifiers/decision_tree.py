@@ -15,46 +15,46 @@ single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
 
 class DecisionTree(BaseEstimator):
-    def __init__(self, det_strategy, split_strategies, impurity_measure, name):
+    def __init__(self, determinizer, split_strategies, impurity_measure, name):
         self.root = None
         self.name = name
-        self.det_strategy = det_strategy
+        self.determinizer = determinizer
         self.split_strategies = split_strategies
         self.impurity_measure = impurity_measure
 
     def is_applicable(self, dataset):
-        return not (self.det_strategy.is_only_multioutput() and isinstance(dataset, SingleOutputDataset))
+        return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset))
 
     def fit(self, dataset):
-        self.det_strategy.set_dataset(dataset)
-        self.root = Node(self.det_strategy, self.split_strategies, self.impurity_measure)
-        prev_y = dataset.Y_train
-        if self.det_strategy.determinize_once_before_construction():
-            y = self.det_strategy.determinize(dataset)
-            dataset.Y_train = y
+        self.determinizer.set_dataset(dataset)
+        self.root = Node(self.determinizer, self.split_strategies, self.impurity_measure)
+        prev_y = dataset.y
+        if self.determinizer.determinize_once_before_construction():
+            y = self.determinizer.determinize(dataset)
+            dataset.y = y
         self.root.fit(dataset)
-        dataset.Y_train = prev_y
+        dataset.y = prev_y
 
     def predict(self, dataset, actual_values=True):
-        return self.root.predict(dataset.X_train, actual_values)
+        return self.root.predict(dataset.x, actual_values)
 
-    def get_stats(self):  # TODO: add entry for every splitting strategy if # > 2
+    def get_stats(self):
         return {
             'nodes': self.root.num_nodes,
             'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
         }
 
-    def export_dot(self, file=None):
-        dot = self.root.export_dot()
+    def print_dot(self, file=None):
+        dot = self.root.print_dot()
         if file:
             with open(file, 'w+') as outfile:
                 outfile.write(dot)
         else:
             return dot
 
-    def export_c(self, num_outputs, example, file=None):
+    def print_c(self, num_outputs, example, file=None):
         template = multi_output_c_template if num_outputs > 1 else single_output_c_template
-        code = self.root.export_c()
+        code = self.root.print_c()
         result = template.render(example=example, num_outputs=num_outputs, code=code)
         if file:
             with open(file, 'w+') as outfile:
@@ -64,7 +64,7 @@ class DecisionTree(BaseEstimator):
 
     # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in
     # the "entity" block
-    def export_vhdl(self, num_inputs, file=None):  # TODO: multi-output; probably just give dataset to this method...
+    def print_vhdl(self, num_inputs, file=None):  # TODO: multi-output; probably just give dataset to this method...
         entity_str = "entity controller is\n\tport (\n"
         all_inputs = ""
         for i in range(0, num_inputs):
@@ -72,7 +72,7 @@ class DecisionTree(BaseEstimator):
             all_inputs += "x" + str(i) + ","
         entity_str += "\t\ty: out <type>\n\t);\nend entity;\n\n"  # no semicolon after last declaration
         architecture = "architecture v1 of controller is\nbegin\n\tprocess(" + all_inputs[:-1] + ")\n\t \
-                        begin\n" + self.root.export_vhdl() + "\n\tend process;\nend architecture;"
+                        begin\n" + self.root.print_vhdl() + "\n\tend process;\nend architecture;"
         if file:
             with open(file, 'w+') as outfile:
                 outfile.write(entity_str + architecture)
@@ -87,8 +87,8 @@ class DecisionTree(BaseEstimator):
         return self.name
 
 class Node:
-    def __init__(self, det_strategy, split_strategies, impurity_measure, depth=0):
-        self.det_strategy = det_strategy
+    def __init__(self, determinizer, split_strategies, impurity_measure, depth=0):
+        self.determinizer = determinizer
         self.split_strategies = split_strategies
         self.impurity_measure = impurity_measure
         self.split = None
@@ -101,9 +101,9 @@ class Node:
         self.index_label = None  # the label with int indices
         self.actual_label = None  # the actual float label
 
-    def predict(self, X, actual_values=True):
+    def predict(self, x, actual_values=True):
         pred = []
-        for row in np.array(X):
+        for row in np.array(x):
             pred.append(self.predict_one(row.reshape(1, -1), actual_values))
         return pred
 
@@ -117,34 +117,34 @@ class Node:
         return self.split.predict(x)
 
     def fit(self, dataset):
-        y = self.det_strategy.determinize(dataset) if not self.det_strategy.determinize_once_before_construction() \
-            else dataset.Y_train
-        if self.check_done(dataset.X_train, y):
+        y = self.determinizer.determinize(dataset) if not self.determinizer.determinize_once_before_construction() \
+            else dataset.y
+        if self.check_done(dataset.x, y):
             return
-        splits = [strategy.find_split(dataset.X_train, y, self.impurity_measure) for strategy in self.split_strategies]
+        splits = [strategy.find_split(dataset.x, y, self.impurity_measure) for strategy in self.split_strategies]
         mask, self.split = \
             min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(y, mask_split[0]))
 
         left_data, right_data = dataset.split(mask)
-        self.left = Node(self.det_strategy, self.split_strategies, self.impurity_measure, self.depth + 1)
-        self.right = Node(self.det_strategy, self.split_strategies, self.impurity_measure, self.depth + 1)
+        self.left = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
+        self.right = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
         self.left.fit(left_data)
         self.right.fit(right_data)
         self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
 
-    def check_done(self, X, y):
+    def check_done(self, x, y):
         if self.depth >= 500:
             print("Aborting: depth >= 500.")
             return True
 
         unique_labels = np.unique(y)
         num_unique_labels = len(unique_labels)
-        unique_data = np.unique(X, axis=0)
+        unique_data = np.unique(x, axis=0)
         num_unique_data = len(unique_data)
         if num_unique_labels <= 1 or num_unique_data <= 1:
             if len(unique_labels) > 0:
-                self.index_label = self.det_strategy.get_index_label(y[0])
-                self.actual_label = self.det_strategy.get_actual_label(y[0])
+                self.index_label = self.determinizer.get_index_label(y[0])
+                self.actual_label = self.determinizer.get_actual_label(y[0])
             else:
                 self.index_label = self.actual_label = None
             self.num_nodes = 1
@@ -154,11 +154,11 @@ class Node:
     def is_leaf(self):
         return not self.left and not self.right
 
-    def export_dot(self):
-        text = 'digraph {{\n{}\n}}'.format(self._export_dot(0)[1])
+    def print_dot(self):
+        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0)[1])
         return text
 
-    def _export_dot(self, starting_number):
+    def _print_dot(self, starting_number):
         if self.is_leaf():
             return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label())
 
@@ -169,7 +169,7 @@ class Node:
         last_number = starting_number
 
         if self.left:
-            last_left_number, left_text = self.left._export_dot(starting_number + 1)
+            last_left_number, left_text = self.left._print_dot(starting_number + 1)
             text += left_text
             label = 'True' if starting_number == 0 else ''
             text += '{} -> {} [label="{}"];\n'.format(starting_number, starting_number + 1, label)
@@ -177,7 +177,7 @@ class Node:
             last_number = last_left_number
 
         if self.right:
-            last_right_number, right_text = self.right._export_dot(number_for_right)
+            last_right_number, right_text = self.right._print_dot(number_for_right)
             text += right_text
             label = 'False' if starting_number == 0 else ''
             text += '{} -> {} [style="dashed", label="{}"];\n'.format(starting_number, number_for_right, label)
@@ -185,13 +185,13 @@ class Node:
 
         return last_number, text
 
-    def export_c(self):
-        return self.export_if_then_else(0, 'c')
+    def print_c(self):
+        return self.print_if_then_else(0, 'c')
 
-    def export_vhdl(self):
-        return self.export_if_then_else(2, 'vhdl')
+    def print_vhdl(self):
+        return self.print_if_then_else(2, 'vhdl')
 
-    def export_if_then_else(self, indentation_level, type):
+    def print_if_then_else(self, indentation_level, type):
         if type not in ['c', 'vhdl']:
             raise ValueError('Only c and vhdl printing is currently supported.')
 
@@ -202,7 +202,7 @@ class Node:
             f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
 
         if self.left:
-            text += f"{self.left.export_if_then_else(indentation_level + 1, type)}\n"
+            text += f"{self.left.print_if_then_else(indentation_level + 1, type)}\n"
         else:
             text += "\t" * (indentation_level + 1) + ";\n"
         if type == 'c':
@@ -210,7 +210,7 @@ class Node:
 
         if self.right:
             text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
-            text += f"{self.right.export_if_then_else(indentation_level + 1, type)}\n"
+            text += f"{self.right.print_if_then_else(indentation_level + 1, type)}\n"
             text += "\t" * indentation_level + ("}" if type == 'c' else "end if;")
 
         return text

@@ -5,14 +5,13 @@ import numpy as np
 from src.dataset.csv_dataset_loader import CSVDatasetLoader
 from src.dataset.scots_dataset_loader import ScotsDatasetLoader
 from src.dataset.uppaal_dataset_loader import UppaalDatasetLoader
-from src.dataset.vector_dataset_loader import VectorDatasetLoader
 from src.util import get_filename_and_ext
 
 class Dataset(ABC):
     """
     Attributes:
-        X_train: the training data of shape (num_states, num_state_dims)
-        Y_train:
+        x: the training data of shape (num_states, num_state_dims)
+        y:
             Multi-output: the training labels of shape (num_input_dims, num_states, max_non_determinism)
                 For example:  [ [[1  2 -1]  [[4  5 -1]
                                 [2  3 -1]   [4  6 -1]
@@ -55,47 +54,46 @@ class Dataset(ABC):
         self.filename = filename
         self.name, self.extension = get_filename_and_ext(filename)
         self.extension_to_loader = {
-            '.vector': VectorDatasetLoader(),
             '.scs': ScotsDatasetLoader(),
             '.dump': UppaalDatasetLoader(),
             '.csv': CSVDatasetLoader(),
         }
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
-        self.X_train = None
-        self.X_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
-        self.Y_train = None
-        self.Y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None,
+        self.x = None
+        self.x_metadata = {"variables": None, "min": None, "max": None, "step_size": None}
+        self.y = None
+        self.y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None,
                            'num_flattened': None}
         self.index_to_value = {}  # mapping from arbitrary integer indices to the actual float labels
         self.is_deterministic = None
 
     def copy_from_other_dataset(self, ds):
-        self.X_train = ds.X_train
-        self.X_metadata = ds.X_metadata
-        self.Y_train = ds.Y_train
-        self.Y_metadata = ds.Y_metadata
+        self.x = ds.x
+        self.x_metadata = ds.x_metadata
+        self.y = ds.y
+        self.y_metadata = ds.y_metadata
         self.index_to_value = ds.index_to_value
         self.is_deterministic = ds.is_deterministic
 
     def load_if_necessary(self):
-        if self.X_train is None:
-            self.X_train, self.X_metadata, self.Y_train, self.Y_metadata, self.index_to_value = \
+        if self.x is None:
+            self.x, self.x_metadata, self.y, self.y_metadata, self.index_to_value = \
                 self.extension_to_loader[self.extension].load_dataset(self.filename)
-            self.Y_metadata['num_rows'] = len(self.X_train)
-            self.Y_metadata['num_flattened'] = sum(1 for row in self.Y_train for y in row)
+            self.y_metadata['num_rows'] = len(self.x)
+            self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
 
     def load_metadata_from_json(self, json_object):
         metadata = json_object['metadata']
-        self.X_metadata = metadata['X_metadata']
-        self.Y_metadata = metadata['Y_metadata']
+        self.x_metadata = metadata['X_metadata']
+        self.y_metadata = metadata['Y_metadata']
 
     def check_loaded(self):
-        if self.X_train is None:
+        if self.x is None:
             raise RuntimeError('Dataset is not loaded.')
 
     @abstractmethod
-    def compute_accuracy(self, Y_pred):
+    def compute_accuracy(self, y_pred):
         pass
 
     @abstractmethod
