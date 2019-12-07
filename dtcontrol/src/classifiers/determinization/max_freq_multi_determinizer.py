@@ -91,6 +91,9 @@ class MaxFreqMultiDeterminizer(Determinizer):
     def get_index_label(self, label):
         return self.dataset.map_tuple_id_back(label)
 
+    def determinize_once_before_construction(self):
+        return False
+
     def is_only_multioutput(self):
         return True
 

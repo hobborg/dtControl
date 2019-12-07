@@ -11,5 +11,8 @@ class NondetDeterminizer(Determinizer):
     def get_index_label(self, label):
         return self.dataset.map_unique_label_back(label)
 
+    def determinize_once_before_construction(self):
+        return True
+
     def is_only_multioutput(self):
         return False

@@ -27,6 +27,9 @@ class NormDeterminizer(Determinizer):
         else:
             return self.dataset.map_tuple_id_back(label)
 
+    def determinize_once_before_construction(self):
+        return True
+
     def is_only_multioutput(self):
         return False
 

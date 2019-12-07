@@ -19,13 +19,9 @@ class DecisionTree(BaseEstimator):
     def __init__(self, det_strategy, split_strategies, impurity_measure):
         self.root = None
         self.name = None
-        self.check_combinable(det_strategy, split_strategies)
         self.det_strategy = det_strategy
         self.split_strategies = split_strategies
         self.impurity_measure = impurity_measure
-
-    def check_combinable(self, det_strategy, split_strategies):
-        pass  # TODO
 
     def is_applicable(self, dataset):
         return isinstance(dataset, MultiOutputDataset) and self.det_strategy.is_only_multioutput() or \
@@ -34,7 +30,12 @@ class DecisionTree(BaseEstimator):
     def fit(self, dataset):
         self.det_strategy.set_dataset(dataset)
         self.root = Node(self.det_strategy, self.split_strategies, self.impurity_measure)
+        prev_y = dataset.Y_train
+        if self.det_strategy.determinize_once_before_construction():
+            y = self.det_strategy.determinize(dataset)
+            dataset.Y_train = y
         self.root.fit(dataset)
+        dataset.Y_train = prev_y
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.X_train, actual_values)
@@ -118,7 +119,8 @@ class Node:
         return self.split.predict(x)
 
     def fit(self, dataset):
-        y = self.det_strategy.determinize(dataset)
+        y = self.det_strategy.determinize(dataset) if not self.det_strategy.determinize_once_before_construction() \
+            else dataset.Y_train
         if self.check_done(dataset.X_train, y):
             return
         splits = [strategy.find_split(dataset.X_train, y, self.impurity_measure) for strategy in self.split_strategies]

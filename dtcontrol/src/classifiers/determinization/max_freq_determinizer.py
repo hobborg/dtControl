@@ -20,6 +20,9 @@ class MaxFreqDeterminizer(Determinizer):
         else:
             return self.dataset.map_tuple_id_back(label)
 
+    def determinize_once_before_construction(self):
+        return False
+
     def is_only_multioutput(self):
         return False
 

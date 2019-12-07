@@ -16,6 +16,14 @@ class Determinizer(ABC):
         pass
 
     @abstractmethod
+    def determinize_once_before_construction(self):
+        """
+        :return: True if the determinization should only be applied once before tree construction, instead of at
+        every node
+        """
+        pass
+
+    @abstractmethod
     def get_index_label(self, label):
         """
         :param label: the determinized label
