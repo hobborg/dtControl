@@ -104,6 +104,10 @@ class Dataset(ABC):
 
     @abstractmethod
     def map_unique_label_back(self, label):
+        """
+        :param label: The unique label
+        :return: The corresponding index (int) label
+        """
         pass
 
     """
@@ -144,18 +148,3 @@ class Dataset(ABC):
             new_label = label_str_to_int[label_str]
             l.append(new_label)
         return np.array(l), int_to_label
-
-    @staticmethod
-    def _get_max_labels(labels):
-        flattened_labels = labels.flatten()
-        # remove -1 as we use it only as a filler
-        flattened_labels = flattened_labels[flattened_labels != -1]
-        label_counts = np.bincount(flattened_labels)
-        new_labels = []
-        for i in range(len(labels)):
-            current = labels[i]
-            current = current[current != -1]
-            max_label = max(list(current), key=lambda l: label_counts[l])
-            assert max_label != -1
-            new_labels.append(max_label)
-        return np.array(new_labels)

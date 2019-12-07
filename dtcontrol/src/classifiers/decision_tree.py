@@ -32,6 +32,7 @@ class DecisionTree(BaseEstimator):
                isinstance(dataset, SingleOutputDataset) and not self.det_strategy.is_only_multioutput()
 
     def fit(self, dataset):
+        self.det_strategy.set_dataset(dataset)
         self.root = Node(self.det_strategy, self.split_strategies, self.impurity_measure)
         self.root.fit(dataset)
 

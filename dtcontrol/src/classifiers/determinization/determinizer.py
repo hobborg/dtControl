@@ -4,8 +4,15 @@ class Determinizer(ABC):
     def __init__(self):
         self.dataset = None
 
+    def set_dataset(self, dataset):
+        self.dataset = dataset
+
     @abstractmethod
     def determinize(self, dataset):
+        """
+        :param dataset: the dataset to be determinized
+        :return: the determinized labels
+        """
         pass
 
     @abstractmethod
