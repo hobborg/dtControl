@@ -1,7 +1,6 @@
 # Custom
 venv
 testenv
-.idea
 dtcontrol/oc1_tmp
 dtcontrol/decision_trees
 dtcontrol/classifiers/OC1_source/*.o
