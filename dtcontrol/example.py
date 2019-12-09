@@ -1,4 +1,5 @@
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
 
 from src.benchmark_suite import BenchmarkSuite
 from src.classifiers.decision_tree import DecisionTree
@@ -31,16 +32,12 @@ suite.add_datasets(['examples'],
 
 cart = CartSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000)
 classifiers = [
     DecisionTree(NondetDeterminizer(), [cart], Entropy(), 'CART'),
     # DecisionTree(NondetDeterminizer(), [cart, logreg], Entropy(), 'logreg'),
     # DecisionTree(MaxFreqDeterminizer(), [cart], Entropy(), 'MaxFreq'),
     # DecisionTree(NormDeterminizer(min), [cart], Entropy(), 'MinNorm'),
     DecisionTree(NormDeterminizer(min), [cart, logreg], Entropy(), 'minnorm-logreg'),
-    # LinearClassifierDecisionTree(LinearSVC, max_iter=5000),
-    # MaxLCDecisionTree(LogisticRegression, solver='lbfgs', penalty='none'),
-    # OC1Wrapper(num_restarts=1, num_jumps=1),
-    # BDD()
-    # MaxEveryNodeMultiDecisionTree()
 ]
 suite.benchmark(classifiers)
