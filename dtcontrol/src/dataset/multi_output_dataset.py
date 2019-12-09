@@ -9,7 +9,7 @@ class MultiOutputDataset(Dataset):
         self.tuple_ids = None
         self.tuple_id_to_tuple = None
         self.tuple_to_tuple_id = None
-        self.unique_labels = None
+        self.unique_labels = None  # ids of lists of tuple ids
         self.list_id_to_list = None  # maps ids of lists of tuple ids to the actual lists of tuple ids
         # the data in a tuple (zipped) format where the outermost dimension becomes the innermost dimension
         # i.e. the new dimensions are: num_examples x num_labels x num_outputs

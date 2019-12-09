@@ -40,14 +40,14 @@ class Determinizer(ABC):
         """
         index_label = self.get_index_label(label)
         if isinstance(index_label, tuple):  # single tuple
-            return tuple([self.dataset.index_to_value[i] for i in index_label if i != -1])
+            return tuple([self.dataset.index_to_actual[i] for i in index_label if i != -1])
         elif isinstance(index_label, list):
             if isinstance(index_label[0], tuple):  # list of tuples
-                return [tuple(map(lambda x: self.dataset.index_to_value[x], tup)) for tup in index_label]
+                return [tuple(map(lambda x: self.dataset.index_to_actual[x], tup)) for tup in index_label]
             else:  # list of labels
-                return [self.dataset.index_to_value[i] for i in index_label if i != -1]
+                return [self.dataset.index_to_actual[i] for i in index_label if i != -1]
         else:  # single label
-            return self.dataset.index_to_value[index_label]
+            return self.dataset.index_to_actual[index_label]
 
     @abstractmethod
     def is_only_multioutput(self):

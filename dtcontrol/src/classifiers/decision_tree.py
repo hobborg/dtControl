@@ -2,26 +2,22 @@ import pickle
 from collections.abc import Iterable
 
 import numpy as np
-from jinja2 import FileSystemLoader, Environment
-from sklearn.base import BaseEstimator
 
-import dtcontrol
 from src import util
+from src.classifiers.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
 from src.dataset.single_output_dataset import SingleOutputDataset
 
-file_loader = FileSystemLoader([path + "/src/c_templates" for path in dtcontrol.__path__])
-env = Environment(loader=file_loader)
-single_output_c_template = env.get_template('single_output.c')
-multi_output_c_template = env.get_template('multi_output.c')
-
-class DecisionTree(BaseEstimator):
+class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):
         self.root = None
         self.name = name
         self.determinizer = determinizer
         self.split_strategies = split_strategies
         self.impurity_measure = impurity_measure
+
+    def get_name(self):
+        return self.name
 
     def is_applicable(self, dataset):
         return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
@@ -46,23 +42,11 @@ class DecisionTree(BaseEstimator):
             'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
         }
 
-    def print_dot(self, file=None):
-        dot = self.root.print_dot()
-        if file:
-            with open(file, 'w+') as outfile:
-                outfile.write(dot)
-        else:
-            return dot
+    def print_dot(self):
+        return self.root.print_dot()
 
-    def print_c(self, num_outputs, example, file=None):
-        template = multi_output_c_template if num_outputs > 1 else single_output_c_template
-        code = self.root.print_c()
-        result = template.render(example=example, num_outputs=num_outputs, code=code)
-        if file:
-            with open(file, 'w+') as outfile:
-                outfile.write(result)
-        else:
-            return result
+    def print_c(self):
+        return self.root.print_c()
 
     # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in
     # the "entity" block

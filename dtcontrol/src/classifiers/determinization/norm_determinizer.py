@@ -34,7 +34,7 @@ class NormDeterminizer(Determinizer):
         return False
 
     def determinize_single_output(self, dataset):
-        return np.apply_along_axis(lambda x: self.comp(x[x != -1], key=lambda i: dataset.index_to_value[i] ** 2),
+        return np.apply_along_axis(lambda x: self.comp(x[x != -1], key=lambda i: dataset.index_to_actual[i] ** 2),
                                    axis=1,
                                    arr=dataset.y)
 
@@ -44,6 +44,6 @@ class NormDeterminizer(Determinizer):
         i = 0
         for arr in zipped:
             result.append(self.comp([t for t in arr if t[0] != -1],
-                                    key=lambda t: sum(dataset.index_to_value[i] ** 2 for i in t)))
+                                    key=lambda t: sum(dataset.index_to_actual[i] ** 2 for i in t)))
             i += 1
         return np.array([dataset.get_tuple_to_tuple_id()[tuple(t)] for t in result])

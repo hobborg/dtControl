@@ -17,8 +17,8 @@ class CSVDatasetLoader(DatasetLoader):
             unique_list = []
             for i in range(state_dim, state_dim + input_dim):
                 unique_list += ds[i].unique().tolist()
-            index_to_value = {x: y for x, y in enumerate(set(unique_list))}
-            value_to_index = {y: x for x, y in index_to_value.items()}
+            index_to_actual = {x: y for x, y in enumerate(set(unique_list))}
+            value_to_index = {y: x for x, y in index_to_actual.items()}
 
             ds[[i for i in range(state_dim, state_dim + input_dim)]] = ds[
                 [i for i in range(state_dim, state_dim + input_dim)]].applymap(lambda x: value_to_index[x])
@@ -54,11 +54,11 @@ class CSVDatasetLoader(DatasetLoader):
 
             y_metadata = dict()
             y_metadata["variables"] = [f"u_{i}" for i in range(input_dim)]
-            y_metadata["min"] = [min(index_to_value.values())]
-            y_metadata["max"] = [max(index_to_value.values())]
+            y_metadata["min"] = [min(index_to_actual.values())]
+            y_metadata["max"] = [max(index_to_actual.values())]
             y_metadata["step_size"] = None  # todo
 
             logging.debug(x_metadata)
             logging.debug(y_metadata)
 
-            return (x, x_metadata, y, y_metadata, index_to_value)
+            return (x, x_metadata, y, y_metadata, index_to_actual)

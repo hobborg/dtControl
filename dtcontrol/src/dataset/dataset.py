@@ -46,7 +46,7 @@ class Dataset(ABC):
                 has the shape (4, 3) as there are 4 states and at most 3 non-deterministic
                 choices for each state.
 
-                Y_train[i] gives the allowed control inputs for the ith state. -1 is a
+                y[i] gives the allowed control inputs for the ith state. -1 is a
                 filler just to make the length of the lists  = max_non_determinism.
     """
 
@@ -65,20 +65,23 @@ class Dataset(ABC):
         self.y = None
         self.y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None,
                            'num_flattened': None}
-        self.index_to_value = {}  # mapping from arbitrary integer indices to the actual float labels
+        self.index_to_actual = {}  # mapping from arbitrary integer indices to the actual float labels
         self.is_deterministic = None
+
+    def get_name(self):
+        return self.name
 
     def copy_from_other_dataset(self, ds):
         self.x = ds.x
         self.x_metadata = ds.x_metadata
         self.y = ds.y
         self.y_metadata = ds.y_metadata
-        self.index_to_value = ds.index_to_value
+        self.index_to_actual = ds.index_to_actual
         self.is_deterministic = ds.is_deterministic
 
     def load_if_necessary(self):
         if self.x is None:
-            self.x, self.x_metadata, self.y, self.y_metadata, self.index_to_value = \
+            self.x, self.x_metadata, self.y, self.y_metadata, self.index_to_actual = \
                 self.extension_to_loader[self.extension].load_dataset(self.filename)
             self.y_metadata['num_rows'] = len(self.x)
             self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
@@ -98,13 +101,17 @@ class Dataset(ABC):
 
     @abstractmethod
     def get_unique_labels(self):
+        """
+        Returns a label representation in which each combination of possible labels occurring in the data is
+        assigned a new unique label.
+        """
         pass
 
     @abstractmethod
     def map_unique_label_back(self, label):
         """
-        :param label: The unique label
-        :return: The corresponding index (int) label
+        :param label: the unique label
+        :return: the corresponding index (int) label
         """
         pass
 

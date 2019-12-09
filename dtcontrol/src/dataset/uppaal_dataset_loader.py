@@ -50,11 +50,11 @@ class UppaalDatasetLoader(DatasetLoader):
             # Figure out the assignments in each action and extract
             # the assigned value. The assigned variable is extracted
             # too, but not used anywhere as of now.
-            index_to_value = dict()
+            index_to_actual = dict()
             action_var = None
             for (action, index) in actions.items():
                 _, action_var, val = re.findall(r"((\w+) := (-?[0-9]+))", action)[0]
-                index_to_value[index] = int(val)
+                index_to_actual[index] = int(val)
 
             row_num_vals = []
             row_actions = []
@@ -143,11 +143,11 @@ class UppaalDatasetLoader(DatasetLoader):
 
             y_metadata = dict()
             y_metadata["variables"] = [action_var]
-            y_metadata["min"] = [min(index_to_value.values())]
-            y_metadata["max"] = [max(index_to_value.values())]
-            y_metadata["step_size"] = [int((y_metadata["max"][0] - y_metadata["min"][0]) / (len(index_to_value) - 1))]
+            y_metadata["min"] = [min(index_to_actual.values())]
+            y_metadata["max"] = [max(index_to_actual.values())]
+            y_metadata["step_size"] = [int((y_metadata["max"][0] - y_metadata["min"][0]) / (len(index_to_actual) - 1))]
 
             logging.debug(x_metadata)
             logging.debug(y_metadata)
 
-            return (x, x_metadata, y, y_metadata, index_to_value)
+            return (x, x_metadata, y, y_metadata, index_to_actual)

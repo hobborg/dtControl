@@ -7,27 +7,23 @@ import webbrowser
 from os import makedirs
 from os.path import join, exists, isfile
 
-from src.classifiers.oc1_wrapper import OC1Wrapper
+from jinja2 import FileSystemLoader, Environment
+
+import dtcontrol
 from src.dataset.multi_output_dataset import MultiOutputDataset
 from src.dataset.single_output_dataset import SingleOutputDataset
 from src.timeout import call_with_timeout
 from src.ui.table_controller import TableController
 from src.util import format_seconds, get_filename_and_ext
 
+file_loader = FileSystemLoader([path + "/src/c_templates" for path in dtcontrol.__path__])
+env = Environment(loader=file_loader)
+single_output_c_template = env.get_template('single_output.c')
+multi_output_c_template = env.get_template('multi_output.c')
+
 class BenchmarkSuite:
     """
-    The benchmark suite runs the given classifiers on all datasets present in the XYdatasets folder and prints the
-    results.
-
-    The classifiers have to satisfy the following interface:
-        classifier.name returns the name to be displayed in the results
-        classifier.fit(dataset) trains the classifier on the given dataset
-        classifier.predict(dataset) returns an array of the classifiers predictions for the dataset
-        classifier.get_stats() returns a dictionary of statistics to be displayed (e.g. the number of nodes in the tree)
-        classifier.is_applicable(dataset) returns whether the classifier can be applied to the dataset
-        classifier.save(file) saves the classifier to a file (for debugging purposes only)
-        classifier.print_dot(file) saves a dot-representation of the classifier to a file
-        classifier.print_c(file) saves a C-representation of the classifier to a file
+    The benchmark suite runs the given classifiers on the given datasets and saves the results.
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', save_folder=None,
@@ -67,7 +63,7 @@ class BenchmarkSuite:
                     # check if dataset is deterministic
                     ds.is_deterministic = self.is_deterministic(file, ext)
                     self.datasets.append(ds)
-        self.datasets.sort(key=lambda ds: ds.name)
+        self.datasets.sort(key=lambda ds: ds.get_name())
 
     def get_files(self, path):
         if isfile(path):
@@ -87,31 +83,32 @@ class BenchmarkSuite:
         for ds in self.datasets:
             for classifier in classifiers:
                 step += 1
-                logging.info(f"{step}/{num_steps}: Evaluating {classifier.name} on {ds.name}... ")
+                logging.info(f"{step}/{num_steps}: Evaluating {classifier.get_name()} on {ds.get_name()}... ")
                 cell, computed = self.compute_cell(ds, classifier)
                 if computed:
-                    self.save_result(classifier.name, ds, cell)
+                    self.save_result(classifier.get_name(), ds, cell)
                     if cell == 'timeout':
-                        msg = f"{step}/{num_steps}: {classifier.name} on {ds.name} timed out after {format_seconds(self.timeout)}"
+                        msg = f"{step}/{num_steps}: {classifier.get_name()} on {ds.get_name()} timed out after {format_seconds(self.timeout)}"
                     else:
-                        msg = f"{step}/{num_steps}: Evaluated {classifier.name} on {ds.name} in {cell['time']}."
+                        msg = f"{step}/{num_steps}: Evaluated {classifier.get_name()} on {ds.get_name()} in {cell['time']}."
                     logging.info(msg)
                 else:
                     if cell == 'not applicable':
-                        self.save_result(classifier.name, ds, cell)
-                        logging.info(f"{step}/{num_steps}: {classifier.name} is not applicable for {ds.name}.")
+                        self.save_result(classifier.get_name(), ds, cell)
+                        logging.info(
+                            f"{step}/{num_steps}: {classifier.get_name()} is not applicable for {ds.get_name()}.")
                     else:
                         logging.info(
-                            f"{step}/{num_steps}: Not running {classifier.name} on {ds.name} as result available in {self.json_file}.")
+                            f"{step}/{num_steps}: Not running {classifier.get_name()} on {ds.get_name()} as result available in {self.json_file}.")
         logging.info('All benchmarks completed. Shutting down dtControl.')
 
-        self.table_controller.update_and_save(self.results, [ds.name for ds in self.datasets],
-                                              [cl.name for cl in classifiers])
+        self.table_controller.update_and_save(self.results, [ds.get_name() for ds in self.datasets],
+                                              [cl.get_name() for cl in classifiers])
 
     def compute_cell(self, dataset, classifier):
         if self.already_computed(dataset, classifier) and not self.rerun:
             computed = False
-            cell = self.results[dataset.name]['classifiers'][classifier.name]
+            cell = self.results[dataset.get_name()]['classifiers'][classifier.get_name()]
         elif not classifier.is_applicable(dataset):
             computed = False
             cell = 'not applicable'
@@ -122,7 +119,8 @@ class BenchmarkSuite:
         return cell, computed
 
     def already_computed(self, dataset, classifier):
-        return dataset.name in self.results and classifier.name in self.results[dataset.name]['classifiers']
+        return dataset.get_name() in self.results and classifier.get_name() in self.results[dataset.get_name()][
+            'classifiers']
 
     def train_and_get_cell(self, dataset, classifier):
         if self.timeout is not None:
@@ -144,14 +142,10 @@ class BenchmarkSuite:
             else:
                 stats = classifier.get_stats()
                 cell = {'stats': stats, 'time': format_seconds(run_time)}
-                dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
-                classifier.print_dot(dot_filename)
-                c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
-                num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
-                classifier.print_c(num_outputs, f'{{{",".join(str(i) + "f" for i in dataset.x[0])}}}', c_filename)
-                if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
-                    vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                    classifier.print_vhdl(len(dataset.x_metadata["variables"]), vhdl_filename)
+                self.save_dot_and_c(classifier, dataset)
+                # if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
+                #     vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
+                #     classifier.print_vhdl(len(dataset.x_metadata["variables"]), vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
@@ -160,26 +154,38 @@ class BenchmarkSuite:
             cell = 'timeout'
         return cell
 
+    def save_dot_and_c(self, classifier, dataset):
+        dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
+        with open(dot_filename, 'w+') as outfile:
+            outfile.write(classifier.print_dot())
+
+        num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
+        template = multi_output_c_template if num_outputs > 1 else single_output_c_template
+        example = f'{{{",".join(str(i) + "f" for i in dataset.x[0])}}}'
+        c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
+        with open(c_filename, 'w+') as outfile:
+            outfile.write(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
+
     @staticmethod
     def get_filename(folder, dataset, classifier, extension, unique=False):
-        dir = join(folder, classifier.name, dataset.name)
+        dir = join(folder, classifier.get_name(), dataset.get_name())
         if not exists(dir):
             makedirs(dir)
-        name = classifier.name
+        name = classifier.get_name()
         if unique:
             name += f'--{time.strftime("%Y%m%d-%H%M%S")}'
         name += extension
         return join(dir, name)
 
     def save_result(self, classifier_name, dataset, result):
-        if dataset.name not in self.results:
-            self.results[dataset.name] = {'classifiers': {},
-                                          'metadata': {
-                                              'X_metadata': dataset.x_metadata,
-                                              'Y_metadata': dataset.y_metadata
-                                          }
-                                          }
-        self.results[dataset.name]['classifiers'][classifier_name] = result
+        if dataset.get_name() not in self.results:
+            self.results[dataset.get_name()] = {'classifiers': {},
+                                                'metadata': {
+                                                    'X_metadata': dataset.x_metadata,
+                                                    'Y_metadata': dataset.y_metadata
+                                                }
+                                                }
+        self.results[dataset.get_name()]['classifiers'][classifier_name] = result
         self.save_to_disk()
 
     def load_results(self):
@@ -188,8 +194,8 @@ class BenchmarkSuite:
         with open(self.json_file, 'r') as infile:
             self.results = json.load(infile)
         for ds in self.datasets:
-            if ds.name in self.results:
-                ds.load_metadata_from_json(self.results[ds.name])
+            if ds.get_name() in self.results:
+                ds.load_metadata_from_json(self.results[ds.get_name()])
 
     def delete_dataset_results(self, dataset_name):
         self.load_results()

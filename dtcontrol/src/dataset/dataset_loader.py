@@ -31,21 +31,21 @@ class DatasetLoader(ABC):
         y = np.load(join(folder, 'Y_train.npy'))
         with open(join(folder, 'extra_data.pickle'), 'rb') as infile:
             extra_data = pickle.load(infile)
-            index_to_value = extra_data["index_to_value"]
+            index_to_actual = extra_data["index_to_value"]
             x_metadata = extra_data["X_metadata"]
             y_metadata = extra_data["Y_metadata"]
         print("done loading.")
-        return x, x_metadata, y, y_metadata, index_to_value
+        return x, x_metadata, y, y_metadata, index_to_actual
 
     def save_converted_dataset(self, filename):
         folder = self.get_converted_folder(filename)
         if not exists(folder):
             makedirs(folder)
-        x, x_metadata, y, y_metadata, index_to_value = self.loaded_datasets[filename]
+        x, x_metadata, y, y_metadata, index_to_actual = self.loaded_datasets[filename]
         np.save(join(folder, 'X_train.npy'), x)
         np.save(join(folder, 'Y_train.npy'), y)
         with open(join(folder, 'extra_data.pickle'), 'wb+') as outfile:
-            pickle.dump({"index_to_value": index_to_value,
+            pickle.dump({"index_to_value": index_to_actual,
                          "X_metadata": x_metadata,
                          "Y_metadata": y_metadata},
                         outfile)
@@ -57,6 +57,6 @@ class DatasetLoader(ABC):
     @abstractmethod
     def _load_dataset(self, filename):
         """
-        Loads a dataset and returns x, x_metadata, y, y_metadata, index_to_value
+        Loads a dataset and returns x, x_metadata, y, y_metadata, index_to_actual
         """
         pass
