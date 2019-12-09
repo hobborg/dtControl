@@ -1,5 +1,5 @@
 table {
-  font-size: smaller;
+  /* font-size: smaller; */
 }
 
 thead > tr > th {
@@ -14,4 +14,18 @@ tbody > tr > th {
 
 .time {
   color: #ecc30b;
+}
+
+.code {
+  font-family: monospace;
+}
+
+#spinner {
+    display: none;
+    position: fixed;
+    z-index: 1031;
+    top: 50%;
+    right: 50%; /* or: left: 50%; */
+    margin-top: -1.5rem; /* have of the elements height */
+    margin-right: -1.5rem; /* have of the elements widht */
 }
