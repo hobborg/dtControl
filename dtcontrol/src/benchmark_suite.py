@@ -42,7 +42,7 @@ class BenchmarkSuite:
         self.table_controller = TableController(self.html_file, self.output_folder, self.is_artifact)
 
         logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
-        logging.info(f"Constructed trees will be written to {self.output_folder}.")
+        logging.info(f"Constructed trees will be written to {self.output_folder}.\n")
 
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
@@ -87,18 +87,18 @@ class BenchmarkSuite:
                 if computed:
                     self.save_result(classifier.get_name(), ds, cell)
                     if cell == 'timeout':
-                        msg = f"{step}/{num_steps}: {classifier.get_name()} on {ds.get_name()} timed out after {format_seconds(self.timeout)}"
+                        msg = f"{step}/{num_steps}: Timed out after {format_seconds(self.timeout)}"
                     else:
-                        msg = f"{step}/{num_steps}: Evaluated {classifier.get_name()} on {ds.get_name()} in {cell['time']}."
+                        msg = f"{step}/{num_steps}: Finished in {cell['time']}."
                     logging.info(msg)
                 else:
                     if cell == 'not applicable':
                         self.save_result(classifier.get_name(), ds, cell)
                         logging.info(
-                            f"{step}/{num_steps}: {classifier.get_name()} is not applicable for {ds.get_name()}.")
+                            f"{step}/{num_steps}: Not applicable.")
                     else:
                         logging.info(
-                            f"{step}/{num_steps}: Not running {classifier.get_name()} on {ds.get_name()} as result available in {self.json_file}.")
+                            f"{step}/{num_steps}: Not running, since the result is already available.")
         logging.info('All benchmarks completed. Shutting down dtControl.')
 
         self.table_controller.update_and_save(self.results, [ds.get_name() for ds in self.datasets],

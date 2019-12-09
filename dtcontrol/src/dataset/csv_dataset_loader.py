@@ -8,7 +8,7 @@ from src.dataset.dataset_loader import DatasetLoader
 class CSVDatasetLoader(DatasetLoader):
     def _load_dataset(self, filename):
         with open(filename, 'r') as f:
-            print(f"Reading from {filename}")
+            logging.info(f"Reading from {filename}")
             f.readline()  # whether permissive
             state_dim, input_dim = map(int, f.readline().split("BEGIN")[1].split())
 

@@ -1,3 +1,4 @@
+import logging
 import pickle
 from collections.abc import Iterable
 
@@ -120,7 +121,7 @@ class Node:
 
     def check_done(self, x, y):
         if self.depth >= 500:
-            print("Aborting: depth >= 500.")
+            logging.info("Aborting: depth >= 500.")
             return True
 
         unique_labels = np.unique(y)

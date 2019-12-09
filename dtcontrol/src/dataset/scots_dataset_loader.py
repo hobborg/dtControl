@@ -10,7 +10,7 @@ class ScotsDatasetLoader(DatasetLoader):
         precision = 10
 
         with open(filename) as f:
-            print(f"Reading from {filename}")
+            logging.info(f"Reading from {filename}")
 
             for i in range(5):
                 f.readline()
@@ -155,7 +155,7 @@ class ScotsDatasetLoader(DatasetLoader):
             if y.shape[0] == 1:
                 y = y[0]
 
-            print("Constructed training set with %s datapoints" % x.shape[0])
+            logging.info("Constructed training set with %s datapoints" % x.shape[0])
 
             # construct metadata
             x_metadata = dict()

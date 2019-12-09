@@ -1,3 +1,4 @@
+import logging
 from os.path import basename, splitext
 
 import numpy as np
@@ -46,3 +47,9 @@ def peek_line(file):
     line = file.readline()
     file.seek(pos)
     return line
+
+def log_without_newline(msg):
+    old_terminator = logging.StreamHandler.terminator
+    logging.StreamHandler.terminator = ""
+    logging.info(msg)
+    logging.StreamHandler.terminator = old_terminator

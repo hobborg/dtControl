@@ -1,9 +1,12 @@
+import logging
 import pickle
 from abc import ABC, abstractmethod
 from os import makedirs
 from os.path import getmtime, split, exists, join
 
 import numpy as np
+
+from src import util
 
 class DatasetLoader(ABC):
     def __init__(self):
@@ -26,7 +29,7 @@ class DatasetLoader(ABC):
     def load_converted_dataset(self, filename):
         folder = self.get_converted_folder(filename)
         assert exists(folder)
-        print("Loading existing pickled dataset...", end=' ')
+        util.log_without_newline('Loading existing converted dataset...')
         x = np.load(join(folder, 'X_train.npy'))
         y = np.load(join(folder, 'Y_train.npy'))
         with open(join(folder, 'extra_data.pickle'), 'rb') as infile:
@@ -34,7 +37,7 @@ class DatasetLoader(ABC):
             index_to_actual = extra_data["index_to_value"]
             x_metadata = extra_data["X_metadata"]
             y_metadata = extra_data["Y_metadata"]
-        print("done loading.")
+        logging.info(" Done.")
         return x, x_metadata, y, y_metadata, index_to_actual
 
     def save_converted_dataset(self, filename):

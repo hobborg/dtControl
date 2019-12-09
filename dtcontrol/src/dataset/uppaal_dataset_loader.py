@@ -20,7 +20,7 @@ class UppaalDatasetLoader(DatasetLoader):
         """
 
         with open(filename) as f:
-            print("Reading from %s" % filename)
+            logging.info("Reading from %s" % filename)
 
             action_set = set()
             controllable_state_set = set()
@@ -131,7 +131,7 @@ class UppaalDatasetLoader(DatasetLoader):
                     y[i][0:len(row_actions[indices[0]])] = sorted(row_actions[indices[0]])
                 i = i + 1
 
-            print("Constructed training set with %s datapoints" % x.shape[0])
+            logging.info("Constructed training set with %s datapoints" % x.shape[0])
 
             # construct metadata
             # assumption is that UPPAAL only works with integers
