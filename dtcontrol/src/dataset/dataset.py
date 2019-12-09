@@ -38,6 +38,7 @@ class Dataset(ABC):
                  [[1  5], [-1 -1], [-1 -1]]
 
                 from which it is easier to extract control actions as tuples.
+
             Single-output: the training labels of shape (num_states, max_non_determinism)
                 For example:   [[1  2 -1]
                                 [2  3 -1]

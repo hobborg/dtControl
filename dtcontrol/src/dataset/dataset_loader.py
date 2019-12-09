@@ -12,14 +12,14 @@ class DatasetLoader(ABC):
 
     def load_dataset(self, filename):
         if filename not in self.loaded_datasets:
-            if self.already_converted(filename):
+            if self.is_already_converted(filename):
                 self.loaded_datasets[filename] = self.load_converted_dataset(filename)
             else:
                 self.loaded_datasets[filename] = self._load_dataset(filename)
                 self.save_converted_dataset(filename)
         return self.loaded_datasets[filename]
 
-    def already_converted(self, filename):
+    def is_already_converted(self, filename):
         possible_path = self.get_converted_folder(filename)
         return exists(possible_path)
 

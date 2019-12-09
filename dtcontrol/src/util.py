@@ -11,11 +11,9 @@ def format_seconds(sec):
         return pattern % (h, m, s)
     return ('%d days, ' + pattern) % (d, h, m, s)
 
-
 def get_filename_and_ext(filename):
     path, ext = splitext(filename)
     return basename(path), ext
-
 
 def make_set(v):
     if isinstance(v, tuple):
@@ -25,7 +23,6 @@ def make_set(v):
     except TypeError:
         return {v}
 
-
 def objround(obj, precision):
     if isinstance(obj, list) or isinstance(obj, np.ndarray):
         return [objround(o, precision) for o in obj]
@@ -34,14 +31,13 @@ def objround(obj, precision):
     # if just a float
     return round(obj, precision)
 
-
 def split_into_lines(l):
     if not isinstance(l, list) or len(l) < 5:
         return str(l)
     i = 0
     l2 = []
     while i < len(l):
-        l2.append(','.join([str(j) for j in l[i:min(i+5, len(l))]]))
+        l2.append(','.join([str(j) for j in l[i:min(i + 5, len(l))]]))
         i += 5
     return '[' + '\\n'.join(l2) + ']'
 

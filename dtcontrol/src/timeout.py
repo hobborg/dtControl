@@ -4,28 +4,24 @@ import signal
 import subprocess
 import time
 
-
 def is_windows():
     return os.name == 'nt'
 
-
-def use_multiprocessing():
+def use_multiprocessing_for_timeout():
     return is_windows()
-
 
 def _call_and_return_in_list(obj, method, return_list, *args):
     getattr(obj, method)(*args)
     return_list[0] = obj
 
-
 def call_with_timeout(obj, method, *args, timeout=60):
     """
     Calls a method on an object and stops the execution once the time limit is reached.
-    :param obj: The object on which the method is to be called
-    :param method: The method to be called on the object
-    :param timeout: The time limit
-    :param args: The arguments to be passed to the method
-    :return: The modified object, True if the call was successful and False otherwise, and the actual time needed
+    :param obj: the object on which the method is to be called
+    :param method: the method to be called on the object
+    :param timeout: the time limit
+    :param args: the arguments to be passed to the method
+    :return: the modified object, True if the call was successful and False otherwise, and the actual time needed
     """
 
     # this slight hack is used to properly terminate the OC1Wrapper, which needs to spawn a child process itself
@@ -42,7 +38,7 @@ def call_with_timeout(obj, method, *args, timeout=60):
         getattr(obj, '{}_command_called'.format(method))()
         return obj, True, time.time() - start
     else:
-        if use_multiprocessing():
+        if use_multiprocessing_for_timeout():
             with multiprocessing.Manager() as manager:
                 return_list = manager.list(range(1))
                 p = multiprocessing.Process(target=_call_and_return_in_list, args=(obj, method, return_list, *args))

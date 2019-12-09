@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import sys
 import time
 import webbrowser
 from os import makedirs
@@ -27,8 +28,8 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', save_folder=None,
-                 rerun=False, use_multiprocessing=True, is_artifact=False):
-        logging.basicConfig(level=logging.INFO, format='%(message)s')
+                 rerun=False, is_artifact=False):
+        logging.basicConfig(level=logging.INFO, format='%(message)s', stream=sys.stdout)
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
         self.html_file = f'{benchmark_file}.html'
@@ -36,9 +37,8 @@ class BenchmarkSuite:
         self.timeout = timeout
         self.output_folder = output_folder
         self.save_folder = save_folder
-        self.rerun = rerun
-        self.use_multiprocessing = use_multiprocessing
-        self.is_artifact = is_artifact
+        self.rerun = rerun  # rerun benchmarks even if there already are results available
+        self.is_artifact = is_artifact  # always produces a table exactly corresponding to the one in the paper
         self.table_controller = TableController(self.html_file, self.output_folder, self.is_artifact)
 
         logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
@@ -60,19 +60,18 @@ class BenchmarkSuite:
                     else:
                         ds = SingleOutputDataset(file)
 
-                    # check if dataset is deterministic
                     ds.is_deterministic = self.is_deterministic(file, ext)
                     self.datasets.append(ds)
         self.datasets.sort(key=lambda ds: ds.get_name())
 
-    def get_files(self, path):
+    @staticmethod
+    def get_files(path):
         if isfile(path):
             return [path]
         else:
             return glob.glob(join(path, '*.scs')) + glob.glob(join(path, '*.dump'))
 
     def display_html(self):
-        # display(HTML(f'<html><a href="{self.html_file}" target="_blank">View table</a></html>'))
         url = f'file://{os.path.abspath(self.html_file)}'
         webbrowser.open(url)
 
@@ -143,7 +142,7 @@ class BenchmarkSuite:
                 stats = classifier.get_stats()
                 cell = {'stats': stats, 'time': format_seconds(run_time)}
                 self.save_dot_and_c(classifier, dataset)
-                # if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
+                # if not isinstance(classifier, OC1Wrapper):
                 #     vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
                 #     classifier.print_vhdl(len(dataset.x_metadata["variables"]), vhdl_filename)
                 if abs(acc - 1.0) > 1e-10:

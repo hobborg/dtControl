@@ -10,12 +10,18 @@ file_loader = FileSystemLoader([path + "/src/ui" for path in dtcontrol.__path__]
 env = Environment(loader=file_loader)
 
 class TableController:
-    def __init__(self, html_file, output_folder, is_artifact):
+    def __init__(self, html_file, output_folder, is_artifact=False):
+        """
+        :param html_file: the html file to save the table to
+        :param output_folder: the folder containing the dot and C files
+        :param is_artifact: if enabled, always produces a table exactly corresponding to the one in the paper
+        """
         self.html_file = html_file
         self.output_folder = output_folder
         self.is_artifact = is_artifact
 
-    def load_from_ui(self, filename):
+    @staticmethod
+    def load_resource(filename):
         full_paths = [path + "/src/ui/" + filename for path in dtcontrol.__path__ if exists(path + "/src/ui/" + filename)]
         with open(full_paths[0]) as infile:
             script = infile.read()
@@ -23,13 +29,13 @@ class TableController:
 
     def update_and_save(self, results, last_run_datasets, last_run_classifiers):
         template = env.get_template('table.html')
-        script_js = self.load_from_ui('table.js')
-        jquery_js = self.load_from_ui('jquery-3.4.1.min.js')
-        bootstrap_css = self.load_from_ui('bootstrap.min.css')
-        bootstrap_js = self.load_from_ui('bootstrap.min.js')
-        bootstrap_toggle_css = self.load_from_ui('bootstrap4-toggle.min.css')
-        bootstrap_toggle_js = self.load_from_ui('bootstrap4-toggle.min.js')
-        style_css = self.load_from_ui('style.css')
+        script_js = self.load_resource('table.js')
+        jquery_js = self.load_resource('jquery-3.4.1.min.js')
+        bootstrap_css = self.load_resource('bootstrap.min.css')
+        bootstrap_js = self.load_resource('bootstrap.min.js')
+        bootstrap_toggle_css = self.load_resource('bootstrap4-toggle.min.css')
+        bootstrap_toggle_js = self.load_resource('bootstrap4-toggle.min.js')
+        style_css = self.load_resource('style.css')
 
         if self.is_artifact:
             table, row_metadata, column_names = self.get_table_data_artifact(results)
@@ -52,7 +58,8 @@ class TableController:
                 style_css=style_css
             ))
 
-    def get_table_data(self, results):
+    @staticmethod
+    def get_table_data(results):
         row_names = sorted(list(results.keys()))
         column_names = set()
         for dataset in results:
@@ -78,7 +85,8 @@ class TableController:
                         for r in row_names]
         return table, row_metadata, column_names
 
-    def get_table_data_artifact(self, results):
+    @staticmethod
+    def get_table_data_artifact(results):
         row_names = [
             'cartpole',
             'tworooms-noneuler-latest',
@@ -149,5 +157,6 @@ class TableController:
             dot = infile.read()
         return GRAPHVIZ_URL + quote(dot)
 
-    def get_file_link(self, file):
+    @staticmethod
+    def get_file_link(file):
         return f'file://{abspath(file)}'

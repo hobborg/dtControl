@@ -11,17 +11,17 @@ from src.classifiers.splitting.linear_classifier import LinearClassifierSplittin
 suite = BenchmarkSuite(timeout=60 * 5, save_folder='saved_classifiers', benchmark_file='benchmark_example', rerun=True)
 suite.add_datasets(['examples'],
                    include=[
-                       # "cartpole",
+                       "cartpole",
                        # "tworooms-noneuler-latest",
                        # "helicopter",
                        # "cruise-latest",
                        # "dcdc",
-                       # "10rooms",
+                       "10rooms",
                        # "truck_trailer",
                        # "traffic_1m",
                        # "traffic_10m",
                        # "traffic_30m",
-                       "vehicle",
+                       # "vehicle",
                        # "aircraft"
                    ],
                    exclude=[
@@ -33,7 +33,7 @@ cart = CartSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 classifiers = [
     DecisionTree(NondetDeterminizer(), [cart], Entropy(), 'CART'),
-    DecisionTree(NondetDeterminizer(), [cart, logreg], Entropy(), 'logreg'),
+    # DecisionTree(NondetDeterminizer(), [cart, logreg], Entropy(), 'logreg'),
     # DecisionTree(MaxFreqDeterminizer(), [cart], Entropy(), 'MaxFreq'),
     # DecisionTree(NormDeterminizer(min), [cart], Entropy(), 'MinNorm'),
     DecisionTree(NormDeterminizer(min), [cart, logreg], Entropy(), 'minnorm-logreg'),

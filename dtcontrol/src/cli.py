@@ -194,7 +194,7 @@ def main():
         filename, file_extension = splitext(args.benchmark_file)
         kwargs["benchmark_file"] = filename
     else:
-        kwargs["benchmark_file"] = 'benchmark'  # TODO best practise to set default?
+        kwargs["benchmark_file"] = 'benchmark'
         logging.warning("--benchmark-file/-b was not set. Defaulting to use 'benchmark.json'")
 
     if args.output:
