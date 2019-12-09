@@ -1,7 +1,9 @@
 from os.path import join, exists, abspath, getsize
 from urllib.parse import quote
-import dtcontrol
+
 from jinja2 import Environment, FileSystemLoader
+
+import dtcontrol
 
 GRAPHVIZ_URL = 'https://dreampuf.github.io/GraphvizOnline/#'
 file_loader = FileSystemLoader([path + "/src/ui" for path in dtcontrol.__path__])
@@ -62,10 +64,11 @@ class TableController:
             for classifier in column_names:
                 if classifier in results[dataset]['classifiers']:
                     cell = results[dataset]['classifiers'][classifier]
-                    try:
-                        cell['stats']['paths'] = int((cell['stats']['nodes'] + 1) / 2)
-                    except (KeyError, TypeError):
-                        cell = 'not yet computed'
+                    if not isinstance(cell, str):
+                        try:
+                            cell['stats']['paths'] = int((cell['stats']['nodes'] + 1) / 2)
+                        except (KeyError, TypeError):
+                            cell = 'not yet computed'
                 else:
                     cell = 'not yet computed'
                 row.append(cell)
