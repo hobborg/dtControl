@@ -1,6 +1,6 @@
 from os.path import basename, splitext
-import numpy as np
 
+import numpy as np
 
 def format_seconds(sec):
     m, s = divmod(sec, 60)
@@ -43,7 +43,7 @@ def split_into_lines(l):
     while i < len(l):
         l2.append(','.join([str(j) for j in l[i:min(i+5, len(l))]]))
         i += 5
-    return '[' + '\n'.join(l2) + ']'
+    return '[' + '\\n'.join(l2) + ']'
 
 def peek_line(file):
     pos = file.tell()

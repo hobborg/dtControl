@@ -10,5 +10,5 @@ int main() {
 }
 
 void classify(const float x[], float result[]) {
-    {{code}}
+{{code}}
 }

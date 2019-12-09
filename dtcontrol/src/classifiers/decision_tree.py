@@ -188,7 +188,7 @@ class Node:
         return last_number, text
 
     def print_c(self):
-        return self.print_if_then_else(0, 'c')
+        return self.print_if_then_else(1, 'c')
 
     def print_vhdl(self):
         return self.print_if_then_else(2, 'vhdl')

@@ -54,6 +54,6 @@ class LinearClassifierSplit(Split):
         for i in range(len(coef)):
             line.append(f"{round(coef[i], 6) if rounded else coef[i]}*x[{i}]")
         line.append(f"{round(intercept, 6) if rounded else intercept}")
-        joiner = "\n+" if newlines else "+"
+        joiner = "\\n+" if newlines else "+"
         hyperplane = joiner.join(line) + " <= 0"
         return hyperplane.replace('+-', '-')

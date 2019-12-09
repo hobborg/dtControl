@@ -9,5 +9,5 @@ int main() {
 }
 
 float classify(const float x[]) {
-    {{code}}
+{{code}}
 }
