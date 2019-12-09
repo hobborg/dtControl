@@ -1,3 +1,10 @@
 decision_trees
 .benchmark_suite
 oc1_tmp
+benchmark.json
+benchmark.html
+benchmark_example.json
+benchmark_example.html
+test_saved_classifiers
+test_benchmark.json
+test_benchmark.html

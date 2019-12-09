@@ -1,0 +1,8 @@
+# Default ignored files
+/workspace.xml
+dtcontrol.iml
+misc.xml
+modules.xml
+other.xml
+inspectionProfiles
+vcs.xml

@@ -1,11 +1,10 @@
 # Custom
 venv
 testenv
-.idea
 dtcontrol/oc1_tmp
 dtcontrol/decision_trees
 dtcontrol/classifiers/OC1_source/*.o
-dtcontrol/classifiers/OC1_source/mktree
+dtcontrol/src/classifiers/OC1_source/mktree
 dtcontrol/benchmark_tmp.*
 dtcontrol/examples/.benchmark_suite
 dtcontrol/saved_classifiers
@@ -135,4 +134,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
+docker/examples
