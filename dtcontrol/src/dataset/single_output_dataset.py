@@ -36,7 +36,7 @@ class SingleOutputDataset(Dataset):
         return self.unique_labels
 
     def map_unique_label_back(self, label):
-        return list(self.unique_mapping[label])
+        return [i for i in self.unique_mapping[label] if i != -1]
 
     def from_mask(self, mask):
         subset = SingleOutputDataset(self.filename)

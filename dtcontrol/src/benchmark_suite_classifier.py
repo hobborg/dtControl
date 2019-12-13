@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 
 class BenchmarkSuiteClassifier(ABC):
-    @abstractmethod
+    def __init__(self, name):
+        self.name = name
+
     def get_name(self):
-        pass
+        return self.name
 
     @abstractmethod
     def is_applicable(self, dataset):
@@ -12,7 +14,7 @@ class BenchmarkSuiteClassifier(ABC):
     @abstractmethod
     def fit(self, dataset):
         """
-        Trains the classifier on the given dataset and keeps the resulting decision tree in memory.
+        Trains the classifier on the given dataset.
         """
         pass
 
@@ -30,6 +32,7 @@ class BenchmarkSuiteClassifier(ABC):
     def get_stats(self):
         """
         Returns a dictionary of statistics to be saved and displayed (e.g. the number of nodes in the tree).
+        :return: the dictionary of statistics
         """
         pass
 
@@ -44,6 +47,7 @@ class BenchmarkSuiteClassifier(ABC):
     def print_dot(self):
         """
         Prints the classifier in the dot (graphviz) format.
+        :return: the dot string
         """
         pass
 
@@ -51,5 +55,6 @@ class BenchmarkSuiteClassifier(ABC):
     def print_c(self):
         """
         Prints the classifier as nested if-else statements in the C syntax.
+        :return: the C string
         """
         pass

@@ -5,20 +5,18 @@ from collections.abc import Iterable
 import numpy as np
 
 from src import util
+from src.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from src.dataset.single_output_dataset import SingleOutputDataset
-from src.decision_tree.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):
+        super().__init__(name)
         self.root = None
         self.name = name
         self.determinizer = determinizer
         self.split_strategies = split_strategies
         self.impurity_measure = impurity_measure
-
-    def get_name(self):
-        return self.name
 
     def is_applicable(self, dataset):
         return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
