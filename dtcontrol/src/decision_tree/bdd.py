@@ -1,12 +1,12 @@
+import math
 import pickle
 import random
-import math
+
+# from dd import cudd as _bdd
+from dd import autoref as _bdd  # TODO: Might use cudd
 from tqdm import tqdm
 
 from src.dataset.multi_output_dataset import MultiOutputDataset
-# from dd import cudd as _bdd
-from dd import autoref as _bdd  # TODO: Might use cudd
-
 
 class BDD:
     """

@@ -1,7 +1,7 @@
 import ast
 import re
 
-from src.classifiers.oc1_node import OC1Node
+from src.decision_tree.oc1_node import OC1Node
 from src.util import peek_line
 
 class OC1Parser:

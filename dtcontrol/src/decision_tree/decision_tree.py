@@ -5,9 +5,9 @@ from collections.abc import Iterable
 import numpy as np
 
 from src import util
-from src.classifiers.benchmark_suite_classifier import BenchmarkSuiteClassifier
-from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
 from src.dataset.single_output_dataset import SingleOutputDataset
+from src.decision_tree.benchmark_suite_classifier import BenchmarkSuiteClassifier
+from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):

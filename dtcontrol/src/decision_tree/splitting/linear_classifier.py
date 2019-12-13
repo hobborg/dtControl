@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.classifiers.splitting.split import Split
-from src.classifiers.splitting.splitting_strategy import SplittingStrategy
+from src.decision_tree.splitting.split import Split
+from src.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class LinearClassifierSplittingStrategy(SplittingStrategy):
     def __init__(self, classifier_class, **kwargs):

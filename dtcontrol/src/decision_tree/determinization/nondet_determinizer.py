@@ -1,4 +1,4 @@
-from src.classifiers.determinization.determinizer import Determinizer
+from src.decision_tree.determinization.determinizer import Determinizer
 
 class NondetDeterminizer(Determinizer):
     """

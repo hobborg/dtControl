@@ -39,7 +39,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from src.benchmark_suite import BenchmarkSuite
-from src.classifiers.oc1_wrapper import OC1Wrapper
+from src.decision_tree.oc1_wrapper import OC1Wrapper
 
 def main():
     def is_valid_file_or_folder(parser, arg):

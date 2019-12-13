@@ -2,7 +2,7 @@ from operator import itemgetter
 
 import numpy as np
 
-from src.classifiers.determinization.determinizer import Determinizer
+from src.decision_tree.determinization.determinizer import Determinizer
 
 class MaxFreqMultiDeterminizer(Determinizer):
     """

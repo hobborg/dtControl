@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 
-from src.classifiers.impurity.impurity_measure import ImpurityMeasure
+from src.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class Entropy(ImpurityMeasure):
     def calculate_impurity(self, y, mask):

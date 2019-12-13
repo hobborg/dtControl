@@ -4,13 +4,13 @@ import unittest
 from sklearn.linear_model import LogisticRegression
 
 from src.benchmark_suite import BenchmarkSuite
-from src.classifiers.decision_tree import DecisionTree
-from src.classifiers.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
-from src.classifiers.determinization.norm_determinizer import NormDeterminizer
-from src.classifiers.impurity.entropy import Entropy
-from src.classifiers.splitting.cart import CartSplittingStrategy
-from src.classifiers.splitting.linear_classifier import LinearClassifierSplittingStrategy
+from src.decision_tree.decision_tree import DecisionTree
+from src.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
+from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.norm_determinizer import NormDeterminizer
+from src.decision_tree.impurity.entropy import Entropy
+from src.decision_tree.splitting.cart import CartSplittingStrategy
+from src.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 class IntegrationTest(unittest.TestCase):
     def setUp(self) -> None:

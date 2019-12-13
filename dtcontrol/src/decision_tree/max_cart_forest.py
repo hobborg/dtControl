@@ -1,6 +1,7 @@
-from src.dataset.multi_output_dataset import MultiOutputDataset
-from src.classifiers.cart_custom_dt import CartNode
 import numpy as np
+from src.decision_tree.cart_custom_dt import CartNode
+
+from src.dataset.multi_output_dataset import MultiOutputDataset
 
 class MaxCartForest():
     def __init__(self):

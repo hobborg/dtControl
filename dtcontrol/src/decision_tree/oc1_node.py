@@ -1,7 +1,7 @@
 import numpy as np
 
 import src.util
-from src.classifiers.decision_tree import Node
+from src.decision_tree.decision_tree import Node
 
 class OC1Node(Node):
     def __init__(self, coeff, intercept, depth=0):

@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.classifiers.determinization.determinizer import Determinizer
 from src.dataset.single_output_dataset import SingleOutputDataset
+from src.decision_tree.determinization.determinizer import Determinizer
 
 class MaxFreqDeterminizer(Determinizer):
     """

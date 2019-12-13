@@ -2,12 +2,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from src.benchmark_suite import BenchmarkSuite
-from src.classifiers.decision_tree import DecisionTree
-from src.classifiers.determinization.nondet_determinizer import NondetDeterminizer
-from src.classifiers.determinization.norm_determinizer import NormDeterminizer
-from src.classifiers.impurity.entropy import Entropy
-from src.classifiers.splitting.cart import CartSplittingStrategy
-from src.classifiers.splitting.linear_classifier import LinearClassifierSplittingStrategy
+from src.decision_tree.decision_tree import DecisionTree
+from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.norm_determinizer import NormDeterminizer
+from src.decision_tree.impurity.entropy import Entropy
+from src.decision_tree.splitting.cart import CartSplittingStrategy
+from src.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 suite = BenchmarkSuite(timeout=60 * 5, save_folder='saved_classifiers', benchmark_file='benchmark_example', rerun=True)
 suite.add_datasets(['examples'],

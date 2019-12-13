@@ -7,9 +7,9 @@ from shutil import copyfile
 import numpy as np
 
 import dtcontrol
-from src.classifiers.decision_tree import DecisionTree
-from src.classifiers.oc1_node import OC1Node
-from src.classifiers.oc1_parser import OC1Parser
+from src.decision_tree.decision_tree import DecisionTree
+from src.decision_tree.oc1_node import OC1Node
+from src.decision_tree.oc1_parser import OC1Parser
 
 class OC1Wrapper(DecisionTree):
     """

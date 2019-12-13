@@ -1,5 +1,5 @@
-from src.classifiers.splitting.split import Split
-from src.classifiers.splitting.splitting_strategy import SplittingStrategy
+from src.decision_tree.splitting.split import Split
+from src.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class CartSplittingStrategy(SplittingStrategy):
     def find_split(self, x, y, impurity_measure):
