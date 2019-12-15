@@ -119,7 +119,7 @@ class Node:
 
     def check_done(self, x, y):
         if self.depth >= 500:
-            logging.info("Aborting: depth >= 500.")
+            logging.error("Aborting: depth >= 500.")
             return True
 
         unique_labels = np.unique(y)
@@ -207,7 +207,8 @@ class Node:
         else:
             return self.actual_label
 
-    def norm(self, tup):
+    @staticmethod
+    def norm(tup):
         if isinstance(tup, tuple):
             return sum([i * i for i in tup])
         else:
@@ -216,7 +217,10 @@ class Node:
     def print_dot_label(self):
         if self.actual_label is None:
             raise ValueError('print_dot_label called although label is None.')
-        rounded = util.objround(self.actual_label, 6)
+        label = self.actual_label
+        if isinstance(self.actual_label, Iterable) and len(self.actual_label) == 1:
+            label = self.actual_label[0]
+        rounded = util.objround(label, 6)
         return util.split_into_lines(rounded)
 
     def print_c_label(self):
