@@ -17,7 +17,7 @@ class IntegrationTest(unittest.TestCase):
     def setUp(self) -> None:
         self.suite = BenchmarkSuite(timeout=60 * 60 * 2,
                                     save_folder='test_saved_classifiers',
-                                    benchmark_file='test_benchmark',
+                                    benchmark_file='benchmark_test',
                                     rerun=False)
         self.expected_results = {
             'cartpole': {
@@ -62,8 +62,8 @@ class IntegrationTest(unittest.TestCase):
             }
         }
         self.init_classifiers()
-        if os.path.exists('test_benchmark.json'):
-            os.remove('test_benchmark.json')
+        if os.path.exists('benchmark_test.json'):
+            os.remove('benchmark_test.json')
 
     def init_classifiers(self):
         self.cart = DecisionTree(NondetDeterminizer(), [CartSplittingStrategy()], Entropy(), 'CART')
