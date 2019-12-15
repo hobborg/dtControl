@@ -1,5 +1,6 @@
 import os
 import unittest
+from unittest import SkipTest
 
 from sklearn.linear_model import LogisticRegression
 
@@ -82,11 +83,13 @@ class IntegrationTest(unittest.TestCase):
         classifiers = [self.cart, self.maxfreq, self.minnorm]
         self.run_test(datasets, classifiers)
 
+    @SkipTest
     def test_medium(self):  # takes about 4 min on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
         classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm]
         self.run_test(datasets, classifiers)
 
+    @SkipTest
     def test_slow(self):  # takes about 6h on my laptop
         datasets = [
             'cartpole',
