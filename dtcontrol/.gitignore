@@ -5,5 +5,3 @@ benchmark*.html
 benchmark*.json
 *.saved
 test_saved_classifiers
-test_benchmark.json
-test_benchmark.html
