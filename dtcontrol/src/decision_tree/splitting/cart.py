@@ -9,7 +9,7 @@ class CartSplittingStrategy(SplittingStrategy):
             for i in range(len(values) - 1):
                 threshold = (values[i] + values[i + 1]) / 2
                 mask = x[:, feature] <= threshold
-                splits[(feature, threshold)] = impurity_measure.calculate_impurity(y, mask)
+                splits[(feature, threshold)] = impurity_measure.calculate_impurity(x, y, mask)
 
         feature, threshold = min(splits.keys(), key=splits.get)
         mask = x[:, feature] <= threshold

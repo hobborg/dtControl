@@ -5,7 +5,7 @@ import numpy as np
 from src.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class Entropy(ImpurityMeasure):
-    def calculate_impurity(self, y, mask):
+    def calculate_impurity(self, x, y, mask):
         left = y[mask]
         right = y[~mask]
         if len(left) == 0 or len(right) == 0:

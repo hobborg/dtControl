@@ -20,7 +20,7 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
             classifier.fit(x, new_y)
             label_to_classifier[label] = classifier
             pred = classifier.predict(x)
-            impurity = impurity_measure.calculate_impurity(y, (pred == -1))
+            impurity = impurity_measure.calculate_impurity(x, y, (pred == -1))
             label_to_impurity[label] = impurity
 
         label = min(label_to_impurity.items(), key=lambda x: x[1])[0]

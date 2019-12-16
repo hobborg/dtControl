@@ -108,7 +108,7 @@ class Node:
             return
         splits = [strategy.find_split(dataset.x, y, self.impurity_measure) for strategy in self.split_strategies]
         mask, self.split = \
-            min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(y, mask_split[0]))
+            min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(dataset.x, y, mask_split[0]))
 
         left_data, right_data = dataset.split(mask)
         self.left = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
@@ -118,8 +118,10 @@ class Node:
         self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
 
     def check_done(self, x, y):
+        if self.depth >= 100:
+            logging.info("Depth >= 100. Maybe something is going wrong?")
         if self.depth >= 500:
-            logging.error("Aborting: depth >= 500.")
+            logging.error("Aborting branch: depth >= 500.")
             return True
 
         unique_labels = np.unique(y)
