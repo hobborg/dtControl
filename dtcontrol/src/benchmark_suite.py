@@ -98,7 +98,7 @@ class BenchmarkSuite:
                             f"{step}/{num_steps}: Not applicable.")
                     else:
                         logging.info(
-                            f"{step}/{num_steps}: Not running, since the result is already available.")
+                            f"{step}/{num_steps}: Not running since the result is already available.")
         logging.info('All benchmarks completed. Shutting down dtControl.')
 
         self.table_controller.update_and_save(self.results, [ds.get_name() for ds in self.datasets],
