@@ -17,7 +17,7 @@ class OC1SplittingStrategy(SplittingStrategy):
     splitting strategy.
     """
 
-    def __init__(self, num_restarts=30, num_jumps=15):
+    def __init__(self, num_restarts=20, num_jumps=5):
         self.oc1_path = 'decision_tree/OC1_source/mktree'
         self.output_file = 'oc1_tmp/output'
         self.data_file = 'oc1_tmp/data.csv'

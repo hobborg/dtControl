@@ -39,12 +39,17 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from src.benchmark_suite import BenchmarkSuite
-from src.decision_tree.oc1_wrapper import OC1Wrapper
+from src.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
+from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.norm_determinizer import NormDeterminizer
+from src.decision_tree.splitting.cart import CartSplittingStrategy
+from src.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
+from src.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
 def main():
     def is_valid_file_or_folder(parser, arg):
         if not exists(arg):
-            parser.error(f"The file/folder {arg} does not exist")
+            parser.error(f"The file/folder {arg} does not exist.")
         else:
             return arg
 
@@ -82,26 +87,17 @@ def main():
         :param det_strategies: list of determinization strategies
         :return: list of classifier objects
         """
+
         method_map = {
-            'cart': {
-                'none': [CartDT()],  # TODO: remove lists and directly map to classifiers
-                'maxfreq': [MaxFreqDT()],
-                'minnorm': [NormDT(min)],
-                # 'random': [RandomDT()],
-            },
-            'linsvm': {
-                'none': [LinearClassifierDT(LinearSVC, max_iter=5000)],
-                'maxfreq': [MaxFreqLinearClassifierDT(LinearSVC, max_iter=5000)],
-                'minnorm': [NormLinearClassifierDT(min, LinearSVC, max_iter=5000)],
-            },
-            'logreg': {
-                'none': [LinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-                'maxfreq': [MaxFreqLinearClassifierDT(LogisticRegression, solver='lbfgs', penalty='none')],
-                'minnorm': [NormLinearClassifierDT(min, LogisticRegression, solver='lbfgs', penalty='none')],
-            },
-            'oc1': {
-                'none': [OC1Wrapper(num_restarts=20, num_jumps=5)]
-            }
+            'cart': CartSplittingStrategy(),
+            'linsvm': LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000),
+            'logreg': LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none'),
+            'oc1': OC1SplittingStrategy(),
+        }
+        determinization_map = {
+            'none': NondetDeterminizer(),
+            'maxfreq': MaxFreqDeterminizer(),
+            'minnorm': NormDeterminizer(min),
         }
 
         # construct all possible method - determinization strategy combinations
