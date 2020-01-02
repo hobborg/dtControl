@@ -7,7 +7,6 @@ Test:
   stage: test
   script:
     - /usr/bin/python3 --version
-    - /usr/bin/pip3 install psutil  # TODO: rebuild docker image
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
     - cd dtcontrol
     - /usr/bin/python3 -m unittest discover -s test
