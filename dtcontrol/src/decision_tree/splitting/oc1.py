@@ -7,7 +7,7 @@ import numpy as np
 
 import dtcontrol
 import src.globals
-from src.decision_tree.splitting.split import LinearSplit
+from src.decision_tree.splitting.split import LinearSplit, AxisAlignedSplit
 from src.decision_tree.splitting.splitting_strategy import SplittingStrategy
 from src.util import log_without_newline
 
@@ -50,7 +50,10 @@ class OC1SplittingStrategy(SplittingStrategy):
         self.save_data_to_file(x, y)
         self.execute_oc1()
         split = self.parse_oc1_dt(x.shape[1])
-        mask = np.dot(x, split.coefficients) + split.intercept <= 0
+        if isinstance(split, AxisAlignedSplit):
+            mask = x[:, split.feature] <= split.threshold
+        else:
+            mask = np.dot(x, split.coefficients) + split.intercept <= 0
         return mask, split
 
     def save_data_to_file(self, x, y):
@@ -83,5 +86,8 @@ class OC1SplittingStrategy(SplittingStrategy):
                 j = j + 1
             else:
                 coefficients.append(0)
-        # TODO MJA: add check if split is actually axis-aligned
+        if len([c for c in coefficients if c != 0]) == 1:
+            for i in range(len(coefficients)):
+                if coefficients[i] != 0:
+                    return AxisAlignedSplit(i, -intercept)
         return LinearSplit(np.array(coefficients), intercept)
