@@ -6,11 +6,12 @@ import sys
 import numpy as np
 
 import dtcontrol
+import src.globals
 from src.decision_tree.splitting.split import LinearSplit
 from src.decision_tree.splitting.splitting_strategy import SplittingStrategy
 from src.util import log_without_newline
 
-class OC1SplittingStrategy(SplittingStrategy):  # TODO MJA: clean up timeout
+class OC1SplittingStrategy(SplittingStrategy):
     """
     OC1 already computes the best axis-aligned split internally, so it is not necessary to have both the CART and OC1
     splitting strategy.
@@ -62,7 +63,9 @@ class OC1SplittingStrategy(SplittingStrategy):  # TODO MJA: clean up timeout
                   f'-j{self.num_jumps} -l {self.log_file}'
         with open(self.output_file, 'w+') as out:
             p = subprocess.Popen(command.split(' '), stdout=out)
+            src.globals.oc1_pid = p.pid
             p.wait()
+            src.globals.oc1_pid = None
 
     def parse_oc1_dt(self, dim):
         with open(self.dt_file) as infile:
