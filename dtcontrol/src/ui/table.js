@@ -17,5 +17,9 @@ $(document).ready(function () {
                 spinner.css('display', 'none');
             }, 500);
         }
+
+    $('#smallTextToggle').change(function () {
+        $('#table').css('font-size', $(this).prop('checked') ? 'smaller' : 'medium');
+    });
     }
 );

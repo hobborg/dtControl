@@ -27,10 +27,17 @@
 </head>
 <body>
 <div class="container-fluid">
-    <div class="text-center mt-4">
-        <label for="lastResultsToggle">Show only results from last run:</label>
-        <br>
-        <input type="checkbox" data-toggle="toggle" id="lastResultsToggle" data-width="100">
+    <div class="row mt-4 text-center">
+        <div class="col-sm-6 col-md-4 offset-md-2 col-lg-3 offset-lg-3 col-xl-2 offset-xl-4">
+            <label for="lastResultsToggle">Show only results from last run:</label>
+            <br>
+            <input type="checkbox" data-toggle="toggle" id="lastResultsToggle" data-width="100">
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 col-xl-2">
+            <label for="smallTextToggle">Small text:</label>
+            <br>
+            <input type="checkbox" data-toggle="toggle" id="smallTextToggle" data-width="100">
+        </div>
     </div>
     <table class="table table-bordered table-hover mt-4" id="table">
         <caption><span class="code">#(s,a)</span> refers to the number of state-action pairs (or state-input pairs).
