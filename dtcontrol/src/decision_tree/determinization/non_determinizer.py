@@ -1,6 +1,6 @@
 from src.decision_tree.determinization.determinizer import Determinizer
 
-class NondetDeterminizer(Determinizer):
+class NonDeterminizer(Determinizer):
     """
     This determinizer doesn't actually do any determinization but simply uses the unique label approach.
     """

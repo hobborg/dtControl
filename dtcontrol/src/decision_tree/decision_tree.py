@@ -7,7 +7,7 @@ import numpy as np
 from src import util
 from src.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from src.dataset.single_output_dataset import SingleOutputDataset
-from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.non_determinizer import NonDeterminizer
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):
@@ -20,7 +20,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def is_applicable(self, dataset):
         return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
-               not (dataset.is_deterministic and not isinstance(self.determinizer, NondetDeterminizer))
+               not (dataset.is_deterministic and not isinstance(self.determinizer, NonDeterminizer))
 
     def fit(self, dataset):
         self.determinizer.set_dataset(dataset)

@@ -40,7 +40,7 @@ from sklearn.svm import LinearSVC
 
 from src.benchmark_suite import BenchmarkSuite
 from src.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.non_determinizer import NonDeterminizer
 from src.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from src.decision_tree.splitting.cart import CartSplittingStrategy
 from src.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -95,7 +95,7 @@ def main():
             'oc1': OC1SplittingStrategy(),
         }
         determinization_map = {
-            'none': NondetDeterminizer(),
+            'none': NonDeterminizer(),
             'maxfreq': MaxFreqDeterminizer(),
             'minnorm': NormDeterminizer(min),
         }

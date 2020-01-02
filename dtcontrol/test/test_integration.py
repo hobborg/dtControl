@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from src.benchmark_suite import BenchmarkSuite
 from src.decision_tree.decision_tree import DecisionTree
 from src.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.non_determinizer import NonDeterminizer
 from src.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from src.decision_tree.impurity.entropy import Entropy
 from src.decision_tree.splitting.cart import CartSplittingStrategy
@@ -67,17 +67,17 @@ class IntegrationTest(unittest.TestCase):
             os.remove('benchmark_test.json')
 
     def init_classifiers(self):
-        self.cart = DecisionTree(NondetDeterminizer(), [CartSplittingStrategy()], Entropy(), 'CART')
+        self.cart = DecisionTree(NonDeterminizer(), [CartSplittingStrategy()], Entropy(), 'CART')
         self.maxfreq = DecisionTree(MaxFreqDeterminizer(), [CartSplittingStrategy()], Entropy(), 'maxfreq')
         self.minnorm = DecisionTree(NormDeterminizer(min), [CartSplittingStrategy()], Entropy(), 'minnorm')
         logreg_strategy = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-        self.logreg = DecisionTree(NondetDeterminizer(),
+        self.logreg = DecisionTree(NonDeterminizer(),
                                    [CartSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
         self.maxfreq_logreg = DecisionTree(MaxFreqDeterminizer(),
                                            [CartSplittingStrategy(), logreg_strategy], Entropy(), 'maxfreq-logreg')
         self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
                                            [CartSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
-        self.oc1 = DecisionTree(NondetDeterminizer(), [OC1SplittingStrategy()], Entropy(), 'oc1')
+        self.oc1 = DecisionTree(NonDeterminizer(), [OC1SplittingStrategy()], Entropy(), 'oc1')
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']

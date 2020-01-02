@@ -4,7 +4,7 @@ from sklearn.svm import LinearSVC
 from src.benchmark_suite import BenchmarkSuite
 from src.decision_tree.decision_tree import DecisionTree
 from src.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from src.decision_tree.determinization.nondet_determinizer import NondetDeterminizer
+from src.decision_tree.determinization.non_determinizer import NonDeterminizer
 from src.decision_tree.impurity.entropy import Entropy
 from src.decision_tree.splitting.cart import CartSplittingStrategy
 from src.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -37,7 +37,7 @@ logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', p
 linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000)
 classifiers = [
     # DecisionTree(NondetDeterminizer(), [cart], Entropy(), 'CART'),
-    SafePruning(DecisionTree(NondetDeterminizer(), [cart], Entropy(), 'CART')),
+    SafePruning(DecisionTree(NonDeterminizer(), [cart], Entropy(), 'CART')),
     # DecisionTree(NondetDeterminizer(), [cart, logreg], Entropy(), 'logreg'),
     DecisionTree(MaxFreqDeterminizer(), [cart], Entropy(), 'MaxFreq'),
     # DecisionTree(NormDeterminizer(min), [cart], Entropy(), 'MinNorm'),
