@@ -12,9 +12,10 @@ from src.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from src.decision_tree.impurity.entropy import Entropy
 from src.decision_tree.splitting.cart import CartSplittingStrategy
 from src.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
+from src.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
 class IntegrationTest(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.suite = BenchmarkSuite(timeout=60 * 60 * 2,
                                     save_folder='test_saved_classifiers',
                                     benchmark_file='benchmark_test',
@@ -76,12 +77,13 @@ class IntegrationTest(unittest.TestCase):
                                            [CartSplittingStrategy(), logreg_strategy], Entropy(), 'maxfreq-logreg')
         self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
                                            [CartSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
-        self.oc1 = None  # TODO
+        self.oc1 = DecisionTree(NondetDeterminizer(), [OC1SplittingStrategy()], Entropy(), 'oc1')
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
         classifiers = [self.cart, self.maxfreq, self.minnorm]
         self.run_test(datasets, classifiers)
+        self.run_test(['cartpole'], [self.oc1])
 
     @SkipTest
     def test_medium(self):  # takes about 4 min on my laptop

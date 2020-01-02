@@ -361,9 +361,9 @@ char* argv[];
 
         // print_dot (root, "tree.dot");
 
-        result = estimate_accuracy (train_points, no_of_train_points, root);
-        printf ("acc. on training set = %f\t#leaves = %.0f\tmax depth = %.0f\n", result.accuracy,
-               result.leaf_count, result.tree_depth);
+        // result = estimate_accuracy (train_points, no_of_train_points, root);
+        //printf ("acc. on training set = %f\t#leaves = %.0f\tmax depth = %.0f\n", result.accuracy,
+        //       result.leaf_count, result.tree_depth);
 
         if (verbose)
             for (i = 1; i <= no_of_categories; i++)
@@ -648,15 +648,15 @@ int cur_no_of_points;
     int i, lindex, rindex, lpt, rpt;
     float oblique_split (), axis_parallel_split (), cart_split ();
     float initial_impurity, cur_impurity;
-    char lnode_str[MAX_DT_DEPTH], rnode_str[MAX_DT_DEPTH];
+    char lnode_str[MAX_DT_DEPTH + 1], rnode_str[MAX_DT_DEPTH + 1];  // + 1 needed to avoid buffer overflow with depth=1
     int usesOblique = FALSE;
 
     /* Validation checks */
     if (cur_no_of_points <= TOO_SMALL_FOR_ANY_SPLIT) return (NULL);
     if (strlen (node_str) + 1 > MAX_DT_DEPTH)
     {
-        fprintf (stderr, "Tree growing aborted along this branch. \n");
-        fprintf (stderr, "Depth cannot be more than MAX_DT_DEPTH, set in oc1.h.\n");
+        // fprintf (stderr, "Tree growing aborted along this branch. \n");
+        // fprintf (stderr, "Depth cannot be more than MAX_DT_DEPTH, set in oc1.h.\n");
         return (NULL);
     }
 

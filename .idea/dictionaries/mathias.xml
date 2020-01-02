@@ -10,9 +10,11 @@
       <w>determinized</w>
       <w>determinizer</w>
       <w>lbfgs</w>
+      <w>linsvm</w>
       <w>logreg</w>
       <w>maxfreq</w>
       <w>minnorm</w>
+      <w>mktree</w>
       <w>multioutput</w>
       <w>vhdl</w>
     </words>

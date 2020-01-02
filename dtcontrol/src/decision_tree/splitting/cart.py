@@ -1,4 +1,4 @@
-from src.decision_tree.splitting.split import Split
+from src.decision_tree.splitting.split import AxisAlignedSplit
 from src.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class CartSplittingStrategy(SplittingStrategy):
@@ -13,21 +13,4 @@ class CartSplittingStrategy(SplittingStrategy):
 
         feature, threshold = min(splits.keys(), key=splits.get)
         mask = x[:, feature] <= threshold
-        return mask, CartSplit(feature, threshold)
-
-class CartSplit(Split):
-    def __init__(self, feature, threshold):
-        self.feature = feature
-        self.threshold = threshold
-
-    def predict(self, features):
-        return features[:, self.feature][0] <= self.threshold
-
-    def print_dot(self):
-        return self.print_c()
-
-    def print_c(self):
-        return f'x[{self.feature}] <= {round(self.threshold, 6)}'
-
-    def print_vhdl(self):
-        return f'x{self.feature} <= {round(self.threshold, 6)}'
+        return mask, AxisAlignedSplit(feature, threshold)
