@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import subprocess
 import sys
 
@@ -17,18 +18,18 @@ class OC1SplittingStrategy(SplittingStrategy):
     splitting strategy.
     """
 
-    def __init__(self, num_restarts=20, num_jumps=5):
+    def __init__(self, num_restarts=20, num_jumps=5, delete_tmp=True):
         self.oc1_path = 'decision_tree/OC1_source/mktree'
-        self.output_file = 'oc1_tmp/output'
-        self.data_file = 'oc1_tmp/data.csv'
-        self.dt_file = 'oc1_tmp/dt'
-        self.log_file = 'oc1_tmp/log'
+        self.tmp_path = '.dtcontrol_tmp'
+        self.output_file = f'{self.tmp_path}/output'
+        self.data_file = f'{self.tmp_path}/data.csv'
+        self.dt_file = f'{self.tmp_path}/dt'
+        self.log_file = f'{self.tmp_path}/log'
         self.num_restarts = num_restarts
         self.num_jumps = num_jumps
+        self.delete_tmp = delete_tmp
         if not os.path.exists(self.oc1_path):
             self.compile_oc1()
-        if not os.path.exists('oc1_tmp'):
-            os.mkdir('oc1_tmp')
 
     def compile_oc1(self):
         for path in dtcontrol.__path__:
@@ -47,6 +48,8 @@ class OC1SplittingStrategy(SplittingStrategy):
                     sys.exit(-1)
 
     def find_split(self, x, y, impurity_measure):
+        if not os.path.exists(self.tmp_path):
+            os.mkdir(self.tmp_path)
         self.save_data_to_file(x, y)
         self.execute_oc1()
         split = self.parse_oc1_dt(x.shape[1])
@@ -54,6 +57,8 @@ class OC1SplittingStrategy(SplittingStrategy):
             mask = x[:, split.feature] <= split.threshold
         else:
             mask = np.dot(x, split.coefficients) + split.intercept <= 0
+        if self.delete_tmp:
+            shutil.rmtree(self.tmp_path)
         return mask, split
 
     def save_data_to_file(self, x, y):
