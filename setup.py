@@ -11,10 +11,17 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='MIT',
-    url="https://gitlab.lrz.de/pranavashok/dtcontrol",
-    packages=['dtcontrol', 'dtcontrol.classifiers', 'dtcontrol.dataset', 'dtcontrol.ui',
-              'dtcontrol.classifiers.OC1_source',
-              'dtcontrol.c_templates'
+    url="https://gitlab.lrz.de/i7/dtcontrol",
+    packages=['dtcontrol',
+              'dtcontrol.c_templates',
+              'dtcontrol.dataset',
+              'dtcontrol.decision_tree',
+              'dtcontrol.decision_tree.determinization',
+              'dtcontrol.decision_tree.impurity',
+              'dtcontrol.decision_tree.OC1_source',
+              'dtcontrol.decision_tree.splitting',
+              'dtcontrol.post_processing',
+              'dtcontrol.ui',
               ],
     entry_points={
         'console_scripts': ['dtcontrol=dtcontrol.cli:main'],
@@ -35,6 +42,7 @@ setuptools.setup(
         'numpy==1.17.3',
         'pandas==0.25.2',
         'ply==3.10',
+        'psutil==5.6.7',
         'pydot==1.4.1',
         'pyparsing==2.4.2',
         'python-dateutil==2.8.0',
@@ -48,6 +56,6 @@ setuptools.setup(
     package_data={
         'dtcontrol.c_templates': ['*.c'],
         'dtcontrol.ui': ['*.js', '*.css', '*.html', '*.py'],
-        'dtcontrol.classifiers.OC1_source': ['*.c', '*.h', 'makefile', '*.readme', 'README'],
+        'dtcontrol.decision_tree.OC1_source': ['*.c', '*.h', 'makefile', '*.readme', 'README'],
     }
 )

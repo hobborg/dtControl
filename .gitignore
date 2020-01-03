@@ -1,13 +1,18 @@
 # Custom
 venv
 testenv
-dtcontrol/oc1_tmp
-dtcontrol/decision_trees
+oc1_tmp
+decision_trees
+tmp.html
 dtcontrol/classifiers/OC1_source/*.o
-dtcontrol/src/decision_tree/OC1_source/mktree
+dtcontrol/decision_tree/OC1_source/mktree
 dtcontrol/benchmark_tmp.*
-dtcontrol/examples/.benchmark_suite
+examples/.benchmark_suite
 dtcontrol/saved_classifiers
+benchmark*.html
+benchmark*.json
+*.saved
+test/test_saved_classifiers
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

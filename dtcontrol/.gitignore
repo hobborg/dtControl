@@ -1,9 +1,0 @@
-decision_trees
-.benchmark_suite
-oc1_tmp
-benchmark*.html
-benchmark*.json
-*.saved
-test_saved_classifiers
-*.o
-mktree

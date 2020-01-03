@@ -8,6 +8,5 @@ Test:
   script:
     - /usr/bin/python3 --version
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
-    - cd dtcontrol
     - /usr/bin/python3 -m unittest discover -s test
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
