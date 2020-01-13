@@ -12,7 +12,6 @@ from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterm
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.cart import CartSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
 class IntegrationTest(unittest.TestCase):
     def setUp(self):
@@ -77,13 +76,11 @@ class IntegrationTest(unittest.TestCase):
                                            [CartSplittingStrategy(), logreg_strategy], Entropy(), 'maxfreq-logreg')
         self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
                                            [CartSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
-        self.oc1 = DecisionTree(NonDeterminizer(), [OC1SplittingStrategy()], Entropy(), 'oc1')
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
         classifiers = [self.cart, self.maxfreq, self.minnorm]
         self.run_test(datasets, classifiers)
-        self.run_test(['cartpole'], [self.oc1])
 
     @SkipTest
     def test_medium(self):  # takes about 4 min on my laptop
@@ -100,7 +97,7 @@ class IntegrationTest(unittest.TestCase):
             '10rooms',
             'vehicle'
         ]
-        classifiers = [self.cart, self.logreg, self.oc1, self.maxfreq, self.maxfreq_logreg, self.minnorm,
+        classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm,
                        self.minnorm_logreg]
         self.run_test(datasets, classifiers)
 
