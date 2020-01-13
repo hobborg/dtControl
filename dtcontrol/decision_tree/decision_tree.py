@@ -107,6 +107,10 @@ class Node:
         if self.check_done(dataset.x, y):
             return
         splits = [strategy.find_split(dataset.x, y, self.impurity_measure) for strategy in self.split_strategies]
+        splits = [s for s in splits if s is not None]
+        if splits == []:
+            logging.error("Aborting branch: no split possible. Are you trying to use OC1 with categorical variables?")
+            return
         mask, self.split = \
             min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(dataset.x, y, mask_split[0]))
 

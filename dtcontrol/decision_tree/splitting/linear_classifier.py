@@ -3,7 +3,7 @@ import numpy as np
 from dtcontrol.decision_tree.splitting.split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
-class LinearClassifierSplittingStrategy(SplittingStrategy):
+class LinearClassifierSplittingStrategy(SplittingStrategy):  # TODO: one-hot encoding for categorical variables?
     def __init__(self, classifier_class, **kwargs):
         self.classifier_class = classifier_class
         self.kwargs = kwargs

@@ -10,6 +10,8 @@ class CSVDatasetLoader(DatasetLoader):
         with open(filename, 'r') as f:
             logging.info(f"Reading from {filename}")
             f.readline()  # whether permissive
+
+            categorical = [int(x) for x in f.readline().split("CATEGORICAL")[1].split()]
             state_dim, input_dim = map(int, f.readline().split("BEGIN")[1].split())
 
             ds = pd.read_csv(f, header=None)
@@ -48,6 +50,7 @@ class CSVDatasetLoader(DatasetLoader):
             # assumption is that UPPAAL only works with integers
             x_metadata = dict()
             x_metadata["variables"] = [f"x_{i}" for i in range(state_dim)]
+            x_metadata["categorical"] = categorical
             x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
             x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
             x_metadata["step_size"] = None  # todo
