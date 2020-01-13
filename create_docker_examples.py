@@ -19,6 +19,6 @@ for ds in bs.datasets:
 if os.path.exists('../docker/examples'):
     shutil.rmtree('../docker/examples')
 
-shutil.copytree('examples', '../docker/examples')
+shutil.copytree('examples', 'docker/examples')
 
 # manual cleanup is required! Remove the zip files and all unwanted scs or dump files.
