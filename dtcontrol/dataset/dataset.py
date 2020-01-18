@@ -62,7 +62,8 @@ class Dataset(ABC):
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
         self.x = None
-        self.x_metadata = {"variables": None, "categorical": None, "min": None, "max": None, "step_size": None}
+        self.x_metadata = {"variables": None, "categorical": None, "category_names": None,
+                           "min": None, "max": None, "step_size": None}
         self.y = None
         self.y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None,
                            'num_flattened': None}
@@ -71,9 +72,6 @@ class Dataset(ABC):
 
     def get_name(self):
         return self.name
-
-    def get_categorical(self):
-        return self.x_metadata['categorical']
 
     def copy_from_other_dataset(self, ds):
         self.x = ds.x

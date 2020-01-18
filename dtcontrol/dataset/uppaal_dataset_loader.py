@@ -137,7 +137,6 @@ class UppaalDatasetLoader(DatasetLoader):
             # assumption is that UPPAAL only works with integers
             x_metadata = dict()
             x_metadata["variables"] = projection_variables
-            x_metadata["categorical"] = []
             x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
             x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
             x_metadata["step_size"] = [1 for _ in range(len(projection_variables))]

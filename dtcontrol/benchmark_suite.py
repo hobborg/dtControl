@@ -83,7 +83,11 @@ class BenchmarkSuite:
             for classifier in classifiers:
                 step += 1
                 logging.info(f"{step}/{num_steps}: Evaluating {classifier.get_name()} on {ds.get_name()}... ")
-                cell, computed = self.compute_cell(ds, classifier)
+                try:
+                    cell, computed = self.compute_cell(ds, classifier)
+                except ValueError as e:
+                    logging.error(e)
+                    continue
                 if computed:
                     self.save_result(classifier.get_name(), ds, cell)
                     if cell == 'timeout':
