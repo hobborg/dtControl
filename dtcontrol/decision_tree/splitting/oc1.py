@@ -47,7 +47,9 @@ class OC1SplittingStrategy(SplittingStrategy):
                     logging.error("Compiling OC1 failed")
                     sys.exit(-1)
 
-    def find_split(self, x, y, impurity_measure):
+    def find_split(self, x_numeric, x_categorical, y, impurity_measure):
+        if len(x_numeric) == 0:
+            return None
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)
         self.save_data_to_file(x, y)

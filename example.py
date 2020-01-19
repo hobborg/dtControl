@@ -5,7 +5,7 @@ from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
-from dtcontrol.decision_tree.splitting.cart import CartSplittingStrategy
+from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 suite = BenchmarkSuite(timeout=60 * 60 * 1, save_folder='saved_classifiers', benchmark_file='benchmark_example',
@@ -30,7 +30,7 @@ suite.add_datasets(['examples'],
                    ]
                    )
 
-cart = CartSplittingStrategy()
+cart = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000)
 classifiers = [

@@ -62,12 +62,16 @@ class Dataset(ABC):
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
         self.x = None
+        self.numeric_x = None
+        self.categorical_x = None
         self.x_metadata = {"variables": None, "categorical": None, "category_names": None,
                            "min": None, "max": None, "step_size": None}
         self.y = None
         self.y_metadata = {"variables": None, "min": None, "max": None, "step_size": None, 'num_rows': None,
                            'num_flattened': None}
         self.index_to_actual = {}  # mapping from arbitrary integer indices to the actual float labels
+        self.numeric_feature_mapping = {}  # maps indices in the numeric array to the actual column index in x
+        self.categorical_feature_mapping = {}  # the same thing for the categorical array
         self.is_deterministic = None
 
     def get_name(self):
@@ -97,6 +101,27 @@ class Dataset(ABC):
         if self.x is None:
             raise RuntimeError('Dataset is not loaded.')
 
+    def get_numeric_x(self):  # TODO MJA: test
+        if self.numeric_x is None:
+            numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
+            numeric_columns = sorted(list(numeric_columns))
+            self.numeric_feature_mapping = {i: numeric_columns[i] for i in range(len(numeric_columns))}
+            self.numeric_x = self.x[:, numeric_columns]
+        return self.numeric_x
+
+    def get_categorical_x(self):
+        if self.categorical_x is None:
+            categorical = self.x_metadata['categorical']
+            self.categorical_feature_mapping = {i: categorical[i] for i in range(len(categorical))}
+            self.categorical_x = self.x[:, categorical]
+        return self.categorical_x
+
+    def map_numeric_feature_back(self, feature):
+        return self.numeric_feature_mapping[feature]
+
+    def map_categorical_feature_back(self, feature):
+        return self.categorical_feature_mapping[feature]
+
     @abstractmethod
     def compute_accuracy(self, y_pred):
         pass
@@ -116,15 +141,6 @@ class Dataset(ABC):
         :return: the corresponding index (int) label
         """
         pass
-
-    def split(self, mask):
-        """
-        Splits the dataset into two subsets, as indicated by the given mask.
-        :param mask: a numpy array of 0s and 1s with len(mask) == num_examples
-        """
-        left = self.from_mask(mask)
-        right = self.from_mask(~mask)
-        return left, right
 
     @abstractmethod
     def from_mask(self, mask):

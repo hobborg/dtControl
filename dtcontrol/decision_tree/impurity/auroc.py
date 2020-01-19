@@ -6,7 +6,7 @@ from sklearn.metrics import roc_auc_score
 
 from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
-class AUROC(ImpurityMeasure):
+class AUROC(ImpurityMeasure):  # TODO MJA
     def calculate_impurity(self, x, y, mask):
         left = self.calculate_auroc(x[mask], y[mask])
         right = self.calculate_auroc(x[~mask], y[~mask])

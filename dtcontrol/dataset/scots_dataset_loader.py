@@ -160,6 +160,7 @@ class ScotsDatasetLoader(DatasetLoader):
             # construct metadata
             x_metadata = dict()
             x_metadata["variables"] = [f"x_{i}" for i in range(len(state_lb))]
+            x_metadata["categorical"] = []
             x_metadata["min"] = state_lb
             x_metadata["max"] = state_ub
             x_metadata["step_size"] = state_eta

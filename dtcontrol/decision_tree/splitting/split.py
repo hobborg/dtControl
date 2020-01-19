@@ -6,12 +6,28 @@ class Split(ABC):
     @abstractmethod
     def predict(self, features):
         """
-        Determines if a single instance lies on the left or the right of this split.
+        Determines the child index of the split for one particular instance.
         :param features: the features of the instance
-        :returns: True if the instance lies on the left and False if the instance lies on the right
+        :returns: the child index (0/1 for a binary split)
         """
         pass
 
+    def split(self, dataset):
+        """
+        Splits the dataset into subsets.
+        :param dataset: the dataset to be split
+        :return: a list of the subsets
+        """
+        return [dataset.from_mask(mask) for mask in self.get_masks(dataset)]
+
+    @abstractmethod
+    def get_masks(self, dataset):
+        """
+        Returns the masks specifying this split.
+        :param dataset: the dataset to be split
+        :return: a list of the masks corresponding to each subset after the split
+        """
+
     @abstractmethod
     def print_dot(self):
         pass
@@ -24,28 +40,7 @@ class Split(ABC):
     def print_vhdl(self):
         pass
 
-class AxisAlignedSplit(Split):
-    """
-    Represents an axis aligned split of the form x[i] <= b.
-    """
-
-    def __init__(self, feature, threshold):
-        self.feature = feature
-        self.threshold = threshold
-
-    def predict(self, features):
-        return features[:, self.feature][0] <= self.threshold
-
-    def print_dot(self):
-        return self.print_c()
-
-    def print_c(self):
-        return f'x[{self.feature}] <= {round(self.threshold, 6)}'
-
-    def print_vhdl(self):
-        return f'x{self.feature} <= {round(self.threshold, 6)}'
-
-class LinearSplit(ABC):
+class LinearSplit(ABC):  # TODO MJA: in eigene klasse stecken
     """
     Represents a linear split of the form wTx + b <= 0.
     """

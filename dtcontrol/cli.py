@@ -35,6 +35,7 @@ from os import makedirs
 from os.path import exists, isfile, splitext
 
 import pkg_resources
+from dtcontrol.decision_tree.splitting.cart import AxisAlignedSplittingStrategy
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
@@ -42,7 +43,6 @@ from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
-from dtcontrol.decision_tree.splitting.cart import CartSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
@@ -89,7 +89,7 @@ def main():
         """
 
         method_map = {
-            'cart': CartSplittingStrategy(),
+            'cart': AxisAlignedSplittingStrategy(),
             'linsvm': LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000),
             'logreg': LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none'),
             'oc1': OC1SplittingStrategy(),

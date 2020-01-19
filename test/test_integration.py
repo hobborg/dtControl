@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest import SkipTest
 
+from dtcontrol.decision_tree.splitting.cart import AxisAlignedSplittingStrategy
 from sklearn.linear_model import LogisticRegression
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
@@ -10,7 +11,6 @@ from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFre
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
-from dtcontrol.decision_tree.splitting.cart import CartSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 class IntegrationTest(unittest.TestCase):
@@ -66,16 +66,17 @@ class IntegrationTest(unittest.TestCase):
             os.remove('benchmark_test.json')
 
     def init_classifiers(self):
-        self.cart = DecisionTree(NonDeterminizer(), [CartSplittingStrategy()], Entropy(), 'CART')
-        self.maxfreq = DecisionTree(MaxFreqDeterminizer(), [CartSplittingStrategy()], Entropy(), 'maxfreq')
-        self.minnorm = DecisionTree(NormDeterminizer(min), [CartSplittingStrategy()], Entropy(), 'minnorm')
+        self.cart = DecisionTree(NonDeterminizer(), [AxisAlignedSplittingStrategy()], Entropy(), 'CART')
+        self.maxfreq = DecisionTree(MaxFreqDeterminizer(), [AxisAlignedSplittingStrategy()], Entropy(), 'maxfreq')
+        self.minnorm = DecisionTree(NormDeterminizer(min), [AxisAlignedSplittingStrategy()], Entropy(), 'minnorm')
         logreg_strategy = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
         self.logreg = DecisionTree(NonDeterminizer(),
-                                   [CartSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
+                                   [AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
         self.maxfreq_logreg = DecisionTree(MaxFreqDeterminizer(),
-                                           [CartSplittingStrategy(), logreg_strategy], Entropy(), 'maxfreq-logreg')
+                                           [AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(),
+                                           'maxfreq-logreg')
         self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
-                                           [CartSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
+                                           [AxisAlignedSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']

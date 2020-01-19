@@ -4,11 +4,11 @@ from dtcontrol.decision_tree.splitting.split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class LinearClassifierSplittingStrategy(SplittingStrategy):  # TODO MJA: one-hot encoding for categorical variables?
-    def __init__(self, classifier_class, **kwargs):
+    def __init__(self, classifier_class, keep_categorical=False, **kwargs):
         self.classifier_class = classifier_class
         self.kwargs = kwargs
 
-    def find_split(self, x, y, impurity_measure):
+    def find_split(self, x_numeric, x_categorical, y, impurity_measure):
         label_to_impurity = {}
         label_to_classifier = {}
         for label in np.unique(y):

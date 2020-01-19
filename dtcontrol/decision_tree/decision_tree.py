@@ -79,8 +79,7 @@ class Node:
         self.split = None
         self.depth = depth
         self.num_nodes = 0
-        self.left = None
-        self.right = None
+        self.children = []
         # labels can be one of the following: a single label, a single tuple, a list of possible labels,
         #                                     a list of tuples
         self.index_label = None  # the label with int indices
@@ -94,32 +93,28 @@ class Node:
 
     def predict_one(self, features, actual_values=True):
         node = self
-        while node.left:
-            node = node.left if node.test_condition(features) else node.right
+        while not node.is_leaf():
+            node = node.children[node.split.predict(features)]
         return node.actual_label if actual_values else node.index_label
-
-    def test_condition(self, x):
-        return self.split.predict(x)
 
     def fit(self, dataset):
         y = self.determinizer.determinize(dataset) if not self.determinizer.determinize_once_before_construction() \
             else dataset.y
         if self.check_done(dataset.x, y):
             return
-        splits = [strategy.find_split(dataset.x, y, self.impurity_measure) for strategy in self.split_strategies]
+        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.split_strategies]
         splits = [s for s in splits if s is not None]
-        if splits == []:
-            logging.error("Aborting branch: no split possible. Are you trying to use OC1 with categorical variables?")
+        if not splits:
+            logging.error("Aborting branch: no split possible.")
             return
-        mask, self.split = \
-            min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(dataset.x, y, mask_split[0]))
+        self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, y, s))
 
-        left_data, right_data = dataset.split(mask)
-        self.left = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
-        self.right = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
-        self.left.fit(left_data)
-        self.right.fit(right_data)
-        self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
+        subsets = self.split.split(dataset)
+        for subset in subsets:
+            node = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
+            node.fit(subset)
+            self.children.append(node)
+        self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
 
     def check_done(self, x, y):
         if self.depth >= 100:
@@ -143,7 +138,7 @@ class Node:
         return False
 
     def is_leaf(self):
-        return not self.left and not self.right
+        return not self.children
 
     def print_dot(self):
         text = 'digraph {{\n{}\n}}'.format(self._print_dot(0)[1])
