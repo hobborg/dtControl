@@ -103,7 +103,7 @@ class IntegrationTest(unittest.TestCase):
 
     def run_test(self, datasets, classifiers):
         # the unzipped_examples folder is used in docker
-        self.suite.add_datasets(['../examples', '/unzipped_examples'], include=datasets)
+        self.suite.add_datasets(['../examples', '/examples'], include=datasets)
         self.suite.benchmark(classifiers)
         self.assert_results_almost_equal(self.expected_results, self.suite.results)
 
