@@ -7,11 +7,8 @@
 FROM alpine
 
 COPY req.txt /req.txt
-RUN mkdir /unzipped_examples
-COPY examples/* /unzipped_examples/
 
 ENV PYTHONUNBUFFERED=1
-
 
 # in the following, we need to manually install Cython and numpy because of some bug in pip/pandas where the install fails
 RUN \
