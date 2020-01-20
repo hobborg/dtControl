@@ -8,7 +8,8 @@ import numpy as np
 
 import dtcontrol
 import dtcontrol.globals
-from dtcontrol.decision_tree.splitting.split import LinearSplit, AxisAlignedSplit
+from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplit
+from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 from dtcontrol.util import log_without_newline
 
@@ -47,21 +48,17 @@ class OC1SplittingStrategy(SplittingStrategy):
                     logging.error("Compiling OC1 failed")
                     sys.exit(-1)
 
-    def find_split(self, x_numeric, x_categorical, y, impurity_measure):
+    def find_split(self, dataset, y, impurity_measure):
+        x_numeric = dataset.get_numeric_x()
         if len(x_numeric) == 0:
             return None
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)
-        self.save_data_to_file(x, y)
+        self.save_data_to_file(x_numeric, y)
         self.execute_oc1()
-        split = self.parse_oc1_dt(x.shape[1])
-        if isinstance(split, AxisAlignedSplit):
-            mask = x[:, split.feature] <= split.threshold
-        else:
-            mask = np.dot(x, split.coefficients) + split.intercept <= 0
         if self.delete_tmp:
             shutil.rmtree(self.tmp_path)
-        return mask, split
+        return self.parse_oc1_dt(dataset)
 
     def save_data_to_file(self, x, y):
         data = np.c_[x, y]
@@ -77,7 +74,7 @@ class OC1SplittingStrategy(SplittingStrategy):
             p.wait()
             dtcontrol.globals.oc1_pid = None
 
-    def parse_oc1_dt(self, dim):
+    def parse_oc1_dt(self, dataset):
         with open(self.dt_file) as infile:
             while not infile.readline().startswith('Root'):
                 pass
@@ -85,6 +82,7 @@ class OC1SplittingStrategy(SplittingStrategy):
 
         summands = hyperplane_str[:-4].split(' + ')
         intercept = float(summands[-1])
+        dim = dataset.get_numeric_x().shape[1]
         j = 0
         coefficients = []
         for i in range(1, dim + 1):
@@ -96,5 +94,6 @@ class OC1SplittingStrategy(SplittingStrategy):
         if len([c for c in coefficients if c != 0]) == 1:
             for i in range(len(coefficients)):
                 if coefficients[i] != 0:
-                    return AxisAlignedSplit(i, -intercept)
-        return LinearSplit(np.array(coefficients), intercept)
+                    return AxisAlignedSplit(dataset.map_numeric_feature_back(i), -intercept)
+        real_coefficients = LinearSplit.map_numeric_coefficients_back(coefficients, dataset)
+        return LinearSplit(real_coefficients, intercept)

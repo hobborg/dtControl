@@ -2,7 +2,6 @@ import os
 import unittest
 from unittest import SkipTest
 
-from dtcontrol.decision_tree.splitting.cart import AxisAlignedSplittingStrategy
 from sklearn.linear_model import LogisticRegression
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
@@ -11,6 +10,7 @@ from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFre
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
+from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 class IntegrationTest(unittest.TestCase):

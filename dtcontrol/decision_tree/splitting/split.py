@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-import numpy as np
-
 class Split(ABC):
     @abstractmethod
     def predict(self, features):
@@ -39,36 +37,3 @@ class Split(ABC):
     @abstractmethod
     def print_vhdl(self):
         pass
-
-class LinearSplit(ABC):  # TODO MJA: in eigene klasse stecken
-    """
-    Represents a linear split of the form wTx + b <= 0.
-    """
-
-    def __init__(self, coefficients, intercept):
-        self.coefficients = coefficients
-        self.intercept = intercept
-
-    def predict(self, features):
-        return np.dot(features, self.coefficients) + self.intercept <= 0
-
-    def print_dot(self):
-        return self.get_hyperplane_str(rounded=True, newlines=True)
-
-    def print_c(self):
-        return self.get_hyperplane_str()
-
-    def print_vhdl(self):
-        hyperplane = self.get_hyperplane_str()
-        hyperplane.replace('[', '')
-        hyperplane.replace(']', '')
-        return hyperplane
-
-    def get_hyperplane_str(self, rounded=False, newlines=False):
-        line = []
-        for i in range(len(self.coefficients)):
-            line.append(f"{round(self.coefficients[i], 6) if rounded else self.coefficients[i]}*x[{i}]")
-        line.append(f"{round(self.intercept, 6) if rounded else self.intercept}")
-        joiner = "\\n+" if newlines else "+"
-        hyperplane = joiner.join(line) + " <= 0"
-        return hyperplane.replace('+-', '-')

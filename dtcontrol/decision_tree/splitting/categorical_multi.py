@@ -6,7 +6,8 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
         x_categorical = dataset.get_categorical_x()
         splits = {}
         for feature in range(x_categorical.shape[1]):
-            split = CategoricalMultiSplit(feature)
+            real_feature = dataset.map_categorical_feature_back(feature)
+            split = CategoricalMultiSplit(real_feature)
             splits[split] = impurity_measure.calculate_impurity(dataset, y, split)
 
         if not splits:
