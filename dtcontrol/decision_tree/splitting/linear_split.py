@@ -17,7 +17,7 @@ class LinearSplit(Split, ABC):
     def map_numeric_coefficients_back(numeric_coefficients, dataset):
         dim = dataset.x.shape[1]
         new_coefficients = [0] * dim
-        for i in range(numeric_coefficients):
+        for i in range(len(numeric_coefficients)):
             new_coefficients[dataset.map_numeric_feature_back(i)] = numeric_coefficients[i]
         return np.array(new_coefficients)
 

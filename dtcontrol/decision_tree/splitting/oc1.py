@@ -47,6 +47,9 @@ class OC1SplittingStrategy(SplittingStrategy):
                 except subprocess.CalledProcessError:
                     logging.error("Compiling OC1 failed")
                     sys.exit(-1)
+            else:
+                logging.error("Could not find OC1 files")
+                sys.exit(-1)
 
     def find_split(self, dataset, y, impurity_measure):
         x_numeric = dataset.get_numeric_x()
@@ -56,9 +59,10 @@ class OC1SplittingStrategy(SplittingStrategy):
             os.mkdir(self.tmp_path)
         self.save_data_to_file(x_numeric, y)
         self.execute_oc1()
+        split = self.parse_oc1_dt(dataset)
         if self.delete_tmp:
             shutil.rmtree(self.tmp_path)
-        return self.parse_oc1_dt(dataset)
+        return split
 
     def save_data_to_file(self, x, y):
         data = np.c_[x, y]
