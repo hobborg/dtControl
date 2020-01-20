@@ -111,6 +111,7 @@ class Node:
         self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, y, s))
 
         subsets = self.split.split(dataset)
+        assert len(subsets) > 1
         for subset in subsets:
             node = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
             node.fit(subset)
@@ -161,6 +162,7 @@ class Node:
                 labels = range(len(self.children))
         else:
             labels = ['True', 'False']
+            assert len(self.children) == 2
         for i in range(len(self.children)):
             child = self.children[i]
             last_number, child_text = child._print_dot(child_starting_number, variables, category_names)
@@ -186,20 +188,25 @@ class Node:
         if self.is_leaf():
             return "\t" * indentation_level + (self.print_c_label() if type == 'c' else self.print_vhdl_label())
 
-        text = "\t" * indentation_level + (
-            f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
-
-        if self.left:
-            text += f"{self.left.print_if_then_else(indentation_level + 1, type)}\n"
+        if isinstance(self.split, CategoricalMultiSplit):
+            text = "\t" * indentation_level + (
+                f"if ({self.split.print_c()} == 0) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} = 0 then\n")
         else:
-            text += "\t" * (indentation_level + 1) + ";\n"
+            text = "\t" * indentation_level + (
+                f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
+
+        text += f"{self.children[0].print_if_then_else(indentation_level + 1, type)}\n"
         if type == 'c':
             text += "\t" * indentation_level + "}\n"
-
-        if self.right:
-            text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
-            text += f"{self.right.print_if_then_else(indentation_level + 1, type)}\n"
-            text += "\t" * indentation_level + ("}" if type == 'c' else "end if;")
+        for i in range(1, len(self.children)):
+            if isinstance(self.split, CategoricalMultiSplit):
+                c_text = f"else if ({self.split.print_c()} == {i}) {{\n"
+                vhdl_text = f"else if ({self.split.print_vhdl()} = {i} then\n"
+                text += "\t" * indentation_level + (c_text if type == 'c' else vhdl_text)
+            else:
+                text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
+            text += f"{self.children[i].print_if_then_else(indentation_level + 1, type)}\n"
+            text += "\t" * indentation_level + ("}\n" if type == 'c' else "end if;")
 
         return text
 

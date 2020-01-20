@@ -3,7 +3,6 @@ from sklearn.svm import LinearSVC
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
-from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
@@ -35,10 +34,10 @@ aa = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000)
 classifiers = [
-    DecisionTree(NonDeterminizer(), [aa], Entropy(), 'CART'),
+    # DecisionTree(NonDeterminizer(), [aa], Entropy(), 'CART'),
     # SafePruning(DecisionTree(NonDeterminizer(), [cart], Entropy(), 'CART')),
     DecisionTree(NonDeterminizer(), [aa, logreg], Entropy(), 'logreg'),
-    DecisionTree(MaxFreqDeterminizer(), [aa], Entropy(), 'MaxFreq'),
+    # DecisionTree(MaxFreqDeterminizer(), [aa], Entropy(), 'MaxFreq'),
     # DecisionTree(NormDeterminizer(min), [cart], Entropy(), 'MinNorm'),
     # DecisionTree(NormDeterminizer(min), [cart, logreg], Entropy(), 'minnorm-logreg'),
 ]

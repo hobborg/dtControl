@@ -8,6 +8,7 @@ import webbrowser
 from os import makedirs
 from os.path import join, exists, isfile
 
+import numpy as np
 from jinja2 import FileSystemLoader, Environment
 
 import dtcontrol
@@ -163,12 +164,12 @@ class BenchmarkSuite:
             outfile.write(classifier.print_dot(dataset.x_metadata.get('variables'),
                                                dataset.x_metadata.get('category_names')))
 
-        # num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
-        # template = multi_output_c_template if num_outputs > 1 else single_output_c_template
-        # example = f'{{{",".join(str(i) + "f" for i in dataset.x[0])}}}'
-        # c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
-        # with open(c_filename, 'w+') as outfile:
-        #     outfile.write(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
+        num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
+        template = multi_output_c_template if num_outputs > 1 else single_output_c_template
+        example = f'{{{",".join(str(i) + (".f" if isinstance(i, np.integer) else "f") for i in dataset.x[0])}}}'
+        c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
+        with open(c_filename, 'w+') as outfile:
+            outfile.write(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
 
     @staticmethod
     def get_filename(folder, dataset, classifier, extension, unique=False):

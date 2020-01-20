@@ -31,7 +31,7 @@ class CategoricalMultiSplit(Split):
         return f'x[{self.feature}]'
 
     def print_c(self):
-        pass
+        return f'x[{self.feature}]'
 
     def print_vhdl(self):
-        pass
+        return f'x{self.feature}]'
