@@ -8,6 +8,7 @@ import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):
@@ -41,8 +42,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
             'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
         }
 
-    def print_dot(self):
-        return self.root.print_dot()
+    def print_dot(self, variables=None, category_names=None):
+        return self.root.print_dot(variables, category_names)
 
     def print_c(self):
         return self.root.print_c()
@@ -79,8 +80,7 @@ class Node:
         self.split = None
         self.depth = depth
         self.num_nodes = 0
-        self.left = None
-        self.right = None
+        self.children = []
         # labels can be one of the following: a single label, a single tuple, a list of possible labels,
         #                                     a list of tuples
         self.index_label = None  # the label with int indices
@@ -94,28 +94,29 @@ class Node:
 
     def predict_one(self, features, actual_values=True):
         node = self
-        while node.left:
-            node = node.left if node.test_condition(features) else node.right
+        while not node.is_leaf():
+            node = node.children[node.split.predict(features)]
         return node.actual_label if actual_values else node.index_label
-
-    def test_condition(self, x):
-        return self.split.predict(x)
 
     def fit(self, dataset):
         y = self.determinizer.determinize(dataset) if not self.determinizer.determinize_once_before_construction() \
             else dataset.y
         if self.check_done(dataset.x, y):
             return
-        splits = [strategy.find_split(dataset.x, y, self.impurity_measure) for strategy in self.split_strategies]
-        mask, self.split = \
-            min(splits, key=lambda mask_split: self.impurity_measure.calculate_impurity(dataset.x, y, mask_split[0]))
+        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.split_strategies]
+        splits = [s for s in splits if s is not None]
+        if not splits:
+            logging.error("Aborting branch: no split possible.")
+            return
+        self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, y, s))
 
-        left_data, right_data = dataset.split(mask)
-        self.left = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
-        self.right = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
-        self.left.fit(left_data)
-        self.right.fit(right_data)
-        self.num_nodes = 1 + self.left.num_nodes + self.right.num_nodes
+        subsets = self.split.split(dataset)
+        assert len(subsets) > 1
+        for subset in subsets:
+            node = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
+            node.fit(subset)
+            self.children.append(node)
+        self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
 
     def check_done(self, x, y):
         if self.depth >= 100:
@@ -139,37 +140,39 @@ class Node:
         return False
 
     def is_leaf(self):
-        return not self.left and not self.right
+        return not self.children
 
-    def print_dot(self):
-        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0)[1])
+    def print_dot(self, variables=None, category_names=None):
+        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0, variables, category_names)[1])
         return text
 
-    def _print_dot(self, starting_number):
+    def _print_dot(self, starting_number, variables=None, category_names=None):
         if self.is_leaf():
             return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label())
 
-        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot())
+        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot(variables))
         text += "];\n"
 
-        number_for_right = starting_number + 1
-        last_number = starting_number
-
-        if self.left:
-            last_left_number, left_text = self.left._print_dot(starting_number + 1)
-            text += left_text
-            label = 'True' if starting_number == 0 else ''
-            text += '{} -> {} [label="{}"];\n'.format(starting_number, starting_number + 1, label)
-            number_for_right = last_left_number + 1
-            last_number = last_left_number
-
-        if self.right:
-            last_right_number, right_text = self.right._print_dot(number_for_right)
-            text += right_text
-            label = 'False' if starting_number == 0 else ''
-            text += '{} -> {} [style="dashed", label="{}"];\n'.format(starting_number, number_for_right, label)
-            last_number = last_right_number
-
+        last_number = -1
+        child_starting_number = starting_number + 1
+        if isinstance(self.split, CategoricalMultiSplit):
+            if category_names and self.split.feature in category_names:
+                labels = category_names[self.split.feature]
+            else:
+                labels = range(len(self.children))
+        else:
+            labels = ['True', 'False']
+            assert len(self.children) == 2
+        for i in range(len(self.children)):
+            child = self.children[i]
+            last_number, child_text = child._print_dot(child_starting_number, variables, category_names)
+            text += child_text
+            text += f'{starting_number} -> {child_starting_number} ['
+            if not isinstance(self.split, CategoricalMultiSplit) and i == 1:
+                text += 'style="dashed", '
+            text += f'label="{labels[i]}"];\n'
+            child_starting_number = last_number + 1
+        assert last_number != -1
         return last_number, text
 
     def print_c(self):
@@ -185,20 +188,25 @@ class Node:
         if self.is_leaf():
             return "\t" * indentation_level + (self.print_c_label() if type == 'c' else self.print_vhdl_label())
 
-        text = "\t" * indentation_level + (
-            f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
-
-        if self.left:
-            text += f"{self.left.print_if_then_else(indentation_level + 1, type)}\n"
+        if isinstance(self.split, CategoricalMultiSplit):
+            text = "\t" * indentation_level + (
+                f"if ({self.split.print_c()} == 0) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} = 0 then\n")
         else:
-            text += "\t" * (indentation_level + 1) + ";\n"
+            text = "\t" * indentation_level + (
+                f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
+
+        text += f"{self.children[0].print_if_then_else(indentation_level + 1, type)}\n"
         if type == 'c':
             text += "\t" * indentation_level + "}\n"
-
-        if self.right:
-            text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
-            text += f"{self.right.print_if_then_else(indentation_level + 1, type)}\n"
-            text += "\t" * indentation_level + ("}" if type == 'c' else "end if;")
+        for i in range(1, len(self.children)):
+            if isinstance(self.split, CategoricalMultiSplit):
+                c_text = f"else if ({self.split.print_c()} == {i}) {{\n"
+                vhdl_text = f"else if ({self.split.print_vhdl()} = {i} then\n"
+                text += "\t" * indentation_level + (c_text if type == 'c' else vhdl_text)
+            else:
+                text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
+            text += f"{self.children[i].print_if_then_else(indentation_level + 1, type)}\n"
+            text += "\t" * indentation_level + ("}\n" if type == 'c' else "end if;")
 
         return text
 

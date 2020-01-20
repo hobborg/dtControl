@@ -1,0 +1,32 @@
+{
+  "column_types": {
+    "categorical": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "column_names": [
+    "Outlook",
+    "Temperature",
+    "Humidity",
+    "Windy"
+  ],
+  "category_names": {
+    "Outlook": [
+      "Rainy",
+      "Overcast",
+      "Sunny"
+    ],
+    "1": [
+      "Cool",
+      "Mild",
+      "Hot"
+    ],
+    "Windy": [
+      "No",
+      "Yes"
+    ]
+  }
+}

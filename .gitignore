@@ -7,7 +7,7 @@ tmp.html
 dtcontrol/classifiers/OC1_source/*.o
 dtcontrol/decision_tree/OC1_source/mktree
 dtcontrol/benchmark_tmp.*
-examples/.benchmark_suite
+.benchmark_suite
 dtcontrol/saved_classifiers
 benchmark*.html
 benchmark*.json

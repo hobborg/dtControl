@@ -5,14 +5,14 @@ import numpy as np
 from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class Entropy(ImpurityMeasure):
-    def calculate_impurity(self, x, y, mask):
-        left = y[mask]
-        right = y[~mask]
-        if len(left) == 0 or len(right) == 0:
-            return sys.maxsize
-        num_labels = len(y)
-        return (len(left) / num_labels) * self.calculate_entropy(left) + \
-               (len(right) / num_labels) * self.calculate_entropy(right)
+    def calculate_impurity(self, dataset, y, split):
+        impurity = 0
+        for mask in split.get_masks(dataset):
+            subset = y[mask]
+            if len(subset) == 0:
+                return sys.maxsize
+            impurity += (len(subset) / len(y)) * self.calculate_entropy(subset)
+        return impurity
 
     @staticmethod
     def calculate_entropy(y):

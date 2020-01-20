@@ -55,3 +55,10 @@ def log_without_newline(msg):
     logging.StreamHandler.terminator = ""
     logging.info(msg)
     logging.StreamHandler.terminator = old_terminator
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False

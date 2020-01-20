@@ -17,14 +17,13 @@ class SafePruning(PostProcessingMethod):
     def prune(self, node):
         if node.is_leaf():
             return
-        self.prune(node.left)
-        self.prune(node.right)
-        node.num_nodes = 1 + node.left.num_nodes + node.right.num_nodes
-        intersection = make_set(node.left.index_label) & make_set(node.right.index_label)
+        for child in node.children:
+            self.prune(child)
+        node.num_nodes = 1 + sum([c.num_nodes for c in node.children])
+        intersection = set.intersection(*[make_set(c.index_label) for c in node.children])
         if len(intersection) == 0:
             return
         node.index_label = list(intersection) if len(intersection) > 1 else list(intersection)[0]
         node.actual_label = node.determinizer.index_label_to_actual(node.index_label)
-        node.left = None
-        node.right = None
+        node.children = []
         node.num_nodes = 1
