@@ -14,8 +14,7 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
         if len(x_numeric) == 0:
             return None
 
-        label_to_impurity = {}
-        label_to_classifier = {}
+        splits = {}
         for label in np.unique(y):
             new_y = np.copy(y)
             label_mask = (new_y == label)
@@ -23,14 +22,11 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
             new_y[~label_mask] = -1
             classifier = self.classifier_class(**self.kwargs)
             classifier.fit(x_numeric, new_y)
-            label_to_classifier[label] = classifier
             features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
-            impurity = impurity_measure.calculate_impurity(dataset, y, LinearClassifierSplit(classifier, features))
-            label_to_impurity[label] = impurity
+            split = LinearClassifierSplit(classifier, features)
+            splits[split] = impurity_measure.calculate_impurity(dataset, y, split)
 
-        label = min(label_to_impurity.items(), key=lambda x: x[1])[0]
-        classifier = label_to_classifier[label]
-        return LinearClassifierSplit(classifier)
+        return min(splits.keys(), key=splits.get)
 
 class LinearClassifierSplit(LinearSplit):
     def __init__(self, classifier, features):

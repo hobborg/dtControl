@@ -33,6 +33,8 @@ class AxisAlignedSplit(Split):
         return 0 if features[:, self.feature][0] <= self.threshold else 1
 
     def print_dot(self, variables=None):
+        if variables:
+            return f'{variables[self.feature]} <= {round(self.threshold, 6)}'
         return self.print_c()
 
     def print_c(self):

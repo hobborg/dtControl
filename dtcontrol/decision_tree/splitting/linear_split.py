@@ -29,7 +29,7 @@ class LinearSplit(Split, ABC):
         return 0 if np.dot(features, self.coefficients) + self.intercept <= 0 else 1
 
     def print_dot(self, variables=None):
-        return self.get_hyperplane_str(rounded=True, newlines=True)
+        return self.get_hyperplane_str(rounded=True, newlines=True, variables=variables)
 
     def print_c(self):
         return self.get_hyperplane_str()
@@ -40,10 +40,14 @@ class LinearSplit(Split, ABC):
         hyperplane.replace(']', '')
         return hyperplane
 
-    def get_hyperplane_str(self, rounded=False, newlines=False):  # TODO MJA: remove 0s
+    def get_hyperplane_str(self, rounded=False, newlines=False, variables=None):
         line = []
         for i in range(len(self.coefficients)):
-            line.append(f"{round(self.coefficients[i], 6) if rounded else self.coefficients[i]}*x[{i}]")
+            if self.coefficients[i] == 0:
+                continue
+            coefficient = round(self.coefficients[i], 6) if rounded else self.coefficients[i]
+            variable = variables[i] if variables else f'x[{i}]'
+            line.append(f"{coefficient}*{variable}")
         line.append(f"{round(self.intercept, 6) if rounded else self.intercept}")
         joiner = "\\n+" if newlines else "+"
         hyperplane = joiner.join(line) + " <= 0"
