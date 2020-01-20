@@ -21,12 +21,12 @@ class TestSafePruning(TestCase):
         sp.run()
 
         self.assertEqual(5, root.num_nodes)
-        self.assertTrue(root.left.is_leaf())
-        self.assertEqual(2, root.left.index_label)
-        self.assertTrue(root.right.left.is_leaf())
-        self.assertEqual([1, 2, 3], root.right.left.index_label)
-        self.assertTrue(root.right.right.is_leaf())
-        self.assertEqual([4, 5], root.right.right.index_label)
+        self.assertTrue(root.children[0].is_leaf())
+        self.assertEqual(2, root.children[0].index_label)
+        self.assertTrue(root.children[1].children[0].is_leaf())
+        self.assertEqual([1, 2, 3], root.children[1].children[0].index_label)
+        self.assertTrue(root.children[1].children[1].is_leaf())
+        self.assertEqual([4, 5], root.children[1].children[1].index_label)
 
     @staticmethod
     def create_leaf(label):
@@ -38,8 +38,7 @@ class TestSafePruning(TestCase):
     @staticmethod
     def create_parent(left, right):
         node = Node(MockDeterminizer(), None, None)
-        node.left = left
-        node.right = right
+        node.children = [left, right]
         node.num_nodes = 1 + left.num_nodes + right.num_nodes
         return node
 
