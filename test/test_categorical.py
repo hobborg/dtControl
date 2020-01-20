@@ -9,8 +9,12 @@ from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMulti
 
 class TestCategorical(unittest.TestCase):
     def test_categorical(self):
-        ds = SingleOutputDataset('golf.csv')
-        ds.load_if_necessary()
+        try:
+            ds = SingleOutputDataset('golf.csv')
+            ds.load_if_necessary()
+        except FileNotFoundError:
+            ds = SingleOutputDataset('test/golf.csv')
+            ds.load_if_necessary()
         self.assertEqual([0, 1, 2, 3], ds.x_metadata['categorical'])
         self.assertEqual(["Outlook", "Temperature", "Humidity", "Windy"], ds.x_metadata['variables'])
         self.assertEqual({
