@@ -8,6 +8,7 @@ import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):
@@ -41,8 +42,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
             'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
         }
 
-    def print_dot(self):
-        return self.root.print_dot()
+    def print_dot(self, variables=None, category_names=None):
+        return self.root.print_dot(variables, category_names)
 
     def print_c(self):
         return self.root.print_c()
@@ -140,27 +141,32 @@ class Node:
     def is_leaf(self):
         return not self.children
 
-    def print_dot(self, metadata=None):  # TODO MJA: pretty printing with metadata
-        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0)[1])
+    def print_dot(self, variables=None, category_names=None):
+        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0, variables, category_names)[1])
         return text
 
-    def _print_dot(self, starting_number):
+    def _print_dot(self, starting_number, variables=None, category_names=None):
         if self.is_leaf():
             return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label())
 
-        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot())
+        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot(variables))
         text += "];\n"
 
         last_number = -1
         child_starting_number = starting_number + 1
-        true_false = self.split.is_true_false()
-        labels = ['True', 'False'] if true_false else range(len(self.children))
+        if isinstance(self.split, CategoricalMultiSplit):
+            if category_names and self.split.feature in category_names:
+                labels = category_names[self.split.feature]
+            else:
+                labels = range(len(self.children))
+        else:
+            labels = ['True', 'False']
         for i in range(len(self.children)):
             child = self.children[i]
-            last_number, child_text = child._print_dot(child_starting_number)
+            last_number, child_text = child._print_dot(child_starting_number, variables, category_names)
             text += child_text
             text += f'{starting_number} -> {child_starting_number} ['
-            if true_false and i == 1:
+            if not isinstance(self.split, CategoricalMultiSplit) and i == 1:
                 text += 'style="dashed", '
             text += f'label="{labels[i]}"];\n'
             child_starting_number = last_number + 1

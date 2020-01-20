@@ -28,10 +28,7 @@ class LinearSplit(Split, ABC):
     def predict(self, features):
         return 0 if np.dot(features, self.coefficients) + self.intercept <= 0 else 1
 
-    def is_true_false(self):
-        return True
-
-    def print_dot(self):
+    def print_dot(self, variables=None):
         return self.get_hyperplane_str(rounded=True, newlines=True)
 
     def print_c(self):
