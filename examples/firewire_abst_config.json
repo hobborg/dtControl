@@ -1,0 +1,27 @@
+{
+  "column_types": {
+    "numeric": [
+      0
+    ],
+    "categorical": [
+      1
+    ]
+  },
+  "column_names": [
+    "clock",
+    "state"
+  ],
+  "category_names": {
+    "state": [
+      "start_start",
+      "fast_start",
+      "start_fast",
+      "start_slow",
+      "slow_start",
+      "fast_fast",
+      "fast_slow",
+      "slow_fast",
+      "slow_slow"
+    ]
+  }
+}
