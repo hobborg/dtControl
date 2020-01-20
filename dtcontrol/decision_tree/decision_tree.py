@@ -140,7 +140,7 @@ class Node:
     def is_leaf(self):
         return not self.children
 
-    def print_dot(self):
+    def print_dot(self, metadata=None):  # TODO MJA: pretty printing with metadata
         text = 'digraph {{\n{}\n}}'.format(self._print_dot(0)[1])
         return text
 
@@ -151,24 +151,20 @@ class Node:
         text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot())
         text += "];\n"
 
-        number_for_right = starting_number + 1
-        last_number = starting_number
-
-        if self.left:
-            last_left_number, left_text = self.left._print_dot(starting_number + 1)
-            text += left_text
-            label = 'True' if starting_number == 0 else ''
-            text += '{} -> {} [label="{}"];\n'.format(starting_number, starting_number + 1, label)
-            number_for_right = last_left_number + 1
-            last_number = last_left_number
-
-        if self.right:
-            last_right_number, right_text = self.right._print_dot(number_for_right)
-            text += right_text
-            label = 'False' if starting_number == 0 else ''
-            text += '{} -> {} [style="dashed", label="{}"];\n'.format(starting_number, number_for_right, label)
-            last_number = last_right_number
-
+        last_number = -1
+        child_starting_number = starting_number + 1
+        true_false = self.split.is_true_false()
+        labels = ['True', 'False'] if true_false else range(len(self.children))
+        for i in range(len(self.children)):
+            child = self.children[i]
+            last_number, child_text = child._print_dot(child_starting_number)
+            text += child_text
+            text += f'{starting_number} -> {child_starting_number} ['
+            if true_false and i == 1:
+                text += 'style="dashed", '
+            text += f'label="{labels[i]}"];\n'
+            child_starting_number = last_number + 1
+        assert last_number != -1
         return last_number, text
 
     def print_c(self):

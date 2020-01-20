@@ -27,6 +27,12 @@ class Split(ABC):
         """
 
     @abstractmethod
+    def is_true_false(self):
+        """
+        :return: True if this split should be labelled with true and false (only applicable for binary splits)
+        """
+
+    @abstractmethod
     def print_dot(self):
         pass
 

@@ -25,8 +25,11 @@ class CategoricalMultiSplit(Split):
         values = sorted(set(dataset.x[:, self.feature]))
         return [dataset.x[:, self.feature] == v for v in values]
 
+    def is_true_false(self):
+        return False
+
     def print_dot(self):
-        pass
+        return f'x[{self.feature}]'
 
     def print_c(self):
         pass
