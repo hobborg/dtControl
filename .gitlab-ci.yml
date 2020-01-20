@@ -7,6 +7,7 @@ Test:
   stage: test
   script:
     - /usr/bin/python3 --version
+    - pwd
     - export PYTHONPATH="$(pwd):$(pwd)/dtcontrol:$PYTHONPATH"
     - /usr/bin/python3 -m unittest discover -s test
     # - PYTHONPATH="$(pwd):$PYTHONPATH" /usr/bin/python3 setup.py install
