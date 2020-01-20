@@ -53,7 +53,7 @@ class OC1SplittingStrategy(SplittingStrategy):
 
     def find_split(self, dataset, y, impurity_measure):
         x_numeric = dataset.get_numeric_x()
-        if len(x_numeric) == 0:
+        if x_numeric.shape[1] == 0:
             return None
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)

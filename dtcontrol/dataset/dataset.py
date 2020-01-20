@@ -101,7 +101,7 @@ class Dataset(ABC):
         if self.x is None:
             raise RuntimeError('Dataset is not loaded.')
 
-    def get_numeric_x(self):  # TODO MJA: test
+    def get_numeric_x(self):
         if self.numeric_x is None:
             numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
             numeric_columns = sorted(list(numeric_columns))
