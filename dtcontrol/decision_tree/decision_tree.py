@@ -39,7 +39,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
     def get_stats(self):
         return {
             'nodes': self.root.num_nodes,
-            'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))
+            'inner nodes': self.root.num_inner_nodes,
+            'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))  # TODO MJA: fix bandwith
         }
 
     def print_dot(self, variables=None, category_names=None):
@@ -80,6 +81,7 @@ class Node:
         self.split = None
         self.depth = depth
         self.num_nodes = 0
+        self.num_inner_nodes = 0
         self.children = []
         # labels can be one of the following: a single label, a single tuple, a list of possible labels,
         #                                     a list of tuples
@@ -117,6 +119,7 @@ class Node:
             node.fit(subset)
             self.children.append(node)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
+        self.num_inner_nodes = 1 + sum([c.num_inner_nodes for c in self.children])
 
     def check_done(self, x, y):
         if self.depth >= 100:

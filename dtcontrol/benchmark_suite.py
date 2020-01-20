@@ -70,7 +70,7 @@ class BenchmarkSuite:
         if isfile(path):
             return [path]
         else:
-            return [p for ext in ['*.scs', '*.dump', '*.csv'] for p in glob.glob(join(path, ext))]
+            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism'] for p in glob.glob(join(path, ext))]
 
     def display_html(self):
         url = f'file://{os.path.abspath(self.html_file)}'
@@ -87,6 +87,7 @@ class BenchmarkSuite:
                 try:
                     cell, computed = self.compute_cell(ds, classifier)
                 except ValueError as e:
+                    # traceback.print_exc()
                     logging.error(e)
                     continue
                 if computed:
@@ -242,7 +243,6 @@ class BenchmarkSuite:
                 input_dim = int(f.readline())
                 return input_dim > 1
         elif "csv" in ext:
-            # if scs, then
             with open(filename) as f:
                 f.readline()
                 _, input_dim = map(int, f.readline().split("BEGIN")[1].split())
@@ -269,5 +269,7 @@ class BenchmarkSuite:
             with open(filename) as f:
                 is_det = "NON-PERMISSIVE" in f.readline()
                 return is_det
+        elif "prism" in ext:
+            return True  # PRISM is always deterministic (?)
         else:
             return False  # UPPAAL is always non-deterministic

@@ -19,7 +19,7 @@ class CategoricalMultiSplit(Split):
         self.feature = feature
 
     def predict(self, features):
-        return features[:, self.feature]
+        return features[:, self.feature][0]
 
     def get_masks(self, dataset):
         values = sorted(set(dataset.x[:, self.feature]))
