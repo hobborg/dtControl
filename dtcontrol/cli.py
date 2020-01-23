@@ -142,7 +142,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog="dtcontrol")
 
-    version = pkg_resources.require("dtcontrol-tum")[0].version
+    version = pkg_resources.require("dtcontrol")[0].version
     parser.add_argument("-v", "--version", action='version',
                         version=f'%(prog)s {version}')
 
@@ -178,12 +178,6 @@ def main():
                         help="Rerun the experiment for all input-method combinations. Overrides the default "
                              "behaviour of not running benchmarks for combinations which are already present"
                              " in the benchmark file.")
-
-    parser.add_argument("--artifact", action='store_true',
-                        help="Makes the tool 'repeatability evaluation' friendly - providing artifact reviewers "
-                             "results in a tabular form which is easy to compare to Table 1 of the paper. Please "
-                             "do not use the --artifact switch if you desire to use dtControl on a controller that is "
-                             "not listed in Table 1")
 
     args = parser.parse_args()
 
