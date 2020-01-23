@@ -31,7 +31,7 @@ setuptools.setup(
         'Jinja2==2.10.3',
         'pandas>=0.25.2',
         'pydot==1.4.1',
-        'scikit-learn>=0.21.3',
+        'scikit-learn>=0.22',
         'tqdm>=4.36.1'
     ],
     package_data={
