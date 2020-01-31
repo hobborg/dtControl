@@ -17,13 +17,15 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
 class CategoricalMultiSplit(Split):
     def __init__(self, feature):
         self.feature = feature
+        self.values = []  # the values corresponding to the children
 
     def predict(self, features):
-        return features[:, self.feature][0]
+        v = features[:, self.feature][0]
+        return self.values.index(v)
 
     def get_masks(self, dataset):
-        values = sorted(set(dataset.x[:, self.feature]))
-        return [dataset.x[:, self.feature] == v for v in values]
+        self.values = sorted(set(dataset.x[:, self.feature]))
+        return [dataset.x[:, self.feature] == v for v in self.values]
 
     def print_dot(self, variables=None):
         if variables:
