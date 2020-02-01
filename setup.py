@@ -31,13 +31,14 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         'License :: OSI Approved :: MIT License'
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.6,<3.8',
     install_requires=[
         'Jinja2==2.10.3',
-        'pandas>=0.25.2',
+        'pandas==0.25.2',
         'pydot==1.4.1',
-        'scikit-learn>=0.22',
-        'tqdm>=4.36.1'
+        'scikit-learn==0.22',
+        'tqdm==4.42.0',
+        'psutil==5.6.7'
     ],
     package_data={
         'dtcontrol.c_templates': ['*.c'],
