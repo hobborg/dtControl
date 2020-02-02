@@ -33,7 +33,7 @@ class BenchmarkSuite:
     """
 
     def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', save_folder=None,
-                 rerun=False, use_multiprocessing=True, is_artifact=False):
+                 rerun=False, use_multiprocessing=True):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
@@ -44,8 +44,7 @@ class BenchmarkSuite:
         self.save_folder = save_folder
         self.rerun = rerun
         self.use_multiprocessing = use_multiprocessing
-        self.is_artifact = is_artifact
-        self.table_controller = TableController(self.html_file, self.output_folder, self.is_artifact)
+        self.table_controller = TableController(self.html_file, self.output_folder)
 
         logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
         logging.info(f"Constructed trees will be written to {self.output_folder}.")
@@ -151,9 +150,7 @@ class BenchmarkSuite:
                 c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
                 num_outputs = 1 if len(dataset.Y_train.shape) <= 2 else len(dataset.Y_train)
                 classifier.export_c(num_outputs, f'{{{",".join(str(i) + "f" for i in dataset.X_train[0])}}}', c_filename)
-                if not isinstance(classifier, OC1Wrapper):  # TODO vhdl for OC1? not until artifact deadline
-                    vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
-                    classifier.export_vhdl(len(dataset.X_metadata["variables"]), vhdl_filename)
+
                 if abs(acc - 1.0) > 1e-10:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:

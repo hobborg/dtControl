@@ -9,10 +9,9 @@ env = Environment(loader=file_loader)
 
 
 class TableController:
-    def __init__(self, html_file, output_folder, is_artifact):
+    def __init__(self, html_file, output_folder):
         self.html_file = html_file
         self.output_folder = output_folder
-        self.is_artifact = is_artifact
 
     def load_from_ui(self, filename):
         full_paths = [path + "/ui/" + filename for path in dtcontrol.__path__ if exists(path + "/ui/" + filename)]
@@ -30,10 +29,7 @@ class TableController:
         bootstrap_toggle_js = self.load_from_ui('bootstrap4-toggle.min.js')
         style_css = self.load_from_ui('style.css')
 
-        if self.is_artifact:
-            table, row_metadata, column_names = self.get_table_data_artifact(results)
-        else:
-            table, row_metadata, column_names = self.get_table_data(results)
+        table, row_metadata, column_names = self.get_table_data(results)
         with open(self.html_file, 'w+') as out:
             out.write(template.render(
                 column_names=column_names,
@@ -74,53 +70,6 @@ class TableController:
         row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'],
                          'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened']}
                         for r in row_names]
-        return table, row_metadata, column_names
-
-    def get_table_data_artifact(self, results):
-        row_names = [
-            'cartpole',
-            'tworooms-noneuler-latest',
-            'helicopter',
-            'cruise-latest',
-            'dcdc',
-            '10rooms',
-            'truck_trailer',
-            'traffic_30m',
-            'vehicle',
-            'aircraft'
-        ]
-        column_names = ['CART',
-                        'LinearClassifierDT-LinearSVC',
-                        'LinearClassifierDT-LogisticRegression',
-                        'OC1',
-                        'MaxFreqDT',
-                        'MaxFreq-LinearClassifierDT-LogisticRegression',
-                        'MinNormDT',
-                        'MinNorm-LinearClassifierDT',
-                        ]
-        table = []
-        for dataset in row_names:
-            row = []
-            for classifier in column_names:
-                try:
-                    cell = results[dataset]['classifiers'][classifier]
-                    cell['stats']['paths'] = int((cell['stats']['nodes']+1)/2)
-                    if 'bandwidth' in cell['stats']:
-                        del cell['stats']['bandwidth']
-                    if 'nodes' in cell['stats']:
-                        del cell['stats']['nodes']
-                    if 'oblique' in cell['stats']:
-                        del cell['stats']['oblique']
-                    if 'extended' in cell['stats']:
-                        del cell['stats']['extended']
-                except (KeyError, TypeError):
-                    cell = 'not yet computed'
-                row.append(cell)
-            table.append(row)
-        row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata'][
-            'num_rows'] if r in results else "unknown",
-                         'state_action_pairs': results[r]['metadata']['Y_metadata'][
-                             'num_flattened'] if r in results else "unknown"} for r in row_names]
         return table, row_metadata, column_names
 
     def get_dot_and_c_links(self, row_metadata, column_names):

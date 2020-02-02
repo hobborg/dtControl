@@ -213,8 +213,6 @@ def main():
             f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' "
             f"would not be re-run. Use the --rerun flag if this is what is desired.")
 
-    kwargs["is_artifact"] = args.artifact
-
     classifiers = get_classifiers(args.method, args.determinize)
 
     if not classifiers:
