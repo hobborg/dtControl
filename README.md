@@ -1,4 +1,3 @@
-
 # dtControl: Decision Tree Learning Algorithms for Controller Representation
 
 ### System requirements 
@@ -32,18 +31,10 @@ MacOS:
 $ brew install python3
 ```
 
-2. We use `virtualenv` to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Install `virtualenv` by running 
+2. We use a virtual environment to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Create a new virtual environment using
 
 ```
-$ sudo pip3 install virtualenv
-```
-
-Try running `virtualenv` in the console.
-
-3. Then run 
-
-```
-$ virtualenv -p python3 ~/dtcontrol-venv
+$ python3 -m venv ~/dtcontrol-venv
 ```
 
 to create a virtual environment for _dtControl_. This will create the folder `dtcontrol-venv` in your home directoy. After evaluating our artifact, you can delete this folder and thereby all traces of the python packages you installed for the REP.
@@ -80,9 +71,8 @@ Note that running all experiments may take several hours, or possibly run out of
 
 To execute a single algorithm on a single model, run a command like
 ```
-$ dtcontrol -i ./dtcontrol/examples/cartpole.scs -m linsvm -t 30m --artifact
+$ dtcontrol -i ./dtcontrol/examples/cartpole.scs --determinize maxfreq --split linear-linsvm --impurity entropy -t 30m
 ```
-where you can replace `cartpole.scs` and `linsvm` with any example and method respectively.
 
 More information can be found by running
 
