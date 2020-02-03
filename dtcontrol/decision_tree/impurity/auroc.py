@@ -8,7 +8,7 @@ from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class AUROC(ImpurityMeasure):  # TODO MJA: one-hot encode categorical?
     def calculate_impurity(self, dataset, y, split):
-        scores = [self.calculate_auroc(dataset.get_numeric_x(), y[mask]) for mask in split.get_masks()]
+        scores = [self.calculate_auroc(dataset.get_numeric_x(), y[mask]) for mask in split.get_masks(dataset)]
         if [s == 0 for s in scores]:
             return sys.maxsize
         return 1 / sum(scores)
