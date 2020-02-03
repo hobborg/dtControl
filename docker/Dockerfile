@@ -4,7 +4,7 @@
 
 # Run the create_docker_examples script before building a new docker image!
 
-FROM alpine
+FROM ubuntu:rolling
 
 COPY req.txt /req.txt
 
@@ -12,11 +12,14 @@ ENV PYTHONUNBUFFERED=1
 
 # in the following, we need to manually install Cython and numpy because of some bug in pip/pandas where the install fails
 RUN \
-     apk add --update python3 libgfortran libgcc libstdc++ openblas linux-headers \
-  && apk add --update --virtual .build build-base python3-dev openblas-dev freetype-dev pkgconfig gfortran \
-  && python3 -mensurepip \
-  && rm -r /usr/lib/python*/ensurepip \
-  && pip3 install --upgrade --no-cache-dir pip \
-  && pip3 install --no-cache-dir -r /req.txt \
-  && apk del .build \
-  && rm /var/cache/apk/*
+  apt-get update && apt-get install -y \
+  python3.7 \
+  python3.8 \
+  python3.7-dev \
+  python3.8-dev \
+  python3-pip \ 
+  && python3.7 -m pip install --no-cache-dir -r /req.txt \
+  && python3.8 -m pip install --no-cache-dir -r /req.txt \
+  && apt-get remove -y python3.7-dev python3.8-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
