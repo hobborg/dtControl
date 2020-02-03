@@ -3,7 +3,7 @@ import numpy as np
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.determinizer import Determinizer
 
-class NormDeterminizer(Determinizer):
+class RandomDeterminizer(Determinizer):
     """
     This determinizer determinizes randomly.
     """
