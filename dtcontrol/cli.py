@@ -35,14 +35,27 @@ from os import makedirs
 from os.path import exists, isfile, splitext
 
 import pkg_resources
-from dtcontrol.decision_tree.splitting.cart import AxisAlignedSplittingStrategy
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
+from dtcontrol.decision_tree.decision_tree import DecisionTree
+
+# Import determinizers
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
+from dtcontrol.decision_tree.determinization.max_freq_multi_determinizer import MaxFreqMultiDeterminizer
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
+from dtcontrol.decision_tree.determinization.random_determinizer import RandomDeterminizer
+
+# Import impurity measures
+from dtcontrol.decision_tree.impurity.auroc import AUROC
+from dtcontrol.decision_tree.impurity.entropy import Entropy
+from dtcontrol.decision_tree.impurity.max_minority import MaxMinority
+
+# Import splitting strategies
+from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
+from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
@@ -79,7 +92,7 @@ def main():
                 parser.error("Invalid value passed as timeout.")
         return timeout
 
-    def get_classifiers(methods, det_strategies):
+    def get_classifiers(split, determinize, impurity):
         """
         Creates classifier objects for each method
 
@@ -88,39 +101,62 @@ def main():
         :return: list of classifier objects
         """
 
-        method_map = {
-            'cart': AxisAlignedSplittingStrategy(),
-            'linsvm': LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000),
-            'logreg': LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none'),
-            'oc1': OC1SplittingStrategy(),
-        }
         determinization_map = {
-            'none': NonDeterminizer(),
             'maxfreq': MaxFreqDeterminizer(),
+            'maxmultifreq': MaxFreqMultiDeterminizer(),
+            'none': NonDeterminizer(),
+            'maxnorm': NormDeterminizer(max),
             'minnorm': NormDeterminizer(min),
+            'random': RandomDeterminizer(),
         }
+        splitting_map = {
+            'axisonly': AxisAlignedSplittingStrategy(),
+            'categorical': CategoricalMultiSplittingStrategy(),
+            'linear-logreg': LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none'),
+            'linear-linsvm': LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000),
+            'oc1': OC1SplittingStrategy()
+        }
+        impurity_map = {
+            'auroc': AUROC(),
+            'entropy': Entropy(),
+            'maxminority': MaxMinority()
+        }
+
+        # Sanity check
+        if 'all' in split:
+            split = splitting_map.keys()
+        else:
+            for sp in split:
+                if sp not in splitting_map:
+                    raise ValueError(f"{sp} is not a valid argument for the --split switch. Exiting...")
+
+        if 'all' in determinize:
+            determinize = determinization_map.keys()
+        else:
+            for det in determinize:
+                if det not in determinization_map:
+                    raise ValueError(f"{det} is not a valid determinization strategy. Exiting...")
+
+        if 'all' in impurity:
+            impurity = impurity_map.keys()
+        else:
+            for imp in impurity:
+                if imp not in impurity_map:
+                    raise ValueError(f"{imp} is not a valid impurity measure. Exiting...")
 
         # construct all possible method - determinization strategy combinations
         classifiers = []
 
-        if 'all' in methods:
-            methods = method_map.keys()
-
-        for method in methods:
-            if method not in method_map:
-                logging.warning(f"No method '{method}' exists. Skipping...")
-                continue
-
-            if 'all' in det_strategies:
-                classifiers.extend(
-                    [classifier for cls_group in method_map[method].values() for classifier in cls_group])
-            else:
-                for det_strategy in det_strategies:
-                    if det_strategy not in method_map[method]:
-                        logging.warning(f"Method '{method}' and determinization strategy '{det_strategy}' "
-                                        f"don't work together (yet). Skipping...")
-                        continue
-                    classifiers.extend(method_map[method][det_strategy])
+        for det in determinize:
+            assert det in determinization_map
+            for imp in impurity:
+                assert imp in impurity_map
+                name = f"{det}-({','.join(split)})-{imp}"
+                classifier = DecisionTree(determinization_map[det],
+                                          [splitting_map[sp] for sp in split],
+                                          impurity_map[imp],
+                                          name)
+                classifiers.append(classifier)
 
         # returns a flattened list
         return classifiers
@@ -129,48 +165,49 @@ def main():
 
     parser = argparse.ArgumentParser(prog="dtcontrol")
 
-    version = pkg_resources.require("dtcontrol-tum")[0].version
+    version = pkg_resources.require("dtcontrol")[0].version
     parser.add_argument("-v", "--version", action='version',
                         version=f'%(prog)s {version}')
-
-    parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
-                        help="The input switch takes in one or more space separated file names or "
-                             "a folder name which contains valid controllers (.scs, .dump or .csv)")
-
-    parser.add_argument("--method", "-m", default=['all'], nargs="+",
-                        help="The method switch takes in one or more space separated method names as "
-                             "arguments. Available methods are: 'cart', 'linsvm', 'logreg', 'oc1'. Running "
-                             "with --method 'all' will run all possible methods. For description about each method, "
-                             "see manual. If this switch is omitted, defaults to 'all'")
-
-    parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['none'],
-                        help="In case of non-deterministic controllers, specify, if desired, the determinization "
-                             "strategy. Possible options are 'minnorm' and 'maxfreq'. If the option 'none' is passed, "
-                             "then the controller is not determinized. The shorthand '-d all' is equivalent to "
-                             "'-d none maxfreq minnorm'.")
-
-    parser.add_argument("--timeout", "-t", type=str,
-                        help="Sets a timeout for each method. Can be specified in seconds, minutes "
-                             "or hours (eg. 300s, 7m or 3h)")
 
     parser.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
                         help="Saves statistics pertaining the construction of the decision trees and their "
                              "sizes into a JSON file, and additionally allows to view it via an HTML file.")
 
+    parser.add_argument("--determinize", "-d", nargs='+', metavar='DETSTRATEGY', default=['none'],
+                        help="In case of non-deterministic controllers, specify, if desired, the determinization "
+                             "strategy. Possible options are 'none', 'maxfreq', 'maxmultifreq', 'maxnorm', 'minnorm' "
+                             "and 'random'. If the option 'none' is passed, then the controller is not determinized. "
+                             "The shorthand '-d all' tries to run all methods with all determinization strategies.")
+
+    parser.add_argument("--impurity", "-p", default=['entropy'], nargs="+",
+                        help="The impurity switch takes in one or more space separated impurity measures as "
+                             "arguments. Available impurity measures are: 'auroc', 'entropy' and 'maxminority'. "
+                             "If this switch is omitted, defaults to using 'entropy'.")
+
+    parser.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
+                        help="The input switch takes in one or more space separated file names or "
+                             "a folder name which contains valid controllers (.scs, .dump or .csv)")
+
     parser.add_argument("--output", "-o", type=str,
                         help="The output switch takes in a path to a folder where the constructed controller "
                              "representation would be saved (c and dot)")
+
+    parser.add_argument("--split", "-s", default=['axisonly'], nargs="+",
+                        help="The split switch takes in one or more space separated splitting strategies as "
+                             "arguments. Available strategies are: 'axisonly', 'categorical', 'linear-logreg', "
+                             "'linear-linsvm' and 'oc1'. This switch determines the set of predicates from which "
+                             "each splitting predicate will be drawn. Running with '--split all' will attempt to "
+                             "use all possible splitting predicates. If this switch is omitted, defaults to "
+                             "'axisonly' splits.")
 
     parser.add_argument("--rerun", "-r", action='store_true',
                         help="Rerun the experiment for all input-method combinations. Overrides the default "
                              "behaviour of not running benchmarks for combinations which are already present"
                              " in the benchmark file.")
 
-    parser.add_argument("--artifact", action='store_true',
-                        help="Makes the tool 'repeatability evaluation' friendly - providing artifact reviewers "
-                             "results in a tabular form which is easy to compare to Table 1 of the paper. Please "
-                             "do not use the --artifact switch if you desire to use dtControl on a controller that is "
-                             "not listed in Table 1")
+    parser.add_argument("--timeout", "-t", type=str,
+                        help="Sets a timeout for each method. Can be specified in seconds, minutes "
+                             "or hours (eg. 300s, 7m or 3h)")
 
     args = parser.parse_args()
 
@@ -206,16 +243,14 @@ def main():
             f"Dataset - method combinations whose results are already present in '{kwargs['benchmark_file']}' "
             f"would not be re-run. Use the --rerun flag if this is what is desired.")
 
-    kwargs["is_artifact"] = args.artifact
-
-    classifiers = get_classifiers(args.method, args.determinize)
-
-    if not classifiers:
-        sys.exit("Cound not find any valid method - determinization strategy combinations. "
-                 "Please read the manual for valid combinations and try again.")
-
     suite = BenchmarkSuite(**kwargs)
     suite.add_datasets(dataset)
+
+    classifiers = get_classifiers(args.split, args.determinize, args.impurity)
+    if not classifiers:
+        sys.exit("Could not find any valid method - determinization strategy combinations. "
+                 "Please read the manual for valid combinations and try again.")
+
     suite.benchmark(classifiers)
 
 
