@@ -37,10 +37,10 @@ setuptools.setup(
     install_requires=[
         'Jinja2==2.10.3',
         'pandas==0.25.2',
+        'psutil==5.6.7',
         'pydot==1.4.1',
         'scikit-learn==0.22',
-        'tqdm==4.42.0',
-        'psutil==5.6.7'
+        'tqdm==4.42.0'
     ],
     package_data={
         'dtcontrol.c_templates': ['*.c'],
