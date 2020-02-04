@@ -17,12 +17,19 @@ class PrismDatasetLoader(DatasetLoader):
         with open(states_file, 'r') as f:
             x_variables = f.readline()
             x_variables = x_variables.replace('(', '').replace(')', '').split(',')
+            x_variables = [x.strip() for x in x_variables]
             last_state = -1
             for line in f:
                 n, t = line.split(':')
                 last_state += 1
                 assert int(n) == last_state
-                state_mapping[int(n)] = [int(i) for i in t.replace('(', '').replace(')', '').split(',')]
+
+                def to_int(x):
+                    if x == 'true' or x == 'false':
+                        return int(x == 'true')
+                    return int(x)
+
+                state_mapping[int(n)] = [to_int(i) for i in t.replace('(', '').replace(')', '').split(',')]
 
         x = []
         y = []
