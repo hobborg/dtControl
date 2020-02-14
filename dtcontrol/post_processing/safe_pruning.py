@@ -3,13 +3,11 @@ from dtcontrol.post_processing.post_processing_method import PostProcessingMetho
 from dtcontrol.util import make_set
 
 class SafePruning(PostProcessingMethod):
-    def __init__(self, classifier, name=None):
+    def __init__(self, classifier):
         if not isinstance(classifier, DecisionTree):  # in theory we also allow other classifiers
             raise ValueError('Safe pruning works only on decision trees.')
-        if not name:
-            name = f'SafePruning-{classifier.get_name()}'
-        super().__init__(classifier, name)
-        self.name = name
+        self.name = classifier.get_name()
+        super().__init__(classifier, self.name)
 
     def run(self):
         self.prune(self.classifier.root)
