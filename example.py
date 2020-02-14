@@ -1,6 +1,9 @@
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
+from decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
+from decision_tree.determinization.norm_determinizer import NormDeterminizer
+from decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
@@ -9,41 +12,45 @@ from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingS
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
-suite = BenchmarkSuite(timeout=60 * 60 * 1, save_folder='saved_classifiers', benchmark_file='benchmark_example',
+suite = BenchmarkSuite(timeout=60 * 60 * 3,
+                       save_folder='saved_classifiers',
+                       benchmark_file='benchmark_double_check',
+                       is_artifact=False,
                        rerun=True)
+
 suite.add_datasets(['examples'],
                    include=[
-                       "firewire_abst",
-                       "wlan0"
+                       # "firewire_abst",
+                       # "wlan0"
                        # "cartpole",
                        # "tworooms-noneuler-latest",
                        # "helicopter",
                        # "cruise-latest",
                        # "dcdc",
-                       # "10rooms",
+                       "10rooms",
                        # "truck_trailer",
                        # "traffic_1m",
                        # "traffic_10m",
                        # "traffic_30m",
                        # "vehicle",
                        # "aircraft"
-                   ],
-                   exclude=[
-                       'aircraft', 'traffic_30m'
                    ]
                    )
 
 aa = AxisAlignedSplittingStrategy()
 cat = CategoricalMultiSplittingStrategy()
+oc1 = OC1SplittingStrategy(num_restarts=10, num_jumps=5)
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000)
 classifiers = [
-    DecisionTree(NonDeterminizer(), [aa, cat], Entropy(), 'CartCat'),
-    # SafePruning(DecisionTree(NonDeterminizer(), [cart], Entropy(), 'CART')),
+    # DecisionTree(NonDeterminizer(), [aa], Entropy(), 'CART'),
+    DecisionTree(NonDeterminizer(), [aa, linsvc], Entropy(), 'linsvc'),
     # DecisionTree(NonDeterminizer(), [aa, logreg], Entropy(), 'logreg'),
+    # DecisionTree(NonDeterminizer(), [aa, oc1], Entropy(), 'OC1'),
     # DecisionTree(MaxFreqDeterminizer(), [aa], Entropy(), 'MaxFreq'),
-    # DecisionTree(NormDeterminizer(min), [cart], Entropy(), 'MinNorm'),
-    # DecisionTree(NormDeterminizer(min), [cart, logreg], Entropy(), 'minnorm-logreg'),
+    # DecisionTree(MaxFreqDeterminizer(), [aa, logreg], Entropy(), 'MaxFreqLC'),
+    # DecisionTree(NormDeterminizer(min), [aa], Entropy(), 'MinNorm'),
+    # DecisionTree(NormDeterminizer(min), [aa, logreg], Entropy(), 'MinNormLC'),
 ]
 suite.benchmark(classifiers)
 suite.display_html()
