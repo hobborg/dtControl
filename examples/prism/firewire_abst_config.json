@@ -1,5 +1,5 @@
 {
-  "column_types": {
+  "x_column_types": {
     "numeric": [
       0
     ],
@@ -7,11 +7,11 @@
       1
     ]
   },
-  "column_names": [
+  "x_column_names": [
     "clock",
     "state"
   ],
-  "category_names": {
+  "x_category_names": {
     "state": [
       "start_start",
       "fast_start",

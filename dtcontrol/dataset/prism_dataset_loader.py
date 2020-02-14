@@ -54,7 +54,8 @@ class PrismDatasetLoader(DatasetLoader):
         index_to_actual = {i: i for i in y_variables.values()}
 
         y_metadata = dict()
-        y_metadata["variables"] = sorted(y_variables.keys(), key=y_variables.get)
+        y_metadata["categorical"] = [0]  # we always have exactly one output, and it is categorical
+        y_metadata["category_names"] = {0: [v.strip() for v in sorted(y_variables.keys(), key=y_variables.get)]}
         y_metadata["min"] = [min(index_to_actual.values())]
         y_metadata["max"] = [max(index_to_actual.values())]
         y_metadata["step_size"] = None  # todo
