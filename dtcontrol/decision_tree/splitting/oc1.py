@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+from os.path import exists
 
 import numpy as np
 
@@ -79,6 +80,8 @@ class OC1SplittingStrategy(SplittingStrategy):
             dtcontrol.globals.oc1_pid = None
 
     def parse_oc1_dt(self, dataset):
+        if not exists(self.dt_file):
+            return None
         with open(self.dt_file) as infile:
             while not infile.readline().startswith('Root'):
                 pass
