@@ -11,6 +11,7 @@ from dtcontrol.decision_tree.determinization.non_determinizer import NonDetermin
 from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
+from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 class IntegrationTest(unittest.TestCase):
@@ -59,6 +60,12 @@ class IntegrationTest(unittest.TestCase):
                 'CART': 6619,
                 'logreg': 5195,  # again different from table
                 'OC1': 4639
+            },
+            'firewire_abst': {
+                'CategoricalCART': 13
+            },
+            'wlan0': {
+                'CategoricalCART': 135
             }
         }
         self.init_classifiers()
@@ -77,10 +84,18 @@ class IntegrationTest(unittest.TestCase):
                                            'maxfreq-logreg')
         self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
                                            [AxisAlignedSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
+        self.categorical_cart = DecisionTree(NonDeterminizer(),
+                                             [AxisAlignedSplittingStrategy(), CategoricalMultiSplittingStrategy()],
+                                             Entropy(), 'CategoricalCART')
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
         classifiers = [self.cart, self.maxfreq, self.minnorm]
+        self.run_test(datasets, classifiers)
+
+    def test_categorical(self):
+        datasets = ['firewire_abst', 'wlan0']
+        classifiers = [self.categorical_cart]
         self.run_test(datasets, classifiers)
 
     @SkipTest
@@ -103,8 +118,8 @@ class IntegrationTest(unittest.TestCase):
         self.run_test(datasets, classifiers)
 
     def run_test(self, datasets, classifiers):
-        # the unzipped_examples folder is used in docker
-        self.suite.add_datasets(['../examples', '/examples'], include=datasets)
+        # docker and local folders
+        self.suite.add_datasets(['../examples', '../examples/prism', '/examples', '/examples/prism'], include=datasets)
         self.suite.benchmark(classifiers)
         self.assert_results_almost_equal(self.expected_results, self.suite.results)
 
@@ -116,7 +131,7 @@ class IntegrationTest(unittest.TestCase):
                 expected_paths = expected[ds][classifier]
                 stats = actual[ds]['classifiers'][classifier]['stats']
                 self.assertFalse('accuracy' in stats, 'Accuracy not 1.0')
-                actual_paths = (stats['nodes'] + 1) / 2
+                actual_paths = stats['paths']
                 tol = (tol_percent / 100) * expected_paths
                 tol = max(tol, 5)  # fix for small trees
                 self.assertTrue(expected_paths - tol <= actual_paths <= expected_paths + tol,
