@@ -32,10 +32,16 @@ class CategoricalSingleSplit(Split):
         mask = dataset.x[:, self.feature] == self.value
         return [mask, ~mask]
 
-    def print_dot(self, variables=None):
+    def print_dot(self, variables=None, category_names=None):
         if variables:
-            return f'{variables[self.feature]} == {self.value}'
-        return self.print_c()
+            var = variables[self.feature]
+        else:
+            var = f'x[{self.feature}]'
+        if category_names and self.feature in category_names:
+            val = category_names[self.feature][self.value]
+        else:
+            val = self.value
+        return f'{var} == {val}'
 
     def print_c(self):
         return f'x[{self.feature}] == {self.value}'

@@ -154,7 +154,7 @@ class Node:
         if self.is_leaf():
             return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label())
 
-        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot(variables))
+        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot(variables, category_names))
         text += "];\n"
 
         last_number = -1

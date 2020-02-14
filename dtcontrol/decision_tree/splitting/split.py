@@ -27,7 +27,7 @@ class Split(ABC):
         """
 
     @abstractmethod
-    def print_dot(self, variables=None):
+    def print_dot(self, variables=None, category_names=None):
         pass
 
     @abstractmethod
