@@ -40,7 +40,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return {
             'nodes': self.root.num_nodes,
             'inner nodes': self.root.num_inner_nodes,
-            'bandwidth': int(np.ceil(np.log2((self.root.num_nodes + 1) / 2)))  # TODO MJA: fix bandwith
+            'paths': self.root.num_nodes - self.root.num_inner_nodes,
+            'bandwidth': int(np.ceil(np.log2((self.root.num_nodes - self.root.num_inner_nodes))))
         }
 
     def print_dot(self, variables=None, category_names=None):
