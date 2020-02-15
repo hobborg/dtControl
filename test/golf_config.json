@@ -1,5 +1,5 @@
 {
-  "column_types": {
+  "x_column_types": {
     "categorical": [
       0,
       1,
@@ -7,13 +7,13 @@
       3
     ]
   },
-  "column_names": [
+  "x_column_names": [
     "Outlook",
     "Temperature",
     "Humidity",
     "Windy"
   ],
-  "category_names": {
+  "x_category_names": {
     "Outlook": [
       "Rainy",
       "Overcast",
