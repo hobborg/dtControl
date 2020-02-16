@@ -35,16 +35,16 @@ class Determinizer(ABC):
     def get_actual_label(self, label):
         """
         :param label: the determinized label
-        :returns: the actual (float) label, which can either be a single label, a single tuple, a list of labels,
-                  or a list of tuples
+        :returns: the actual (float/categorical) label, which can either be a single label, a single tuple, a list of
+                  labels, or a list of tuples
         """
         return self.index_label_to_actual(self.get_index_label(label))
 
     def index_label_to_actual(self, index_label):
         """
         :param index_label: the index label
-        :returns: the actual (float) label, which can either be a single label, a single tuple, a list of labels,
-                  or a list of tuples
+        :returns: the actual (float/categorical) label, which can either be a single label, a single tuple, a list of
+                  labels, or a list of tuples
         """
         if isinstance(index_label, tuple):  # single tuple
             return tuple([self.dataset.index_to_actual[i] for i in index_label if i != -1])

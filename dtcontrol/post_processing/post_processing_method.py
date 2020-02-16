@@ -29,8 +29,8 @@ class PostProcessingMethod(BenchmarkSuiteClassifier, ABC):
     def save(self, file):
         self.classifier.save(file)
 
-    def print_dot(self, variables=None, category_names=None):
-        return self.classifier.print_dot(variables, category_names)
+    def print_dot(self, x_metadata, y_metadata):
+        return self.classifier.print_dot(x_metadata, y_metadata)
 
     def print_c(self):
         return self.classifier.print_c()

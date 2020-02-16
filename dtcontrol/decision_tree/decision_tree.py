@@ -1,6 +1,7 @@
 import logging
 import pickle
 from collections.abc import Iterable
+from typing import Sequence
 
 import numpy as np
 
@@ -9,6 +10,7 @@ from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit
+from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, determinizer, split_strategies, impurity_measure, name):
@@ -44,8 +46,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
             'bandwidth': int(np.ceil(np.log2((self.root.num_nodes - self.root.num_inner_nodes))))
         }
 
-    def print_dot(self, variables=None, category_names=None):
-        return self.root.print_dot(variables, category_names)
+    def print_dot(self, x_metadata, y_metadata):
+        return self.root.print_dot(x_metadata, y_metadata)
 
     def print_c(self):
         return self.root.print_c()
@@ -87,7 +89,7 @@ class Node:
         # labels can be one of the following: a single label, a single tuple, a list of possible labels,
         #                                     a list of tuples
         self.index_label = None  # the label with int indices
-        self.actual_label = None  # the actual float label
+        self.actual_label = None  # the actual float or categorical label
 
     def predict(self, x, actual_values=True):
         pred = []
@@ -146,22 +148,24 @@ class Node:
     def is_leaf(self):
         return not self.children
 
-    def print_dot(self, variables=None, category_names=None):
-        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0, variables, category_names)[1])
+    def print_dot(self, x_metadata, y_metadata):
+        text = 'digraph {{\n{}\n}}'.format(self._print_dot(0, x_metadata, y_metadata)[1])
         return text
 
-    def _print_dot(self, starting_number, variables=None, category_names=None):
+    def _print_dot(self, starting_number, x_metadata, y_metadata):
+        variables = x_metadata.get('variables')
+        x_category_names = x_metadata.get('category_names')
         if self.is_leaf():
-            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label())
+            return starting_number, '{} [label=\"{}\"];\n'.format(starting_number, self.print_dot_label(y_metadata))
 
-        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot(variables, category_names))
+        text = '{} [label=\"{}\"'.format(starting_number, self.split.print_dot(variables, x_category_names))
         text += "];\n"
 
         last_number = -1
         child_starting_number = starting_number + 1
         if isinstance(self.split, CategoricalMultiSplit):
-            if category_names and self.split.feature in category_names:
-                names = category_names[self.split.feature]
+            if x_category_names and self.split.feature in x_category_names:
+                names = x_category_names[self.split.feature]
                 labels = [names[i] for i in self.split.values]
             else:
                 labels = self.split.values
@@ -170,7 +174,7 @@ class Node:
         assert len(self.children) == len(labels)
         for i in range(len(self.children)):
             child = self.children[i]
-            last_number, child_text = child._print_dot(child_starting_number, variables, category_names)
+            last_number, child_text = child._print_dot(child_starting_number, x_metadata, y_metadata)
             text += child_text
             text += f'{starting_number} -> {child_starting_number} ['
             if not isinstance(self.split, CategoricalMultiSplit) and i == 1:
@@ -230,20 +234,43 @@ class Node:
         else:
             return abs(tup)
 
-    def print_dot_label(self):
+    def print_dot_label(self, y_metadata):
         if self.actual_label is None:
             raise ValueError('print_dot_label called although label is None.')
-        label = self.actual_label
-        if isinstance(self.actual_label, Iterable) and len(self.actual_label) == 1:
-            label = self.actual_label[0]
-        rounded = util.objround(label, 6)
-        return util.split_into_lines(rounded)
+
+        if isinstance(self.actual_label, list):
+            new_label = [self.print_single_actual_label(label, y_metadata) for label in self.actual_label]
+            if len(new_label) == 1:
+                return new_label[0]
+            return util.split_into_lines(new_label)
+        else:
+            return self.print_single_actual_label(self.actual_label, y_metadata)
+
+    @staticmethod
+    def print_single_actual_label(label, y_metadata):
+        categorical = y_metadata.get('categorical', [])
+        category_names = y_metadata.get('category_names', {})
+        if not isinstance(label, tuple):
+            label = tuple([label])
+        new_label = []
+        for i in range(len(label)):
+            if i in categorical:
+                assert isinstance(label[i], int)
+                if i in category_names:
+                    new_label.append(category_names[i][label[i]])
+                else:
+                    new_label.append(label[i])
+            else:
+                new_label.append(str(util.objround(label[i], 6)))
+        if len(new_label) == 1:
+            return new_label[0]
+        return print_tuple(new_label)
 
     def print_c_label(self):
         if self.actual_label is None:
             raise ValueError('print_c_label called although label is None.')
         label = self.get_determinized_label()
-        if isinstance(label, Iterable):
+        if isinstance(label, Sequence):
             return ' '.join([
                 f'result[{i}] = {round(label[i], 6)}f;' for i in range(len(label))
             ])

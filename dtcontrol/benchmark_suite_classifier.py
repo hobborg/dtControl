@@ -44,11 +44,11 @@ class BenchmarkSuiteClassifier(ABC):
         pass
 
     @abstractmethod
-    def print_dot(self, variables=None, category_names=None):
+    def print_dot(self, x_metadata, y_metadata):
         """
         Prints the classifier in the dot (graphviz) format.
-        :param variables: a list of column names
-        :param category_names: a dictionary mapping categorical columns to names of categories
+        :param x_metadata: metadata describing the columns of the data
+        :param y_metadata: metadata describing the columns of the labels
         :return: the dot string
         """
         pass

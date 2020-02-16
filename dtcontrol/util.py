@@ -34,13 +34,19 @@ def objround(obj, precision):
     # if just a float
     return round(obj, precision)
 
+def print_tuple(t):
+    return f'({", ".join([str(e) for e in t])})'
+
+def print_list(l):
+    return f'[{", ".join([str(e) for e in l])}]'
+
 def split_into_lines(l):
     if not isinstance(l, list) or len(l) < 5:
-        return str(l)
+        return print_list(l)
     i = 0
     l2 = []
     while i < len(l):
-        l2.append(','.join([str(j) for j in l[i:min(i + 5, len(l))]]))
+        l2.append(', '.join([str(j) for j in l[i:min(i + 5, len(l))]]))
         i += 5
     return '[' + '\\n'.join(l2) + ']'
 

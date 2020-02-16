@@ -71,7 +71,7 @@ class Dataset(ABC):
         self.y = None
         self.y_metadata = {"categorical": None, "category_names": None, "min": None, "max": None, "step_size": None,
                            'num_rows': None, 'num_flattened': None}
-        self.index_to_actual = {}  # mapping from arbitrary integer indices to the actual float labels
+        self.index_to_actual = {}  # mapping from arbitrary integer indices to the actual float/categorical labels
         self.numeric_feature_mapping = {}  # maps indices in the numeric array to the actual column index in x
         self.categorical_feature_mapping = {}  # the same thing for the categorical array
         self.is_deterministic = None

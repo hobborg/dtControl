@@ -162,8 +162,7 @@ class BenchmarkSuite:
     def save_dot_and_c(self, classifier, dataset):
         dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
         with open(dot_filename, 'w+') as outfile:
-            outfile.write(classifier.print_dot(dataset.x_metadata.get('variables'),
-                                               dataset.x_metadata.get('category_names')))
+            outfile.write(classifier.print_dot(dataset.x_metadata, dataset.y_metadata))
 
         num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
         template = multi_output_c_template if num_outputs > 1 else single_output_c_template
