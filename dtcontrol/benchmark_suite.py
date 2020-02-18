@@ -70,7 +70,8 @@ class BenchmarkSuite:
         if isfile(path):
             return [path]
         else:
-            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism'] for p in glob.glob(join(path, ext))]
+            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism'] for p in glob.glob(join(path, ext))
+                    if not p.endswith('_states.prism')]
 
     def display_html(self):
         url = f'file://{os.path.abspath(self.html_file)}'
