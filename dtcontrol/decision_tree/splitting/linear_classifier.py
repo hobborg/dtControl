@@ -37,5 +37,5 @@ class LinearClassifierSplit(LinearSplit):
         mask = self.classifier.predict(dataset.get_numeric_x()) == -1
         return [mask, ~mask]
 
-    def predict(self, features):
+    def predict(self, features):  # TODO MJA: fix this -- need to use only numeric features
         return 0 if self.classifier.predict(features)[0] == -1 else 1
