@@ -673,5 +673,156 @@
         "num_flattened": 2738
       }
     }
+  },
+  "zeroconf": {
+    "classifiers": {
+      "single": {
+        "stats": {
+          "nodes": 379,
+          "inner nodes": 189,
+          "paths": 190,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.669"
+      },
+      "multi": {
+        "stats": {
+          "nodes": 370,
+          "inner nodes": 178,
+          "paths": 192,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.363"
+      },
+      "both": {
+        "stats": {
+          "nodes": 367,
+          "inner nodes": 178,
+          "paths": 189,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.719"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "b_ip7",
+          "b_ip6",
+          "b_ip5",
+          "b_ip4",
+          "b_ip3",
+          "b_ip2",
+          "b_ip1",
+          "b_ip0",
+          "n",
+          "n0",
+          "n1",
+          "b",
+          "z",
+          "ip_mess",
+          "x",
+          "y",
+          "coll",
+          "probes",
+          "mess",
+          "defend",
+          "ip",
+          "l"
+        ],
+        "categorical": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          11,
+          13,
+          18,
+          19,
+          20,
+          21
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "max": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          2,
+          2,
+          3,
+          20,
+          2,
+          2,
+          1,
+          2,
+          60,
+          4,
+          10,
+          1,
+          1,
+          1,
+          2,
+          3
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "reset",
+            "async_choose_host0",
+            "time",
+            "send",
+            "async_probes_host0",
+            "async_finishfrom_environment",
+            "rec",
+            "async_startto_environment",
+            "async_startfrom_environment"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          8
+        ],
+        "step_size": null,
+        "num_rows": 29814,
+        "num_flattened": 29814
+      }
+    }
   }
 }
