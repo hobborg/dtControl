@@ -1,9 +1,8 @@
-image: gitlab.lrz.de:5005/i7/dtcontrol:1.4
-
 stages:
   - test
 
 test:python3.7:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.4
   stage: test
   script:
     - /usr/bin/python3.7 --version
@@ -17,6 +16,7 @@ test:python3.7:
       - decision_trees/
 
 test:python3.8:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.4
   stage: test
   script:
     - /usr/bin/python3.8 --version
@@ -28,3 +28,15 @@ test:python3.8:
     expire_in: '20 min'
     paths:
       - decision_trees/
+
+pages:
+  image: ruby:2.7
+  script:
+  - cd webpage
+  - bundle install
+  - bundle exec jekyll build -d ../public
+  artifacts:
+    paths:
+    - public
+  only:
+    - master
