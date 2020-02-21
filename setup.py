@@ -15,6 +15,7 @@ setuptools.setup(
     license='MIT',
     url="https://gitlab.lrz.de/i7/dtcontrol",
     packages=['dtcontrol',
+              'dtcontrol.c_templates',
               'dtcontrol.dataset',
               'dtcontrol.decision_tree',
               'dtcontrol.decision_tree.determinization',
