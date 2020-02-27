@@ -29,14 +29,15 @@ test:python3.8:
     paths:
       - decision_trees/
 
-pages:
+webpage:
   image: ruby:2.7
   script:
-  - cd webpage
+  - cd web
   - bundle install
-  - bundle exec jekyll build -d ../public
+  - bundle exec jekyll build -d site
   artifacts:
     paths:
-    - public
+    - site
   only:
-    - master
+    - new-webpage
+  
