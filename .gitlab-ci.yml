@@ -29,15 +29,24 @@ test:python3.8:
     paths:
       - decision_trees/
 
-webpage:
+jekyll:
   image: ruby:2.7
-  script:
-  - cd web
-  - bundle install
-  - bundle exec jekyll build -d site
-  artifacts:
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
     paths:
-    - site
-  only:
-    - new-webpage
-  
+      - web/vendor/ruby
+  before_script:
+    - apt update && apt install -y rsync
+    - cd web
+    - bundle config set path 'vendor/ruby'
+    - bundle install
+  script:
+    - bundle exec jekyll build
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - cat ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - rsync -avz _site/* ashok@vmesparza11:/var/www/dtcontrol
