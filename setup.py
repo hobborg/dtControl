@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dtcontrol",
-    version="2.0.0.dev1",
+    version="2.0.0.dev2",
     description="A small tool which can convert automatically synthesised formally verified "
                 "controllers into concise decision trees.",
     long_description=long_description,

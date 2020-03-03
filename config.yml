@@ -1,10 +1,10 @@
 # User-defined configurations
-custom:
-  config-1:
-    determinize: maxfreq
-    predicates: ['axisonly']
-    impurity: 'entropy'
-    safe-pruning: True
+#custom:
+#  config-1:
+#    determinize: maxfreq
+#    predicates: ['axisonly']
+#    impurity: 'entropy'
+#    safe-pruning: True
 
 # Preset Configurations
 presets:
