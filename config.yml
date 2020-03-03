@@ -1,0 +1,24 @@
+# User-defined configurations
+custom:
+  config-1:
+    determinize: maxfreq
+    predicates: ['axisonly']
+    impurity: 'entropy'
+    safe-pruning: True
+
+# Preset Configurations
+presets:
+  default:
+    determinize: none
+    predicates: ['axisonly']
+    impurity: 'entropy'
+    safe-pruning: False
+  qest19-sos:
+    determinize: none
+    predicates: ['axisonly']
+    impurity: 'entropy'
+    safe-pruning: True
+  qest19-vik:
+    determinize: none
+    predicates: ['axisonly', 'linear-logreg']
+    impurity: 'auroc'

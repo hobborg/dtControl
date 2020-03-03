@@ -34,6 +34,9 @@ import sys
 from os import makedirs
 from os.path import exists, isfile, splitext
 
+from collections import namedtuple
+from tabulate import tabulate
+
 import pkg_resources
 from pkg_resources import Requirement, resource_filename
 
@@ -63,6 +66,8 @@ from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingS
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
+from dtcontrol.post_processing.safe_pruning import SafePruning
+
 
 def main():
     def is_valid_file_or_folder(parser, arg):
@@ -113,7 +118,41 @@ def main():
                 parser.error("Invalid value passed as timeout.")
         return timeout
 
-    def get_classifiers(split, determinize, impurity, name=None):
+    def get_preset(preset, user_config, default_config):
+        if user_config and preset in user_config['custom']:
+            value = user_config['custom'][preset]
+        elif preset in default_config['presets']:
+            value = default_config['presets'][preset]
+        else:
+            sys.exit(f"Preset '{preset}' not found. Please ensure that the specified config file contains a configuration called {preset}. Refer to the User Manual for details on how to write presets.")
+
+        default_value = default_config['presets']['default']
+
+        # Obtain the different settings from the value dict
+        # In case something is not defined, choose the default from default_value dict
+        if 'predicates' in value:
+            predicates = value['predicates']
+        else:
+            predicates = default_value['predicates']
+
+        if 'determinize' in value:
+            determinize = value['determinize']
+        else:
+            determinize = default_value['determinize']
+
+        if 'impurity' in value:
+            impurity = value['impurity']
+        else:
+            impurity = default_value['impurity']
+
+        if 'safe-pruning' in value:
+            safe_pruning = value['safe-pruning']
+        else:
+            safe_pruning = default_value['safe-pruning']
+
+        return predicates, determinize, impurity, safe_pruning
+
+    def get_classifiers(split, determinize, impurity, safe_pruning=False, name=None):
         """
         Creates classifier objects for each method
 
@@ -155,7 +194,7 @@ def main():
             determinize = determinization_map.keys()
         else:
             if determinize not in determinization_map:
-                raise ValueError(f"{det} is not a valid determinization strategy. Exiting...")
+                raise ValueError(f"{determinize} is not a valid determinization strategy. Exiting...")
             else:
                 determinize = [determinize]
 
@@ -163,7 +202,7 @@ def main():
             impurity = impurity_map.keys()
         else:
             if impurity not in impurity_map:
-                raise ValueError(f"{imp} is not a valid impurity measure. Exiting...")
+                raise ValueError(f"{impurity} is not a valid impurity measure. Exiting...")
             else:
                 impurity = [impurity]
 
@@ -180,6 +219,9 @@ def main():
                                           [splitting_map[sp] for sp in split],
                                           impurity_map[imp],
                                           name)
+                if safe_pruning:
+                    logging.info(f"INFO: Enabling safe pruning for preset {name}")
+                    classifier = SafePruning(classifier)
                 classifiers.append(classifier)
 
         # returns a flattened list
@@ -244,6 +286,10 @@ def main():
 
     args = parser.parse_args()
 
+    if args.presets and (args.split or args.determinize or args.impurity):
+        logging.warning(
+            "WARNING: Since --presets switch is used to define run configurarions, ignoring the --split, --determinize and --impurity switches.\n")
+
     kwargs = dict()
 
     if args.input:
@@ -261,7 +307,7 @@ def main():
         kwargs["benchmark_file"] = filename
     else:
         kwargs["benchmark_file"] = 'benchmark'
-        logging.warning("--benchmark-file/-b was not set. Defaulting to use 'benchmark.json'")
+        logging.info("INFO: --benchmark-file/-b was not set. Defaulting to use 'benchmark.json'")
 
     if args.output:
         try:
@@ -294,24 +340,15 @@ def main():
         except ScannerError:
             sys.exit(f"Scan error in the YAML configuration file '{args.config}'. Please re-check syntax.")
 
-    def get_preset(preset, user_config, default_config):
-        if user_config and preset in user_config['custom']:
-            value = user_config['custom'][preset]
-        elif preset in default_config['presets']:
-            value = default_config['presets'][preset]
-        else:
-            sys.exit(f"Preset '{preset}' not found. Please ensure that the specified config file contains a configuration called {preset}. Refer to the User Manual for details on how to write presets.")
-            return None
-        return value['predicates'], value['determinize'], value['impurity']
-
     classifiers = []
+    run_config_table = []
+    Row = namedtuple('Row', ['Name', 'Predicate', 'Determinize', 'Impurity', 'SafePruning'])
+
     if args.presets:
         for preset in args.presets:
-            split, determinize, impurity = get_preset(preset, user_config, default_config)
-            classifiers.extend(get_classifiers(split, determinize, impurity, name=preset))
-
-        if args.split or args.determinize or args.impurity:
-            logging.warning("WARNING: Since --presets switch is used to define run configurarions, ignoring the --split, --determinize and --impurity switches.\n")
+            split, determinize, impurity, safe_pruning = get_preset(preset, user_config, default_config)
+            classifiers.extend(get_classifiers(split, determinize, impurity, safe_pruning=safe_pruning, name=preset))
+            run_config_table.append(Row(Name=preset, Predicate=split, Determinize=determinize, Impurity=impurity, SafePruning=safe_pruning))
 
     if not args.presets:
         classifiers = get_classifiers(args.split, args.determinize, args.impurity)
@@ -319,8 +356,10 @@ def main():
         sys.exit("Could not find any valid method - determinization strategy combinations. "
                  "Please read the manual for valid combinations and try again.")
 
-    suite.benchmark(classifiers)
+    logging.info("INFO: The following configurations would now be run:\n")
+    print(tabulate(run_config_table, ['name', 'predicates', 'determinize', 'impurity', 'safe-pruning'], tablefmt="presto"), end="\n\n")
 
+    suite.benchmark(classifiers)
 
 if __name__ == "__main__":
     main()
