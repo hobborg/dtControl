@@ -58,6 +58,7 @@ gen:
     - master
 
 jekyll:
+  stage: web
   image: ruby:2.7
   cache:
     key: ${CI_COMMIT_REF_SLUG}
