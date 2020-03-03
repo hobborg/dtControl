@@ -50,7 +50,8 @@ gen:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
   stage: build
   script:
-    - python setup.py bdist_wheel
+    - python3.7 setup.py bdist_wheel
+    - python3.8 setup.py bdist_wheel
   artifacts:
     paths:
       - dist/*.whl
