@@ -47,13 +47,11 @@ version:
   only:
     - master
 
-run:
+gen:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
   stage: build
   script:
     - python setup.py bdist_wheel
-    # an alternative approach is to install and run:
-    - pip install dist/*
-    # run the command here
   artifacts:
     paths:
       - dist/*.whl
