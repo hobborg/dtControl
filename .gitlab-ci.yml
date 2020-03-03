@@ -2,7 +2,6 @@ stages:
   - test
   - version
   - build
-  - web
 
 test:python3.7:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
@@ -59,7 +58,7 @@ gen:
     - master
 
 jekyll:
-  stage: web
+  stage: build
   image: ruby:2.7
   cache:
     key: ${CI_COMMIT_REF_SLUG}
