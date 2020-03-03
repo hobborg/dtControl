@@ -42,8 +42,8 @@ class BenchmarkSuite:
         self.is_artifact = is_artifact  # always produces a table exactly corresponding to the one in the paper
         self.table_controller = TableController(self.html_file, self.output_folder, self.is_artifact)
 
-        logging.info(f"Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
-        logging.info(f"Constructed trees will be written to {self.output_folder}.\n")
+        logging.info(f"INFO: Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
+        logging.info(f"INFO: Constructed trees will be written to {self.output_folder}.\n")
 
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
