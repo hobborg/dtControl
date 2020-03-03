@@ -1,11 +1,17 @@
+import os
 import setuptools
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+version = 'unknown'
+if os.path.exists(os.path.join(".", 'version')):
+    with open(os.path.join(".", 'version')) as version_file:
+        version = version_file.read().strip()
+
 setuptools.setup(
     name="dtcontrol",
-    version="2.0.0.dev2",
+    version=version,
     description="A small tool which can convert automatically synthesised formally verified "
                 "controllers into concise decision trees.",
     long_description=long_description,

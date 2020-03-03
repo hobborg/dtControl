@@ -1,8 +1,11 @@
 stages:
   - test
+  - version
+  - build
+  - web
 
 test:python3.7:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.4
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
   stage: test
   script:
     - /usr/bin/python3.7 --version
@@ -16,7 +19,7 @@ test:python3.7:
       - decision_trees/
 
 test:python3.8:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.4
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
   stage: test
   script:
     - /usr/bin/python3.8 --version
@@ -29,7 +32,36 @@ test:python3.8:
     paths:
       - decision_trees/
 
+version:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
+  stage: version
+  script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+    - eval $(ssh-agent -s)
+    - echo "$CI_GITLAB_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - python gen-semver.py
+  artifacts:
+    paths:
+      - version
+  only:
+    - master
+
+run:
+  stage: build
+  script:
+    - python setup.py bdist_wheel
+    # an alternative approach is to install and run:
+    - pip install dist/*
+    # run the command here
+  artifacts:
+    paths:
+      - dist/*.whl
+  only:
+    - master
+
 jekyll:
+  stage: web
   image: ruby:2.7
   cache:
     key: ${CI_COMMIT_REF_SLUG}
@@ -50,3 +82,5 @@ jekyll:
     - cat ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - rsync -avz _site/* ashok@vmesparza11:/var/www/dtcontrol
+  only:
+    - master
