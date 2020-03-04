@@ -27,6 +27,8 @@ def tag_repo(tag):
 
 def bump(latest):
     commit_msg = git("log", "--format=%B", "-n", "1", "HEAD").decode().strip()
+    if "#nobump" in commit_msg:
+        return latest
     if "#minor" in commit_msg:
         return semver.bump_minor(latest)
     if "#major" in commit_msg:
@@ -43,19 +45,22 @@ def main():
     except subprocess.CalledProcessError:
         # No tags in the repository
         version = "1.0.0"
-    else:
-        # Skip already tagged commits
-        if '-' not in latest:
-            version_file.write(latest)
+    else:  # comes here if try succeeds without throwing exception
+        if '-' not in latest:  # Skip already tagged commits
+            version = latest
+            version_file.write(version)
             version_file.close()
             print("Skipping tag update as latest commit already tagged.")
-            return 0
+        else:
+            version = bump(latest)
 
-        version = bump(latest)
-    print(f"Bumped version: {version}")
+        if not (version == latest):  # If version has indeed changed
+            print(f"Bumped version: {version}")
+            tag_repo(version)
+        else:
+            print("Not bumping version.")
 
-    tag_repo(version)
-    version_file.write(latest)
+    version_file.write(version)
     version_file.close()
     print("Saved to file 'version'")
 
