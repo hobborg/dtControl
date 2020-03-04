@@ -1,11 +1,17 @@
+import os
 import setuptools
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+version = 'unknown'
+if os.path.exists(os.path.join(".", 'version')):
+    with open(os.path.join(".", 'version')) as version_file:
+        version = version_file.read().strip()
+
 setuptools.setup(
     name="dtcontrol",
-    version="2.0.0.dev1",
+    version=version,
     description="A small tool which can convert automatically synthesised formally verified "
                 "controllers into concise decision trees.",
     long_description=long_description,
@@ -13,7 +19,7 @@ setuptools.setup(
     author='Mathias Jackermeier',
     author_email='mathias.jackermeier@outlook.de',
     license='MIT',
-    url="https://gitlab.lrz.de/i7/dtcontrol",
+    url="https://dtcontrol.model.in.tum.de/",
     packages=['dtcontrol',
               'dtcontrol.c_templates',
               'dtcontrol.dataset',
@@ -40,10 +46,12 @@ setuptools.setup(
         'pandas==0.25.2',
         'psutil==5.6.7',
         'pydot==1.4.1',
+        'ruamel.yaml==0.16.10',
         'scikit-learn==0.22',
         'tqdm==4.42.0'
     ],
     package_data={
+        'dtcontrol': ['config.yml'],
         'dtcontrol.c_templates': ['*.c'],
         'dtcontrol.ui': ['*.js', '*.css', '*.html', '*.py'],
         'dtcontrol.decision_tree.OC1_source': ['*.c', '*.h', 'makefile', '*.readme', 'README'],
