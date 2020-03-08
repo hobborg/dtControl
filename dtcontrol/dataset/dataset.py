@@ -81,10 +81,14 @@ class Dataset(ABC):
 
     def copy_from_other_dataset(self, ds):
         self.x = ds.x
+        self.numeric_x = None
+        self.categorical_x = None
         self.x_metadata = ds.x_metadata
         self.y = ds.y
         self.y_metadata = ds.y_metadata
         self.index_to_actual = ds.index_to_actual
+        self.numeric_feature_mapping = ds.numeric_feature_mapping
+        self.categorical_feature_mapping = ds.categorical_feature_mapping
         self.is_deterministic = ds.is_deterministic
 
     def load_if_necessary(self):
