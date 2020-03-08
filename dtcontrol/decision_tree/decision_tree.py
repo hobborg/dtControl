@@ -166,9 +166,9 @@ class Node:
         if isinstance(self.split, CategoricalMultiSplit):
             if x_category_names and self.split.feature in x_category_names:
                 names = x_category_names[self.split.feature]
-                labels = [names[i] for i in self.split.values]
+                labels = [names[i] for i in self.split.value_groups]
             else:
-                labels = self.split.values
+                labels = self.split.value_groups
         else:
             labels = ['True', 'False']
         assert len(self.children) == len(labels)
@@ -199,8 +199,8 @@ class Node:
 
         if isinstance(self.split, CategoricalMultiSplit):
             text = "\t" * indentation_level + (
-                f"if ({self.split.print_c()} == {self.split.values[0]}) {{\n" if type == 'c' else
-                f"if {self.split.print_vhdl()} = {self.split.values[0]} then\n")
+                f"if ({self.split.print_c()} == {self.split.value_groups[0]}) {{\n" if type == 'c' else
+                f"if {self.split.print_vhdl()} = {self.split.value_groups[0]} then\n")
         else:
             text = "\t" * indentation_level + (
                 f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
@@ -210,8 +210,8 @@ class Node:
             text += "\t" * indentation_level + "}\n"
         for i in range(1, len(self.children)):
             if isinstance(self.split, CategoricalMultiSplit):
-                c_text = f"else if ({self.split.print_c()} == {self.split.values[i]}) {{\n"
-                vhdl_text = f"else if ({self.split.print_vhdl()} = {self.split.values[i]} then\n"
+                c_text = f"else if ({self.split.print_c()} == {self.split.value_groups[i]}) {{\n"
+                vhdl_text = f"else if ({self.split.print_vhdl()} = {self.split.value_groups[i]} then\n"
                 text += "\t" * indentation_level + (c_text if type == 'c' else vhdl_text)
             else:
                 text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
