@@ -40,6 +40,9 @@ def print_tuple(t):
 def print_list(l):
     return f'[{", ".join([str(e) for e in l])}]'
 
+def print_set(s):
+    return f'{{{", ".join([str(e) for e in s])}}}'
+
 def split_into_lines(l):
     if not isinstance(l, list) or len(l) < 5:
         return print_list(l)

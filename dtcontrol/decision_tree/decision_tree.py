@@ -164,11 +164,21 @@ class Node:
         last_number = -1
         child_starting_number = starting_number + 1
         if isinstance(self.split, CategoricalMultiSplit):
+            names = None
             if x_category_names and self.split.feature in x_category_names:
                 names = x_category_names[self.split.feature]
-                labels = [names[i] for i in self.split.values]
-            else:
-                labels = self.split.values
+            labels = []
+            for group in self.split.value_groups:
+                if len(group) == 1:
+                    label = group[0] if not names else names[group[0]]
+                    labels.append(label)
+                else:
+                    str_group = group if not names else [names[v] for v in group]
+                    label = f'{{{str_group[0]}'
+                    for s in str_group[1:]:
+                        label += f',\\n{s}'
+                    label += '}'
+                    labels.append(label)
         else:
             labels = ['True', 'False']
         assert len(self.children) == len(labels)
@@ -198,9 +208,13 @@ class Node:
             return "\t" * indentation_level + (self.print_c_label() if type == 'c' else self.print_vhdl_label())
 
         if isinstance(self.split, CategoricalMultiSplit):
-            text = "\t" * indentation_level + (
-                f"if ({self.split.print_c()} == {self.split.values[0]}) {{\n" if type == 'c' else
-                f"if {self.split.print_vhdl()} = {self.split.values[0]} then\n")
+            if type == 'vhdl':
+                raise ValueError('VHDL does not (yet?) support multi splits')
+            disjunction = " || ".join([
+                f"{self.split.print_c()} == {self.split.value_groups[0][i]}"
+                for i in range(len(self.split.value_groups[0]))
+            ])
+            text = "\t" * indentation_level + f"if ({disjunction}) {{\n"
         else:
             text = "\t" * indentation_level + (
                 f"if ({self.split.print_c()}) {{\n" if type == 'c' else f"if {self.split.print_vhdl()} then\n")
@@ -210,9 +224,12 @@ class Node:
             text += "\t" * indentation_level + "}\n"
         for i in range(1, len(self.children)):
             if isinstance(self.split, CategoricalMultiSplit):
-                c_text = f"else if ({self.split.print_c()} == {self.split.values[i]}) {{\n"
-                vhdl_text = f"else if ({self.split.print_vhdl()} = {self.split.values[i]} then\n"
-                text += "\t" * indentation_level + (c_text if type == 'c' else vhdl_text)
+                disjunction = " || ".join([
+                    f"{self.split.print_c()} == {self.split.value_groups[i][j]}"
+                    for j in range(len(self.split.value_groups[i]))
+                ])
+                c_text = f"else if ({disjunction}) {{\n"
+                text += "\t" * indentation_level + c_text
             else:
                 text += "\t" * indentation_level + ("else {\n" if type == 'c' else "else \n")
             text += f"{self.children[i].print_if_then_else(indentation_level + 1, type)}\n"
