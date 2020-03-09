@@ -1,3 +1,9 @@
+import copy
+import sys
+from copy import copy
+
+import numpy as np
+
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
@@ -15,14 +21,39 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
             splits[split] = impurity
 
             if self.value_grouping:
-                values = sorted(set(x_categorical[:, feature]))
-                for i in range(len(values)):
-                    for j in range(i, len(values)):
-                        pass  # merge, compute new impurity and iterate until we don't find any improvement
+                value_groups, grouped_impurity = \
+                    self.find_best_value_groups(dataset, y, impurity_measure, feature, impurity)
+                grouped_split = CategoricalMultiSplit(real_feature, value_groups)
+                splits[grouped_split] = grouped_impurity
 
         if not splits:
             return None
         return min(splits.keys(), key=splits.get)
+
+    @staticmethod
+    def find_best_value_groups(dataset, y, impurity_measure, feature, initial_impurity):
+        impurity = initial_impurity
+        real_feature = dataset.map_categorical_feature_back(feature)
+
+        values = sorted(set(dataset.get_categorical_x()[:, feature]))
+        value_groups = [[v] for v in values]
+        best_new_value_groups = value_groups
+        best_new_impurity = impurity
+        while best_new_impurity <= impurity:
+            impurity = best_new_impurity
+            value_groups = best_new_value_groups
+            best_new_impurity = sys.maxsize
+            for i in range(len(value_groups)):
+                for j in range(i + 1, len(value_groups)):
+                    new_groups = copy.deepcopy(value_groups)
+                    new_groups[i] += new_groups[j]
+                    del new_groups[j]
+                    new_split = CategoricalMultiSplit(real_feature, new_groups)
+                    new_impurity = impurity_measure.calculate_impurity(dataset, y, new_split)
+                    if new_impurity <= best_new_impurity:
+                        best_new_impurity = new_impurity
+                        best_new_value_groups = new_groups
+        return value_groups, impurity
 
 class CategoricalMultiSplit(Split):
     def __init__(self, feature, value_groups=None):
@@ -41,7 +72,13 @@ class CategoricalMultiSplit(Split):
     def get_masks(self, dataset):
         if not self.value_groups:
             self.value_groups = [[v] for v in sorted(set(dataset.x[:, self.feature]))]
-        return [sum(dataset.x[:, self.feature] == group[i] for i in range(len(group))) for group in self.value_groups]
+        masks = []
+        for group in self.value_groups:
+            mask = np.zeros(len(dataset.x), dtype=bool)
+            for v in group:
+                mask |= dataset.x[:, self.feature] == v
+            masks.append(mask)
+        return masks
 
     def print_dot(self, variables=None, category_names=None):
         if variables:
