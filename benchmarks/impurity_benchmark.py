@@ -22,7 +22,7 @@ suite.add_datasets(['examples', 'examples/prism'],
                        "cartpole",
                        "tworooms-noneuler-latest",
                        # "helicopter",
-                       # "cruise-latest",
+                       "cruise-latest",
                        # "dcdc",
                        "10rooms",
                        # "truck_trailer",
@@ -45,10 +45,10 @@ classifiers = [
     DecisionTree(NonDeterminizer(), [aa, logreg], GiniIndex(), 'logreg-gini'),
     DecisionTree(MaxFreqDeterminizer(), [aa], Entropy(), 'MaxFreq-ent'),
     DecisionTree(MaxFreqDeterminizer(), [aa], GiniIndex(), 'MaxFreq-gini'),
-    DecisionTree(NonDeterminizer(), [categorical], Entropy(), 'Cat-ent'),
-    DecisionTree(NonDeterminizer(), [categorical], GiniIndex(), 'Cat-gini'),
-    DecisionTree(NonDeterminizer(), [grouping], Entropy(), 'Group-ent'),
-    DecisionTree(NonDeterminizer(), [grouping], GiniIndex(), 'Group-gini'),
+    DecisionTree(NonDeterminizer(), [aa, categorical], Entropy(), 'Cat-ent'),
+    DecisionTree(NonDeterminizer(), [aa, categorical], GiniIndex(), 'Cat-gini'),
+    DecisionTree(NonDeterminizer(), [aa, grouping], Entropy(), 'Group-ent'),
+    DecisionTree(NonDeterminizer(), [aa, grouping], GiniIndex(), 'Group-gini'),
 ]
 suite.benchmark(classifiers)
 suite.display_html()

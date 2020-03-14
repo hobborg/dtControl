@@ -13,12 +13,12 @@ from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMulti
 from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
-    def __init__(self, determinizer, split_strategies, impurity_measure, name):
+    def __init__(self, determinizer, splitting_strategies, impurity_measure, name):
         super().__init__(name)
         self.root = None
         self.name = name
         self.determinizer = determinizer
-        self.split_strategies = split_strategies
+        self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
 
     def is_applicable(self, dataset):
@@ -27,7 +27,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def fit(self, dataset):
         self.determinizer.set_dataset(dataset)
-        self.root = Node(self.determinizer, self.split_strategies, self.impurity_measure)
+        self.root = Node(self.determinizer, self.splitting_strategies, self.impurity_measure)
         prev_y = dataset.y
         if self.determinizer.determinize_once_before_construction():
             y = self.determinizer.determinize(dataset)
@@ -77,9 +77,9 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return self.name
 
 class Node:
-    def __init__(self, determinizer, split_strategies, impurity_measure, depth=0):
+    def __init__(self, determinizer, splitting_strategies, impurity_measure, depth=0):
         self.determinizer = determinizer
-        self.split_strategies = split_strategies
+        self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
         self.split = None
         self.depth = depth
@@ -108,7 +108,7 @@ class Node:
             else dataset.y
         if self.check_done(dataset.x, y):
             return
-        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.split_strategies]
+        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
         if not splits:
             logging.error("Aborting branch: no split possible.")
@@ -118,7 +118,7 @@ class Node:
         subsets = self.split.split(dataset)
         assert len(subsets) > 1
         for subset in subsets:
-            node = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
+            node = Node(self.determinizer, self.splitting_strategies, self.impurity_measure, self.depth + 1)
             node.fit(subset)
             self.children.append(node)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])

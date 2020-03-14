@@ -95,6 +95,8 @@ class BenchmarkSuite:
                     self.save_result(classifier.get_name(), ds, cell)
                     if cell == 'timeout':
                         msg = f"{step}/{num_steps}: Timed out after {format_seconds(self.timeout)}"
+                    elif cell == 'failed to fit':
+                        msg = f"{step}/{num_steps}: Failed to fit"
                     else:
                         msg = f"{step}/{num_steps}: Finished in {cell['time']}."
                     logging.info(msg)
