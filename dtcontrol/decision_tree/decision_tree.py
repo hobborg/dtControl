@@ -9,7 +9,8 @@ import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
-from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit
+from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
+from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
@@ -20,6 +21,12 @@ class DecisionTree(BenchmarkSuiteClassifier):
         self.determinizer = determinizer
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
+        self.check_valid()
+
+    def check_valid(self):
+        multi = any(isinstance(strategy, CategoricalMultiSplittingStrategy) for strategy in self.splitting_strategies)
+        if multi and isinstance(self.impurity_measure, TwoingRule):
+            raise ValueError('The twoing rule cannot be used with the multi splitting strategy.')
 
     def is_applicable(self, dataset):
         return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
