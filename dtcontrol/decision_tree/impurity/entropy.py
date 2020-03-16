@@ -6,6 +6,8 @@ from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class Entropy(ImpurityMeasure):
     def calculate_impurity(self, dataset, y, split):
+        if len(split.get_masks(dataset)) == 1:
+            return sys.maxsize
         impurity = 0
         for mask in split.get_masks(dataset):
             subset = y[mask]
@@ -20,3 +22,6 @@ class Entropy(ImpurityMeasure):
         unique = np.unique(y)
         probabilities = [len(y[y == label]) / num_labels for label in unique]
         return sum(-prob * np.log2(prob) for prob in probabilities)
+
+    def get_oc1_name(self):
+        return 'info_gain'

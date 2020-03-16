@@ -16,7 +16,7 @@ class TestSafePruning(TestCase):
         r = self.create_parent(rl, rr)
         root = self.create_parent(l, r)
 
-        sp = SafePruning(DecisionTree(None, None, None, 'name'))
+        sp = SafePruning(DecisionTree(None, [], None, 'name'))
         sp.classifier.root = root
         sp.run()
 

@@ -1,0 +1,458 @@
+{
+  "10rooms": {
+    "classifiers": {
+      "CART-ent": {
+        "stats": {
+          "nodes": 17297,
+          "inner nodes": 8648,
+          "paths": 8649,
+          "bandwidth": 14
+        },
+        "time": "00:00:06.488"
+      },
+      "CART-twoing": {
+        "stats": {
+          "nodes": 17415,
+          "inner nodes": 8707,
+          "paths": 8708,
+          "bandwidth": 14
+        },
+        "time": "00:00:04.873"
+      },
+      "logreg-ent": {
+        "stats": {
+          "nodes": 147,
+          "inner nodes": 73,
+          "paths": 74,
+          "bandwidth": 7
+        },
+        "time": "00:00:11.461"
+      },
+      "logreg-twoing": {
+        "stats": {
+          "nodes": 151,
+          "inner nodes": 75,
+          "paths": 76,
+          "bandwidth": 7
+        },
+        "time": "00:00:16.173"
+      },
+      "MaxFreq-ent": {
+        "stats": {
+          "nodes": 7,
+          "inner nodes": 3,
+          "paths": 4,
+          "bandwidth": 2
+        },
+        "time": "00:00:00.610"
+      },
+      "MaxFreq-twoing": {
+        "stats": {
+          "nodes": 7,
+          "inner nodes": 3,
+          "paths": 4,
+          "bandwidth": 2
+        },
+        "time": "00:00:00.614"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "categorical": [],
+        "min": [
+          18.75,
+          18.75,
+          18.75,
+          18.75,
+          18.75,
+          18.75,
+          18.75,
+          18.75,
+          18.75,
+          18.75
+        ],
+        "max": [
+          21.25,
+          21.25,
+          21.25,
+          21.25,
+          21.25,
+          21.25,
+          21.25,
+          21.25,
+          21.25,
+          21.25
+        ],
+        "step_size": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "variables": [
+          "T1",
+          "T2",
+          "T3",
+          "T4",
+          "T5",
+          "T6",
+          "T7",
+          "T8",
+          "T9",
+          "T10"
+        ]
+      },
+      "Y_metadata": {
+        "variables": [
+          "u_0",
+          "u_1"
+        ],
+        "min": [
+          0.0,
+          0.0
+        ],
+        "max": [
+          1.0,
+          1.0
+        ],
+        "step_size": [
+          0.5,
+          0.5
+        ],
+        "num_rows": 26244,
+        "num_flattened": 52488
+      }
+    }
+  },
+  "cartpole": {
+    "classifiers": {
+      "CART-ent": {
+        "stats": {
+          "nodes": 253,
+          "inner nodes": 126,
+          "paths": 127,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.167"
+      },
+      "CART-twoing": {
+        "stats": {
+          "nodes": 253,
+          "inner nodes": 126,
+          "paths": 127,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.123"
+      },
+      "logreg-ent": {
+        "stats": {
+          "nodes": 199,
+          "inner nodes": 99,
+          "paths": 100,
+          "bandwidth": 7
+        },
+        "time": "00:00:03.178"
+      },
+      "logreg-twoing": {
+        "stats": {
+          "nodes": 209,
+          "inner nodes": 104,
+          "paths": 105,
+          "bandwidth": 7
+        },
+        "time": "00:00:03.433"
+      },
+      "MaxFreq-ent": {
+        "stats": {
+          "nodes": 11,
+          "inner nodes": 5,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.038"
+      },
+      "MaxFreq-twoing": {
+        "stats": {
+          "nodes": 13,
+          "inner nodes": 6,
+          "paths": 7,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.041"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "categorical": [],
+        "min": [
+          2.24,
+          -2.0
+        ],
+        "max": [
+          4.08,
+          2.0
+        ],
+        "step_size": [
+          0.08,
+          0.1
+        ]
+      },
+      "Y_metadata": {
+        "variables": [
+          "u_0"
+        ],
+        "min": [
+          -4.0
+        ],
+        "max": [
+          4.0
+        ],
+        "step_size": [
+          0.1
+        ],
+        "num_rows": 271,
+        "num_flattened": 21951
+      }
+    }
+  },
+  "cruise-latest": {
+    "classifiers": {
+      "CART-ent": {
+        "stats": {
+          "nodes": 987,
+          "inner nodes": 493,
+          "paths": 494,
+          "bandwidth": 9
+        },
+        "time": "00:00:14.102"
+      },
+      "CART-twoing": {
+        "stats": {
+          "nodes": 1043,
+          "inner nodes": 521,
+          "paths": 522,
+          "bandwidth": 10
+        },
+        "time": "00:00:15.667"
+      },
+      "logreg-ent": {
+        "stats": {
+          "nodes": 783,
+          "inner nodes": 391,
+          "paths": 392,
+          "bandwidth": 9
+        },
+        "time": "00:01:14.468"
+      },
+      "logreg-twoing": {
+        "stats": {
+          "nodes": 945,
+          "inner nodes": 472,
+          "paths": 473,
+          "bandwidth": 9
+        },
+        "time": "00:02:11.223"
+      },
+      "MaxFreq-ent": {
+        "stats": {
+          "nodes": 3,
+          "inner nodes": 1,
+          "paths": 2,
+          "bandwidth": 1
+        },
+        "time": "00:00:05.573"
+      },
+      "MaxFreq-twoing": {
+        "stats": {
+          "nodes": 3,
+          "inner nodes": 1,
+          "paths": 2,
+          "bandwidth": 1
+        },
+        "time": "00:00:05.732"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "Ego.Choose",
+          "Front.Choose",
+          "distance",
+          "velocityEgo",
+          "accelerationEgo",
+          "velocityFront",
+          "accelerationFront"
+        ],
+        "categorical": [],
+        "min": [
+          1,
+          0,
+          6,
+          -10,
+          -2,
+          -10,
+          -2
+        ],
+        "max": [
+          1,
+          0,
+          230,
+          20,
+          2,
+          20,
+          2
+        ],
+        "step_size": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "Y_metadata": {
+        "variables": [
+          "accelerationEgo"
+        ],
+        "min": [
+          -2
+        ],
+        "max": [
+          2
+        ],
+        "step_size": [
+          2
+        ],
+        "num_rows": 295615,
+        "num_flattened": 886845
+      }
+    }
+  },
+  "tworooms-noneuler-latest": {
+    "classifiers": {
+      "CART-ent": {
+        "stats": {
+          "nodes": 27,
+          "inner nodes": 13,
+          "paths": 14,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.715"
+      },
+      "CART-twoing": {
+        "stats": {
+          "nodes": 27,
+          "inner nodes": 13,
+          "paths": 14,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.509"
+      },
+      "logreg-ent": {
+        "stats": {
+          "nodes": 11,
+          "inner nodes": 5,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:04.443"
+      },
+      "logreg-twoing": {
+        "stats": {
+          "nodes": 11,
+          "inner nodes": 5,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:03.780"
+      },
+      "MaxFreq-ent": {
+        "stats": {
+          "nodes": 9,
+          "inner nodes": 4,
+          "paths": 5,
+          "bandwidth": 3
+        },
+        "time": "00:00:01.096"
+      },
+      "MaxFreq-twoing": {
+        "stats": {
+          "nodes": 9,
+          "inner nodes": 4,
+          "paths": 5,
+          "bandwidth": 3
+        },
+        "time": "00:00:01.087"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "Room1.Choose",
+          "External_temp.Choose",
+          "Room2.Choose",
+          "T_ext",
+          "T1",
+          "T2",
+          "Heat1",
+          "Heat2"
+        ],
+        "categorical": [],
+        "min": [
+          0,
+          0,
+          0,
+          140,
+          180,
+          180,
+          0,
+          0
+        ],
+        "max": [
+          1,
+          0,
+          1,
+          160,
+          220,
+          220,
+          1,
+          1
+        ],
+        "step_size": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "Y_metadata": {
+        "variables": [
+          "Heat2"
+        ],
+        "min": [
+          0
+        ],
+        "max": [
+          1
+        ],
+        "step_size": [
+          0
+        ],
+        "num_rows": 40311,
+        "num_flattened": 80622
+      }
+    }
+  }
+}

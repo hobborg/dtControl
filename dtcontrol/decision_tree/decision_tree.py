@@ -9,17 +9,28 @@ import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
-from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit
+from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
+from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
+from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
-    def __init__(self, determinizer, split_strategies, impurity_measure, name):
+    def __init__(self, determinizer, splitting_strategies, impurity_measure, name):
         super().__init__(name)
         self.root = None
         self.name = name
         self.determinizer = determinizer
-        self.split_strategies = split_strategies
+        self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
+        self.check_valid()
+
+    def check_valid(self):
+        multi = any(isinstance(strategy, CategoricalMultiSplittingStrategy) for strategy in self.splitting_strategies)
+        if multi and isinstance(self.impurity_measure, TwoingRule):
+            raise ValueError('The twoing rule cannot be used with the multi splitting strategy.')
+        oc1 = any(isinstance(strategy, OC1SplittingStrategy) for strategy in self.splitting_strategies)
+        if oc1 and self.impurity_measure.get_oc1_name() is None:
+            raise ValueError('Incompatible impurity measure used with OC1.')
 
     def is_applicable(self, dataset):
         return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
@@ -27,7 +38,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def fit(self, dataset):
         self.determinizer.set_dataset(dataset)
-        self.root = Node(self.determinizer, self.split_strategies, self.impurity_measure)
+        self.root = Node(self.determinizer, self.splitting_strategies, self.impurity_measure)
         prev_y = dataset.y
         if self.determinizer.determinize_once_before_construction():
             y = self.determinizer.determinize(dataset)
@@ -77,9 +88,9 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return self.name
 
 class Node:
-    def __init__(self, determinizer, split_strategies, impurity_measure, depth=0):
+    def __init__(self, determinizer, splitting_strategies, impurity_measure, depth=0):
         self.determinizer = determinizer
-        self.split_strategies = split_strategies
+        self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
         self.split = None
         self.depth = depth
@@ -108,7 +119,7 @@ class Node:
             else dataset.y
         if self.check_done(dataset.x, y):
             return
-        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.split_strategies]
+        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
         if not splits:
             logging.error("Aborting branch: no split possible.")
@@ -118,7 +129,7 @@ class Node:
         subsets = self.split.split(dataset)
         assert len(subsets) > 1
         for subset in subsets:
-            node = Node(self.determinizer, self.split_strategies, self.impurity_measure, self.depth + 1)
+            node = Node(self.determinizer, self.splitting_strategies, self.impurity_measure, self.depth + 1)
             node.fit(subset)
             self.children.append(node)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])

@@ -12,6 +12,7 @@ import numpy as np
 from jinja2 import FileSystemLoader, Environment
 
 import dtcontrol
+from dtcontrol import util
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.timeout import call_with_timeout
@@ -22,6 +23,8 @@ file_loader = FileSystemLoader([path + "/c_templates" for path in dtcontrol.__pa
 env = Environment(loader=file_loader)
 single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
+
+util.ignore_convergence_warnings()
 
 class BenchmarkSuite:
     """
@@ -52,6 +55,8 @@ class BenchmarkSuite:
             logging.error('A dataset cannot be both included and excluded.\nAborting.')
             return
         self.datasets = []
+        if isinstance(paths, str):
+            paths = [paths]
         for path in paths:
             for file in self.get_files(path):
                 name, ext = get_filename_and_ext(file)
@@ -95,6 +100,8 @@ class BenchmarkSuite:
                     self.save_result(classifier.get_name(), ds, cell)
                     if cell == 'timeout':
                         msg = f"{step}/{num_steps}: Timed out after {format_seconds(self.timeout)}"
+                    elif cell == 'failed to fit':
+                        msg = f"{step}/{num_steps}: Failed to fit"
                     else:
                         msg = f"{step}/{num_steps}: Finished in {cell['time']}."
                     logging.info(msg)

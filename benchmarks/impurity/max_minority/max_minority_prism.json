@@ -1,0 +1,1662 @@
+{
+  "firewire_abst": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 18,
+          "inner nodes": 5,
+          "paths": 13,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.043"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 18,
+          "inner nodes": 5,
+          "paths": 13,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.017"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 9,
+          "inner nodes": 3,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.056"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 36,
+          "inner nodes": 16,
+          "paths": 20,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.061"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 7,
+          "paths": 8,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.056"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 575,
+          "inner nodes": 287,
+          "paths": 288,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.106"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 18,
+          "inner nodes": 5,
+          "paths": 13,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.041"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 18,
+          "inner nodes": 5,
+          "paths": 13,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.017"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "clock",
+          "state"
+        ],
+        "categorical": [
+          1
+        ],
+        "min": [
+          0,
+          0
+        ],
+        "max": [
+          167,
+          8
+        ],
+        "step_size": null,
+        "category_names": {
+          "1": [
+            "start_start",
+            "fast_start",
+            "start_fast",
+            "start_slow",
+            "slow_start",
+            "fast_fast",
+            "fast_slow",
+            "slow_fast",
+            "slow_slow"
+          ]
+        }
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "round",
+            "move",
+            "time"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          2
+        ],
+        "step_size": null,
+        "num_rows": 845,
+        "num_flattened": 845
+      }
+    }
+  },
+  "firewire_impl_01": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.184"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 326,
+          "inner nodes": 150,
+          "paths": 176,
+          "bandwidth": 8
+        },
+        "time": "00:00:00.353"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 79,
+          "inner nodes": 30,
+          "paths": 49,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.230"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 157,
+          "inner nodes": 72,
+          "paths": 85,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.155"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 83,
+          "inner nodes": 41,
+          "paths": 42,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.262"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 589,
+          "inner nodes": 294,
+          "paths": 295,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.469"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.200"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 325,
+          "inner nodes": 150,
+          "paths": 175,
+          "bandwidth": 8
+        },
+        "time": "00:00:00.345"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "w12",
+          "y1",
+          "y2",
+          "x1",
+          "s1",
+          "w21",
+          "z1",
+          "z2",
+          "x2",
+          "s2"
+        ],
+        "categorical": [
+          0,
+          4,
+          9
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          8,
+          2,
+          1,
+          167,
+          7,
+          8,
+          2,
+          1,
+          167,
+          7
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "snd_idle12",
+            "snd_idle21",
+            "time",
+            "rec_idle21",
+            "snd_ack21",
+            "rec_req21",
+            "rec_ack21",
+            "snd_ack12",
+            "snd_req12",
+            "snd_req21",
+            "rec_req12",
+            "rec_ack12",
+            "rec_idle12"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          12
+        ],
+        "step_size": null,
+        "num_rows": 1741,
+        "num_flattened": 1741
+      }
+    }
+  },
+  "firewire_impl_02": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.238"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 136,
+          "inner nodes": 54,
+          "paths": 82,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.122"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 79,
+          "inner nodes": 30,
+          "paths": 49,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.298"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 161,
+          "inner nodes": 75,
+          "paths": 86,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.187"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 73,
+          "inner nodes": 36,
+          "paths": 37,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.253"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 661,
+          "inner nodes": 330,
+          "paths": 331,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.577"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.232"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 136,
+          "inner nodes": 54,
+          "paths": 82,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.121"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "w12",
+          "y1",
+          "y2",
+          "x1",
+          "s1",
+          "w21",
+          "z1",
+          "z2",
+          "x2",
+          "s2"
+        ],
+        "categorical": [
+          0,
+          4,
+          9
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          8,
+          3,
+          2,
+          167,
+          7,
+          8,
+          3,
+          2,
+          167,
+          7
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "snd_idle12",
+            "snd_idle21",
+            "time",
+            "rec_idle21",
+            "snd_ack21",
+            "rec_req21",
+            "rec_ack21",
+            "snd_ack12",
+            "snd_req12",
+            "snd_req21",
+            "rec_req12",
+            "rec_ack12",
+            "rec_idle12"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          12
+        ],
+        "step_size": null,
+        "num_rows": 2860,
+        "num_flattened": 2860
+      }
+    }
+  },
+  "firewire_impl_05": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 94,
+          "inner nodes": 36,
+          "paths": 58,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.427"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 107,
+          "inner nodes": 41,
+          "paths": 66,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.172"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 77,
+          "inner nodes": 30,
+          "paths": 47,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.502"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 126,
+          "inner nodes": 57,
+          "paths": 69,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.302"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 79,
+          "inner nodes": 39,
+          "paths": 40,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.488"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 1051,
+          "inner nodes": 525,
+          "paths": 526,
+          "bandwidth": 10
+        },
+        "time": "00:00:00.951"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 94,
+          "inner nodes": 36,
+          "paths": 58,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.433"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 107,
+          "inner nodes": 41,
+          "paths": 66,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.186"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "w12",
+          "y1",
+          "y2",
+          "x1",
+          "s1",
+          "w21",
+          "z1",
+          "z2",
+          "x2",
+          "s2"
+        ],
+        "categorical": [
+          0,
+          4,
+          9
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          8,
+          6,
+          5,
+          167,
+          7,
+          8,
+          6,
+          5,
+          167,
+          7
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "snd_idle12",
+            "snd_idle21",
+            "time",
+            "rec_idle21",
+            "snd_ack21",
+            "rec_req21",
+            "rec_ack21",
+            "snd_ack12",
+            "snd_req12",
+            "snd_req21",
+            "rec_req12",
+            "rec_ack12",
+            "rec_idle12"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          12
+        ],
+        "step_size": null,
+        "num_rows": 6953,
+        "num_flattened": 6953
+      }
+    }
+  },
+  "leader2": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 5,
+          "paths": 10,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.005"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 5,
+          "paths": 10,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.003"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 14,
+          "inner nodes": 5,
+          "paths": 9,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.009"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 20,
+          "inner nodes": 9,
+          "paths": 11,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.007"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 7,
+          "paths": 8,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.008"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 23,
+          "inner nodes": 11,
+          "paths": 12,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.006"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 5,
+          "paths": 10,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.008"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 20,
+          "inner nodes": 9,
+          "paths": 11,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.007"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "s1",
+          "p1",
+          "receive1",
+          "sent1",
+          "c2",
+          "s2",
+          "p2",
+          "receive2",
+          "sent2"
+        ],
+        "categorical": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          1,
+          3,
+          1,
+          2,
+          2,
+          1,
+          3,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "async_pick_process1",
+            "async_pick_process2",
+            "p12",
+            "p21",
+            "c12",
+            "c21"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          5
+        ],
+        "step_size": null,
+        "num_rows": 34,
+        "num_flattened": 34
+      }
+    }
+  },
+  "leader3": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 56,
+          "inner nodes": 19,
+          "paths": 37,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.026"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 60,
+          "inner nodes": 20,
+          "paths": 40,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.017"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 49,
+          "inner nodes": 19,
+          "paths": 30,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.049"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 175,
+          "inner nodes": 84,
+          "paths": 91,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.078"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 45,
+          "inner nodes": 22,
+          "paths": 23,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.040"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 113,
+          "inner nodes": 56,
+          "paths": 57,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.037"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 50,
+          "inner nodes": 19,
+          "paths": 31,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.047"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 176,
+          "inner nodes": 84,
+          "paths": 92,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.074"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "s1",
+          "p1",
+          "receive1",
+          "sent1",
+          "c2",
+          "s2",
+          "p2",
+          "receive2",
+          "sent2",
+          "c3",
+          "s3",
+          "p3",
+          "receive3",
+          "sent3"
+        ],
+        "categorical": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          11,
+          12,
+          13,
+          14
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          2,
+          3,
+          1,
+          2,
+          2,
+          2,
+          3,
+          1,
+          2,
+          2,
+          2,
+          3,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "async_pick_process1",
+            "async_pick_process2",
+            "p31",
+            "p12",
+            "c23",
+            "async_pick_process3",
+            "p23",
+            "c12",
+            "c31"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          8
+        ],
+        "step_size": null,
+        "num_rows": 361,
+        "num_flattened": 361
+      }
+    }
+  },
+  "leader4": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 174,
+          "inner nodes": 61,
+          "paths": 113,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.137"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 414,
+          "inner nodes": 152,
+          "paths": 262,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.160"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 154,
+          "inner nodes": 61,
+          "paths": 93,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.252"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 1767,
+          "inner nodes": 867,
+          "paths": 900,
+          "bandwidth": 10
+        },
+        "time": "00:00:00.808"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 121,
+          "inner nodes": 60,
+          "paths": 61,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.214"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 1487,
+          "inner nodes": 743,
+          "paths": 744,
+          "bandwidth": 10
+        },
+        "time": "00:00:00.543"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 155,
+          "inner nodes": 61,
+          "paths": 94,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.246"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 1518,
+          "inner nodes": 737,
+          "paths": 781,
+          "bandwidth": 10
+        },
+        "time": "00:00:00.797"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "s1",
+          "p1",
+          "receive1",
+          "sent1",
+          "c2",
+          "s2",
+          "p2",
+          "receive2",
+          "sent2",
+          "c3",
+          "s3",
+          "p3",
+          "receive3",
+          "sent3",
+          "c4",
+          "s4",
+          "p4",
+          "receive4",
+          "sent4"
+        ],
+        "categorical": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          11,
+          12,
+          13,
+          14,
+          16,
+          17,
+          18,
+          19
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          3,
+          3,
+          1,
+          2,
+          2,
+          3,
+          3,
+          1,
+          2,
+          2,
+          3,
+          3,
+          1,
+          2,
+          2,
+          3,
+          3,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "async_pick_process1",
+            "async_pick_process2",
+            "p41",
+            "p12",
+            "p23",
+            "c23",
+            "async_pick_process3",
+            "c34",
+            "async_pick_process4",
+            "p34",
+            "c41",
+            "c12"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          11
+        ],
+        "step_size": null,
+        "num_rows": 3168,
+        "num_flattened": 3168
+      }
+    }
+  },
+  "mer10": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 199,
+          "inner nodes": 74,
+          "paths": 125,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.481"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 1440,
+          "inner nodes": 612,
+          "paths": 828,
+          "bandwidth": 10
+        },
+        "time": "00:00:00.761"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 148,
+          "inner nodes": 65,
+          "paths": 83,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.667"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 2719,
+          "inner nodes": 1339,
+          "paths": 1380,
+          "bandwidth": 11
+        },
+        "time": "00:00:01.824"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 115,
+          "inner nodes": 57,
+          "paths": 58,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.579"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 2557,
+          "inner nodes": 1278,
+          "paths": 1279,
+          "bandwidth": 11
+        },
+        "time": "00:00:01.388"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 158,
+          "inner nodes": 68,
+          "paths": 90,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.692"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 1707,
+          "inner nodes": 827,
+          "paths": 880,
+          "bandwidth": 10
+        },
+        "time": "00:00:01.499"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "s",
+          "r",
+          "k",
+          "commUser",
+          "driveUser",
+          "gc",
+          "dc",
+          "gd",
+          "dd",
+          "s1",
+          "r1",
+          "rescind1",
+          "s2",
+          "r2",
+          "rescind2",
+          "e",
+          "u"
+        ],
+        "categorical": [
+          0,
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "min": [
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          2,
+          2,
+          10,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          4,
+          2,
+          1,
+          4,
+          2,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "u1_grant_comm",
+            "async_init1_user2",
+            "async_inits_user2",
+            "loop",
+            "async_pendcancel_user2",
+            "u2_cancel_drive",
+            "u2_rescind_drive",
+            "async_init1_user1",
+            "u2_request_comm",
+            "u2_request_drive",
+            "async_inits_user1",
+            "u1_request_comm",
+            "u1_request_drive",
+            "async_pendcancel_user1",
+            "u1_cancel_drive",
+            "u1_cancel_comm",
+            "u2_cancel_comm",
+            "no_rescind_drive",
+            "u1_rescind_drive",
+            "commwait",
+            "u1_deny_comm"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          20
+        ],
+        "step_size": null,
+        "num_rows": 23792,
+        "num_flattened": 23792
+      }
+    }
+  },
+  "wlan0": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 206,
+          "inner nodes": 71,
+          "paths": 135,
+          "bandwidth": 8
+        },
+        "time": "00:00:00.124"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 543,
+          "inner nodes": 234,
+          "paths": 309,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.150"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 175,
+          "inner nodes": 69,
+          "paths": 106,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.341"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 507,
+          "inner nodes": 240,
+          "paths": 267,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.600"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 237,
+          "inner nodes": 118,
+          "paths": 119,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.298"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 1181,
+          "inner nodes": 590,
+          "paths": 591,
+          "bandwidth": 10
+        },
+        "time": "00:00:00.385"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 197,
+          "inner nodes": 71,
+          "paths": 126,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.167"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 531,
+          "inner nodes": 237,
+          "paths": 294,
+          "bandwidth": 9
+        },
+        "time": "00:00:00.196"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "c2",
+          "x1",
+          "s1",
+          "slot1",
+          "backoff1",
+          "bc1",
+          "x2",
+          "s2",
+          "slot2",
+          "backoff2",
+          "bc2"
+        ],
+        "categorical": [
+          0,
+          1,
+          3,
+          4,
+          6,
+          8,
+          9,
+          11
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          2,
+          2,
+          6,
+          12,
+          0,
+          15,
+          0,
+          6,
+          12,
+          0,
+          15,
+          0
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "time",
+            "send2",
+            "async_backoff_station1",
+            "async_backoff_station2",
+            "send1",
+            "async_transmit_station1",
+            "finish2",
+            "async_wait_free_station1",
+            "async_wait_free_station2",
+            "finish1"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          9
+        ],
+        "step_size": null,
+        "num_rows": 2738,
+        "num_flattened": 2738
+      }
+    }
+  },
+  "zeroconf": {
+    "classifiers": {
+      "Cat-ent": {
+        "stats": {
+          "nodes": 370,
+          "inner nodes": 178,
+          "paths": 192,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.407"
+      },
+      "Cat-max": {
+        "stats": {
+          "nodes": 12722,
+          "inner nodes": 6350,
+          "paths": 6372,
+          "bandwidth": 13
+        },
+        "time": "00:00:04.860"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 367,
+          "inner nodes": 178,
+          "paths": 189,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.628"
+      },
+      "Group-max": {
+        "stats": {
+          "nodes": 14624,
+          "inner nodes": 7305,
+          "paths": 7319,
+          "bandwidth": 13
+        },
+        "time": "00:00:06.239"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 379,
+          "inner nodes": 189,
+          "paths": 190,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.705"
+      },
+      "Single-max": {
+        "stats": {
+          "nodes": 12649,
+          "inner nodes": 6324,
+          "paths": 6325,
+          "bandwidth": 13
+        },
+        "time": "00:00:05.459"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 367,
+          "inner nodes": 178,
+          "paths": 189,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.737"
+      },
+      "Both-max": {
+        "stats": {
+          "nodes": 14619,
+          "inner nodes": 7303,
+          "paths": 7316,
+          "bandwidth": 13
+        },
+        "time": "00:00:07.710"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "b_ip7",
+          "b_ip6",
+          "b_ip5",
+          "b_ip4",
+          "b_ip3",
+          "b_ip2",
+          "b_ip1",
+          "b_ip0",
+          "n",
+          "n0",
+          "n1",
+          "b",
+          "z",
+          "ip_mess",
+          "x",
+          "y",
+          "coll",
+          "probes",
+          "mess",
+          "defend",
+          "ip",
+          "l"
+        ],
+        "categorical": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          11,
+          13,
+          18,
+          19,
+          20,
+          21
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "max": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          2,
+          2,
+          3,
+          20,
+          2,
+          2,
+          1,
+          2,
+          60,
+          4,
+          10,
+          1,
+          1,
+          1,
+          2,
+          3
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "reset",
+            "async_choose_host0",
+            "time",
+            "send",
+            "async_probes_host0",
+            "async_finishfrom_environment",
+            "rec",
+            "async_startto_environment",
+            "async_startfrom_environment"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          8
+        ],
+        "step_size": null,
+        "num_rows": 29814,
+        "num_flattened": 29814
+      }
+    }
+  }
+}

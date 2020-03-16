@@ -18,9 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Change the following statement to use a different impurity measure. */
 
-#define IMPURITY info_gain ()
+#define IMPURITY twoing ()
 /* possible values are: maxminority                             */
 /*			summinority				*/
 /*			variance				*/

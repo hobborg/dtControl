@@ -2,6 +2,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
+from dtcontrol.decision_tree.decision_tree import DecisionTree
+from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.impurity.entropy import Entropy
+from dtcontrol.decision_tree.impurity.gini_index import GiniIndex
+from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -18,7 +23,7 @@ suite.add_datasets(['examples', 'examples/prism'],
                        # "wlan0",
                        # "mer10"
                        "cartpole",
-                       # "tworooms-noneuler-latest",
+                       "tworooms-noneuler-latest",
                        # "helicopter",
                        # "cruise-latest",
                        # "dcdc",
@@ -44,7 +49,9 @@ classifiers = [
     # DecisionTree(NonDeterminizer(), [aa, logreg], AUROC(), 'CART-logreg-auc'),
     # DecisionTree(NonDeterminizer(), [aa, linsvc], Entropy(), 'linsvc'),
     # DecisionTree(NonDeterminizer(), [aa, logreg], Entropy(), 'logreg'),
-    # DecisionTree(NonDeterminizer(), [aa, oc1], Entropy(), 'OC1'),
+    DecisionTree(NonDeterminizer(), [aa, oc1], Entropy(), 'OC1-ent'),
+    DecisionTree(NonDeterminizer(), [aa, oc1], GiniIndex(), 'OC1-gini'),
+    DecisionTree(NonDeterminizer(), [aa, oc1], TwoingRule(), 'OC1-twoing'),
     # DecisionTree(MaxFreqDeterminizer(), [aa], Entropy(), 'MaxFreq'),
     # DecisionTree(MaxFreqDeterminizer(), [aa, logreg], Entropy(), 'MaxFreqLC'),
     # DecisionTree(NormDeterminizer(min), [aa], Entropy(), 'MinNorm'),
