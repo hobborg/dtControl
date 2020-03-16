@@ -3,6 +3,13 @@ from os.path import basename, splitext
 
 import numpy as np
 
+def ignore_convergence_warnings():
+    logging.captureWarnings(capture=True)
+    logger = logging.getLogger("py.warnings")
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
+    logger.addFilter(lambda record: "ConvergenceWarning" not in record.getMessage())
+
 def format_seconds(sec):
     m, s = divmod(sec, 60)
     h, m = divmod(m, 60)
