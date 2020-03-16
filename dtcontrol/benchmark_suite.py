@@ -10,6 +10,7 @@ from os.path import join, exists, isfile
 
 import numpy as np
 from jinja2 import FileSystemLoader, Environment
+from sklearn.exceptions import ConvergenceWarning
 
 import dtcontrol
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
@@ -22,6 +23,11 @@ file_loader = FileSystemLoader([path + "/c_templates" for path in dtcontrol.__pa
 env = Environment(loader=file_loader)
 single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
+
+import warnings
+
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category=ConvergenceWarning)
 
 class BenchmarkSuite:
     """
