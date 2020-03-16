@@ -11,6 +11,7 @@ from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
+from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
@@ -27,6 +28,9 @@ class DecisionTree(BenchmarkSuiteClassifier):
         multi = any(isinstance(strategy, CategoricalMultiSplittingStrategy) for strategy in self.splitting_strategies)
         if multi and isinstance(self.impurity_measure, TwoingRule):
             raise ValueError('The twoing rule cannot be used with the multi splitting strategy.')
+        oc1 = any(isinstance(strategy, OC1SplittingStrategy) for strategy in self.splitting_strategies)
+        if oc1 and self.impurity_measure.get_oc1_name() is None:
+            raise ValueError('Incompatible impurity measure used with OC1.')
 
     def is_applicable(self, dataset):
         return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \

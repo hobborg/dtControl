@@ -26,3 +26,6 @@ class TwoingRule(ImpurityMeasure):
         if twoing_value == 0:
             return sys.maxsize
         return 1 / twoing_value
+
+    def get_oc1_name(self):
+        return 'twoing'

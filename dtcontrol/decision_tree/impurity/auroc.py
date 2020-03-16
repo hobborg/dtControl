@@ -34,3 +34,6 @@ class AUROC(ImpurityMeasure):  # TODO MJA: one-hot encode categorical?
             label_to_auroc[label] = auroc
         weighted_avg = sum([auroc * (len(y[y == label]) / len(y)) for label, auroc in label_to_auroc.items()])
         return weighted_avg
+
+    def get_oc1_name(self):
+        return None

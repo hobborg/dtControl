@@ -10,3 +10,10 @@ class ImpurityMeasure(ABC):
         :returns: the calculated impurity
         """
         pass
+
+    @abstractmethod
+    def get_oc1_name(self):
+        """
+        :return: the string used to identify this impurity measure in OC1
+        """
+        pass

@@ -22,3 +22,6 @@ class Entropy(ImpurityMeasure):
         unique = np.unique(y)
         probabilities = [len(y[y == label]) / num_labels for label in unique]
         return sum(-prob * np.log2(prob) for prob in probabilities)
+
+    def get_oc1_name(self):
+        return 'info_gain'

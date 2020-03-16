@@ -38,3 +38,6 @@ class EntropyRatio(ImpurityMeasure):
             info -= (len(subset) / len(y)) * np.log2((len(subset) / len(y)))
         assert info > 0
         return info
+
+    def get_oc1_name(self):
+        return None

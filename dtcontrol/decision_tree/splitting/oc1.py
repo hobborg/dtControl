@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -15,13 +16,9 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 from dtcontrol.util import log_without_newline
 
 class OC1SplittingStrategy(SplittingStrategy):
-    """
-    OC1 already computes the best axis-aligned split internally, so it is not necessary to have both the CART and OC1
-    splitting strategy.
-    """
-
     def __init__(self, num_restarts=20, num_jumps=5, delete_tmp=True):
         self.oc1_path = 'decision_tree/OC1_source/mktree'
+        self.header_file = 'decision_tree/OC1_source/oc1_bkp.h'
         self.tmp_path = '.dtcontrol_tmp'
         self.output_file = f'{self.tmp_path}/output'
         self.data_file = f'{self.tmp_path}/data.csv'
@@ -30,6 +27,7 @@ class OC1SplittingStrategy(SplittingStrategy):
         self.num_restarts = num_restarts
         self.num_jumps = num_jumps
         self.delete_tmp = delete_tmp
+        self.regex_pattern = re.compile(r'IMPURITY (.+) \(\)')
         if not os.path.exists(self.oc1_path):
             self.compile_oc1()
 
@@ -59,11 +57,30 @@ class OC1SplittingStrategy(SplittingStrategy):
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)
         self.save_data_to_file(x_numeric, y)
+        self.set_impurity_measure(impurity_measure)
         self.execute_oc1()
         split = self.parse_oc1_dt(dataset)
         if self.delete_tmp:
             shutil.rmtree(self.tmp_path)
         return split
+
+    def set_impurity_measure(self, impurity_measure):
+        for path in dtcontrol.__path__:
+            header = f'{path}/decision_tree/OC1_source/oc1.h'
+            if os.path.exists(header):
+                self.header_file = header
+        with open(self.header_file, 'r') as infile:
+            content = infile.read()
+        match = re.search(self.regex_pattern, content)
+        assert match
+        if match.group(1) == impurity_measure.get_oc1_name():
+            return
+        new_content = re.sub(self.regex_pattern, f'IMPURITY {impurity_measure.get_oc1_name()} ()', content)
+        with open(self.header_file, 'w') as outfile:
+            outfile.write(new_content)
+        logging.disable(logging.INFO)
+        self.compile_oc1()
+        logging.disable(logging.NOTSET)
 
     def save_data_to_file(self, x, y):
         data = np.c_[x, y]

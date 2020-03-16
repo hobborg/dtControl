@@ -20,3 +20,6 @@ class MaxMinority(ImpurityMeasure):
     def calculate_minority(y):
         label = np.bincount(y).argmax()
         return len(y[y != label])
+
+    def get_oc1_name(self):
+        return 'maxminority'

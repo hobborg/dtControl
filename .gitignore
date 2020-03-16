@@ -1,7 +1,7 @@
 # Custom
 venv
 testenv
-oc1_tmp
+.dtcontrol_tmp
 decision_trees
 tmp.html
 dtcontrol/classifiers/OC1_source/*.o

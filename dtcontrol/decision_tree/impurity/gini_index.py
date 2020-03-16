@@ -22,3 +22,6 @@ class GiniIndex(ImpurityMeasure):
         unique = np.unique(y)
         probabilities = [len(y[y == label]) / num_labels for label in unique]
         return 1 - sum(prob * prob for prob in probabilities)
+
+    def get_oc1_name(self):
+        return 'gini_index'

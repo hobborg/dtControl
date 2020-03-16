@@ -19,7 +19,7 @@
 #include <string.h>
 
 
-#define IMPURITY twoing ()
+#define IMPURITY gini_index ()
 /* possible values are: maxminority                             */
 /*			summinority				*/
 /*			variance				*/
