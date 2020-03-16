@@ -10,7 +10,7 @@ from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingS
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 
 suite = BenchmarkSuite(timeout=60 * 3,
-                       benchmark_file='benchmarks/gini',
+                       benchmark_file='benchmarks/impurity/gini/gini',
                        rerun=False)
 
 suite.add_datasets(['examples', 'examples/prism'],

@@ -8,7 +8,7 @@ from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMulti
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 
 suite = BenchmarkSuite(timeout=60,
-                       benchmark_file='benchmarks/gini_prism',
+                       benchmark_file='benchmarks/impurity/gini/gini_prism',
                        rerun=False)
 
 suite.add_datasets(['examples/prism'])
