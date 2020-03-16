@@ -52,6 +52,8 @@ class BenchmarkSuite:
             logging.error('A dataset cannot be both included and excluded.\nAborting.')
             return
         self.datasets = []
+        if isinstance(paths, str):
+            paths = [paths]
         for path in paths:
             for file in self.get_files(path):
                 name, ext = get_filename_and_ext(file)
