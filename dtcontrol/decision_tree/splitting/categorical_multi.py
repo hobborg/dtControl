@@ -24,7 +24,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
             real_feature = dataset.map_categorical_feature_back(feature)
             split = CategoricalMultiSplit(real_feature)
             impurity = impurity_measure.calculate_impurity(dataset, y, split)
-            if impurity == sys.maxsize:  # TODO MJA: remove this once impurity measures are fixed?
+            if impurity == sys.maxsize:
                 continue
 
             if self.value_grouping:

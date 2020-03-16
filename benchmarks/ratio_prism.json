@@ -8,7 +8,7 @@
           "paths": 13,
           "bandwidth": 4
         },
-        "time": "00:00:00.039"
+        "time": "00:00:00.041"
       },
       "Cat-ratio": {
         "stats": {
@@ -17,7 +17,7 @@
           "paths": 13,
           "bandwidth": 4
         },
-        "time": "00:00:00.044"
+        "time": "00:00:00.055"
       },
       "Group-ent": {
         "stats": {
@@ -26,7 +26,16 @@
           "paths": 6,
           "bandwidth": 3
         },
-        "time": "00:00:00.046"
+        "time": "00:00:00.051"
+      },
+      "Group-ratio": {
+        "stats": {
+          "nodes": 18,
+          "inner nodes": 5,
+          "paths": 13,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.066"
       },
       "Single-ent": {
         "stats": {
@@ -35,7 +44,7 @@
           "paths": 8,
           "bandwidth": 3
         },
-        "time": "00:00:00.054"
+        "time": "00:00:00.052"
       },
       "Single-ratio": {
         "stats": {
@@ -44,7 +53,7 @@
           "paths": 284,
           "bandwidth": 9
         },
-        "time": "00:00:00.211"
+        "time": "00:00:00.230"
       },
       "Both-ent": {
         "stats": {
@@ -62,16 +71,7 @@
           "paths": 13,
           "bandwidth": 4
         },
-        "time": "00:00:00.049"
-      },
-      "Group-ratio": {
-        "stats": {
-          "nodes": 18,
-          "inner nodes": 5,
-          "paths": 13,
-          "bandwidth": 4
-        },
-        "time": "00:00:00.058"
+        "time": "00:00:00.054"
       }
     },
     "metadata": {
@@ -138,7 +138,7 @@
           "paths": 62,
           "bandwidth": 6
         },
-        "time": "00:00:00.179"
+        "time": "00:00:00.188"
       },
       "Cat-ratio": {
         "stats": {
@@ -147,43 +147,7 @@
           "paths": 62,
           "bandwidth": 6
         },
-        "time": "00:00:00.211"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 83,
-          "inner nodes": 41,
-          "paths": 42,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.252"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 111,
-          "inner nodes": 55,
-          "paths": 56,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.249"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 99,
-          "inner nodes": 37,
-          "paths": 62,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.185"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 99,
-          "inner nodes": 37,
-          "paths": 62,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.223"
+        "time": "00:00:00.227"
       },
       "Group-ent": {
         "stats": {
@@ -192,7 +156,7 @@
           "paths": 49,
           "bandwidth": 6
         },
-        "time": "00:00:00.227"
+        "time": "00:00:00.231"
       },
       "Group-ratio": {
         "stats": {
@@ -201,7 +165,43 @@
           "paths": 62,
           "bandwidth": 6
         },
-        "time": "00:00:00.245"
+        "time": "00:00:00.282"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 83,
+          "inner nodes": 41,
+          "paths": 42,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.257"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 111,
+          "inner nodes": 55,
+          "paths": 56,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.268"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.186"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.239"
       }
     },
     "metadata": {
@@ -291,7 +291,7 @@
           "paths": 62,
           "bandwidth": 6
         },
-        "time": "00:00:00.216"
+        "time": "00:00:00.226"
       },
       "Cat-ratio": {
         "stats": {
@@ -300,43 +300,7 @@
           "paths": 70,
           "bandwidth": 7
         },
-        "time": "00:00:00.260"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 73,
-          "inner nodes": 36,
-          "paths": 37,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.246"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 97,
-          "inner nodes": 48,
-          "paths": 49,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.290"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 99,
-          "inner nodes": 37,
-          "paths": 62,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.226"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 112,
-          "inner nodes": 42,
-          "paths": 70,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.275"
+        "time": "00:00:00.285"
       },
       "Group-ent": {
         "stats": {
@@ -345,9 +309,45 @@
           "paths": 49,
           "bandwidth": 6
         },
-        "time": "00:00:00.267"
+        "time": "00:00:00.279"
       },
       "Group-ratio": {
+        "stats": {
+          "nodes": 112,
+          "inner nodes": 42,
+          "paths": 70,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.343"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 73,
+          "inner nodes": 36,
+          "paths": 37,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.257"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 97,
+          "inner nodes": 48,
+          "paths": 49,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.352"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 99,
+          "inner nodes": 37,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.252"
+      },
+      "Both-ratio": {
         "stats": {
           "nodes": 112,
           "inner nodes": 42,
@@ -444,7 +444,7 @@
           "paths": 58,
           "bandwidth": 6
         },
-        "time": "00:00:00.401"
+        "time": "00:00:00.425"
       },
       "Cat-ratio": {
         "stats": {
@@ -453,43 +453,7 @@
           "paths": 76,
           "bandwidth": 7
         },
-        "time": "00:00:00.399"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 79,
-          "inner nodes": 39,
-          "paths": 40,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.461"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 117,
-          "inner nodes": 58,
-          "paths": 59,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.498"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 94,
-          "inner nodes": 36,
-          "paths": 58,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.410"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 124,
-          "inner nodes": 48,
-          "paths": 76,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.419"
+        "time": "00:00:00.471"
       },
       "Group-ent": {
         "stats": {
@@ -498,7 +462,7 @@
           "paths": 47,
           "bandwidth": 6
         },
-        "time": "00:00:00.473"
+        "time": "00:00:00.496"
       },
       "Group-ratio": {
         "stats": {
@@ -507,7 +471,43 @@
           "paths": 76,
           "bandwidth": 7
         },
-        "time": "00:00:00.450"
+        "time": "00:00:00.533"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 79,
+          "inner nodes": 39,
+          "paths": 40,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.487"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 117,
+          "inner nodes": 58,
+          "paths": 59,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.560"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 94,
+          "inner nodes": 36,
+          "paths": 58,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.479"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 124,
+          "inner nodes": 48,
+          "paths": 76,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.486"
       }
     },
     "metadata": {
@@ -597,7 +597,7 @@
           "paths": 10,
           "bandwidth": 4
         },
-        "time": "00:00:00.005"
+        "time": "00:00:00.009"
       },
       "Cat-ratio": {
         "stats": {
@@ -606,43 +606,7 @@
           "paths": 14,
           "bandwidth": 4
         },
-        "time": "00:00:00.007"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 7,
-          "paths": 8,
-          "bandwidth": 3
-        },
-        "time": "00:00:00.007"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 7,
-          "paths": 8,
-          "bandwidth": 3
-        },
         "time": "00:00:00.008"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 5,
-          "paths": 10,
-          "bandwidth": 4
-        },
-        "time": "00:00:00.008"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 20,
-          "inner nodes": 8,
-          "paths": 12,
-          "bandwidth": 4
-        },
-        "time": "00:00:00.013"
       },
       "Group-ent": {
         "stats": {
@@ -651,7 +615,7 @@
           "paths": 9,
           "bandwidth": 4
         },
-        "time": "00:00:00.008"
+        "time": "00:00:00.012"
       },
       "Group-ratio": {
         "stats": {
@@ -660,7 +624,43 @@
           "paths": 12,
           "bandwidth": 4
         },
-        "time": "00:00:00.012"
+        "time": "00:00:00.013"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 7,
+          "paths": 8,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.008"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 7,
+          "paths": 8,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.009"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 5,
+          "paths": 10,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.015"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 20,
+          "inner nodes": 8,
+          "paths": 12,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.014"
       }
     },
     "metadata": {
@@ -757,7 +757,25 @@
           "paths": 41,
           "bandwidth": 6
         },
-        "time": "00:00:00.032"
+        "time": "00:00:00.036"
+      },
+      "Group-ent": {
+        "stats": {
+          "nodes": 49,
+          "inner nodes": 19,
+          "paths": 30,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.054"
+      },
+      "Group-ratio": {
+        "stats": {
+          "nodes": 57,
+          "inner nodes": 21,
+          "paths": 36,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.072"
       },
       "Single-ent": {
         "stats": {
@@ -766,7 +784,7 @@
           "paths": 23,
           "bandwidth": 5
         },
-        "time": "00:00:00.039"
+        "time": "00:00:00.045"
       },
       "Single-ratio": {
         "stats": {
@@ -775,7 +793,7 @@
           "paths": 27,
           "bandwidth": 5
         },
-        "time": "00:00:00.048"
+        "time": "00:00:00.053"
       },
       "Both-ent": {
         "stats": {
@@ -793,25 +811,7 @@
           "paths": 36,
           "bandwidth": 6
         },
-        "time": "00:00:00.059"
-      },
-      "Group-ent": {
-        "stats": {
-          "nodes": 49,
-          "inner nodes": 19,
-          "paths": 30,
-          "bandwidth": 5
-        },
-        "time": "00:00:00.047"
-      },
-      "Group-ratio": {
-        "stats": {
-          "nodes": 57,
-          "inner nodes": 21,
-          "paths": 36,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.058"
+        "time": "00:00:00.060"
       }
     },
     "metadata": {
@@ -921,7 +921,7 @@
           "paths": 113,
           "bandwidth": 7
         },
-        "time": "00:00:00.143"
+        "time": "00:00:00.136"
       },
       "Cat-ratio": {
         "stats": {
@@ -930,43 +930,7 @@
           "paths": 147,
           "bandwidth": 8
         },
-        "time": "00:00:00.175"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 121,
-          "inner nodes": 60,
-          "paths": 61,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.201"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 129,
-          "inner nodes": 64,
-          "paths": 65,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.224"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 155,
-          "inner nodes": 61,
-          "paths": 94,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.243"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 208,
-          "inner nodes": 74,
-          "paths": 134,
-          "bandwidth": 8
-        },
-        "time": "00:00:00.315"
+        "time": "00:00:00.173"
       },
       "Group-ent": {
         "stats": {
@@ -975,7 +939,7 @@
           "paths": 93,
           "bandwidth": 7
         },
-        "time": "00:00:00.246"
+        "time": "00:00:00.236"
       },
       "Group-ratio": {
         "stats": {
@@ -984,7 +948,43 @@
           "paths": 133,
           "bandwidth": 8
         },
-        "time": "00:00:00.299"
+        "time": "00:00:00.350"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 121,
+          "inner nodes": 60,
+          "paths": 61,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.222"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 129,
+          "inner nodes": 64,
+          "paths": 65,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.225"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 155,
+          "inner nodes": 61,
+          "paths": 94,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.239"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 208,
+          "inner nodes": 74,
+          "paths": 134,
+          "bandwidth": 8
+        },
+        "time": "00:00:00.311"
       }
     },
     "metadata": {
@@ -1116,7 +1116,7 @@
           "paths": 125,
           "bandwidth": 7
         },
-        "time": "00:00:00.473"
+        "time": "00:00:00.460"
       },
       "Cat-ratio": {
         "stats": {
@@ -1125,43 +1125,7 @@
           "paths": 142,
           "bandwidth": 8
         },
-        "time": "00:00:00.495"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 115,
-          "inner nodes": 57,
-          "paths": 58,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.555"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 139,
-          "inner nodes": 69,
-          "paths": 70,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.622"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 158,
-          "inner nodes": 68,
-          "paths": 90,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.683"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 213,
-          "inner nodes": 89,
-          "paths": 124,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.808"
+        "time": "00:00:00.499"
       },
       "Group-ent": {
         "stats": {
@@ -1170,7 +1134,7 @@
           "paths": 83,
           "bandwidth": 7
         },
-        "time": "00:00:00.721"
+        "time": "00:00:00.646"
       },
       "Group-ratio": {
         "stats": {
@@ -1179,7 +1143,43 @@
           "paths": 124,
           "bandwidth": 7
         },
-        "time": "00:00:00.751"
+        "time": "00:00:00.798"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 115,
+          "inner nodes": 57,
+          "paths": 58,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.567"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 139,
+          "inner nodes": 69,
+          "paths": 70,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.633"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 158,
+          "inner nodes": 68,
+          "paths": 90,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.678"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 213,
+          "inner nodes": 89,
+          "paths": 124,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.810"
       }
     },
     "metadata": {
@@ -1311,7 +1311,7 @@
           "paths": 135,
           "bandwidth": 8
         },
-        "time": "00:00:00.135"
+        "time": "00:00:00.123"
       },
       "Cat-ratio": {
         "stats": {
@@ -1320,43 +1320,7 @@
           "paths": 136,
           "bandwidth": 8
         },
-        "time": "00:00:00.157"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 237,
-          "inner nodes": 118,
-          "paths": 119,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.291"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 323,
-          "inner nodes": 161,
-          "paths": 162,
-          "bandwidth": 8
-        },
-        "time": "00:00:00.360"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 197,
-          "inner nodes": 71,
-          "paths": 126,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.167"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 208,
-          "inner nodes": 77,
-          "paths": 131,
-          "bandwidth": 8
-        },
-        "time": "00:00:00.199"
+        "time": "00:00:00.148"
       },
       "Group-ent": {
         "stats": {
@@ -1365,7 +1329,7 @@
           "paths": 106,
           "bandwidth": 7
         },
-        "time": "00:00:00.321"
+        "time": "00:00:00.334"
       },
       "Group-ratio": {
         "stats": {
@@ -1374,7 +1338,43 @@
           "paths": 131,
           "bandwidth": 8
         },
-        "time": "00:00:00.304"
+        "time": "00:00:00.339"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 237,
+          "inner nodes": 118,
+          "paths": 119,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.296"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 323,
+          "inner nodes": 161,
+          "paths": 162,
+          "bandwidth": 8
+        },
+        "time": "00:00:00.361"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 197,
+          "inner nodes": 71,
+          "paths": 126,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.156"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 208,
+          "inner nodes": 77,
+          "paths": 131,
+          "bandwidth": 8
+        },
+        "time": "00:00:00.178"
       }
     },
     "metadata": {
@@ -1472,7 +1472,7 @@
           "paths": 192,
           "bandwidth": 8
         },
-        "time": "00:00:01.436"
+        "time": "00:00:01.374"
       },
       "Cat-ratio": {
         "stats": {
@@ -1481,43 +1481,7 @@
           "paths": 237,
           "bandwidth": 8
         },
-        "time": "00:00:01.604"
-      },
-      "Single-ent": {
-        "stats": {
-          "nodes": 379,
-          "inner nodes": 189,
-          "paths": 190,
-          "bandwidth": 8
-        },
-        "time": "00:00:01.675"
-      },
-      "Single-ratio": {
-        "stats": {
-          "nodes": 453,
-          "inner nodes": 226,
-          "paths": 227,
-          "bandwidth": 8
-        },
-        "time": "00:00:01.841"
-      },
-      "Both-ent": {
-        "stats": {
-          "nodes": 367,
-          "inner nodes": 178,
-          "paths": 189,
-          "bandwidth": 8
-        },
-        "time": "00:00:01.784"
-      },
-      "Both-ratio": {
-        "stats": {
-          "nodes": 456,
-          "inner nodes": 219,
-          "paths": 237,
-          "bandwidth": 8
-        },
-        "time": "00:00:02.055"
+        "time": "00:00:01.584"
       },
       "Group-ent": {
         "stats": {
@@ -1526,7 +1490,7 @@
           "paths": 189,
           "bandwidth": 8
         },
-        "time": "00:00:01.757"
+        "time": "00:00:01.516"
       },
       "Group-ratio": {
         "stats": {
@@ -1535,7 +1499,43 @@
           "paths": 237,
           "bandwidth": 8
         },
-        "time": "00:00:01.771"
+        "time": "00:00:01.804"
+      },
+      "Single-ent": {
+        "stats": {
+          "nodes": 379,
+          "inner nodes": 189,
+          "paths": 190,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.688"
+      },
+      "Single-ratio": {
+        "stats": {
+          "nodes": 453,
+          "inner nodes": 226,
+          "paths": 227,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.832"
+      },
+      "Both-ent": {
+        "stats": {
+          "nodes": 367,
+          "inner nodes": 178,
+          "paths": 189,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.728"
+      },
+      "Both-ratio": {
+        "stats": {
+          "nodes": 456,
+          "inner nodes": 219,
+          "paths": 237,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.965"
       }
     },
     "metadata": {

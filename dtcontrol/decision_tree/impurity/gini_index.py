@@ -6,6 +6,8 @@ from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class GiniIndex(ImpurityMeasure):
     def calculate_impurity(self, dataset, y, split):
+        if len(split.get_masks(dataset)) == 1:
+            return sys.maxsize
         impurity = 0
         for mask in split.get_masks(dataset):
             subset = y[mask]

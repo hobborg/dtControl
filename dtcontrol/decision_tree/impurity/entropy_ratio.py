@@ -6,12 +6,12 @@ from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
 class EntropyRatio(ImpurityMeasure):
     def calculate_impurity(self, dataset, y, split):
+        if any(len(y[mask]) == 0 for mask in split.get_masks(dataset)) or \
+                len(split.get_masks(dataset)) == 1:
+            return sys.maxsize
+
         split_entropy = self.calculate_split_entropy(dataset, y, split)
-        if split_entropy == sys.maxsize:
-            return sys.maxsize
         split_info = self.calculate_split_info(dataset, y, split)
-        if split_info == 0:
-            return sys.maxsize
         return split_entropy / split_info
 
     @staticmethod
@@ -19,9 +19,8 @@ class EntropyRatio(ImpurityMeasure):
         entropy = 0
         for mask in split.get_masks(dataset):
             subset = y[mask]
-            if len(subset) == 0:
-                return sys.maxsize
             entropy += (len(subset) / len(y)) * EntropyRatio.calculate_entropy(subset)
+        assert entropy >= 0
         return entropy
 
     @staticmethod
@@ -36,7 +35,6 @@ class EntropyRatio(ImpurityMeasure):
         info = 0
         for mask in split.get_masks(dataset):
             subset = y[mask]
-            if len(subset) == 0:
-                return 0
             info -= (len(subset) / len(y)) * np.log2((len(subset) / len(y)))
+        assert info > 0
         return info
