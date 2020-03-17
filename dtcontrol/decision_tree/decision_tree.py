@@ -8,6 +8,7 @@ import numpy as np
 import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
+from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
@@ -117,7 +118,7 @@ class Node:
     def fit(self, dataset):
         y = self.determinizer.determinize(dataset) if not self.determinizer.determinize_once_before_construction() \
             else dataset.y
-        if self.check_done(dataset.x, y):
+        if self.check_done(dataset.x, MaxFreqDeterminizer().determinize(dataset)):
             return
         splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
