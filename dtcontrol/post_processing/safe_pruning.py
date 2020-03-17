@@ -18,6 +18,7 @@ class SafePruning(PostProcessingMethod):
         for child in node.children:
             self.prune(child)
         node.num_nodes = 1 + sum([c.num_nodes for c in node.children])
+        node.num_inner_nodes = 1 + sum([c.num_inner_nodes for c in node.children])
         intersection = set.intersection(*[make_set(c.index_label) for c in node.children])
         if len(intersection) == 0:
             return
@@ -25,3 +26,4 @@ class SafePruning(PostProcessingMethod):
         node.actual_label = node.determinizer.index_label_to_actual(node.index_label)
         node.children = []
         node.num_nodes = 1
+        node.num_inner_nodes = 0
