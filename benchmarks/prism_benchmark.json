@@ -1,15 +1,6 @@
 {
   "firewire_abst": {
     "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 7,
-          "paths": 8,
-          "bandwidth": 3
-        },
-        "time": "00:00:00.050"
-      },
       "multi": {
         "stats": {
           "nodes": 18,
@@ -17,25 +8,43 @@
           "paths": 13,
           "bandwidth": 4
         },
-        "time": "00:00:00.036"
+        "time": "00:00:00.042"
       },
-      "both": {
+      "tol 0": {
         "stats": {
-          "nodes": 18,
-          "inner nodes": 5,
-          "paths": 13,
-          "bandwidth": 4
+          "nodes": 9,
+          "inner nodes": 3,
+          "paths": 6,
+          "bandwidth": 3
         },
-        "time": "00:00:00.038"
+        "time": "00:00:00.053"
       },
-      "multi_logreg": {
+      "tol 1e-5": {
         "stats": {
-          "nodes": 18,
-          "inner nodes": 5,
-          "paths": 13,
-          "bandwidth": 4
+          "nodes": 9,
+          "inner nodes": 3,
+          "paths": 6,
+          "bandwidth": 3
         },
-        "time": "00:00:00.160"
+        "time": "00:00:00.053"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 10,
+          "inner nodes": 4,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.065"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 11,
+          "inner nodes": 5,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.069"
       }
     },
     "metadata": {
@@ -95,15 +104,6 @@
   },
   "firewire_impl_01": {
     "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 83,
-          "inner nodes": 41,
-          "paths": 42,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.251"
-      },
       "multi": {
         "stats": {
           "nodes": 99,
@@ -111,16 +111,43 @@
           "paths": 62,
           "bandwidth": 6
         },
-        "time": "00:00:00.168"
+        "time": "00:00:00.188"
       },
-      "both": {
+      "tol 0": {
         "stats": {
-          "nodes": 99,
-          "inner nodes": 37,
-          "paths": 62,
+          "nodes": 79,
+          "inner nodes": 30,
+          "paths": 49,
           "bandwidth": 6
         },
-        "time": "00:00:00.179"
+        "time": "00:00:00.241"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 79,
+          "inner nodes": 30,
+          "paths": 49,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.241"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 73,
+          "inner nodes": 35,
+          "paths": 38,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.480"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 77,
+          "inner nodes": 38,
+          "paths": 39,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.495"
       }
     },
     "metadata": {
@@ -203,15 +230,6 @@
   },
   "firewire_impl_02": {
     "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 73,
-          "inner nodes": 36,
-          "paths": 37,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.243"
-      },
       "multi": {
         "stats": {
           "nodes": 99,
@@ -219,16 +237,43 @@
           "paths": 62,
           "bandwidth": 6
         },
-        "time": "00:00:00.207"
+        "time": "00:00:00.226"
       },
-      "both": {
+      "tol 0": {
         "stats": {
-          "nodes": 99,
-          "inner nodes": 37,
-          "paths": 62,
+          "nodes": 79,
+          "inner nodes": 30,
+          "paths": 49,
           "bandwidth": 6
         },
-        "time": "00:00:00.222"
+        "time": "00:00:00.286"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 79,
+          "inner nodes": 30,
+          "paths": 49,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.289"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 66,
+          "inner nodes": 31,
+          "paths": 35,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.426"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 75,
+          "inner nodes": 37,
+          "paths": 38,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.459"
       }
     },
     "metadata": {
@@ -311,15 +356,6 @@
   },
   "firewire_impl_05": {
     "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 79,
-          "inner nodes": 39,
-          "paths": 40,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.465"
-      },
       "multi": {
         "stats": {
           "nodes": 94,
@@ -327,16 +363,43 @@
           "paths": 58,
           "bandwidth": 6
         },
-        "time": "00:00:00.379"
+        "time": "00:00:00.428"
       },
-      "both": {
+      "tol 0": {
         "stats": {
-          "nodes": 94,
-          "inner nodes": 36,
-          "paths": 58,
+          "nodes": 77,
+          "inner nodes": 30,
+          "paths": 47,
           "bandwidth": 6
         },
-        "time": "00:00:00.427"
+        "time": "00:00:00.510"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 77,
+          "inner nodes": 30,
+          "paths": 47,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.509"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 71,
+          "inner nodes": 34,
+          "paths": 37,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.600"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 71,
+          "inner nodes": 35,
+          "paths": 36,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.686"
       }
     },
     "metadata": {
@@ -417,17 +480,446 @@
       }
     }
   },
-  "mer10": {
+  "leader2": {
     "classifiers": {
-      "single": {
+      "multi": {
         "stats": {
-          "nodes": 115,
-          "inner nodes": 57,
-          "paths": 58,
+          "nodes": 15,
+          "inner nodes": 5,
+          "paths": 10,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.008"
+      },
+      "tol 0": {
+        "stats": {
+          "nodes": 14,
+          "inner nodes": 5,
+          "paths": 9,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.009"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 14,
+          "inner nodes": 5,
+          "paths": 9,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.009"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 13,
+          "inner nodes": 5,
+          "paths": 8,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.010"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 15,
+          "inner nodes": 7,
+          "paths": 8,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.011"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "s1",
+          "p1",
+          "receive1",
+          "sent1",
+          "c2",
+          "s2",
+          "p2",
+          "receive2",
+          "sent2"
+        ],
+        "categorical": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          1,
+          3,
+          1,
+          2,
+          2,
+          1,
+          3,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "async_pick_process1",
+            "async_pick_process2",
+            "p12",
+            "p21",
+            "c12",
+            "c21"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          5
+        ],
+        "step_size": null,
+        "num_rows": 34,
+        "num_flattened": 34
+      }
+    }
+  },
+  "leader3": {
+    "classifiers": {
+      "multi": {
+        "stats": {
+          "nodes": 56,
+          "inner nodes": 19,
+          "paths": 37,
           "bandwidth": 6
         },
-        "time": "00:00:00.611"
+        "time": "00:00:00.030"
       },
+      "tol 0": {
+        "stats": {
+          "nodes": 49,
+          "inner nodes": 19,
+          "paths": 30,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.049"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 49,
+          "inner nodes": 19,
+          "paths": 30,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.049"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 46,
+          "inner nodes": 20,
+          "paths": 26,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.066"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 45,
+          "inner nodes": 22,
+          "paths": 23,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.071"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "s1",
+          "p1",
+          "receive1",
+          "sent1",
+          "c2",
+          "s2",
+          "p2",
+          "receive2",
+          "sent2",
+          "c3",
+          "s3",
+          "p3",
+          "receive3",
+          "sent3"
+        ],
+        "categorical": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          11,
+          12,
+          13,
+          14
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          2,
+          3,
+          1,
+          2,
+          2,
+          2,
+          3,
+          1,
+          2,
+          2,
+          2,
+          3,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "async_pick_process1",
+            "async_pick_process2",
+            "p31",
+            "p12",
+            "c23",
+            "async_pick_process3",
+            "p23",
+            "c12",
+            "c31"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          8
+        ],
+        "step_size": null,
+        "num_rows": 361,
+        "num_flattened": 361
+      }
+    }
+  },
+  "leader4": {
+    "classifiers": {
+      "multi": {
+        "stats": {
+          "nodes": 174,
+          "inner nodes": 61,
+          "paths": 113,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.138"
+      },
+      "tol 0": {
+        "stats": {
+          "nodes": 154,
+          "inner nodes": 61,
+          "paths": 93,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.238"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 154,
+          "inner nodes": 61,
+          "paths": 93,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.238"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 120,
+          "inner nodes": 53,
+          "paths": 67,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.269"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 119,
+          "inner nodes": 59,
+          "paths": 60,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.324"
+      }
+    },
+    "metadata": {
+      "X_metadata": {
+        "variables": [
+          "c1",
+          "s1",
+          "p1",
+          "receive1",
+          "sent1",
+          "c2",
+          "s2",
+          "p2",
+          "receive2",
+          "sent2",
+          "c3",
+          "s3",
+          "p3",
+          "receive3",
+          "sent3",
+          "c4",
+          "s4",
+          "p4",
+          "receive4",
+          "sent4"
+        ],
+        "categorical": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          11,
+          12,
+          13,
+          14,
+          16,
+          17,
+          18,
+          19
+        ],
+        "min": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max": [
+          3,
+          3,
+          1,
+          2,
+          2,
+          3,
+          3,
+          1,
+          2,
+          2,
+          3,
+          3,
+          1,
+          2,
+          2,
+          3,
+          3,
+          1,
+          2,
+          2
+        ],
+        "step_size": null
+      },
+      "Y_metadata": {
+        "categorical": [
+          0
+        ],
+        "category_names": {
+          "0": [
+            "async_pick_process1",
+            "async_pick_process2",
+            "p41",
+            "p12",
+            "p23",
+            "c23",
+            "async_pick_process3",
+            "c34",
+            "async_pick_process4",
+            "p34",
+            "c41",
+            "c12"
+          ]
+        },
+        "min": [
+          0
+        ],
+        "max": [
+          11
+        ],
+        "step_size": null,
+        "num_rows": 3168,
+        "num_flattened": 3168
+      }
+    }
+  },
+  "mer10": {
+    "classifiers": {
       "multi": {
         "stats": {
           "nodes": 199,
@@ -435,25 +927,43 @@
           "paths": 125,
           "bandwidth": 7
         },
-        "time": "00:00:00.433"
+        "time": "00:00:00.471"
       },
-      "both": {
+      "tol 0": {
         "stats": {
-          "nodes": 158,
+          "nodes": 157,
           "inner nodes": 68,
-          "paths": 90,
+          "paths": 89,
           "bandwidth": 7
         },
-        "time": "00:00:00.744"
+        "time": "00:00:00.669"
       },
-      "multi_logreg": {
+      "tol 1e-5": {
         "stats": {
-          "nodes": 199,
-          "inner nodes": 74,
-          "paths": 125,
+          "nodes": 148,
+          "inner nodes": 65,
+          "paths": 83,
           "bandwidth": 7
         },
-        "time": "00:00:01.782"
+        "time": "00:00:00.660"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 120,
+          "inner nodes": 58,
+          "paths": 62,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.810"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 115,
+          "inner nodes": 57,
+          "paths": 58,
+          "bandwidth": 6
+        },
+        "time": "00:00:00.852"
       }
     },
     "metadata": {
@@ -578,15 +1088,6 @@
   },
   "wlan0": {
     "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 237,
-          "inner nodes": 118,
-          "paths": 119,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.300"
-      },
       "multi": {
         "stats": {
           "nodes": 206,
@@ -594,16 +1095,43 @@
           "paths": 135,
           "bandwidth": 8
         },
-        "time": "00:00:00.126"
+        "time": "00:00:00.125"
       },
-      "both": {
+      "tol 0": {
         "stats": {
-          "nodes": 197,
-          "inner nodes": 71,
-          "paths": 126,
+          "nodes": 175,
+          "inner nodes": 69,
+          "paths": 106,
           "bandwidth": 7
         },
-        "time": "00:00:00.162"
+        "time": "00:00:00.329"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 175,
+          "inner nodes": 69,
+          "paths": 106,
+          "bandwidth": 7
+        },
+        "time": "00:00:00.339"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 161,
+          "inner nodes": 78,
+          "paths": 83,
+          "bandwidth": 7
+        },
+        "time": "00:00:01.351"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 151,
+          "inner nodes": 75,
+          "paths": 76,
+          "bandwidth": 7
+        },
+        "time": "00:00:01.564"
       }
     },
     "metadata": {
@@ -694,15 +1222,6 @@
   },
   "zeroconf": {
     "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 379,
-          "inner nodes": 189,
-          "paths": 190,
-          "bandwidth": 8
-        },
-        "time": "00:00:01.669"
-      },
       "multi": {
         "stats": {
           "nodes": 370,
@@ -710,16 +1229,43 @@
           "paths": 192,
           "bandwidth": 8
         },
-        "time": "00:00:01.363"
+        "time": "00:00:01.405"
       },
-      "both": {
+      "tol 0": {
         "stats": {
           "nodes": 367,
           "inner nodes": 178,
           "paths": 189,
           "bandwidth": 8
         },
-        "time": "00:00:01.719"
+        "time": "00:00:01.547"
+      },
+      "tol 1e-5": {
+        "stats": {
+          "nodes": 367,
+          "inner nodes": 178,
+          "paths": 189,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.521"
+      },
+      "tol .2": {
+        "stats": {
+          "nodes": 379,
+          "inner nodes": 189,
+          "paths": 190,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.855"
+      },
+      "tol inf": {
+        "stats": {
+          "nodes": 379,
+          "inner nodes": 189,
+          "paths": 190,
+          "bandwidth": 8
+        },
+        "time": "00:00:01.833"
       }
     },
     "metadata": {
@@ -840,417 +1386,6 @@
         "step_size": null,
         "num_rows": 29814,
         "num_flattened": 29814
-      }
-    }
-  },
-  "leader2": {
-    "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 7,
-          "paths": 8,
-          "bandwidth": 3
-        },
-        "time": "00:00:00.007"
-      },
-      "multi": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 5,
-          "paths": 10,
-          "bandwidth": 4
-        },
-        "time": "00:00:00.004"
-      },
-      "both": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 5,
-          "paths": 10,
-          "bandwidth": 4
-        },
-        "time": "00:00:00.007"
-      },
-      "multi_logreg": {
-        "stats": {
-          "nodes": 15,
-          "inner nodes": 5,
-          "paths": 10,
-          "bandwidth": 4
-        },
-        "time": "00:00:00.047"
-      }
-    },
-    "metadata": {
-      "X_metadata": {
-        "variables": [
-          "c1",
-          "s1",
-          "p1",
-          "receive1",
-          "sent1",
-          "c2",
-          "s2",
-          "p2",
-          "receive2",
-          "sent2"
-        ],
-        "categorical": [
-          1,
-          2,
-          3,
-          4,
-          6,
-          7,
-          8,
-          9
-        ],
-        "min": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        "max": [
-          1,
-          3,
-          1,
-          2,
-          2,
-          1,
-          3,
-          1,
-          2,
-          2
-        ],
-        "step_size": null
-      },
-      "Y_metadata": {
-        "categorical": [
-          0
-        ],
-        "category_names": {
-          "0": [
-            "async_pick_process1",
-            "async_pick_process2",
-            "p12",
-            "p21",
-            "c12",
-            "c21"
-          ]
-        },
-        "min": [
-          0
-        ],
-        "max": [
-          5
-        ],
-        "step_size": null,
-        "num_rows": 34,
-        "num_flattened": 34
-      }
-    }
-  },
-  "leader3": {
-    "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 45,
-          "inner nodes": 22,
-          "paths": 23,
-          "bandwidth": 5
-        },
-        "time": "00:00:00.038"
-      },
-      "multi": {
-        "stats": {
-          "nodes": 56,
-          "inner nodes": 19,
-          "paths": 37,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.023"
-      },
-      "both": {
-        "stats": {
-          "nodes": 50,
-          "inner nodes": 19,
-          "paths": 31,
-          "bandwidth": 5
-        },
-        "time": "00:00:00.042"
-      },
-      "multi_logreg": {
-        "stats": {
-          "nodes": 56,
-          "inner nodes": 19,
-          "paths": 37,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.243"
-      }
-    },
-    "metadata": {
-      "X_metadata": {
-        "variables": [
-          "c1",
-          "s1",
-          "p1",
-          "receive1",
-          "sent1",
-          "c2",
-          "s2",
-          "p2",
-          "receive2",
-          "sent2",
-          "c3",
-          "s3",
-          "p3",
-          "receive3",
-          "sent3"
-        ],
-        "categorical": [
-          1,
-          2,
-          3,
-          4,
-          6,
-          7,
-          8,
-          9,
-          11,
-          12,
-          13,
-          14
-        ],
-        "min": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        "max": [
-          2,
-          3,
-          1,
-          2,
-          2,
-          2,
-          3,
-          1,
-          2,
-          2,
-          2,
-          3,
-          1,
-          2,
-          2
-        ],
-        "step_size": null
-      },
-      "Y_metadata": {
-        "categorical": [
-          0
-        ],
-        "category_names": {
-          "0": [
-            "async_pick_process1",
-            "async_pick_process2",
-            "p31",
-            "p12",
-            "c23",
-            "async_pick_process3",
-            "p23",
-            "c12",
-            "c31"
-          ]
-        },
-        "min": [
-          0
-        ],
-        "max": [
-          8
-        ],
-        "step_size": null,
-        "num_rows": 361,
-        "num_flattened": 361
-      }
-    }
-  },
-  "leader4": {
-    "classifiers": {
-      "single": {
-        "stats": {
-          "nodes": 121,
-          "inner nodes": 60,
-          "paths": 61,
-          "bandwidth": 6
-        },
-        "time": "00:00:00.200"
-      },
-      "multi": {
-        "stats": {
-          "nodes": 174,
-          "inner nodes": 61,
-          "paths": 113,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.124"
-      },
-      "both": {
-        "stats": {
-          "nodes": 155,
-          "inner nodes": 61,
-          "paths": 94,
-          "bandwidth": 7
-        },
-        "time": "00:00:00.235"
-      },
-      "multi_logreg": {
-        "stats": {
-          "nodes": 174,
-          "inner nodes": 61,
-          "paths": 113,
-          "bandwidth": 7
-        },
-        "time": "00:00:01.108"
-      }
-    },
-    "metadata": {
-      "X_metadata": {
-        "variables": [
-          "c1",
-          "s1",
-          "p1",
-          "receive1",
-          "sent1",
-          "c2",
-          "s2",
-          "p2",
-          "receive2",
-          "sent2",
-          "c3",
-          "s3",
-          "p3",
-          "receive3",
-          "sent3",
-          "c4",
-          "s4",
-          "p4",
-          "receive4",
-          "sent4"
-        ],
-        "categorical": [
-          1,
-          2,
-          3,
-          4,
-          6,
-          7,
-          8,
-          9,
-          11,
-          12,
-          13,
-          14,
-          16,
-          17,
-          18,
-          19
-        ],
-        "min": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        "max": [
-          3,
-          3,
-          1,
-          2,
-          2,
-          3,
-          3,
-          1,
-          2,
-          2,
-          3,
-          3,
-          1,
-          2,
-          2,
-          3,
-          3,
-          1,
-          2,
-          2
-        ],
-        "step_size": null
-      },
-      "Y_metadata": {
-        "categorical": [
-          0
-        ],
-        "category_names": {
-          "0": [
-            "async_pick_process1",
-            "async_pick_process2",
-            "p41",
-            "p12",
-            "p23",
-            "c23",
-            "async_pick_process3",
-            "c34",
-            "async_pick_process4",
-            "p34",
-            "c41",
-            "c12"
-          ]
-        },
-        "min": [
-          0
-        ],
-        "max": [
-          11
-        ],
-        "step_size": null,
-        "num_rows": 3168,
-        "num_flattened": 3168
       }
     }
   }
