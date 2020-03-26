@@ -5,9 +5,8 @@ from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class LinearClassifierOnlyLeafSplittingStrategy(SplittingStrategy):
-    def __init__(self, classifier_class, keep_categorical=False, **kwargs):  # TODO MJA: implement one hot encoding
+    def __init__(self, classifier_class, **kwargs):
         self.classifier_class = classifier_class
-        self.keep_categorical = keep_categorical
         self.kwargs = kwargs
 
     def find_split(self, dataset, y, impurity_measure):
@@ -26,8 +25,8 @@ class LinearClassifierOnlyLeafSplittingStrategy(SplittingStrategy):
         classifier.fit(x_numeric, new_y)
 
         if np.array_equal(classifier.predict(x_numeric), new_y):  # perfect split
-            features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
-            split = LinearClassifierSplit(classifier, features)
+            real_features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
+            split = LinearClassifierSplit(classifier, real_features, dataset.numeric_columns)
             assert impurity_measure.calculate_impurity(dataset, y, split) == 0
             return split
         return None

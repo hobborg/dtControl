@@ -4,9 +4,8 @@ from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class LinearClassifierSplittingStrategy(SplittingStrategy):
-    def __init__(self, classifier_class, keep_categorical=False, **kwargs):  # TODO MJA: implement one hot encoding
+    def __init__(self, classifier_class, **kwargs):
         self.classifier_class = classifier_class
-        self.keep_categorical = keep_categorical
         self.kwargs = kwargs
 
     def find_split(self, dataset, y, impurity_measure):
@@ -22,20 +21,21 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
             new_y[~label_mask] = -1
             classifier = self.classifier_class(**self.kwargs)
             classifier.fit(x_numeric, new_y)
-            features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
-            split = LinearClassifierSplit(classifier, features)
+            real_features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
+            split = LinearClassifierSplit(classifier, real_features, dataset.numeric_columns)
             splits[split] = impurity_measure.calculate_impurity(dataset, y, split)
 
         return min(splits.keys(), key=splits.get)
 
 class LinearClassifierSplit(LinearSplit):
-    def __init__(self, classifier, features):
-        super().__init__(features, classifier.intercept_[0])
+    def __init__(self, classifier, real_coefficients, numeric_columns):
+        super().__init__(classifier.coef_[0], classifier.intercept_[0], real_coefficients, numeric_columns)
         self.classifier = classifier
+        self.numeric_columns = numeric_columns
 
     def get_masks(self, dataset):
         mask = self.classifier.predict(dataset.get_numeric_x()) == -1
         return [mask, ~mask]
 
-    def predict(self, features):  # TODO MJA: fix this -- need to use only numeric features
-        return 0 if self.classifier.predict(features)[0] == -1 else 1
+    def predict(self, features):
+        return 0 if self.classifier.predict(features[:, self.numeric_columns])[0] == -1 else 1

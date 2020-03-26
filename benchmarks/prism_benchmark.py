@@ -10,6 +10,7 @@ from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingS
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
+from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
 suite = BenchmarkSuite(timeout=60 * 2,
                        save_folder='prism_saved_classifiers',
@@ -26,13 +27,16 @@ tol_medium = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=.2
 tol_inf = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=sys.maxsize)
 categorical_single = CategoricalSingleSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+oc1 = OC1SplittingStrategy()
 classifiers = [
+    DecisionTree(NonDeterminizer(), [aa, categorical_multi, logreg], Entropy(), 'logreg'),
+    DecisionTree(NonDeterminizer(), [aa, categorical_multi, oc1], Entropy(), 'oc1'),
     # DecisionTree(NonDeterminizer(), [aa, categorical_single], Entropy(), 'single'),
     DecisionTree(NonDeterminizer(), [aa, categorical_multi], Entropy(), 'multi'),
-    DecisionTree(NonDeterminizer(), [aa, tol0], Entropy(), 'tol 0'),
-    DecisionTree(NonDeterminizer(), [aa, tol_small], Entropy(), 'tol 1e-5'),
-    DecisionTree(NonDeterminizer(), [aa, tol_medium], Entropy(), 'tol .2'),
-    DecisionTree(NonDeterminizer(), [aa, tol_inf], Entropy(), 'tol inf'),
+    # DecisionTree(NonDeterminizer(), [aa, tol0], Entropy(), 'tol 0'),
+    # DecisionTree(NonDeterminizer(), [aa, tol_small], Entropy(), 'tol 1e-5'),
+    # DecisionTree(NonDeterminizer(), [aa, tol_medium], Entropy(), 'tol .2'),
+    # DecisionTree(NonDeterminizer(), [aa, tol_inf], Entropy(), 'tol inf'),
     # DecisionTree(NonDeterminizer(), [aa, categorical_single, categorical_multi], Entropy(), 'both'),
     # DecisionTree(NonDeterminizer(), [aa, categorical_multi, logreg], Entropy(), 'multi_logreg')
 ]

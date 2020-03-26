@@ -16,9 +16,9 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 from dtcontrol.util import log_without_newline
 
 class OC1SplittingStrategy(SplittingStrategy):
-    def __init__(self, num_restarts=20, num_jumps=5, delete_tmp=True):
+    def __init__(self, num_restarts=10, num_jumps=5, delete_tmp=True):
         self.oc1_path = 'decision_tree/OC1_source/mktree'
-        self.header_file = 'decision_tree/OC1_source/oc1_bkp.h'
+        self.header_file = 'decision_tree/OC1_source/oc1.h'
         self.tmp_path = '.dtcontrol_tmp'
         self.output_file = f'{self.tmp_path}/output'
         self.data_file = f'{self.tmp_path}/data.csv'
@@ -120,4 +120,4 @@ class OC1SplittingStrategy(SplittingStrategy):
                 if coefficients[i] != 0:
                     return AxisAlignedSplit(dataset.map_numeric_feature_back(i), -intercept)
         real_coefficients = LinearSplit.map_numeric_coefficients_back(coefficients, dataset)
-        return LinearSplit(real_coefficients, intercept)
+        return LinearSplit(coefficients, intercept, real_coefficients, dataset.numeric_columns)
