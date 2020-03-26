@@ -1,13 +1,5 @@
-# User-defined configurations
-#custom:
-#  config-1:
-#    determinize: maxfreq
-#    predicates: ['axisonly']
-#    impurity: 'entropy'
-#    safe-pruning: True
-
 # Preset Configurations
-presets:
+system-presets:
   default:
     determinize: none
     predicates: ['axisonly']
@@ -22,3 +14,4 @@ presets:
     determinize: none
     predicates: ['axisonly', 'linear-logreg']
     impurity: 'auroc'
+    safe-pruning: False
