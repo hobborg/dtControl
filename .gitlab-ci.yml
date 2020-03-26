@@ -42,7 +42,7 @@ version:
     - python3.7 gen-semver.py
   artifacts:
     paths:
-      - version
+      - VERSION
   only:
     - master
 
