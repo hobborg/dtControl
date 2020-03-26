@@ -1,10 +1,19 @@
 import os
+import subprocess
 import setuptools
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-version = 'unknown'
+def git(*args):
+    return subprocess.check_output(["git"] + list(args))
+
+try:
+    # Try to obtain version from the latest tag
+    version = git("describe", "--tags").decode().strip()
+except subprocess.CalledProcessError:
+    # If not git repo or if tags are not available, use the version 'master'
+    version = 'master'
 # The VERSION file should not be manually edited, it is updated by the CI job
 if os.path.exists(os.path.join(".", 'VERSION')):
     with open(os.path.join(".", 'VERSION')) as version_file:
