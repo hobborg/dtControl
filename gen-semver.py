@@ -21,6 +21,8 @@ def tag_repo(tag):
     push_url = re.sub(r'.+@([^/]+)/', r'git@\1:', url)
 
     git("remote", "set-url", "--push", "origin", push_url)
+    git("config", "user.email", "'ashok@in.tum.de'")
+    git("config", "user.name", "'Pranav Ashok'")
     git("add", "VERSION")
     git("commit", "-m", "CI: Updated VERSION")
     git("tag", tag)
