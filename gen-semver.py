@@ -21,6 +21,8 @@ def tag_repo(tag):
     push_url = re.sub(r'.+@([^/]+)/', r'git@\1:', url)
 
     git("remote", "set-url", "--push", "origin", push_url)
+    git("add", "VERSION")
+    git("commit", "-m", "CI: Updated VERSION")
     git("tag", tag)
     git("push", "origin", tag)
 
@@ -38,7 +40,7 @@ def bump(latest):
 
 
 def main():
-    version_file = open("version", 'w')
+    version_file = open("VERSION", 'w')
     try:
         latest = git("describe", "--tags").decode().strip()
         print(f"Current version: {latest}")
@@ -54,15 +56,15 @@ def main():
         else:
             version = bump(latest)
 
+        version_file.write(version)
+        version_file.close()
+        print("Saved to file 'version'")
+
         if not (version == latest):  # If version has indeed changed
             print(f"Bumped version: {version}")
             tag_repo(version)
         else:
             print("Not bumping version.")
-
-    version_file.write(version)
-    version_file.close()
-    print("Saved to file 'version'")
 
     return 0
 

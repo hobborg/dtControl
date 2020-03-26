@@ -5,8 +5,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 version = 'unknown'
-if os.path.exists(os.path.join(".", 'version')):
-    with open(os.path.join(".", 'version')) as version_file:
+# The VERSION file should not be manually edited, it is updated by the CI job
+if os.path.exists(os.path.join(".", 'VERSION')):
+    with open(os.path.join(".", 'VERSION')) as version_file:
         version = version_file.read().strip()
 
 setuptools.setup(
@@ -48,6 +49,7 @@ setuptools.setup(
         'pydot==1.4.1',
         'ruamel.yaml==0.16.10',
         'scikit-learn==0.22',
+        'tabulate==0.8.6',
         'tqdm==4.42.0'
     ],
     package_data={
