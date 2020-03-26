@@ -21,8 +21,8 @@ def tag_repo(tag):
     push_url = re.sub(r'.+@([^/]+)/', r'git@\1:', url)
 
     git("remote", "set-url", "--push", "origin", push_url)
-    git("tag", "-f", tag)
-    git("push", "-f", "origin", tag)
+    git("tag", tag)
+    git("push", "origin", tag)
 
 
 def bump(latest):
