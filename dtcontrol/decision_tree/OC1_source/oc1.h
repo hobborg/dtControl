@@ -19,7 +19,7 @@
 #include <string.h>
 
 
-#define IMPURITY twoing ()
+#define IMPURITY info_gain ()
 /* possible values are: maxminority                             */
 /*			summinority				*/
 /*			variance				*/

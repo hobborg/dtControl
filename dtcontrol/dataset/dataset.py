@@ -73,7 +73,9 @@ class Dataset(ABC):
                            'num_rows': None, 'num_flattened': None}
         self.index_to_actual = {}  # mapping from arbitrary integer indices to the actual float/categorical labels
         self.numeric_feature_mapping = {}  # maps indices in the numeric array to the actual column index in x
+        self.numeric_columns = None
         self.categorical_feature_mapping = {}  # the same thing for the categorical array
+        self.categorical_columns = None
         self.is_deterministic = None
 
     def get_name(self):
@@ -109,17 +111,18 @@ class Dataset(ABC):
 
     def get_numeric_x(self):
         if self.numeric_x is None:
-            numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
-            numeric_columns = sorted(list(numeric_columns))
-            self.numeric_feature_mapping = {i: numeric_columns[i] for i in range(len(numeric_columns))}
-            self.numeric_x = self.x[:, numeric_columns]
+            self.numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
+            self.numeric_columns = sorted(list(self.numeric_columns))
+            self.numeric_feature_mapping = {i: self.numeric_columns[i] for i in range(len(self.numeric_columns))}
+            self.numeric_x = self.x[:, self.numeric_columns]
         return self.numeric_x
 
     def get_categorical_x(self):
         if self.categorical_x is None:
-            categorical = self.x_metadata['categorical']
-            self.categorical_feature_mapping = {i: categorical[i] for i in range(len(categorical))}
-            self.categorical_x = self.x[:, categorical]
+            self.categorical_columns = self.x_metadata['categorical']
+            self.categorical_feature_mapping = {i: self.categorical_columns[i] for i in
+                                                range(len(self.categorical_columns))}
+            self.categorical_x = self.x[:, self.categorical_columns]
         return self.categorical_x
 
     def map_numeric_feature_back(self, feature):

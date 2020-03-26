@@ -6,11 +6,11 @@ from sklearn.metrics import roc_auc_score
 
 from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
 
-class AUROC(ImpurityMeasure):  # TODO MJA: one-hot encode categorical?
+class AUROC(ImpurityMeasure):
     def calculate_impurity(self, dataset, y, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
-        scores = [self.calculate_auroc(dataset.get_numeric_x()[mask], y[mask]) for mask in split.get_masks(dataset)]
+        scores = [self.calculate_auroc(dataset.x[mask], y[mask]) for mask in split.get_masks(dataset)]
         if any([s == 0 for s in scores]):
             return sys.maxsize
         return 1 / sum(scores)
