@@ -16,11 +16,11 @@ class TestCategorical(unittest.TestCase):
             ds = SingleOutputDataset('test/golf.csv')
             ds.load_if_necessary()
         self.assertEqual([0, 1, 2, 3], ds.x_metadata['categorical'])
-        self.assertEqual(["Outlook", "Temperature", "Humidity", "Windy"], ds.x_metadata['variables'])
+        self.assertEqual(["Weather", "Temperature", "Humidity", "Wind"], ds.x_metadata['variables'])
         self.assertEqual({
-            0: ["Rainy", "Overcast", "Sunny"],
+            0: ["Rain", "Overcast", "Sunny"],
             1: ["Cool", "Mild", "Hot"],
-            3: ["No", "Yes"]
+            3: ["Weak", "Strong"]
         }, ds.x_metadata['category_names'])
 
         dt = DecisionTree(NonDeterminizer(), [CategoricalMultiSplittingStrategy(), AxisAlignedSplittingStrategy()],
@@ -30,17 +30,20 @@ class TestCategorical(unittest.TestCase):
         self.assertEqual(0, root.split.feature)
         self.assertEqual(3, len(root.children))
         l = root.children[0]
-        self.assertEqual(2, l.split.feature)
-        self.assertEqual(2, len(l.children))
-        ll = l.children[0]
-        lr = l.children[1]
-        self.assertTrue(ll.is_leaf())
-        self.assertEqual([1], ll.actual_label)
-        self.assertTrue(lr.is_leaf())
-        self.assertEqual([0], lr.actual_label)
+        self.assertTrue(l.is_leaf())
+        self.assertEqual([0], l.actual_label)
         m = root.children[1]
-        self.assertTrue(m.is_leaf())
-        self.assertEqual([1], m.actual_label)
+        self.assertEqual(1, m.split.feature)
+        self.assertEqual(3, len(m.children))
+        ml = m.children[0]
+        self.assertTrue(ml.is_leaf())
+        self.assertEqual([1], ml.actual_label)
+        mm = m.children[0]
+        self.assertTrue(mm.is_leaf())
+        self.assertEqual([1], mm.actual_label)
+        mr = m.children[2]
+        self.assertTrue(mr.is_leaf())
+        self.assertEqual([0], mr.actual_label)
         r = root.children[2]
         self.assertEqual(3, r.split.feature)
         self.assertEqual(2, len(r.children))

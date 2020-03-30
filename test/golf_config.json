@@ -1,10 +1,7 @@
 {
   "x_column_types": {
     "categorical": [
-      0,
-      1,
-      2,
-      3
+      0,1,2,3
     ]
   },
   "y_column_types": {
@@ -13,14 +10,14 @@
     ]
   },
   "x_column_names": [
-    "Outlook",
+    "Weather",
     "Temperature",
     "Humidity",
-    "Windy"
+    "Wind"
   ],
   "x_category_names": {
-    "Outlook": [
-      "Rainy",
+    "Weather": [
+      "Rain",
       "Overcast",
       "Sunny"
     ],
@@ -29,9 +26,9 @@
       "Mild",
       "Hot"
     ],
-    "Windy": [
-      "No",
-      "Yes"
+    "Wind": [
+      "Weak",
+      "Strong"
     ]
   },
   "y_category_names": {
