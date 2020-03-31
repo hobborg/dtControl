@@ -128,6 +128,10 @@ class Node:
 
         subsets = self.split.split(dataset)
         assert len(subsets) > 1
+        if any(len(s.x) == 0 for s in subsets):
+            logging.error("Aborting branch: no split possible. "
+                          "You might want to consider adding more splitting strategies.")
+            return
         for subset in subsets:
             node = Node(self.determinizer, self.splitting_strategies, self.impurity_measure, self.depth + 1)
             node.fit(subset)
