@@ -2,14 +2,15 @@ import sys
 
 import numpy as np
 
-from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
+from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
 
-class TwoingRule(ImpurityMeasure):
-    def calculate_impurity(self, dataset, y, split):
+class TwoingRule(DeterministicImpurityMeasure):
+    def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
         assert len(split.get_masks(dataset)) == 2
         [left_mask, right_mask] = split.get_masks(dataset)
+        y = self.determinizer.determinize(dataset)
         left = y[left_mask]
         right = y[right_mask]
         if len(left) == 0 or len(right) == 0:

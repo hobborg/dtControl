@@ -2,12 +2,13 @@ import sys
 
 import numpy as np
 
-from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
+from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
 
-class Entropy(ImpurityMeasure):
-    def calculate_impurity(self, dataset, y, split):
+class Entropy(DeterministicImpurityMeasure):
+    def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
+        y = self.determinizer.determinize(dataset)
         impurity = 0
         for mask in split.get_masks(dataset):
             subset = y[mask]
