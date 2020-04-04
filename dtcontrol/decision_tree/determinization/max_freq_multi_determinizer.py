@@ -6,6 +6,8 @@ from dtcontrol.decision_tree.determinization.determinizer import Determinizer
 
 class MaxFreqMultiDeterminizer(Determinizer):
     """
+    WARNING: this determinizer is no longer supported!
+
     This determinizer uses the maximum frequency multi determinization approach.
     """
 

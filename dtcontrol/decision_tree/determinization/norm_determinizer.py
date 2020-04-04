@@ -16,22 +16,12 @@ class NormDeterminizer(Determinizer):
         self.comp = comp
 
     def determinize(self, dataset):
-        if isinstance(dataset, SingleOutputDataset):
-            return self.determinize_single_output(dataset)
-        else:
-            return self.determinize_multi_output(dataset)
-
-    def get_index_label(self, label):
-        if isinstance(self.dataset, SingleOutputDataset):
-            return label
-        else:
-            return self.dataset.map_tuple_id_back(label)
-
-    def determinize_once_before_construction(self):
-        return True
-
-    def is_only_multioutput(self):
-        return False
+        if self.pre_determinized_labels is None:
+            if isinstance(dataset, SingleOutputDataset):
+                self.pre_determinized_labels = self.determinize_single_output(dataset)
+            else:
+                self.pre_determinized_labels = self.determinize_multi_output(dataset)
+        return self.pre_determinized_labels
 
     def determinize_single_output(self, dataset):
         return np.apply_along_axis(lambda x: self.comp(x[x != -1], key=lambda i: dataset.index_to_actual[i] ** 2),

@@ -9,22 +9,12 @@ class RandomDeterminizer(Determinizer):
     """
 
     def determinize(self, dataset):
+        if self.pre_determinized_labels is not None:
+            return self.pre_determinized_labels
         if isinstance(dataset, SingleOutputDataset):
             return self.choose_random_labels(dataset.y)
         else:
             return self.choose_random_labels(dataset.get_tuple_ids())
-
-    def get_index_label(self, label):
-        if isinstance(self.dataset, SingleOutputDataset):
-            return label
-        else:
-            return self.dataset.map_tuple_id_back(label)
-
-    def determinize_once_before_construction(self):
-        return True
-
-    def is_only_multioutput(self):
-        return False
 
     @staticmethod
     def choose_random_labels(y):
