@@ -136,12 +136,45 @@ class Dataset(ABC):
         pass
 
     @abstractmethod
+    def get_single_labels(self):
+        """
+        Converts multi-output labels to the tuple-id-representation, resulting in single-output labels that are
+        returned.
+        For a SingleOutputDataset, simply returns y.
+        """
+        pass
+
+    @abstractmethod
+    def map_single_label_back(self, single_label):
+        """
+        For a multi-output dataset, returns the tuple corresponding to the tuple id.
+        For a single-output dataset, simply returns the single-label.
+        """
+        pass
+
+    @abstractmethod
     def get_unique_labels(self):
         """
         Returns a label representation in which each combination of possible labels occurring in the data is
         assigned a new unique label.
         """
         pass
+
+    def index_label_to_actual(self, index_label):
+        """
+        :param index_label: the index label
+        :returns: the actual (float/categorical) label, which can either be a single label, a single tuple, a list of
+                  labels, or a list of tuples
+        """
+        if isinstance(index_label, tuple):  # single tuple
+            return tuple([self.index_to_actual[i] for i in index_label if i != -1])
+        elif isinstance(index_label, list):
+            if isinstance(index_label[0], tuple):  # list of tuples
+                return [tuple(map(lambda x: self.index_to_actual[x], tup)) for tup in index_label]
+            else:  # list of labels
+                return [self.index_to_actual[i] for i in index_label if i != -1]
+        else:  # single label
+            return self.index_to_actual[index_label]
 
     @abstractmethod
     def map_unique_label_back(self, label):

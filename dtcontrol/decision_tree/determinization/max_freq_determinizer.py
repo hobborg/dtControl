@@ -1,6 +1,5 @@
 import numpy as np
 
-from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.determinizer import Determinizer
 
 class MaxFreqDeterminizer(Determinizer):
@@ -11,10 +10,7 @@ class MaxFreqDeterminizer(Determinizer):
     def determinize(self, dataset):
         if self.pre_determinized_labels is not None:
             return self.pre_determinized_labels
-        if isinstance(dataset, SingleOutputDataset):
-            return self.get_max_freq_labels(dataset.y)
-        else:
-            return self.get_max_freq_labels(dataset.get_tuple_ids())
+        return self.get_max_freq_labels(dataset.get_single_labels())
 
     @staticmethod
     def get_max_freq_labels(labels):

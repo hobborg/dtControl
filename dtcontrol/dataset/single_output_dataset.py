@@ -18,6 +18,12 @@ class SingleOutputDataset(Dataset):
                 num_correct += 1
         return num_correct / len(y_pred)
 
+    def get_single_labels(self):
+        return self.y
+
+    def map_single_label_back(self, single_label):
+        return single_label
+
     def get_unique_labels(self):
         """
         e.g.

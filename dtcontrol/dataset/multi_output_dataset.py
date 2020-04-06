@@ -61,6 +61,12 @@ class MultiOutputDataset(Dataset):
             self.tuples = np.stack(self.y, axis=2)
         return self.tuples
 
+    def get_single_labels(self):
+        return self.get_tuple_ids()
+
+    def map_single_label_back(self, single_label):
+        return self.map_tuple_id_back(single_label)
+
     def get_tuple_ids(self):
         """
         [[[ 0  0]
