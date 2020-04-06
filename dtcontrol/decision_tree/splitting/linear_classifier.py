@@ -26,7 +26,7 @@ class LinearClassifierSplittingStrategy(SplittingStrategy):
             classifier.fit(x_numeric, new_y)
             real_features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
             split = LinearClassifierSplit(classifier, real_features, dataset.numeric_columns)
-            splits[split] = impurity_measure.calculate_impurity(dataset, y, split)
+            splits[split] = impurity_measure.calculate_impurity(dataset, split)
 
         return min(splits.keys(), key=splits.get)
 

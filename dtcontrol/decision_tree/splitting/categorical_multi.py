@@ -23,7 +23,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
         for feature in range(x_categorical.shape[1]):
             real_feature = dataset.map_categorical_feature_back(feature)
             split = CategoricalMultiSplit(real_feature)
-            impurity = impurity_measure.calculate_impurity(dataset, y, split)
+            impurity = impurity_measure.calculate_impurity(dataset, split)
             if impurity == sys.maxsize:
                 continue
 

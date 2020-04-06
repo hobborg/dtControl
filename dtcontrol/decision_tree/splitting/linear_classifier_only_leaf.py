@@ -30,7 +30,7 @@ class LinearClassifierOnlyLeafSplittingStrategy(SplittingStrategy):
         if np.array_equal(classifier.predict(x_numeric), new_y):  # perfect split
             real_features = LinearSplit.map_numeric_coefficients_back(classifier.coef_[0], dataset)
             split = LinearClassifierSplit(classifier, real_features, dataset.numeric_columns)
-            assert impurity_measure.calculate_impurity(dataset, y, split) == 0
+            assert impurity_measure.calculate_impurity(dataset, split) == 0
             return split
         return None
 
