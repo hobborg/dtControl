@@ -10,13 +10,15 @@ import numpy as np
 
 import dtcontrol
 import dtcontrol.globals
+from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplit
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 from dtcontrol.util import log_without_newline
 
 class OC1SplittingStrategy(SplittingStrategy):
-    def __init__(self, num_restarts=10, num_jumps=5, delete_tmp=True):
+    def __init__(self, determinizer=NonDeterminizer(), num_restarts=10, num_jumps=5, delete_tmp=True):
+        self.determinizer = determinizer
         self.oc1_path = 'decision_tree/OC1_source/mktree'
         self.header_file = 'decision_tree/OC1_source/oc1.h'
         self.tmp_path = '.dtcontrol_tmp'
@@ -50,10 +52,11 @@ class OC1SplittingStrategy(SplittingStrategy):
                 logging.error("Could not find OC1 files")
                 sys.exit(-1)
 
-    def find_split(self, dataset, y, impurity_measure):
+    def find_split(self, dataset, impurity_measure):
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return None
+        y = self.determinizer.determinize(dataset)
         if not os.path.exists(self.tmp_path):
             os.mkdir(self.tmp_path)
         self.save_data_to_file(x_numeric, y)

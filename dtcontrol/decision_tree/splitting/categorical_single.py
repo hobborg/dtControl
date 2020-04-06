@@ -2,14 +2,14 @@ from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class CategoricalSingleSplittingStrategy(SplittingStrategy):
-    def find_split(self, dataset, y, impurity_measure):
+    def find_split(self, dataset, impurity_measure):
         x_categorical = dataset.get_categorical_x()
         splits = {}
         for feature in range(x_categorical.shape[1]):
             real_feature = dataset.map_categorical_feature_back(feature)
             for value in set(x_categorical[:, feature]):
                 split = CategoricalSingleSplit(real_feature, value)
-                splits[split] = impurity_measure.calculate_impurity(dataset, y, split)
+                splits[split] = impurity_measure.calculate_impurity(dataset, split)
 
         if not splits:
             return None

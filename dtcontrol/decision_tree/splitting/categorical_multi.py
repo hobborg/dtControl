@@ -17,7 +17,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
         self.value_grouping = value_grouping
         self.tolerance = tolerance
 
-    def find_split(self, dataset, y, impurity_measure):
+    def find_split(self, dataset, impurity_measure):
         x_categorical = dataset.get_categorical_x()
         splits = {}
         for feature in range(x_categorical.shape[1]):
@@ -29,7 +29,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
 
             if self.value_grouping:
                 value_groups, grouped_impurity = \
-                    self.find_best_value_groups(dataset, y, impurity_measure, feature, impurity)
+                    self.find_best_value_groups(dataset, impurity_measure, feature, impurity)
                 grouped_split = CategoricalMultiSplit(real_feature, value_groups)
                 splits[grouped_split] = grouped_impurity
             else:
@@ -39,7 +39,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
             return None
         return min(splits.keys(), key=splits.get)
 
-    def find_best_value_groups(self, dataset, y, impurity_measure, feature, initial_impurity):
+    def find_best_value_groups(self, dataset, impurity_measure, feature, initial_impurity):
         impurity = initial_impurity
         real_feature = dataset.map_categorical_feature_back(feature)
 
@@ -59,7 +59,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
                     new_groups[i] += new_groups[j]
                     del new_groups[j]
                     new_split = CategoricalMultiSplit(real_feature, new_groups)
-                    new_impurity = impurity_measure.calculate_impurity(dataset, y, new_split)
+                    new_impurity = impurity_measure.calculate_impurity(dataset, new_split)
                     if new_impurity <= best_new_impurity:
                         best_new_impurity = new_impurity
                         best_new_value_groups = new_groups
