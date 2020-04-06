@@ -9,6 +9,7 @@ import numpy as np
 import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
 from dtcontrol.decision_tree.impurity.nondeterministic_impurity_measure import NondeterministicImpurityMeasure
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
@@ -17,7 +18,7 @@ from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, early_stopping=False,
-                 early_stopping_num_examples=None, pre_determinize=False):
+                 early_stopping_num_examples=None):
         super().__init__(name)
         self.root = None
         self.name = name
@@ -25,7 +26,6 @@ class DecisionTree(BenchmarkSuiteClassifier):
         self.impurity_measure = impurity_measure
         self.early_stopping = early_stopping
         self.early_stopping_num_examples = early_stopping_num_examples
-        self.pre_determinize = pre_determinize
         self.check_valid()
 
     def check_valid(self):
@@ -37,8 +37,6 @@ class DecisionTree(BenchmarkSuiteClassifier):
             raise ValueError('Incompatible impurity measure used with OC1.')
         if not self.early_stopping and self.early_stopping_num_examples is not None:
             raise ValueError('Early stopping parameters set although early stopping is disabled.')
-        if self.pre_determinize and isinstance(self.impurity_measure, NondeterministicImpurityMeasure):
-            raise ValueError('\'pre-determinize\' cannot be used with nondeterministic impurity measures.')
 
         determinization = isinstance(self.impurity_measure, NondeterministicImpurityMeasure) or \
                           not isinstance(self.impurity_measure.determinizer, NonDeterminizer)
@@ -54,13 +52,9 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return True
 
     def fit(self, dataset):
-        self.root = Node(self.determinizer, self.splitting_strategies, self.impurity_measure)
-        prev_y = dataset.y
-        if self.determinizer.determinize_once_before_construction():
-            y = self.determinizer.determinize(dataset)
-            dataset.y = y
+        self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
+                         self.early_stopping_num_examples)
         self.root.fit(dataset)
-        dataset.y = prev_y
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
@@ -105,12 +99,11 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
 class Node:
     def __init__(self, splitting_strategies, impurity_measure, early_stopping=False, early_stopping_num_examples=None,
-                 pre_determinize=False, depth=0):
+                 depth=0):
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
         self.early_stopping = early_stopping
         self.early_stopping_num_examples = early_stopping_num_examples
-        self.pre_determinize = pre_determinize
         self.depth = depth
         self.split = None
         self.num_nodes = 0
@@ -137,7 +130,9 @@ class Node:
     def fit(self, dataset):
         if self.check_done(dataset):
             return
-        if self.pre_determinize:
+        pre_determinize = isinstance(self.impurity_measure, DeterministicImpurityMeasure) and \
+                          self.impurity_measure.determinizer.is_pre()
+        if pre_determinize:
             determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
             self.impurity_measure.determinizer.pre_determinized_labels = determinized_labels
         splits = [strategy.find_split(dataset, self.impurity_measure) for strategy in self.splitting_strategies]
@@ -146,7 +141,7 @@ class Node:
             logging.error("Aborting branch: no split possible.")
             return
         self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, s))
-        if self.pre_determinize:
+        if pre_determinize:
             self.impurity_measure.determinizer.pre_determinized_labels = None
 
         subsets = self.split.split(dataset)
@@ -157,7 +152,7 @@ class Node:
             return
         for subset in subsets:
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
-                        self.early_stopping_num_examples, self.pre_determinize, self.depth + 1)
+                        self.early_stopping_num_examples, self.depth + 1)
             node.fit(subset)
             self.children.append(node)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
@@ -179,6 +174,7 @@ class Node:
         if self.early_stopping:
             if self.early_stopping_num_examples is None or len(dataset.x) <= self.early_stopping_num_examples:
                 intersection = reduce(np.intersect1d, y)
+                intersection = intersection[intersection != -1]
                 if len(intersection) > 0:
                     self.set_labels(intersection, dataset)
                     return True

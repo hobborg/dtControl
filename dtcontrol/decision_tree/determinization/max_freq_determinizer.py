@@ -7,8 +7,13 @@ class MaxFreqDeterminizer(Determinizer):
     This determinizer uses the maximum frequency determinization approach.
     """
 
+    def __init__(self, pre_determinize=True):
+        super().__init__()
+        self.pre_determinize = pre_determinize
+
     def determinize(self, dataset):
-        if self.pre_determinized_labels is not None:
+        if self.is_pre():
+            assert self.pre_determinized_labels is not None
             return self.pre_determinized_labels
         return self.get_max_freq_labels(dataset.get_single_labels())
 
@@ -26,3 +31,6 @@ class MaxFreqDeterminizer(Determinizer):
             assert max_label != -1
             new_labels.append(max_label)
         return np.array(new_labels)
+
+    def is_pre(self):
+        return self.pre_determinize

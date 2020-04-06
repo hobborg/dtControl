@@ -11,3 +11,7 @@ class Determinizer(ABC):
         :return: the determinized labels
         """
         pass
+
+    @abstractmethod
+    def is_pre(self):
+        pass

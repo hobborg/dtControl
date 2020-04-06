@@ -16,12 +16,10 @@ class NormDeterminizer(Determinizer):
         self.comp = comp
 
     def determinize(self, dataset):
-        if self.pre_determinized_labels is None:
-            if isinstance(dataset, SingleOutputDataset):
-                self.pre_determinized_labels = self.determinize_single_output(dataset)
-            else:
-                self.pre_determinized_labels = self.determinize_multi_output(dataset)
-        return self.pre_determinized_labels
+        if isinstance(dataset, SingleOutputDataset):
+            return self.determinize_single_output(dataset)
+        else:
+            return self.determinize_multi_output(dataset)
 
     def determinize_single_output(self, dataset):
         return np.apply_along_axis(lambda x: self.comp(x[x != -1], key=lambda i: dataset.index_to_actual[i] ** 2),
@@ -37,3 +35,6 @@ class NormDeterminizer(Determinizer):
                                     key=lambda t: sum(dataset.index_to_actual[i] ** 2 for i in t)))
             i += 1
         return np.array([dataset.get_tuple_to_tuple_id()[tuple(t)] for t in result])
+
+    def is_pre(self):
+        return True
