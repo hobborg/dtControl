@@ -48,6 +48,7 @@ class SingleOutputDataset(Dataset):
         subset = SingleOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
         subset.parent_mask = mask
+        subset.original_mask = self.create_original_mask(mask)
         subset.x = self.x[mask]
         subset.y = self.y[mask]
         if self.unique_labels is not None:

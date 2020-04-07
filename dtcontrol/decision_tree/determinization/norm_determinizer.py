@@ -16,6 +16,8 @@ class NormDeterminizer(Determinizer):
         self.comp = comp
 
     def determinize(self, dataset):
+        if self.pre_determinized_labels is not None:
+            return self.pre_determinized_labels[dataset.original_mask]
         if isinstance(dataset, SingleOutputDataset):
             return self.determinize_single_output(dataset)
         else:
@@ -36,5 +38,8 @@ class NormDeterminizer(Determinizer):
             i += 1
         return np.array([dataset.get_tuple_to_tuple_id()[tuple(t)] for t in result])
 
-    def is_pre(self):
+    def is_pre_split(self):
+        return False
+
+    def is_pre_construction(self):
         return True

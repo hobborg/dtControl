@@ -142,12 +142,9 @@ class MultiOutputDataset(Dataset):
         subset = MultiOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
         subset.parent_mask = mask
+        subset.original_mask = self.create_original_mask(mask)
         subset.x = self.x[mask]
-        if len(subset.y.shape) == 3:
-            subset.y = self.y[:, mask, :]
-        else:  # if we only determinize once before tree construction
-            assert False  # TODO REF
-            subset.y = self.y[mask]
+        subset.y = self.y[:, mask, :]
         if self.tuple_ids is not None:
             subset.tuple_ids = self.tuple_ids[mask]
             subset.tuple_id_to_tuple = self.tuple_id_to_tuple

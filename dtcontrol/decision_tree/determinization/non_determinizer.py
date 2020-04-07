@@ -6,7 +6,12 @@ class NonDeterminizer(Determinizer):
     """
 
     def determinize(self, dataset):
+        if self.pre_determinized_labels is not None:
+            return self.pre_determinized_labels[dataset.original_mask]
         return dataset.get_unique_labels()
 
-    def is_pre(self):
+    def is_pre_split(self):
+        return False
+
+    def is_pre_construction(self):
         return True

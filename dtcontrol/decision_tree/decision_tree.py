@@ -35,15 +35,17 @@ class DecisionTree(BenchmarkSuiteClassifier):
         oc1 = any(isinstance(strategy, OC1SplittingStrategy) for strategy in self.splitting_strategies)
         if oc1 and self.impurity_measure.get_oc1_name() is None:
             raise ValueError('Incompatible impurity measure used with OC1.')
-        if oc1 and not self.impurity_measure.determinizer.is_pre():
+        if oc1 and not (self.impurity_measure.determinizer.is_pre_split() or
+                        self.impurity_measure.determinizer.is_pre_construction()):
             raise ValueError('OC1 can only be used with pre-determinization.')
         if not self.early_stopping and self.early_stopping_num_examples is not None:
             raise ValueError('Early stopping parameters set although early stopping is disabled.')
 
         determinization = isinstance(self.impurity_measure, NondeterministicImpurityMeasure) or \
-                          not isinstance(self.impurity_measure.determinizer, NonDeterminizer)
+                          not self.impurity_measure.determinizer.is_pre_construction()
         if determinization and (not self.early_stopping or self.early_stopping_num_examples is not None):
-            raise ValueError('Determinization can only be used if early stopping is enabled without parameters.')
+            raise ValueError('Determinization during tree construction '
+                             'can only be used if early stopping is enabled without parameters.')
 
     def is_applicable(self, dataset):
         if dataset.is_deterministic:
@@ -54,9 +56,19 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return True
 
     def fit(self, dataset):
+        reset_determinizer = False
+        if isinstance(self.impurity_measure, DeterministicImpurityMeasure):
+            determinizer = self.impurity_measure.determinizer
+            if determinizer.is_pre_construction():
+                determinizer.pre_determinized_labels = determinizer.determinize(dataset)
+                reset_determinizer = True
+
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                          self.early_stopping_num_examples)
         self.root.fit(dataset)
+
+        if reset_determinizer:
+            determinizer.pre_determinized_labels = None
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
@@ -133,7 +145,7 @@ class Node:
         if self.check_done(dataset):
             return
         pre_determinize = isinstance(self.impurity_measure, DeterministicImpurityMeasure) and \
-                          self.impurity_measure.determinizer.is_pre()
+                          self.impurity_measure.determinizer.is_pre_split()
         if pre_determinize:
             determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
             self.impurity_measure.determinizer.pre_determinized_labels = determinized_labels

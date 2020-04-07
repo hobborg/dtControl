@@ -7,19 +7,20 @@ class RandomDeterminizer(Determinizer):
     This determinizer determinizes randomly.
     """
 
-    def __init__(self, pre_determinize=True):
+    def __init__(self):
         super().__init__()
-        self.pre_determinize = pre_determinize
 
     def determinize(self, dataset):
-        if self.is_pre() and self.pre_determinized_labels is not None:
-            assert dataset.parent_mask is not None
-            return self.pre_determinized_labels[dataset.parent_mask]
+        if self.pre_determinized_labels is not None:
+            return self.pre_determinized_labels[dataset.original_mask]
         return self.choose_random_labels(dataset.get_single_labels())
 
     @staticmethod
     def choose_random_labels(y):
         return np.apply_along_axis(lambda x: np.random.choice(x[x != -1]), axis=1, arr=y)
 
-    def is_pre(self):
-        return self.pre_determinize
+    def is_pre_split(self):
+        return False
+
+    def is_pre_construction(self):
+        return True

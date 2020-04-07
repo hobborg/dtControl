@@ -12,8 +12,7 @@ class MaxFreqDeterminizer(Determinizer):
         self.pre_determinize = pre_determinize
 
     def determinize(self, dataset):
-        if self.is_pre() and self.pre_determinized_labels is not None:
-            assert dataset.parent_mask is not None
+        if self.is_pre_split() and self.pre_determinized_labels is not None:
             return self.pre_determinized_labels[dataset.parent_mask]
         return self.get_max_freq_labels(dataset.get_single_labels())
 
@@ -32,5 +31,8 @@ class MaxFreqDeterminizer(Determinizer):
             new_labels.append(max_label)
         return np.array(new_labels)
 
-    def is_pre(self):
+    def is_pre_split(self):
         return self.pre_determinize
+
+    def is_pre_construction(self):
+        return False
