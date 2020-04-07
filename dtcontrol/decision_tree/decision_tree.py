@@ -17,13 +17,14 @@ from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
-    def __init__(self, splitting_strategies, impurity_measure, name, early_stopping=False,
+    def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
                  early_stopping_num_examples=None):
         super().__init__(name)
         self.root = None
         self.name = name
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
+        self.label_pre_processor = label_pre_processor
         self.early_stopping = early_stopping
         self.early_stopping_num_examples = early_stopping_num_examples
         self.check_valid()
@@ -35,14 +36,15 @@ class DecisionTree(BenchmarkSuiteClassifier):
         oc1 = any(isinstance(strategy, OC1SplittingStrategy) for strategy in self.splitting_strategies)
         if oc1 and self.impurity_measure.get_oc1_name() is None:
             raise ValueError('Incompatible impurity measure used with OC1.')
-        if oc1 and not (self.impurity_measure.determinizer.is_pre_split() or
-                        self.impurity_measure.determinizer.is_pre_construction()):
-            raise ValueError('OC1 can only be used with pre-determinization.')
+        if oc1 and not (self.impurity_measure.determinizer.is_pre_split()):
+            raise ValueError('OC1 can only be used with pre-split-determinization.')
         if not self.early_stopping and self.early_stopping_num_examples is not None:
             raise ValueError('Early stopping parameters set although early stopping is disabled.')
 
         determinization = isinstance(self.impurity_measure, NondeterministicImpurityMeasure) or \
-                          not self.impurity_measure.determinizer.is_pre_construction()
+                          not isinstance(self.impurity_measure.determinizer, NonDeterminizer)
+        if determinization and self.label_pre_processor is not None:
+            raise ValueError('Determinization during tree construction cannot be used with a label preprocessor.')
         if determinization and (not self.early_stopping or self.early_stopping_num_examples is not None):
             raise ValueError('Determinization during tree construction '
                              'can only be used if early stopping is enabled without parameters.')
@@ -56,19 +58,11 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return True
 
     def fit(self, dataset):
-        reset_determinizer = False
-        if isinstance(self.impurity_measure, DeterministicImpurityMeasure):
-            determinizer = self.impurity_measure.determinizer
-            if determinizer.is_pre_construction():
-                determinizer.pre_determinized_labels = determinizer.determinize(dataset)
-                reset_determinizer = True
-
+        if self.label_pre_processor is not None:
+            dataset = self.label_pre_processor.preprocess(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                          self.early_stopping_num_examples)
         self.root.fit(dataset)
-
-        if reset_determinizer:
-            determinizer.pre_determinized_labels = None
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)

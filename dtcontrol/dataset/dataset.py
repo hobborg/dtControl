@@ -78,7 +78,6 @@ class Dataset(ABC):
         self.categorical_columns = None
         self.is_deterministic = None
         self.parent_mask = None  # if this is a subset, parent_mask saves the mask into the parent dataset
-        self.original_mask = None  # if this is a subset, original_mask saves the mask into the original dataset
 
     def get_name(self):
         return self.name
@@ -101,7 +100,6 @@ class Dataset(ABC):
                 self.extension_to_loader[self.extension].load_dataset(self.filename)
             self.y_metadata['num_rows'] = len(self.x)
             self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
-            self.original_mask = np.ones(len(self.x), dtype=bool)
 
     def load_metadata_from_json(self, json_object):
         metadata = json_object['metadata']
@@ -133,11 +131,6 @@ class Dataset(ABC):
 
     def map_categorical_feature_back(self, feature):
         return self.categorical_feature_mapping[feature]
-
-    def create_original_mask(self, parent_mask):
-        original_mask = np.copy(self.original_mask)
-        original_mask[original_mask == True] = parent_mask
-        return original_mask
 
     def __len__(self):
         return len(self.x)

@@ -33,6 +33,3 @@ class MaxFreqDeterminizer(Determinizer):
 
     def is_pre_split(self):
         return self.pre_determinize
-
-    def is_pre_construction(self):
-        return False
