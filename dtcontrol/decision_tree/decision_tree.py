@@ -35,6 +35,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
         oc1 = any(isinstance(strategy, OC1SplittingStrategy) for strategy in self.splitting_strategies)
         if oc1 and self.impurity_measure.get_oc1_name() is None:
             raise ValueError('Incompatible impurity measure used with OC1.')
+        if oc1 and not self.impurity_measure.determinizer.is_pre():
+            raise ValueError('OC1 can only be used with pre-determinization.')
         if not self.early_stopping and self.early_stopping_num_examples is not None:
             raise ValueError('Early stopping parameters set although early stopping is disabled.')
 

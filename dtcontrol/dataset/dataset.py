@@ -77,6 +77,7 @@ class Dataset(ABC):
         self.categorical_feature_mapping = {}  # the same thing for the categorical array
         self.categorical_columns = None
         self.is_deterministic = None
+        self.parent_mask = None  # if this is a subset, parent_mask saves the mask with which it has been created
 
     def get_name(self):
         return self.name
@@ -130,6 +131,9 @@ class Dataset(ABC):
 
     def map_categorical_feature_back(self, feature):
         return self.categorical_feature_mapping[feature]
+
+    def __len__(self):
+        return len(self.x)
 
     @abstractmethod
     def compute_accuracy(self, y_pred):

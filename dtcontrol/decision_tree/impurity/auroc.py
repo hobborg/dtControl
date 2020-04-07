@@ -11,7 +11,10 @@ class AUROC(DeterministicImpurityMeasure):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
         y = self.determinizer.determinize(dataset)
-        scores = [self.calculate_auroc(dataset.x[mask], y[mask]) for mask in split.get_masks(dataset)]
+        scores = []
+        for mask in split.get_masks(dataset):
+            subset_labels = self.determinizer.determinize(dataset.from_mask(mask))
+            scores.append(self.calculate_auroc(dataset.x[mask], subset_labels))
         if any([s == 0 for s in scores]):
             return sys.maxsize
         return 1 / sum(scores)

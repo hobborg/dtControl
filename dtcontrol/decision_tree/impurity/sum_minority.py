@@ -8,13 +8,12 @@ class SumMinority(DeterministicImpurityMeasure):
     def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
-        y = self.determinizer.determinize(dataset)
         minorities = []
         for mask in split.get_masks(dataset):
-            subset = y[mask]
-            if len(subset) == 0:
+            subset_labels = self.determinizer.determinize(dataset.from_mask(mask))
+            if len(subset_labels) == 0:
                 return sys.maxsize
-            minorities.append(self.calculate_minority(subset))
+            minorities.append(self.calculate_minority(subset_labels))
         return sum(minorities)
 
     @staticmethod

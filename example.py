@@ -13,7 +13,7 @@ from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
 suite = BenchmarkSuite(timeout=60 * 60 * 3,
                        save_folder='saved_classifiers',
-                       benchmark_file='benchmark_try_lc_new',
+                       benchmark_file='benchmark_idk',
                        rerun=False)
 
 suite.add_datasets(['examples', 'examples/prism'],
@@ -22,11 +22,11 @@ suite.add_datasets(['examples', 'examples/prism'],
                        # "wlan0",
                        # "mer10"
                        "cartpole",
-                       "tworooms-noneuler-latest",
+                       # "tworooms-noneuler-latest",
                        # "helicopter",
                        # "cruise-latest",
                        # "dcdc",
-                       "10rooms",
+                       # "10rooms",
                        # "truck_trailer",
                        # "traffic_1m",
                        # "traffic_10m",
@@ -44,8 +44,10 @@ logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', p
 linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000, determinizer=MaxFreqDeterminizer())
 classifiers = [
     DecisionTree([aa], Entropy(), 'CART'),
+    DecisionTree([aa], Entropy(), 'ES', early_stopping=True),
+    DecisionTree([aa], Entropy(), 'ES_MSS', early_stopping=True, early_stopping_num_examples=20),
+    DecisionTree([aa], Entropy(MaxFreqDeterminizer()), 'MaxFreq', early_stopping=True),
     DecisionTree([aa], Entropy(MaxFreqDeterminizer(pre_determinize=False)), 'MaxFreq-post', early_stopping=True),
-    DecisionTree([aa, logreg], Entropy(MaxFreqDeterminizer()), 'MaxFreqLC-new', early_stopping=True),
     DecisionTree([aa], NondeterministicEntropy(), 'Nondet', early_stopping=True)
 ]
 suite.benchmark(classifiers)

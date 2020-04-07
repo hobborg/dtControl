@@ -12,9 +12,9 @@ class MaxFreqDeterminizer(Determinizer):
         self.pre_determinize = pre_determinize
 
     def determinize(self, dataset):
-        if self.is_pre():
-            assert self.pre_determinized_labels is not None
-            return self.pre_determinized_labels
+        if self.is_pre() and self.pre_determinized_labels is not None:
+            assert dataset.parent_mask is not None
+            return self.pre_determinized_labels[dataset.parent_mask]
         return self.get_max_freq_labels(dataset.get_single_labels())
 
     @staticmethod
