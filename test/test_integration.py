@@ -7,9 +7,9 @@ from sklearn.linear_model import LogisticRegression
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
-from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
+from dtcontrol.decision_tree.impurity.nondeterministic_entropy import NondeterministicEntropy
+from dtcontrol.decision_tree.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -28,7 +28,8 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq': 6,
                 'maxfreq-logreg': 7,
                 'minnorm': 56,
-                'minnorm-logreg': 16
+                'minnorm-logreg': 16,
+                'nondet': 4
             },
             'cruise-latest': {
                 'CART': 494,
@@ -37,7 +38,8 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq': 2,
                 'maxfreq-logreg': 2,
                 'minnorm': 282,
-                'minnorm-logreg': 197
+                'minnorm-logreg': 197,
+                'nondet': 2
             },
             'dcdc': {
                 'CART': 136,
@@ -45,7 +47,8 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq': 5,
                 'maxfreq-logreg': 5,
                 'minnorm': 11,
-                'minnorm-logreg': 125
+                'minnorm-logreg': 125,
+                'nondet': 3
             },
             '10rooms': {
                 'CART': 8649,
@@ -54,7 +57,8 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq': 4,
                 'maxfreq-logreg': 10,
                 'minnorm': 2704,
-                'minnorm-logreg': 28
+                'minnorm-logreg': 28,
+                'nondet': 4
             },
             'vehicle': {
                 'CART': 6619,
@@ -62,10 +66,12 @@ class IntegrationTest(unittest.TestCase):
                 'OC1': 4639
             },
             'firewire_abst': {
-                'CategoricalCART': 13
+                'CategoricalCART': 13,
+                'AVG': 6
             },
             'wlan0': {
-                'CategoricalCART': 135
+                'CategoricalCART': 135,
+                'AVG': 106
             }
         }
         self.init_classifiers()
@@ -73,35 +79,39 @@ class IntegrationTest(unittest.TestCase):
             os.remove('benchmark_test.json')
 
     def init_classifiers(self):
-        self.cart = DecisionTree(NonDeterminizer(), [AxisAlignedSplittingStrategy()], Entropy(), 'CART')
-        self.maxfreq = DecisionTree(MaxFreqDeterminizer(), [AxisAlignedSplittingStrategy()], Entropy(), 'maxfreq')
-        self.minnorm = DecisionTree(NormDeterminizer(min), [AxisAlignedSplittingStrategy()], Entropy(), 'minnorm')
+        self.cart = DecisionTree([AxisAlignedSplittingStrategy()], Entropy(), 'CART')
+        self.maxfreq = DecisionTree([AxisAlignedSplittingStrategy()], Entropy(MaxFreqDeterminizer()), 'maxfreq',
+                                    early_stopping=True, early_stopping_optimized=True)
+        self.minnorm = DecisionTree([AxisAlignedSplittingStrategy()], Entropy(), 'minnorm',
+                                    label_pre_processor=NormPreProcessor(min))
         logreg_strategy = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-        self.logreg = DecisionTree(NonDeterminizer(),
-                                   [AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
-        self.maxfreq_logreg = DecisionTree(MaxFreqDeterminizer(),
-                                           [AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(),
-                                           'maxfreq-logreg')
-        self.minnorm_logreg = DecisionTree(NormDeterminizer(min),
-                                           [AxisAlignedSplittingStrategy, logreg_strategy], Entropy(), 'minnorm-logreg')
-        self.categorical_cart = DecisionTree(NonDeterminizer(),
-                                             [AxisAlignedSplittingStrategy(), CategoricalMultiSplittingStrategy()],
+        self.logreg = DecisionTree([AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
+        self.maxfreq_logreg = DecisionTree([AxisAlignedSplittingStrategy(), logreg_strategy],
+                                           Entropy(MaxFreqDeterminizer()),
+                                           'maxfreq-logreg', early_stopping=True, early_stopping_optimized=True)
+        self.minnorm_logreg = DecisionTree([AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(), 'minnorm-logreg',
+                                           label_pre_processor=NormPreProcessor(min))
+        self.nondet = DecisionTree([AxisAlignedSplittingStrategy()], NondeterministicEntropy(), 'nondet',
+                                   early_stopping=True, early_stopping_optimized=True)
+        self.categorical_cart = DecisionTree([AxisAlignedSplittingStrategy(), CategoricalMultiSplittingStrategy()],
                                              Entropy(), 'CategoricalCART')
+        self.avg = DecisionTree([AxisAlignedSplittingStrategy(), CategoricalMultiSplittingStrategy(value_grouping=True)],
+                                Entropy(), 'AVG')
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
-        classifiers = [self.cart, self.maxfreq, self.minnorm]
+        classifiers = [self.cart, self.maxfreq, self.minnorm, self.nondet]
         self.run_test(datasets, classifiers)
 
     def test_categorical(self):
         datasets = ['firewire_abst', 'wlan0']
-        classifiers = [self.categorical_cart]
+        classifiers = [self.categorical_cart, self.avg]
         self.run_test(datasets, classifiers)
 
     @SkipTest
     def test_medium(self):  # takes about 4 min on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
-        classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm]
+        classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm, self.nondet]
         self.run_test(datasets, classifiers)
 
     @SkipTest
@@ -114,7 +124,7 @@ class IntegrationTest(unittest.TestCase):
             'vehicle'
         ]
         classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm,
-                       self.minnorm_logreg]
+                       self.minnorm_logreg, self.nondet]
         self.run_test(datasets, classifiers)
 
     def run_test(self, datasets, classifiers):

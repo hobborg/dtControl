@@ -2,7 +2,6 @@ import unittest
 
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.decision_tree.decision_tree import DecisionTree
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
@@ -16,7 +15,7 @@ class TestDot(unittest.TestCase):
             ds = MultiOutputDataset('test/golf_multi.csv')
             ds.load_if_necessary()
 
-        dt = DecisionTree(NonDeterminizer(), [CategoricalMultiSplittingStrategy(), AxisAlignedSplittingStrategy()],
+        dt = DecisionTree([CategoricalMultiSplittingStrategy(), AxisAlignedSplittingStrategy()],
                           Entropy(), 'categorical')
         dt.fit(ds)
 
