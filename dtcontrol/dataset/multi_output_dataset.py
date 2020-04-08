@@ -61,6 +61,12 @@ class MultiOutputDataset(Dataset):
             self.tuples = np.stack(self.y, axis=2)
         return self.tuples
 
+    def get_single_labels(self):
+        return self.get_tuple_ids()
+
+    def map_single_label_back(self, single_label):
+        return self.map_tuple_id_back(single_label)
+
     def get_tuple_ids(self):
         """
         [[[ 0  0]
@@ -135,11 +141,9 @@ class MultiOutputDataset(Dataset):
     def from_mask(self, mask):
         subset = MultiOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
+        subset.parent_mask = mask
         subset.x = self.x[mask]
-        if len(subset.y.shape) == 3:
-            subset.y = self.y[:, mask, :]
-        else:  # if we only determinize once before tree construction
-            subset.y = self.y[mask]
+        subset.y = self.y[:, mask, :]
         if self.tuple_ids is not None:
             subset.tuple_ids = self.tuple_ids[mask]
             subset.tuple_id_to_tuple = self.tuple_id_to_tuple
@@ -150,3 +154,9 @@ class MultiOutputDataset(Dataset):
         if self.tuples is not None:
             subset.tuples = self.tuples[mask]
         return subset
+
+    def from_mask_optimized(self, mask):
+        empty_object = type('', (), {})()
+        empty_object.parent_mask = mask
+        empty_object.get_single_labels = lambda: self.get_single_labels()[mask]
+        return empty_object

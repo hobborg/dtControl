@@ -1,27 +1,33 @@
 import logging
 import pickle
 from collections.abc import Iterable
+from functools import reduce
 from typing import Sequence
 
 import numpy as np
 
 import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
-from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
+from dtcontrol.decision_tree.impurity.nondeterministic_impurity_measure import NondeterministicImpurityMeasure
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
-    def __init__(self, determinizer, splitting_strategies, impurity_measure, name):
+    def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
+                 early_stopping_num_examples=None, early_stopping_optimized=False):
         super().__init__(name)
         self.root = None
         self.name = name
-        self.determinizer = determinizer
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
+        self.label_pre_processor = label_pre_processor
+        self.early_stopping = early_stopping
+        self.early_stopping_num_examples = early_stopping_num_examples
+        self.early_stopping_optimized = early_stopping_optimized
         self.check_valid()
 
     def check_valid(self):
@@ -31,20 +37,33 @@ class DecisionTree(BenchmarkSuiteClassifier):
         oc1 = any(isinstance(strategy, OC1SplittingStrategy) for strategy in self.splitting_strategies)
         if oc1 and self.impurity_measure.get_oc1_name() is None:
             raise ValueError('Incompatible impurity measure used with OC1.')
+        if oc1 and not (self.impurity_measure.determinizer.is_pre_split()):
+            raise ValueError('OC1 can only be used with pre-split-determinization.')
+        if not self.early_stopping and self.early_stopping_num_examples is not None:
+            raise ValueError('Early stopping parameters set although early stopping is disabled.')
+
+        determinization = isinstance(self.impurity_measure, NondeterministicImpurityMeasure) or \
+                          not isinstance(self.impurity_measure.determinizer, NonDeterminizer)
+        if determinization and self.label_pre_processor is not None:
+            raise ValueError('Determinization during tree construction cannot be used with a label preprocessor.')
+        if determinization and (not self.early_stopping or self.early_stopping_num_examples is not None):
+            raise ValueError('Determinization during tree construction '
+                             'can only be used if early stopping is enabled without parameters.')
 
     def is_applicable(self, dataset):
-        return not (self.determinizer.is_only_multioutput() and isinstance(dataset, SingleOutputDataset)) and \
-               not (dataset.is_deterministic and not isinstance(self.determinizer, NonDeterminizer))
+        if dataset.is_deterministic:
+            if isinstance(self.impurity_measure, NondeterministicImpurityMeasure):
+                return False
+            if not isinstance(self.impurity_measure.determinizer, NonDeterminizer):
+                return False
+        return True
 
     def fit(self, dataset):
-        self.determinizer.set_dataset(dataset)
-        self.root = Node(self.determinizer, self.splitting_strategies, self.impurity_measure)
-        prev_y = dataset.y
-        if self.determinizer.determinize_once_before_construction():
-            y = self.determinizer.determinize(dataset)
-            dataset.y = y
+        if self.label_pre_processor is not None:
+            dataset = self.label_pre_processor.preprocess(dataset)
+        self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
+                         self.early_stopping_num_examples, self.early_stopping_optimized)
         self.root.fit(dataset)
-        dataset.y = prev_y
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
@@ -88,12 +107,15 @@ class DecisionTree(BenchmarkSuiteClassifier):
         return self.name
 
 class Node:
-    def __init__(self, determinizer, splitting_strategies, impurity_measure, depth=0):
-        self.determinizer = determinizer
+    def __init__(self, splitting_strategies, impurity_measure, early_stopping=False, early_stopping_num_examples=None,
+                 early_stopping_optimized=False, depth=0):
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
-        self.split = None
+        self.early_stopping = early_stopping
+        self.early_stopping_num_examples = early_stopping_num_examples
+        self.early_stopping_optimized = early_stopping_optimized
         self.depth = depth
+        self.split = None
         self.num_nodes = 0
         self.num_inner_nodes = 0
         self.children = []
@@ -101,6 +123,7 @@ class Node:
         #                                     a list of tuples
         self.index_label = None  # the label with int indices
         self.actual_label = None  # the actual float or categorical label
+        self.logged_depth_problem = False
 
     def predict(self, x, actual_values=True):
         pred = []
@@ -115,16 +138,21 @@ class Node:
         return node.actual_label if actual_values else node.index_label
 
     def fit(self, dataset):
-        y = self.determinizer.determinize(dataset) if not self.determinizer.determinize_once_before_construction() \
-            else dataset.y
-        if self.check_done(dataset.x, y):
+        if self.check_done(dataset):
             return
-        splits = [strategy.find_split(dataset, y, self.impurity_measure) for strategy in self.splitting_strategies]
+        pre_determinize = isinstance(self.impurity_measure, DeterministicImpurityMeasure) and \
+                          self.impurity_measure.determinizer.is_pre_split()
+        if pre_determinize:
+            determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
+            self.impurity_measure.determinizer.pre_determinized_labels = determinized_labels
+        splits = [strategy.find_split(dataset, self.impurity_measure) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
         if not splits:
             logging.error("Aborting branch: no split possible.")
             return
-        self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, y, s))
+        self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, s))
+        if pre_determinize:
+            self.impurity_measure.determinizer.pre_determinized_labels = None
 
         subsets = self.split.split(dataset)
         assert len(subsets) > 1
@@ -133,32 +161,57 @@ class Node:
                           "You might want to consider adding more splitting strategies.")
             return
         for subset in subsets:
-            node = Node(self.determinizer, self.splitting_strategies, self.impurity_measure, self.depth + 1)
+            node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
+                        self.early_stopping_num_examples, self.early_stopping_optimized, self.depth + 1)
             node.fit(subset)
             self.children.append(node)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
         self.num_inner_nodes = 1 + sum([c.num_inner_nodes for c in self.children])
 
-    def check_done(self, x, y):
-        if self.depth >= 100:
+    def check_done(self, dataset):
+        if self.depth >= 100 and not self.logged_depth_problem:
+            self.logged_depth_problem = True
             logging.info("Depth >= 100. Maybe something is going wrong?")
         if self.depth >= 500:
             logging.error("Aborting branch: depth >= 500.")
             return True
 
-        unique_labels = np.unique(y)
-        num_unique_labels = len(unique_labels)
-        unique_data = np.unique(x, axis=0)
-        num_unique_data = len(unique_data)
-        if num_unique_labels <= 1 or num_unique_data <= 1:
-            if len(unique_labels) > 0:
-                self.index_label = self.determinizer.get_index_label(y[0])
-                self.actual_label = self.determinizer.get_actual_label(y[0])
-            else:
-                self.index_label = self.actual_label = None
+        y = dataset.get_single_labels()
+        if len(np.unique(y, axis=0)) <= 1:
+            self.set_labels(y[0, :], dataset)
+            return True
+
+        if self.early_stopping:
+            if self.early_stopping_num_examples is None or len(dataset.x) <= self.early_stopping_num_examples:
+                if self.early_stopping_optimized:
+                    flattened = y.flatten()
+                    flattened = flattened[flattened != -1]
+                    counts = np.bincount(flattened)[1:]
+                    if np.any(counts == len(dataset)):
+                        index_label = np.where(counts == len(dataset))[0][0] + 1
+                        self.set_labels([index_label], dataset)
+                        return True
+                else:
+                    intersection = reduce(np.intersect1d, y)
+                    intersection = intersection[intersection != -1]
+                    if len(intersection) > 0:
+                        self.set_labels(intersection, dataset)
+                        return True
+
+        unique_x = np.unique(dataset.x)
+        if len(unique_x) <= 1:
+            self.index_label = self.actual_label = None
             self.num_nodes = 1
             return True
+
         return False
+
+    def set_labels(self, label_array, dataset):
+        self.index_label = [dataset.map_single_label_back(label) for label in list(label_array) if label != -1]
+        if len(self.index_label) == 1:
+            self.index_label = self.index_label[0]
+        self.actual_label = dataset.index_label_to_actual(self.index_label)
+        self.num_nodes = 1
 
     def is_leaf(self):
         return not self.children
@@ -272,8 +325,6 @@ class Node:
 
         if isinstance(self.actual_label, list):
             new_label = [self.print_single_actual_label(label, y_metadata) for label in self.actual_label]
-            if len(new_label) == 1:
-                return new_label[0]
             return util.split_into_lines(new_label)
         else:
             return self.print_single_actual_label(self.actual_label, y_metadata)

@@ -4,13 +4,17 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 
-from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
+from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
 
-class AUROC(ImpurityMeasure):
-    def calculate_impurity(self, dataset, y, split):
+class AUROC(DeterministicImpurityMeasure):
+    def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
-        scores = [self.calculate_auroc(dataset.x[mask], y[mask]) for mask in split.get_masks(dataset)]
+        y = self.determinizer.determinize(dataset)
+        scores = []
+        for mask in split.get_masks(dataset):
+            subset_labels = self.determinizer.determinize(dataset.from_mask_optimized(mask))
+            scores.append(self.calculate_auroc(dataset.x[mask], subset_labels))
         if any([s == 0 for s in scores]):
             return sys.maxsize
         return 1 / sum(scores)

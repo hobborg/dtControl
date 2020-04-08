@@ -18,6 +18,12 @@ class SingleOutputDataset(Dataset):
                 num_correct += 1
         return num_correct / len(y_pred)
 
+    def get_single_labels(self):
+        return self.y
+
+    def map_single_label_back(self, single_label):
+        return single_label
+
     def get_unique_labels(self):
         """
         e.g.
@@ -41,9 +47,16 @@ class SingleOutputDataset(Dataset):
     def from_mask(self, mask):
         subset = SingleOutputDataset(self.filename)
         subset.copy_from_other_dataset(self)
+        subset.parent_mask = mask
         subset.x = self.x[mask]
         subset.y = self.y[mask]
         if self.unique_labels is not None:
             subset.unique_labels = self.unique_labels[mask]
             subset.unique_mapping = self.unique_mapping
         return subset
+
+    def from_mask_optimized(self, mask):
+        empty_object = type('', (), {})()
+        empty_object.parent_mask = mask
+        empty_object.get_single_labels = lambda: self.y[mask]
+        return empty_object

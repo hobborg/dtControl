@@ -2,7 +2,7 @@ from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class AxisAlignedSplittingStrategy(SplittingStrategy):
-    def find_split(self, dataset, y, impurity_measure):
+    def find_split(self, dataset, impurity_measure):
         x_numeric = dataset.get_numeric_x()
         splits = {}
         for feature in range(x_numeric.shape[1]):
@@ -11,7 +11,7 @@ class AxisAlignedSplittingStrategy(SplittingStrategy):
                 threshold = (values[i] + values[i + 1]) / 2
                 real_feature = dataset.map_numeric_feature_back(feature)
                 split = AxisAlignedSplit(real_feature, threshold)
-                splits[split] = impurity_measure.calculate_impurity(dataset, y, split)
+                splits[split] = impurity_measure.calculate_impurity(dataset, split)
         if not splits:
             return None
         return min(splits.keys(), key=splits.get)

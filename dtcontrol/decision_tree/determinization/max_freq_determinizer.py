@@ -1,6 +1,5 @@
 import numpy as np
 
-from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.determinizer import Determinizer
 
 class MaxFreqDeterminizer(Determinizer):
@@ -8,23 +7,14 @@ class MaxFreqDeterminizer(Determinizer):
     This determinizer uses the maximum frequency determinization approach.
     """
 
+    def __init__(self, pre_determinize=True):
+        super().__init__()
+        self.pre_determinize = pre_determinize
+
     def determinize(self, dataset):
-        if isinstance(dataset, SingleOutputDataset):
-            return self.get_max_freq_labels(dataset.y)
-        else:
-            return self.get_max_freq_labels(dataset.get_tuple_ids())
-
-    def get_index_label(self, label):
-        if isinstance(self.dataset, SingleOutputDataset):
-            return label
-        else:
-            return self.dataset.map_tuple_id_back(label)
-
-    def determinize_once_before_construction(self):
-        return False
-
-    def is_only_multioutput(self):
-        return False
+        if self.is_pre_split() and self.pre_determinized_labels is not None:
+            return self.pre_determinized_labels[dataset.parent_mask]
+        return self.get_max_freq_labels(dataset.get_single_labels())
 
     @staticmethod
     def get_max_freq_labels(labels):
@@ -40,3 +30,6 @@ class MaxFreqDeterminizer(Determinizer):
             assert max_label != -1
             new_labels.append(max_label)
         return np.array(new_labels)
+
+    def is_pre_split(self):
+        return self.pre_determinize

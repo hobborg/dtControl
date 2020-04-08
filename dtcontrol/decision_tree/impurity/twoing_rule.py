@@ -2,19 +2,19 @@ import sys
 
 import numpy as np
 
-from dtcontrol.decision_tree.impurity.impurity_measure import ImpurityMeasure
+from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
 
-class TwoingRule(ImpurityMeasure):
-    def calculate_impurity(self, dataset, y, split):
+class TwoingRule(DeterministicImpurityMeasure):
+    def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize
         assert len(split.get_masks(dataset)) == 2
         [left_mask, right_mask] = split.get_masks(dataset)
-        left = y[left_mask]
-        right = y[right_mask]
+        left = self.determinizer.determinize(dataset.from_mask_optimized(left_mask))
+        right = self.determinizer.determinize(dataset.from_mask_optimized(right_mask))
         if len(left) == 0 or len(right) == 0:
             return sys.maxsize
-        num_labels = len(y)
+        num_labels = len(dataset)
         twoing_value = (len(left) / num_labels) * (len(right) / num_labels)
         s = 0
         unique = np.unique(y)
