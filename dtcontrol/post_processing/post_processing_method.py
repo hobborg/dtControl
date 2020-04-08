@@ -12,6 +12,7 @@ class PostProcessingMethod(BenchmarkSuiteClassifier, ABC):
         """
         Runs the post-processing method and transforms the decision tree.
         """
+        pass
 
     def is_applicable(self, dataset):
         return self.classifier.is_applicable(dataset)

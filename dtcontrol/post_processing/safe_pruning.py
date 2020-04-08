@@ -23,7 +23,8 @@ class SafePruning(PostProcessingMethod):
         if len(intersection) == 0:
             return
         node.index_label = list(intersection) if len(intersection) > 1 else list(intersection)[0]
-        node.actual_label = node.determinizer.index_label_to_actual(node.index_label)
+        intersection = set.intersection(*[make_set(c.actual_label) for c in node.children])
+        node.actual_label = list(intersection) if len(intersection) > 1 else list(intersection)[0]
         node.children = []
         node.num_nodes = 1
         node.num_inner_nodes = 0
