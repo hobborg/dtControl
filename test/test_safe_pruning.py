@@ -28,6 +28,33 @@ class TestSafePruning(TestCase):
         self.assertTrue(root.children[1].children[1].is_leaf())
         self.assertEqual([4, 5], root.children[1].children[1].index_label)
 
+    def test_rounds(self):
+        ll = self.create_leaf([1,2])
+        lr = self.create_leaf([3,4])
+        l = self.create_parent(ll, lr)
+        rll = self.create_leaf([1,2,3])
+        rlr = self.create_leaf([2,3,4])
+        rl = self.create_parent(rll, rlr)
+        rrl = self.create_leaf([2,5])
+        rrr = self.create_leaf([8, 2])
+        rr = self.create_parent(rrl, rrr)
+        r = self.create_parent(rl, rr)
+        root = self.create_parent(l, r)
+
+        sp = SafePruning(DecisionTree([], Entropy(), 'name'), rounds=1)
+        sp.classifier.root = root
+        sp.run()
+
+        self.assertEqual(7, root.num_nodes)
+        self.assertTrue(root.children[0].children[0].is_leaf())
+        self.assertEqual([1,2], root.children[0].children[0].index_label)
+        self.assertTrue(root.children[0].children[1].is_leaf())
+        self.assertEqual([3, 4], root.children[0].children[1].index_label)
+        self.assertTrue(root.children[1].children[0].is_leaf())
+        self.assertEqual([2,3], root.children[1].children[0].index_label)
+        self.assertTrue(root.children[1].children[1].is_leaf())
+        self.assertEqual(2, root.children[1].children[1].index_label)
+
     @staticmethod
     def create_leaf(label):
         node = Node(None, None)
