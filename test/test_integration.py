@@ -25,7 +25,7 @@ class IntegrationTest(unittest.TestCase):
                 'CART': 127,
                 'logreg': 100,  # this is different from the table but apparently correct
                 'OC1': 92,
-                'maxfreq': 60,
+                'maxfreq': 6,
                 'maxfreq-logreg': 7,
                 'minnorm': 56,
                 'minnorm-logreg': 16,
