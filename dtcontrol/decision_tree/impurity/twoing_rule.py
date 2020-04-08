@@ -10,8 +10,8 @@ class TwoingRule(DeterministicImpurityMeasure):
             return sys.maxsize
         assert len(split.get_masks(dataset)) == 2
         [left_mask, right_mask] = split.get_masks(dataset)
-        left = self.determinizer.determinize(dataset.from_mask(left_mask))
-        right = self.determinizer.determinize(dataset.from_mask(right_mask))
+        left = self.determinizer.determinize(dataset.from_mask_optimized(left_mask))
+        right = self.determinizer.determinize(dataset.from_mask_optimized(right_mask))
         if len(left) == 0 or len(right) == 0:
             return sys.maxsize
         num_labels = len(dataset)

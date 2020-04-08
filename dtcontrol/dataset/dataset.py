@@ -196,6 +196,14 @@ class Dataset(ABC):
         """
         pass
 
+    @abstractmethod
+    def from_mask_optimized(self, mask):
+        """
+        An optimized version of the from_mask method that only copies the labels. This is used inside the critical
+        impurity measure code.
+        """
+        pass
+
     @staticmethod
     def get_unique_labels_from_2d(labels):
         """

@@ -54,3 +54,9 @@ class SingleOutputDataset(Dataset):
             subset.unique_labels = self.unique_labels[mask]
             subset.unique_mapping = self.unique_mapping
         return subset
+
+    def from_mask_optimized(self, mask):
+        empty_object = type('', (), {})()
+        empty_object.parent_mask = mask
+        empty_object.get_single_labels = lambda: self.y[mask]
+        return empty_object

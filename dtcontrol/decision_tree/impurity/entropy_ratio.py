@@ -17,7 +17,7 @@ class EntropyRatio(DeterministicImpurityMeasure):
     def calculate_split_entropy(self, dataset, split):
         entropy = 0
         for mask in split.get_masks(dataset):
-            subset_labels = self.determinizer.determinize(dataset.from_mask(mask))
+            subset_labels = self.determinizer.determinize(dataset.from_mask_optimized(mask))
             entropy += (len(subset_labels) / len(dataset)) * EntropyRatio.calculate_entropy(subset_labels)
         assert entropy >= 0
         return entropy
@@ -32,7 +32,7 @@ class EntropyRatio(DeterministicImpurityMeasure):
     def calculate_split_info(self, dataset, split):
         info = 0
         for mask in split.get_masks(dataset):
-            subset_labels = self.determinizer.determinize(dataset.from_mask(mask))
+            subset_labels = self.determinizer.determinize(dataset.from_mask_optimized(mask))
             info -= (len(subset_labels) / len(dataset)) * np.log2((len(subset_labels) / len(dataset)))
         assert info > 0
         return info

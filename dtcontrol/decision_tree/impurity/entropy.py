@@ -10,7 +10,7 @@ class Entropy(DeterministicImpurityMeasure):
             return sys.maxsize
         impurity = 0
         for mask in split.get_masks(dataset):
-            subset_labels = self.determinizer.determinize(dataset.from_mask(mask))
+            subset_labels = self.determinizer.determinize(dataset.from_mask_optimized(mask))
             if len(subset_labels) == 0:
                 return sys.maxsize
             impurity += (len(subset_labels) / len(dataset)) * self.calculate_entropy(subset_labels)

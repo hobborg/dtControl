@@ -18,7 +18,7 @@ from dtcontrol.util import print_tuple
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
-                 early_stopping_num_examples=None):
+                 early_stopping_num_examples=None, early_stopping_optimized=False):
         super().__init__(name)
         self.root = None
         self.name = name
@@ -27,6 +27,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         self.label_pre_processor = label_pre_processor
         self.early_stopping = early_stopping
         self.early_stopping_num_examples = early_stopping_num_examples
+        self.early_stopping_optimized = early_stopping_optimized
         self.check_valid()
 
     def check_valid(self):
@@ -61,7 +62,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
-                         self.early_stopping_num_examples)
+                         self.early_stopping_num_examples, self.early_stopping_optimized)
         self.root.fit(dataset)
 
     def predict(self, dataset, actual_values=True):
@@ -107,11 +108,12 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
 class Node:
     def __init__(self, splitting_strategies, impurity_measure, early_stopping=False, early_stopping_num_examples=None,
-                 depth=0):
+                 early_stopping_optimized=False, depth=0):
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
         self.early_stopping = early_stopping
         self.early_stopping_num_examples = early_stopping_num_examples
+        self.early_stopping_optimized = early_stopping_optimized
         self.depth = depth
         self.split = None
         self.num_nodes = 0
@@ -160,7 +162,7 @@ class Node:
             return
         for subset in subsets:
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
-                        self.early_stopping_num_examples, self.depth + 1)
+                        self.early_stopping_num_examples, self.early_stopping_optimized, self.depth + 1)
             node.fit(subset)
             self.children.append(node)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
@@ -181,11 +183,20 @@ class Node:
 
         if self.early_stopping:
             if self.early_stopping_num_examples is None or len(dataset.x) <= self.early_stopping_num_examples:
-                intersection = reduce(np.intersect1d, y)
-                intersection = intersection[intersection != -1]
-                if len(intersection) > 0:
-                    self.set_labels(intersection, dataset)
-                    return True
+                if self.early_stopping_optimized:
+                    flattened = y.flatten()
+                    flattened = flattened[flattened != -1]
+                    counts = np.bincount(flattened)[1:]
+                    if np.any(counts == len(dataset)):
+                        index_label = np.where(counts == len(dataset))[0][0] + 1
+                        self.set_labels([index_label], dataset)
+                        return True
+                else:
+                    intersection = reduce(np.intersect1d, y)
+                    intersection = intersection[intersection != -1]
+                    if len(intersection) > 0:
+                        self.set_labels(intersection, dataset)
+                        return True
 
         unique_x = np.unique(dataset.x)
         if len(unique_x) <= 1:

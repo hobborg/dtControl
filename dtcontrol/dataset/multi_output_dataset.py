@@ -154,3 +154,9 @@ class MultiOutputDataset(Dataset):
         if self.tuples is not None:
             subset.tuples = self.tuples[mask]
         return subset
+
+    def from_mask_optimized(self, mask):
+        empty_object = type('', (), {})()
+        empty_object.parent_mask = mask
+        empty_object.get_single_labels = lambda: self.get_single_labels()[mask]
+        return empty_object
