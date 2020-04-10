@@ -183,20 +183,19 @@ class Node:
 
         if self.early_stopping:
             if self.early_stopping_num_examples is None or len(dataset.x) <= self.early_stopping_num_examples:
-                if self.early_stopping_optimized:
-                    flattened = y.flatten()
-                    flattened = flattened[flattened != -1]
-                    counts = np.bincount(flattened)[1:]
-                    if np.any(counts == len(dataset)):
+                flattened = y.flatten()
+                flattened = flattened[flattened != -1]
+                counts = np.bincount(flattened)[1:]
+                if np.any(counts == len(dataset)):
+                    if self.early_stopping_optimized:
                         index_label = np.where(counts == len(dataset))[0][0] + 1
                         self.set_labels([index_label], dataset)
-                        return True
-                else:
-                    intersection = reduce(np.intersect1d, y)
-                    intersection = intersection[intersection != -1]
-                    if len(intersection) > 0:
+                    else:
+                        intersection = reduce(np.intersect1d, y)
+                        intersection = intersection[intersection != -1]
+                        assert len(intersection) > 0
                         self.set_labels(intersection, dataset)
-                        return True
+                    return True
 
         unique_x = np.unique(dataset.x)
         if len(unique_x) <= 1:
