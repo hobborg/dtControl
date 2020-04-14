@@ -1,0 +1,66 @@
+{
+  "cartpole": {
+    "classifiers": {
+      "logreg-ent": {
+        "stats": {
+          "nodes": 199,
+          "inner nodes": 99,
+          "paths": 100,
+          "bandwidth": 7
+        },
+        "time": "00:00:03.443"
+      },
+      "MaxFreq-logreg-ent": {
+        "stats": {
+          "nodes": 11,
+          "inner nodes": 5,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:01.410"
+      },
+      "MaxFreq-logreg-auroc": {
+        "stats": {
+          "nodes": 31,
+          "inner nodes": 15,
+          "paths": 16,
+          "bandwidth": 4
+        },
+        "time": "00:00:30.196"
+      },
+    },
+    "metadata": {
+      "X_metadata": {
+        "categorical": [],
+        "min": [
+          2.24,
+          -2.0
+        ],
+        "max": [
+          4.08,
+          2.0
+        ],
+        "step_size": [
+          0.08,
+          0.1
+        ]
+      },
+      "Y_metadata": {
+        "variables": [
+          "u_0"
+        ],
+        "min": [
+          -4.0
+        ],
+        "max": [
+          4.0
+        ],
+        "step_size": [
+          0.1
+        ],
+        "num_rows": 271,
+        "num_flattened": 21951
+      }
+    }
+  }
+}
