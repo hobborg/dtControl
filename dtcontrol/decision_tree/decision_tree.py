@@ -10,7 +10,7 @@ import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
-from dtcontrol.decision_tree.impurity.nondeterministic_impurity_measure import NondeterministicImpurityMeasure
+from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
@@ -42,7 +42,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         if not self.early_stopping and self.early_stopping_num_examples is not None:
             raise ValueError('Early stopping parameters set although early stopping is disabled.')
 
-        determinization = isinstance(self.impurity_measure, NondeterministicImpurityMeasure) or \
+        determinization = isinstance(self.impurity_measure, MultiLabelImpurityMeasure) or \
                           not isinstance(self.impurity_measure.determinizer, NonDeterminizer)
         if determinization and self.label_pre_processor is not None:
             raise ValueError('Determinization during tree construction cannot be used with a label preprocessor.')
@@ -52,7 +52,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def is_applicable(self, dataset):
         if dataset.is_deterministic:
-            if isinstance(self.impurity_measure, NondeterministicImpurityMeasure):
+            if isinstance(self.impurity_measure, MultiLabelImpurityMeasure):
                 return False
             if not isinstance(self.impurity_measure.determinizer, NonDeterminizer):
                 return False

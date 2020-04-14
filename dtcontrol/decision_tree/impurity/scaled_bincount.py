@@ -2,9 +2,9 @@ import sys
 
 import numpy as np
 
-from dtcontrol.decision_tree.impurity.nondeterministic_impurity_measure import NondeterministicImpurityMeasure
+from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
 
-class ScaledBincount(NondeterministicImpurityMeasure):
+class ScaledBincount(MultiLabelImpurityMeasure):
     def __init__(self, scaling_function):
         self.scaling_function = scaling_function
 

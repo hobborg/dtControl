@@ -8,7 +8,7 @@ from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
-from dtcontrol.decision_tree.impurity.nondeterministic_entropy import NondeterministicEntropy
+from dtcontrol.decision_tree.impurity.multi_label_entropy import MultiLabelEntropy
 from dtcontrol.decision_tree.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
@@ -29,7 +29,7 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq-logreg': 7,
                 'minnorm': 56,
                 'minnorm-logreg': 16,
-                'nondet': 4
+                'multilabel': 4
             },
             'cruise-latest': {
                 'CART': 494,
@@ -39,7 +39,7 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq-logreg': 2,
                 'minnorm': 282,
                 'minnorm-logreg': 197,
-                'nondet': 2
+                'multilabel': 2
             },
             'dcdc': {
                 'CART': 136,
@@ -48,7 +48,7 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq-logreg': 5,
                 'minnorm': 11,
                 'minnorm-logreg': 125,
-                'nondet': 3
+                'multilabel': 3
             },
             '10rooms': {
                 'CART': 8649,
@@ -58,7 +58,7 @@ class IntegrationTest(unittest.TestCase):
                 'maxfreq-logreg': 10,
                 'minnorm': 2704,
                 'minnorm-logreg': 28,
-                'nondet': 4
+                'multilabel': 4
             },
             'vehicle': {
                 'CART': 6619,
@@ -91,8 +91,8 @@ class IntegrationTest(unittest.TestCase):
                                            'maxfreq-logreg', early_stopping=True, early_stopping_optimized=True)
         self.minnorm_logreg = DecisionTree([AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(), 'minnorm-logreg',
                                            label_pre_processor=NormPreProcessor(min))
-        self.nondet = DecisionTree([AxisAlignedSplittingStrategy()], NondeterministicEntropy(), 'nondet',
-                                   early_stopping=True, early_stopping_optimized=True)
+        self.multilabel = DecisionTree([AxisAlignedSplittingStrategy()], MultiLabelEntropy(), 'multilabel',
+                                       early_stopping=True, early_stopping_optimized=True)
         self.categorical_cart = DecisionTree([AxisAlignedSplittingStrategy(), CategoricalMultiSplittingStrategy()],
                                              Entropy(), 'CategoricalCART')
         self.avg = DecisionTree([AxisAlignedSplittingStrategy(), CategoricalMultiSplittingStrategy(value_grouping=True)],
@@ -100,7 +100,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_fast(self):  # takes about 30s on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
-        classifiers = [self.cart, self.maxfreq, self.minnorm, self.nondet]
+        classifiers = [self.cart, self.maxfreq, self.minnorm, self.multilabel]
         self.run_test(datasets, classifiers)
 
     def test_categorical(self):
@@ -111,7 +111,7 @@ class IntegrationTest(unittest.TestCase):
     @SkipTest
     def test_medium(self):  # takes about 4 min on my laptop
         datasets = ['cartpole', '10rooms', 'vehicle']
-        classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm, self.nondet]
+        classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm, self.multilabel]
         self.run_test(datasets, classifiers)
 
     @SkipTest
@@ -124,7 +124,7 @@ class IntegrationTest(unittest.TestCase):
             'vehicle'
         ]
         classifiers = [self.cart, self.logreg, self.maxfreq, self.maxfreq_logreg, self.minnorm,
-                       self.minnorm_logreg, self.nondet]
+                       self.minnorm_logreg, self.multilabel]
         self.run_test(datasets, classifiers)
 
     def run_test(self, datasets, classifiers):

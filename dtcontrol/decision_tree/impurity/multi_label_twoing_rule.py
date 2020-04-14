@@ -2,9 +2,9 @@ import sys
 
 import numpy as np
 
-from dtcontrol.decision_tree.impurity.nondeterministic_impurity_measure import NondeterministicImpurityMeasure
+from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
 
-class NonDetTwoingRule(NondeterministicImpurityMeasure):
+class MultiLabelTwoingRule(MultiLabelImpurityMeasure):
     def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
             return sys.maxsize

@@ -1,8 +1,7 @@
-from dtcontrol.decision_tree.impurity.nondeterministic_impurity_measure import NondeterministicImpurityMeasure
-
+from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
 from dtcontrol.decision_tree.impurity.scaled_bincount import ScaledBincount
 
-class NondeterministicGiniIndex(NondeterministicImpurityMeasure):
+class MultiLabelGiniIndex(MultiLabelImpurityMeasure):
 
     def __init__(self):
         self.scaled_bincount = ScaledBincount(self.scaling_function)
