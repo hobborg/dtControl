@@ -149,6 +149,8 @@ class Node:
         splits = [s for s in splits if s is not None]
         if not splits:
             logging.error("Aborting branch: no split possible.")
+            if pre_determinize:
+                self.impurity_measure.determinizer.pre_determinized_labels = None
             return
         self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, s))
         if pre_determinize:

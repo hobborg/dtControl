@@ -18,7 +18,7 @@ class CSVDatasetLoader(DatasetLoader):
             unique_list = []
             for i in range(state_dim, state_dim + input_dim):
                 unique_list += ds[i].unique().tolist()
-            index_to_actual = {x: y for x, y in enumerate(set(unique_list))}
+            index_to_actual = {x + 1: y for x, y in enumerate(set(unique_list))}
             value_to_index = {y: x for x, y in index_to_actual.items()}
 
             ds[[i for i in range(state_dim, state_dim + input_dim)]] = ds[

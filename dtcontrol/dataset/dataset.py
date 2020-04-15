@@ -98,6 +98,7 @@ class Dataset(ABC):
         if self.x is None:
             self.x, self.x_metadata, self.y, self.y_metadata, self.index_to_actual = \
                 self.extension_to_loader[self.extension].load_dataset(self.filename)
+            assert len([i for i in self.index_to_actual if i == 0]) == 0  # labels have to start with 1 because of OC1
             self.y_metadata['num_rows'] = len(self.x)
             self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
 

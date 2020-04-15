@@ -34,7 +34,7 @@ class PrismDatasetLoader(DatasetLoader):
         x = []
         y = []
         y_variables = {}
-        y_index = 0
+        y_index = 1  # labels start with 1
         with open(filename, 'r') as f:
             for line in f:
                 n, a = line.split(':')
@@ -51,7 +51,7 @@ class PrismDatasetLoader(DatasetLoader):
         x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
         x_metadata["step_size"] = None  # todo
 
-        index_to_actual = {i: i for i in y_variables.values()}
+        index_to_actual = {i: i - 1 for i in y_variables.values()}
 
         y_metadata = dict()
         y_metadata["categorical"] = [0]  # we always have exactly one output, and it is categorical
