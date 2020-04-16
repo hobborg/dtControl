@@ -19,7 +19,7 @@ class IntegrationTest(unittest.TestCase):
         self.suite = BenchmarkSuite(timeout=60 * 60 * 2,
                                     save_folder='test_saved_classifiers',
                                     benchmark_file='benchmark_test',
-                                    rerun=False)
+                                    rerun=True)
         self.expected_results = {
             'cartpole': {
                 'CART': 127,
