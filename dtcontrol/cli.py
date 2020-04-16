@@ -276,21 +276,21 @@ def main():
             raise ValueError(f"{safe_pruning} is not a valid value for safe-pruning in preset {name}. Exiting...")
 
         determinization_map = {
-            'maxfreq': MaxFreqDeterminizer(),
-            'minnorm': NormPreProcessor(min),
-            'maxnorm': NormPreProcessor(max),
-            'random': RandomPreProcessor(),
-            'none': NonDeterminizer(),
-            'auto': MaxFreqDeterminizer()
+            'maxfreq': lambda x: MaxFreqDeterminizer(),
+            'minnorm': lambda x: NormPreProcessor(min),
+            'maxnorm': lambda x: NormPreProcessor(max),
+            'random': lambda x: RandomPreProcessor(),
+            'none': lambda x: NonDeterminizer(),
+            'auto': lambda x: MaxFreqDeterminizer()
         }
         splitting_map = {
-            'axisonly': AxisAlignedSplittingStrategy(),
+            'axisonly': lambda x: AxisAlignedSplittingStrategy(),
             'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x, solver='lbfgs', penalty='none'),
             'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
             'oc1': lambda x: OC1SplittingStrategy(determinizer=x),  # TODO See import comment, doesn't work on Mac
-            'multisplit': CategoricalMultiSplittingStrategy(value_grouping=False),
-            'singlesplit': CategoricalSingleSplittingStrategy(),
-            'valuegrouping': CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
+            'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
+            'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
+            'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
         }
         impurity_map = {
             'auroc': lambda x: AUROC(determinizer=x),
@@ -318,7 +318,7 @@ def main():
         label_pre_processor = None
         early_stopping = False
         if determinize in ['minnorm', 'random']:
-            label_pre_processor = determinization_map[determinize]
+            label_pre_processor = determinization_map[determinize](None)
             determinize = "none"
         if (determinize in ['maxfreq', 'auto']):
             early_stopping = True
@@ -339,11 +339,11 @@ def main():
         splitting_strategy = []
         for sp in combined_split:
             if sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
-                splitting_strategy.append(splitting_map[sp](determinization_map[determinize]))
+                splitting_strategy.append(splitting_map[sp](determinization_map[determinize](None)))
             else:
-                splitting_strategy.append(splitting_map[sp])
+                splitting_strategy.append(splitting_map[sp](None))
 
-        impurity_measure = impurity_map[impurity](determinization_map[determinize])
+        impurity_measure = impurity_map[impurity](determinization_map[determinize](None))
 
         classifier = DecisionTree(splitting_strategy, impurity_measure, name,
                                   early_stopping=early_stopping, label_pre_processor=label_pre_processor)
