@@ -2,7 +2,7 @@
 
 ### System requirements 
 
-To run dtControl, you need Python 3.6.8 or higher with several libraries, namely numpy, pandas, scikit-learn, jinja2 and tqdm. This README explains how to install all of these on a Linux machine. TODO hardware requirements
+To run dtControl, you need Python 3.6.8 or higher with several libraries, namely numpy, pandas, scikit-learn, jinja2 and tqdm. This README explains how to install all of these on a Linux machine.
 
 
 ## Installing dtControl on your machine
@@ -13,7 +13,7 @@ For most users, running
 $ pip install dtcontrol
 ```
 
-should install the latest version of dtControl, as long as you have `python >= 3.6.8` and `pip` installed on your system (if not, install python by following the steps in the next section and try again). In case you have both `python2` as well as `python3` installed on your system, you might have to run the command with `pip3` instead of `pip`.
+inside a new virtual environment (for details, see next section) should install the latest version of dtControl, as long as you have `python >= 3.6.8` and `pip` installed on your system (if not, install python by following the steps in the next section and try again). In case you have both `python2` as well as `python3` installed on your system, you might have to run `python3 -m pip install dtcontrol`.
 
 ### Manual Installation
 
@@ -31,18 +31,20 @@ MacOS:
 $ brew install python3
 ```
 
-2. We use a virtual environment to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Create a new virtual environment using
+2. We use a virtual environment to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Create a new folder `dtcontrol` and create a virtual environment inside it
 
 ```
-$ python3 -m venv ~/dtcontrol-venv
+$ mkdir dtcontrol
+$ cd dtcontrol
+$ python3 -m venv venv
 ```
 
-to create a virtual environment for _dtControl_. This will create the folder `dtcontrol-venv` in your home directoy. After evaluating our artifact, you can delete this folder and thereby all traces of the python packages you installed for the REP.
+to create a virtual environment for _dtControl_. This will create the folder `venv` inside your `dtcontrol` folder. To uninstall the tool, you can delete this folder and thereby all traces of the python packages you installed for using it.
 
 4. Run 
 
 ```
-$ source ~/dtcontrol-venv/bin/activate
+$ source venv/bin/activate
 ```
 
 to enter the virtual environment. Run `python` and check that the displayed version is greater than 3.6.8 (if not, see (3) in the next section). Press Ctrl+D to exit the python console again.
@@ -50,7 +52,7 @@ to enter the virtual environment. Run `python` and check that the displayed vers
 5. With the virtual environment activated, run 
 
 ```
-$ python3 -m pip install dtcontrol
+$ pip install dtcontrol
 ```
 
 This should install _dtControl_ and all its dependencies. Try running _dtControl_ by typing `dtcontrol` in the console. It should print the help text.
@@ -71,7 +73,7 @@ Note that running all experiments may take several hours, or possibly run out of
 
 To execute a single algorithm on a single model, run a command like
 ```
-$ dtcontrol -i ./dtcontrol/examples/cartpole.scs --determinize maxfreq --split linear-linsvm --impurity entropy -t 30m
+$ dtcontrol --input ./dtcontrol/examples/cartpole.scs --use-preset maxfreq --timeout 30m
 ```
 
 More information can be found by running

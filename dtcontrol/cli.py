@@ -3,70 +3,51 @@
 """
 README
 
-Run dtcontrol --help to see usage. Some examples are given below.
-
-Example:
-dtcontrol --input controller.scs --output decision_trees --method maxcart
-
-will read controller.scs and use maxcart on it and print the c, dot, vhdl files
-into the decision_trees folder
-
-
-dtcontrol --input controller1.scs controller2.scs --output decision_trees --benchmark_file benchmarks.json
-
-will read controller1.scs and controller2.scs, try out all methods and save the
-results in decision_trees; moreover save the run and tree statistics in
-benchmark.json and a nice HTML table in benchmark.html
-
-
-dtcontrol --input dumps --output decision_trees --method all --determinize maxfreq minnorm
-
-will read all valid controllers in dumps, run the determinized variants (using the maxfreq
- and minnorm determinization strategies) of all methods on them and save the decision
-trees in decision_trees
-
+Run dtcontrol --help to see usage.
 """
 
 import argparse
 import logging
 import re
+import shutil
 import sys
+from collections import namedtuple, OrderedDict
 from os import makedirs, remove
 from os.path import exists, isfile, splitext
-import shutil
-
-from collections import namedtuple
-from tabulate import tabulate
+from typing import Tuple, Union, List
 
 import pkg_resources
 from pkg_resources import Requirement, resource_filename
-
 from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
+from tabulate import tabulate
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
-
 # Import determinizers
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from dtcontrol.decision_tree.determinization.max_freq_multi_determinizer import MaxFreqMultiDeterminizer
 from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
-from dtcontrol.decision_tree.determinization.norm_determinizer import NormDeterminizer
-from dtcontrol.decision_tree.determinization.random_determinizer import RandomDeterminizer
 
 # Import impurity measures
 from dtcontrol.decision_tree.impurity.auroc import AUROC
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.impurity.gini_index import GiniIndex
 from dtcontrol.decision_tree.impurity.max_minority import MaxMinority
+from dtcontrol.decision_tree.impurity.multi_label_entropy import MultiLabelEntropy
+from dtcontrol.decision_tree.impurity.multi_label_gini_index import MultiLabelGiniIndex
+from dtcontrol.decision_tree.impurity.multi_label_twoing_rule import MultiLabelTwoingRule
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
+
+# Import preprocessing strategies
+from dtcontrol.decision_tree.pre_processing.norm_pre_processor import NormPreProcessor
+from dtcontrol.decision_tree.pre_processing.random_pre_processor import RandomPreProcessor
 
 # Import splitting strategies
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
+from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy  # TODO Doesn't work on MacOS, check
 from dtcontrol.post_processing.safe_pruning import SafePruning
@@ -85,7 +66,7 @@ def main():
         else:
             return arg
 
-    def load_default_config():
+    def load_default_config() -> OrderedDict:
         try:
             default_config_file = resource_filename(Requirement.parse("dtcontrol"),
                                                     "config.yml")  # System-level config file
@@ -103,7 +84,7 @@ def main():
                 f"Scan error in the default YAML configuration file '{default_config_file}'. Please raise an issue with the developers.")
         return default_config
 
-    def parse_timeout(timeout_string: str):
+    def parse_timeout(timeout_string: str) -> int:
         """
         Parses the timeout string
 
@@ -138,10 +119,10 @@ def main():
                 except ScannerError:
                     sys.exit(f"Scan error in the YAML configuration file '{args.config}'. Please re-check syntax.")
                 else:
-                    if 'user-presets' not in user_config:
-                        logging.warning("WARNING: config file does not contain the 'user-presets' key. "
+                    if 'presets' not in user_config:
+                        logging.warning("WARNING: config file does not contain the 'presets' key. "
                                         "No user configurations could be loaded. Ensure that user presets "
-                                        "are defined under the user-presets key.\n")
+                                        "are defined under the presets key.\n")
             else:
                 logging.info("WARNING: --config switch not used, only loading pre-defined run configurations.")
 
@@ -149,61 +130,98 @@ def main():
         elif args.sample:
             print("# Paste the following contents into a .yml file and \n"
                   "# pass the file to dtcontrol using --config <filename>.yml\n"
-                  "user-presets:\n"
+                  "presets:\n"
                   "  my-config:\n"
                   "    determinize: maxfreq\n"
-                  "    predicates: ['axisonly']\n"
+                  "    numeric-predicates: ['axisonly']\n"
+                  "    categorical-predicates: ['singlesplit']\n"
                   "    impurity: 'entropy'\n"
                   "    safe-pruning: False\n"
                   "  another-config:\n"
                   "    determinize: minnorm\n"
-                  "    predicates: ['linear-logreg']\n"
-                  "    impurity: 'entropy'\n"
+                  "    numeric-predicates: ['linear-logreg']\n"
+                  "    categorical-predicates: ['valuegrouping']\n"
+                  "    tolerance: 10e-4\n"
                   "    safe-pruning: False")
         else:
             parser_conf.print_help()
 
         sys.exit(0)
 
-    def list_presets(user_config, system_config):
-        Row = namedtuple('Row', ['Name', 'Predicate', 'Determinize', 'Impurity', 'SafePruning'])
+    def get_key_or_default(preset_dict: OrderedDict, default_dict: OrderedDict, key: str):
+        if key in preset_dict:
+            return preset_dict[key]
+        else:
+            return default_dict[key]
+
+    def get_key_or_empty(preset_dict: OrderedDict, default_dict: OrderedDict, key: str):
+        if key in preset_dict:
+            return preset_dict[key]
+        else:
+            return ""
+
+    def list_presets(user_config: OrderedDict, system_config: OrderedDict):
+        Row = namedtuple('Row',
+                         ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
+                          'SafePruning'])
 
         run_config_table = []
-        if user_config and 'user-presets' in user_config:
-            for preset in user_config['user-presets']:
-                split = user_config['user-presets'][preset]['predicates']
-                determinize = user_config['user-presets'][preset]['determinize']
-                impurity = user_config['user-presets'][preset]['impurity']
-                safe_pruning = user_config['user-presets'][preset]['safe-pruning']
-                run_config_table.append(Row(Name=preset, Predicate=split, Determinize=determinize, Impurity=impurity,
-                                            SafePruning=safe_pruning))
+        default_value: OrderedDict = load_default_config()['presets']['default']
+
+        if user_config and 'presets' in user_config:
+            for preset in user_config['presets']:
+                value = user_config['presets'][preset]
+                run_config_table.append(Row(Name=preset,
+                                            NumericPredicate=get_key_or_default(value, default_value, 'numeric-predicates'),
+                                            CategoricalPredicate=get_key_or_empty(value, default_value,
+                                                                                  'categorical-predicates'),
+                                            Determinize=get_key_or_default(value, default_value, 'determinize'),
+                                            Impurity=get_key_or_default(value, default_value, 'impurity'),
+                                            Tolerance=get_key_or_empty(value, default_value, 'tolerance'),
+                                            SafePruning=get_key_or_empty(value, default_value, 'safe-pruning')))
 
         if run_config_table:
             logging.info("The following user presets (run configurations) are available:\n")
-            print(tabulate(run_config_table, ['name', 'predicates', 'determinize', 'impurity', 'safe-pruning'],
-                           tablefmt="presto"), end="\n\n")
+            logging.info(tabulate(run_config_table,
+                                  ['name', 'numeric-predicates', 'categorical-predicates', 'determinize', 'impurity',
+                                   'tolerance', 'safe-pruning'],
+                                  tablefmt="presto"))
+            logging.info("\n")
 
         run_config_table = []
-        if system_config and 'system-presets' in system_config:
-            for preset in system_config['system-presets']:
-                split = system_config['system-presets'][preset]['predicates']
-                determinize = system_config['system-presets'][preset]['determinize']
-                impurity = system_config['system-presets'][preset]['impurity']
-                safe_pruning = system_config['system-presets'][preset]['safe-pruning']
-                run_config_table.append(Row(Name=preset, Predicate=split, Determinize=determinize, Impurity=impurity,
-                                            SafePruning=safe_pruning))
+        if system_config and 'presets' in system_config:
+            for preset in system_config['presets']:
+                value = system_config['presets'][preset]
+                run_config_table.append(Row(Name=preset,
+                                            NumericPredicate=get_key_or_default(value, default_value,
+                                                                                'numeric-predicates'),
+                                            CategoricalPredicate=get_key_or_empty(value, default_value,
+                                                                                  'categorical-predicates'),
+                                            Determinize=get_key_or_default(value, default_value, 'determinize'),
+                                            Impurity=get_key_or_default(value, default_value, 'impurity'),
+                                            Tolerance=get_key_or_empty(value, default_value, 'tolerance'),
+                                            SafePruning=get_key_or_empty(value, default_value, 'safe-pruning')))
 
         logging.info("The following pre-defined presets (run configurations) are available:\n")
-        print(tabulate(run_config_table, ['name', 'predicates', 'determinize', 'impurity', 'safe-pruning'],
-                       tablefmt="presto"), end="\n\n")
+        logging.info(tabulate(run_config_table,
+                              ['name', 'numeric-predicates', 'categorical-predicates', 'determinize', 'impurity',
+                               'tolerance', 'safe-pruning'],
+                              tablefmt="presto"))
+        logging.info("\n")
         logging.info("User presets take precedence over pre-defined presets. "
-                     "Try running, for example,\n\tdtcontrol --input examples/cartpole.scs --use-preset qest19-sos")
+                     "Try running, for example,\n\tdtcontrol --input examples/cartpole.scs --use-preset maxfreq")
 
-    def get_preset(preset, user_config, default_config):
-        if user_config and preset in user_config['user-presets']:
-            value = user_config['user-presets'][preset]
-        elif preset in default_config['system-presets']:
-            value = default_config['system-presets'][preset]
+    def fetch_presets_from_loaded_config(loaded_config: Union[None, OrderedDict]) -> List[str]:
+        if loaded_config:
+            return list(loaded_config['presets'].keys())
+        else:
+            return []
+
+    def get_preset(preset: str, user_config: OrderedDict, default_config: OrderedDict) -> Tuple:
+        if user_config and preset in user_config['presets']:
+            value = user_config['presets'][preset]
+        elif preset in default_config['presets']:
+            value = default_config['presets'][preset]
         else:
             sys.exit(f"Preset '{preset}' not found.\n"
                      f"Please ensure that the specified config file contains a "
@@ -213,82 +231,122 @@ def main():
                      f"--config and --use-preset switches (see help).\n"
                      f"Refer to the User Manual (https://dtcontrol.readthedocs.io/) for details on how to write presets.")
 
-        default_value = default_config['system-presets']['default']
+        default_value = default_config['presets']['default']
 
         # Obtain the different settings from the value dict
         # In case something is not defined, choose the default from default_value dict
-        if 'predicates' in value:
-            predicates = value['predicates']
-        else:
-            predicates = default_value['predicates']
+        for key in value.keys():
+            if key not in ['numeric-predicates', 'categorical-predicates', 'determinize', 'impurity', 'tolerance', 'safe-pruning']:
+                logging.warning(f"Ignoring unknown key {key} specified under preset {preset}.")
 
-        if 'determinize' in value:
-            determinize = value['determinize']
-        else:
-            determinize = default_value['determinize']
+        numeric_predicates = get_key_or_default(value, default_value, 'numeric-predicates')
+        categorical_predicates = get_key_or_default(value, default_value, 'categorical-predicates')
+        determinize = get_key_or_default(value, default_value, 'determinize')
+        impurity = get_key_or_default(value, default_value, 'impurity')
+        tolerance = get_key_or_default(value, default_value, 'tolerance')
+        safe_pruning = get_key_or_default(value, default_value, 'safe-pruning')
 
-        if 'impurity' in value:
-            impurity = value['impurity']
-        else:
-            impurity = default_value['impurity']
+        return numeric_predicates, categorical_predicates, determinize, impurity, tolerance, safe_pruning
 
-        if 'safe-pruning' in value:
-            safe_pruning = value['safe-pruning']
-        else:
-            safe_pruning = default_value['safe-pruning']
-
-        return predicates, determinize, impurity, safe_pruning
-
-    def get_classifier(split, determinize, impurity, safe_pruning=False, name=None):
+    # TODO Make early stopping user definable
+    def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
+                       name=None):
         """
         Creates classifier objects for each method
 
-        :param methods: list of method strings
-        :param det_strategies: list of determinization strategies
+        :param name:
+        :param safe_pruning:
+        :param impurity:
+        :param determinize:
+        :param split:
+        :param tolerance:
+        :param value_grouping:
         :return: list of classifier objects
         """
 
+        combined_split = numeric_split + categorical_split
+        # Give the preset a name, if doesn't exist
+        if not name:
+            name = f"{determinize}-({','.join(combined_split)})-{impurity}"
+
+        if not isinstance(tolerance, float):
+            raise ValueError(f"{tolerance} is not a valid tolerance value (enter a float, e.g., 1e-5). Exiting...")
+
+        if not isinstance(safe_pruning, bool):
+            raise ValueError(f"{safe_pruning} is not a valid value for safe-pruning in preset {name}. Exiting...")
+
         determinization_map = {
             'maxfreq': MaxFreqDeterminizer(),
-            'maxmultifreq': MaxFreqMultiDeterminizer(),
+            'minnorm': NormPreProcessor(min),
+            'maxnorm': NormPreProcessor(max),
+            'random': RandomPreProcessor(),
             'none': NonDeterminizer(),
-            'maxnorm': NormDeterminizer(max),
-            'minnorm': NormDeterminizer(min),
-            'random': RandomDeterminizer(),
+            'auto': MaxFreqDeterminizer()
         }
         splitting_map = {
             'axisonly': AxisAlignedSplittingStrategy(),
-            'categorical': CategoricalMultiSplittingStrategy(),
-            'linear-logreg': LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none'),
-            'linear-linsvm': LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000),
-            'oc1': OC1SplittingStrategy()  # TODO See import comment, doesn't work on Mac
+            'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x, solver='lbfgs', penalty='none'),
+            'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
+            'oc1': lambda x: OC1SplittingStrategy(determinizer=x),  # TODO See import comment, doesn't work on Mac
+            'multisplit': CategoricalMultiSplittingStrategy(value_grouping=False),
+            'singlesplit': CategoricalSingleSplittingStrategy(),
+            'valuegrouping': CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
         }
         impurity_map = {
-            'auroc': AUROC(),
-            'entropy': Entropy(),
-            'gini': GiniIndex(),
-            'maxminority': MaxMinority(),
-            'twoing': TwoingRule()
+            'auroc': lambda x: AUROC(determinizer=x),
+            'entropy': lambda x: Entropy(determinizer=x),
+            'gini': lambda x: GiniIndex(determinizer=x),
+            'maxminority': lambda x: MaxMinority(determinizer=x),
+            'twoing': lambda x: TwoingRule(determinizer=x),
+            'multilabelentropy': lambda x: MultiLabelEntropy(),
+            'multilabelgini': lambda x: MultiLabelGiniIndex(),
+            'multilabeltwoing': lambda x: MultiLabelTwoingRule(),
         }
 
         # Sanity check
-        for sp in split:
+        for sp in combined_split:
             if sp not in splitting_map:
-                raise ValueError(f"{sp} is not a valid predicate type. Exiting...")
+                raise ValueError(f"{sp} is not a valid predicate type in preset {name}. Exiting...")
 
         if determinize not in determinization_map:
-            raise ValueError(f"{determinize} is not a valid determinization strategy. Exiting...")
+            raise ValueError(f"{determinize} is not a valid determinization strategy in preset {name}. Exiting...")
 
         if impurity not in impurity_map:
-            raise ValueError(f"{impurity} is not a valid impurity measure. Exiting...")
+            raise ValueError(f"{impurity} is not a valid impurity measure in preset {name}. Exiting...")
 
-        if not name:
-            name = f"{determinize}-({','.join(split)})-{impurity}"
+        # Handle necessary cases which make the user interface simple
+        label_pre_processor = None
+        early_stopping = False
+        if determinize in ['minnorm', 'random']:
+            label_pre_processor = determinization_map[determinize]
+            determinize = "none"
+        if (determinize in ['maxfreq', 'auto']):
+            early_stopping = True
 
-        classifier = DecisionTree(determinization_map[determinize],
-                                  [splitting_map[sp] for sp in split],
-                                  impurity_map[impurity],
-                                  name)
+        # determinizer must be auto when using multilablestuff
+        if 'multilabel' in impurity:
+            if not determinize == "auto":
+                logging.error(f"{impurity} impurity measure automatically determinizes. Please use 'determinize: auto' when defining the preset.")
+                sys.exit(-1)
+
+        # if auto is used with any other, then give info message saying we use maxfreq
+        if 'multilabel' not in impurity:
+            if determinize == "auto":
+                logging.info(f"INFO: Using the recommended maxfreq determinizer since the preset contained 'determinize: auto'.")
+                determinize = "maxfreq"
+
+        # if using logreg/svm/oc1, then determinizer must be passed to the split
+        splitting_strategy = []
+        for sp in combined_split:
+            if sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
+                splitting_strategy.append(splitting_map[sp](determinization_map[determinize]))
+            else:
+                splitting_strategy.append(splitting_map[sp])
+
+        impurity_measure = impurity_map[impurity](determinization_map[determinize])
+
+        classifier = DecisionTree(splitting_strategy, impurity_measure, name,
+                                  early_stopping=early_stopping, label_pre_processor=label_pre_processor)
 
         if safe_pruning:
             logging.info(f"Enabling safe pruning for preset {name}")
@@ -372,8 +430,8 @@ def main():
         suite.add_datasets(dataset)
 
         # Parse config files
-        default_config = load_default_config()
-        user_config = None
+        default_config: OrderedDict = load_default_config()
+        user_config: Union[None, OrderedDict] = None
 
         if args.config:
             try:
@@ -387,21 +445,55 @@ def main():
 
         classifiers = []
         run_config_table = []
-        Row = namedtuple('Row', ['Name', 'Predicate', 'Determinize', 'Impurity', 'SafePruning'])
+        Row = namedtuple('Row',
+                         ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
+                          'SafePruning'])
 
         if args.use_preset:
-            for preset in args.use_preset:
-                split, determinize, impurity, safe_pruning = get_preset(preset, user_config, default_config)
-                classifiers.append(get_classifier(split, determinize, impurity, safe_pruning=safe_pruning, name=preset))
-                run_config_table.append(Row(Name=preset, Predicate=split, Determinize=determinize, Impurity=impurity,
-                                            SafePruning=safe_pruning))
+            if "all-user" in args.use_preset:
+                presets = fetch_presets_from_loaded_config(user_config)
+                if not presets:
+                    sys.exit("Please specify a user config file via the --config switch. See help for more details.")
+            elif "all-system" in args.use_preset:
+                presets = fetch_presets_from_loaded_config(default_config)
+            elif "all" in args.use_preset:
+                presets = fetch_presets_from_loaded_config(user_config) \
+                          + fetch_presets_from_loaded_config(default_config)
+            else:
+                presets = args.use_preset
+            for preset in presets:
+                numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(preset,
+                                                                                                              user_config,
+                                                                                                              default_config)
+                classifiers.append(
+                    get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=tolerance,
+                                   safe_pruning=safe_pruning, name=preset))
+                run_config_table.append(
+                    Row(Name=preset, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
+                        Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
+                        SafePruning=safe_pruning))
 
         if not classifiers:
-            sys.exit("Please select a valid preset. Read the user manual for more details.")
+            logging.info("INFO: Assuming --use-preset default, since no preset explicitly specified.")
+            preset = "default"
+            numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(preset,
+                                                                                                          user_config,
+                                                                                                          default_config)
+            classifiers.append(
+                get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=tolerance,
+                               safe_pruning=safe_pruning, name=preset))
+            run_config_table.append(
+                Row(Name=preset, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
+                    Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
+                    SafePruning=safe_pruning))
+
 
         logging.info("The following configurations would now be run:\n")
-        print(tabulate(run_config_table, ['name', 'predicates', 'determinize', 'impurity', 'safe-pruning'],
-                       tablefmt="presto"), end="\n\n")
+        logging.info(tabulate(run_config_table,
+                              ['name', 'numeric-predicates', 'categorical-predicates', 'determinize', 'impurity',
+                               'tolerance', 'safe-pruning'],
+                              tablefmt="presto"))
+        logging.info("\n")
 
         suite.benchmark(classifiers)
 
@@ -443,8 +535,9 @@ def main():
 
     run_config.add_argument("--use-preset", "-p", type=str, nargs="+",
                             help="Run one or more presets defined in the CONFIGFILE. If the --config switch has not "
-                                 "been used, then presets are chosen from the system-level configuration file. Refer "
-                                 "the User Manual for more details.")
+                                 "been used, then presets are chosen from the system-level configuration file. Special "
+                                 "parameters for this switch include 'all', 'all-user', 'all-system'. Refer the User "
+                                 "Manual for more details.")
 
     run_config.add_argument("--rerun", "-r", action='store_true',
                             help="Rerun the experiment for all input-method combinations. Overrides the default "

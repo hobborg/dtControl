@@ -11,6 +11,10 @@ class MaxFreqMultiDeterminizer(Determinizer):
     This determinizer uses the maximum frequency multi determinization approach.
     """
 
+    def __init__(self, pre_determinize=True):
+        super().__init__()
+        self.pre_determinize = pre_determinize
+
     def determinize(self, dataset):
         """
         Given a y_train such as
@@ -99,6 +103,9 @@ class MaxFreqMultiDeterminizer(Determinizer):
 
     def is_only_multioutput(self):
         return True
+
+    def is_pre_split(self):
+        return self.pre_determinize
 
     @staticmethod
     def get_ranks(y):
