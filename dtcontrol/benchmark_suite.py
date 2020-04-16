@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import time
+import traceback
 import webbrowser
 from os import makedirs
 from os.path import join, exists, isfile

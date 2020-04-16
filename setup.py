@@ -36,6 +36,7 @@ setuptools.setup(
               'dtcontrol.decision_tree',
               'dtcontrol.decision_tree.determinization',
               'dtcontrol.decision_tree.impurity',
+              'dtcontrol.decision_tree.pre_processing',
               'dtcontrol.decision_tree.splitting',
               'dtcontrol.decision_tree.OC1_source',
               'dtcontrol.post_processing',

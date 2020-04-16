@@ -1,17 +1,47 @@
 # Preset Configurations
-system-presets:
+presets:
   default:
     determinize: none
-    predicates: ['axisonly']
+    numeric-predicates: ['axisonly']
+    categorical-predicates: ['multisplit']  # ['singlesplit', 'valuegrouping']
     impurity: 'entropy'
-    safe-pruning: False
-  qest19-sos:
+    tolerance: 1e-5
+    safe-pruning: false
+
+  # Non-deterministic
+  cart:
+    numeric-predicates: ['axisonly']
+  linsvm:
+    numeric-predicates: ['axisonly', 'linear-linsvm']
+  logreg:
+    numeric-predicates: ['axisonly', 'linear-logreg']
+  oc1:
+    numeric-predicates: ['oc1']
+
+  # Deterministic
+  maxfreq:
+    determinize: 'maxfreq'
+    numeric-predicates: ['axisonly']
+  maxfreqlc:
+    determinize: 'maxfreq'
+    numeric-predicates: ['axisonly', 'linear-logreg']
+  minnorm:
+    determinize: 'minnorm'
+    numeric-predicates: ['axisonly']
+  minnormlc:
+    determinize: 'minnorm'
+    numeric-predicates: ['axisonly', 'linear-logreg']
+
+  # Previous papers
+  sos:
     determinize: none
-    predicates: ['axisonly']
-    impurity: 'entropy'
-    safe-pruning: True
-  qest19-vik:
+    numeric-predicates: ['axisonly']
+  sos-safepruning:
     determinize: none
-    predicates: ['axisonly', 'linear-logreg']
+    numeric-predicates: ['axisonly']
+    safe-pruning: true
+  linear-auroc:
+    determinize: none
+    numeric-predicates: ['axisonly', 'linear-logreg']
     impurity: 'auroc'
-    safe-pruning: False
+
