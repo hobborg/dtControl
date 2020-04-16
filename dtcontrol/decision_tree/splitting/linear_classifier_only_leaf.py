@@ -1,12 +1,12 @@
 import numpy as np
 
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplit
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
 class LinearClassifierOnlyLeafSplittingStrategy(SplittingStrategy):
-    def __init__(self, classifier_class, determinizer=NonDeterminizer(), **kwargs):
+    def __init__(self, classifier_class, determinizer=LabelPowersetDeterminizer(), **kwargs):
         self.determinizer = determinizer
         self.classifier_class = classifier_class
         self.kwargs = kwargs

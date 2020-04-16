@@ -2,8 +2,8 @@ from sklearn.linear_model import LogisticRegression
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.impurity.max_minority import MaxMinority
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
@@ -33,10 +33,10 @@ suite.add_datasets('../../../examples',
 aa = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 classifiers = [
-    DecisionTree(NonDeterminizer(), [aa], Entropy(), 'CART-ent'),
-    DecisionTree(NonDeterminizer(), [aa], MaxMinority(), 'CART-max'),
-    DecisionTree(NonDeterminizer(), [aa, logreg], Entropy(), 'logreg-ent'),
-    DecisionTree(NonDeterminizer(), [aa, logreg], MaxMinority(), 'logreg-max'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa], Entropy(), 'CART-ent'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa], MaxMinority(), 'CART-max'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, logreg], Entropy(), 'logreg-ent'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, logreg], MaxMinority(), 'logreg-max'),
     DecisionTree(MaxFreqDeterminizer(), [aa], Entropy(), 'MaxFreq-ent'),
     DecisionTree(MaxFreqDeterminizer(), [aa], MaxMinority(), 'MaxFreq-max')
 ]

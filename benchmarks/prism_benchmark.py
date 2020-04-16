@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
@@ -29,10 +29,10 @@ categorical_single = CategoricalSingleSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 oc1 = OC1SplittingStrategy()
 classifiers = [
-    DecisionTree(NonDeterminizer(), [aa, categorical_multi, logreg], Entropy(), 'logreg'),
-    DecisionTree(NonDeterminizer(), [aa, categorical_multi, oc1], Entropy(), 'oc1'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, logreg], Entropy(), 'logreg'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, oc1], Entropy(), 'oc1'),
     # DecisionTree(NonDeterminizer(), [aa, categorical_single], Entropy(), 'single'),
-    DecisionTree(NonDeterminizer(), [aa, categorical_multi], Entropy(), 'multi'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi], Entropy(), 'multi'),
     # DecisionTree(NonDeterminizer(), [aa, tol0], Entropy(), 'tol 0'),
     # DecisionTree(NonDeterminizer(), [aa, tol_small], Entropy(), 'tol 1e-5'),
     # DecisionTree(NonDeterminizer(), [aa, tol_medium], Entropy(), 'tol .2'),

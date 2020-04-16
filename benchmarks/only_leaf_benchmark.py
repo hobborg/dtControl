@@ -2,7 +2,7 @@ from sklearn.linear_model import LogisticRegression
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -37,9 +37,9 @@ aa = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 only_leaf = LinearClassifierOnlyLeafSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 classifiers = [
-    DecisionTree(NonDeterminizer(), [aa], Entropy(), 'CART'),
-    DecisionTree(NonDeterminizer(), [aa, logreg], Entropy(), 'logreg'),
-    DecisionTree(NonDeterminizer(), [aa, only_leaf], Entropy(), 'only_leaf'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa], Entropy(), 'CART'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, logreg], Entropy(), 'logreg'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, only_leaf], Entropy(), 'only_leaf'),
 ]
 suite.benchmark(classifiers)
 suite.display_html()
