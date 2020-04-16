@@ -17,7 +17,7 @@ inside a new virtual environment (for details, see next section) should install 
 
 ### Manual Installation
 
-_Note: In case of difficulty when following any of the instructions in this section, please check the section 'Common Installation Issues' below_
+*Note: In case of difficulty when following any of the instructions in this section, please check the section 'Common Installation Issues' below*
 
 1. Make sure you have `python3.6.8` (or newer) and `pip3`
 
@@ -62,7 +62,7 @@ This should install _dtControl_ and all its dependencies. Try running _dtControl
 
 1. If `sudo apt-get install python3.6` does not work, this might help you: https://askubuntu.com/questions/865554/how-do-i-install-python-3-6-using-apt-get.
 2. In case of errors when trying to run `virtualenv`, check that it is located in a directory that is included in your path; this might help you: https://stackoverflow.com/questions/31133050/virtualenv-command-not-found.
-3. If you don't see what went wrong, leave the virtual environment (run "deactivate"), delete the folder `rm -rf ~/dtcontrol-venv` and go through all the installation steps again. If errors still occur, look at section _Fail safe: Virtual machine_.
+3. If you don't see what went wrong, leave the virtual environment (run "deactivate"), delete the folder `rm -rf ~/dtcontrol-venv` and go through all the installation steps again. If errors still occur, look at section *Fail safe: Virtual machine*.
 
 
 ## Running the experiments

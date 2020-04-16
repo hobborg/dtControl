@@ -22,10 +22,9 @@ if os.path.exists(os.path.join(".", 'VERSION')):
 setuptools.setup(
     name="dtcontrol",
     version=version,
-    description="A small tool which can convert automatically synthesised formally verified "
-                "controllers into concise decision trees.",
-    long_description=long_description,
+    description="A small tool which can convert automatically synthesised formally verified controllers into concise decision trees.",
     long_description_content_type="text/markdown",
+    long_description=long_description,
     author='Mathias Jackermeier',
     author_email='mathias.jackermeier@outlook.de',
     license='MIT',
