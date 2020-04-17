@@ -23,7 +23,7 @@ suite.add_datasets(['examples', 'examples/prism'],
                        # "firewire_abst",
                        # "wlan0",
                        # "mer10"
-                       "cartpole",
+                        "cartpole",
                        # "tworooms-noneuler-latest",
                         "helicopter",
                         "cruise-latest",
@@ -32,7 +32,7 @@ suite.add_datasets(['examples', 'examples/prism'],
                        # "truck_trailer",
                        # "traffic_1m",
                        # "traffic_10m",
-                        "traffic_30m",
+                       # "traffic_30m",
                         "vehicle",
                         "aircraft"
                    ]
@@ -45,10 +45,17 @@ logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', p
                                            determinizer=MaxFreqDeterminizer())
 linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000, determinizer=MaxFreqDeterminizer())
 bdd_actOR = BDD(0)
+bdd_actOR_minnorm = BDD(0, label_pre_processor=NormPreProcessor(min))
 bdd_actUL = BDD(1)
+bdd_actUL_minnorm = BDD(1, label_pre_processor=NormPreProcessor(min))
+# TODO: Add parameter preprocessor to BDD
+# dataset = normprocessor.preprocess(dataset)
+# bdd_actUL = BDD(1, normpreprocessor)
 classifiers = [
-    #bdd_actOR,
-    bdd_actUL
+    bdd_actOR,
+    bdd_actOR_minnorm,
+    bdd_actUL,
+    bdd_actUL_minnorm
     #DecisionTree([aa], Entropy(), 'CART'),
     #DecisionTree([aa], Entropy(), 'Min', label_pre_processor=NormPreProcessor(min)),
     #DecisionTree([aa], Entropy(), 'Rand', label_pre_processor=RandomPreProcessor()),

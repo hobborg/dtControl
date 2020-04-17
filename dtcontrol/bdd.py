@@ -22,7 +22,7 @@ class BDD(BenchmarkSuiteClassifier):
     num_bits = ld((max-min)/step_size) ; used in generating the vars in the beginning of fit
     """
 
-    def __init__(self, all_or_unique_label):
+    def __init__(self, all_or_unique_label, label_pre_processor=None):
         self.name = f"BDD_{'actOR' if all_or_unique_label==0 else 'UL'}"
         self.bdd = _bdd.BDD()
         self.bdd.configure(reordering=False)
@@ -31,6 +31,7 @@ class BDD(BenchmarkSuiteClassifier):
         self.all_or_unique_label = all_or_unique_label
         self.x_metadata = dict()
         self.act_metadata = dict()
+        self.label_pre_processor = label_pre_processor
 
     def is_applicable(self, dataset):
         return True
@@ -40,6 +41,8 @@ class BDD(BenchmarkSuiteClassifier):
 
     # TODO: check whether there is some cool cudd stuff that we can utilize
     def fit(self, dataset):
+        if self.label_pre_processor is not None:
+            dataset = self.label_pre_processor.preprocess(dataset)
         self.x_metadata = dataset.x_metadata
         if "variables" not in self.x_metadata.keys():
             self.x_metadata["variables"] = [f"x{i}" for i in range(0,len(dataset.x[0]))]
@@ -108,6 +111,7 @@ class BDD(BenchmarkSuiteClassifier):
                 break
 
         print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        self.bdd.dump("10rooms.pdf")
 
 ################### Helper methods for fit #####################
 
@@ -173,6 +177,8 @@ class BDD(BenchmarkSuiteClassifier):
             return dataset.get_single_labels()
 
     def checkValid(self, dataset):
+        if self.label_pre_processor is not None:
+            dataset = self.label_pre_processor.preprocess(dataset)
         row_num = -1
         sols = [x for x in self.bdd.pick_iter(self.result)]
 
