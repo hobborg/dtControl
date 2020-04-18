@@ -28,7 +28,7 @@ from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 # Import determinizers
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 
 # Import impurity measures
 from dtcontrol.decision_tree.impurity.auroc import AUROC
@@ -280,7 +280,7 @@ def main():
             'minnorm': lambda x: NormPreProcessor(min),
             'maxnorm': lambda x: NormPreProcessor(max),
             'random': lambda x: RandomPreProcessor(),
-            'none': lambda x: NonDeterminizer(),
+            'none': lambda x: LabelPowersetDeterminizer(),
             'auto': lambda x: MaxFreqDeterminizer()
         }
         splitting_map = {

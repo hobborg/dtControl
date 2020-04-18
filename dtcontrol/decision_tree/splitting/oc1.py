@@ -10,14 +10,14 @@ import numpy as np
 
 import dtcontrol
 import dtcontrol.globals
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplit
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 from dtcontrol.util import log_without_newline
 
 class OC1SplittingStrategy(SplittingStrategy):
-    def __init__(self, determinizer=NonDeterminizer(), num_restarts=10, num_jumps=5, delete_tmp=True):
+    def __init__(self, determinizer=LabelPowersetDeterminizer(), num_restarts=10, num_jumps=5, delete_tmp=True):
         self.determinizer = determinizer
         self.oc1_path = 'decision_tree/OC1_source/mktree'
         self.header_file = 'decision_tree/OC1_source/oc1.h'

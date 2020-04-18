@@ -2,9 +2,9 @@ import sys
 
 import numpy as np
 
-from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
+from dtcontrol.decision_tree.impurity.determinizing_impurity_measure import DeterminizingImpurityMeasure
 
-class EntropyRatio(DeterministicImpurityMeasure):
+class EntropyRatio(DeterminizingImpurityMeasure):
     def calculate_impurity(self, dataset, split):
         if any(np.all(mask == False) for mask in split.get_masks(dataset)) or \
                 len(split.get_masks(dataset)) == 1:

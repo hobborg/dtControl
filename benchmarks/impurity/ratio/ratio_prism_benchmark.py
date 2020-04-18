@@ -1,6 +1,6 @@
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.impurity.entropy_ratio import EntropyRatio
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
@@ -18,14 +18,14 @@ categorical = CategoricalMultiSplittingStrategy()
 grouping = CategoricalMultiSplittingStrategy(value_grouping=True)
 single = CategoricalSingleSplittingStrategy()
 classifiers = [
-    DecisionTree(NonDeterminizer(), [aa, categorical], Entropy(), 'Cat-ent'),
-    DecisionTree(NonDeterminizer(), [aa, categorical], EntropyRatio(), 'Cat-ratio'),
-    DecisionTree(NonDeterminizer(), [aa, grouping], Entropy(), 'Group-ent'),
-    DecisionTree(NonDeterminizer(), [aa, grouping], EntropyRatio(), 'Group-ratio'),
-    DecisionTree(NonDeterminizer(), [aa, single], Entropy(), 'Single-ent'),
-    DecisionTree(NonDeterminizer(), [aa, single], EntropyRatio(), 'Single-ratio'),
-    DecisionTree(NonDeterminizer(), [aa, single, categorical], Entropy(), 'Both-ent'),
-    DecisionTree(NonDeterminizer(), [aa, single, categorical], EntropyRatio(), 'Both-ratio'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical], Entropy(), 'Cat-ent'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical], EntropyRatio(), 'Cat-ratio'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, grouping], Entropy(), 'Group-ent'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, grouping], EntropyRatio(), 'Group-ratio'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, single], Entropy(), 'Single-ent'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, single], EntropyRatio(), 'Single-ratio'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, single, categorical], Entropy(), 'Both-ent'),
+    DecisionTree(LabelPowersetDeterminizer(), [aa, single, categorical], EntropyRatio(), 'Both-ratio'),
 ]
 suite.benchmark(classifiers)
 suite.display_html()

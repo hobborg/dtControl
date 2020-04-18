@@ -8,8 +8,8 @@ import numpy as np
 
 import dtcontrol.util as util
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
-from dtcontrol.decision_tree.determinization.non_determinizer import NonDeterminizer
-from dtcontrol.decision_tree.impurity.deterministic_impurity_measure import DeterministicImpurityMeasure
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
+from dtcontrol.decision_tree.impurity.determinizing_impurity_measure import DeterminizingImpurityMeasure
 from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
@@ -43,7 +43,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
             raise ValueError('Early stopping parameters set although early stopping is disabled.')
 
         determinization = isinstance(self.impurity_measure, MultiLabelImpurityMeasure) or \
-                          not isinstance(self.impurity_measure.determinizer, NonDeterminizer)
+                          not isinstance(self.impurity_measure.determinizer, LabelPowersetDeterminizer)
         if determinization and self.label_pre_processor is not None:
             raise ValueError('Determinization during tree construction cannot be used with a label preprocessor.')
         if determinization and (not self.early_stopping or self.early_stopping_num_examples is not None):
@@ -54,7 +54,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         if dataset.is_deterministic:
             if isinstance(self.impurity_measure, MultiLabelImpurityMeasure):
                 return False
-            if not isinstance(self.impurity_measure.determinizer, NonDeterminizer):
+            if not isinstance(self.impurity_measure.determinizer, LabelPowersetDeterminizer):
                 return False
         return True
 
@@ -140,7 +140,7 @@ class Node:
     def fit(self, dataset):
         if self.check_done(dataset):
             return
-        pre_determinize = isinstance(self.impurity_measure, DeterministicImpurityMeasure) and \
+        pre_determinize = isinstance(self.impurity_measure, DeterminizingImpurityMeasure) and \
                           self.impurity_measure.determinizer.is_pre_split()
         if pre_determinize:
             determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
