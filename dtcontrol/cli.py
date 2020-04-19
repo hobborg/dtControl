@@ -14,6 +14,7 @@ import sys
 from collections import namedtuple, OrderedDict
 from os import makedirs, remove
 from os.path import exists, isfile, splitext
+import platform
 from typing import Tuple, Union, List
 
 import pkg_resources
@@ -49,7 +50,7 @@ from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingS
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy  # TODO Doesn't work on MacOS, check
+from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
 
 
@@ -172,7 +173,8 @@ def main():
             for preset in user_config['presets']:
                 value = user_config['presets'][preset]
                 run_config_table.append(Row(Name=preset,
-                                            NumericPredicate=get_key_or_default(value, default_value, 'numeric-predicates'),
+                                            NumericPredicate=get_key_or_default(value, default_value,
+                                                                                'numeric-predicates'),
                                             CategoricalPredicate=get_key_or_empty(value, default_value,
                                                                                   'categorical-predicates'),
                                             Determinize=get_key_or_default(value, default_value, 'determinize'),
@@ -236,7 +238,8 @@ def main():
         # Obtain the different settings from the value dict
         # In case something is not defined, choose the default from default_value dict
         for key in value.keys():
-            if key not in ['numeric-predicates', 'categorical-predicates', 'determinize', 'impurity', 'tolerance', 'safe-pruning']:
+            if key not in ['numeric-predicates', 'categorical-predicates', 'determinize', 'impurity', 'tolerance',
+                           'safe-pruning']:
                 logging.warning(f"Ignoring unknown key {key} specified under preset {preset}.")
 
         numeric_predicates = get_key_or_default(value, default_value, 'numeric-predicates')
@@ -285,9 +288,10 @@ def main():
         }
         splitting_map = {
             'axisonly': lambda x: AxisAlignedSplittingStrategy(),
-            'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x, solver='lbfgs', penalty='none'),
+            'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x,
+                                                                         solver='lbfgs', penalty='none'),
             'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
-            'oc1': lambda x: OC1SplittingStrategy(determinizer=x),  # TODO See import comment, doesn't work on Mac
+            'oc1': lambda x: OC1SplittingStrategy(determinizer=x),
             'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
             'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
             'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
@@ -326,13 +330,15 @@ def main():
         # determinizer must be auto when using multilablestuff
         if 'multilabel' in impurity:
             if not determinize == "auto":
-                logging.error(f"{impurity} impurity measure automatically determinizes. Please use 'determinize: auto' when defining the preset.")
+                logging.error(
+                    f"{impurity} impurity measure automatically determinizes. Please use 'determinize: auto' when defining the preset.")
                 sys.exit(-1)
 
         # if auto is used with any other, then give info message saying we use maxfreq
         if 'multilabel' not in impurity:
             if determinize == "auto":
-                logging.info(f"INFO: Using the recommended maxfreq determinizer since the preset contained 'determinize: auto'.")
+                logging.info(
+                    f"INFO: Using the recommended maxfreq determinizer since the preset contained 'determinize: auto'.")
                 determinize = "maxfreq"
 
         # if using logreg/svm/oc1, then determinizer must be passed to the split
@@ -465,28 +471,49 @@ def main():
                 numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(preset,
                                                                                                               user_config,
                                                                                                               default_config)
-                classifiers.append(
-                    get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=tolerance,
-                                   safe_pruning=safe_pruning, name=preset))
+                try:
+                    classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
+                                                tolerance=tolerance,
+                                                safe_pruning=safe_pruning, name=preset)
+                except EnvironmentError:
+                    logging.warning(f"WARNING: Could not instantiate a classifier for preset '{preset}'. This could be "
+                                    f"because the preset '{preset}' is not supported on this platform. Skipping...\n")
+                    continue
+                except Exception:
+                    logging.warning(f"WARNING: Could not instantiate a classifier for preset '{preset}'. Skipping...\n")
+                    continue
+
+                classifiers.append(classifier)
                 run_config_table.append(
                     Row(Name=preset, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
                         Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
                         SafePruning=safe_pruning))
 
-        if not classifiers:
+        if not args.use_preset:
             logging.info("INFO: Assuming --use-preset default, since no preset explicitly specified.")
             preset = "default"
             numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(preset,
                                                                                                           user_config,
                                                                                                           default_config)
-            classifiers.append(
-                get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=tolerance,
-                               safe_pruning=safe_pruning, name=preset))
+            try:
+                classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
+                                            tolerance=tolerance,
+                                            safe_pruning=safe_pruning, name=preset)
+            except Exception:
+                logging.error("Could not instantiate the default classifier due a runtime error. Exiting...")
+                sys.exit(-1)
+
+            classifiers.append(classifier)
+
             run_config_table.append(
                 Row(Name=preset, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
                     Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
                     SafePruning=safe_pruning))
 
+        if not classifiers:
+            logging.warning(
+                "No valid preset selected. Please try again with the correct preset name. Use 'dtcontrol preset --list' to see valid presets.")
+            sys.exit("Exiting...")
 
         logging.info("The following configurations would now be run:\n")
         logging.info(tabulate(run_config_table,

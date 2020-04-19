@@ -28,6 +28,7 @@ tol_inf = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=sys.m
 categorical_single = CategoricalSingleSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 oc1 = OC1SplittingStrategy()
+
 classifiers = [
     DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, logreg], Entropy(), 'logreg'),
     DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, oc1], Entropy(), 'oc1'),

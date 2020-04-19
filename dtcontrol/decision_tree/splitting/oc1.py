@@ -3,7 +3,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 from os.path import exists
 
 import numpy as np
@@ -46,11 +45,9 @@ class OC1SplittingStrategy(SplittingStrategy):
                     self.oc1_path = oc1_src + "/mktree"
                     logging.info("Compiled OC1")
                 except subprocess.CalledProcessError:
-                    logging.error("Compiling OC1 failed")
-                    sys.exit(-1)
+                    raise EnvironmentError("Compiling OC1 failed")
             else:
-                logging.error("Could not find OC1 files")
-                sys.exit(-1)
+                raise EnvironmentError("Could not find OC1 files")
 
     def find_split(self, dataset, impurity_measure):
         x_numeric = dataset.get_numeric_x()
