@@ -69,7 +69,7 @@ def main():
     def load_default_config() -> OrderedDict:
         try:
             default_config_file = resource_filename(Requirement.parse("dtcontrol"),
-                                                    "config.yml")  # System-level config file
+                                                    "dtcontrol/config.yml")  # System-level config file
         except pkg_resources.DistributionNotFound:
             sys.exit(
                 f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
