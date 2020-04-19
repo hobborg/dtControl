@@ -16,6 +16,7 @@ from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMulti
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
 
+
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
                  early_stopping_num_examples=None, early_stopping_optimized=False):
@@ -105,6 +106,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def __str__(self):
         return self.name
+
 
 class Node:
     def __init__(self, splitting_strategies, impurity_measure, early_stopping=False, early_stopping_num_examples=None,

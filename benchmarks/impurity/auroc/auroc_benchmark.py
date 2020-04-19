@@ -7,7 +7,6 @@ from dtcontrol.decision_tree.impurity.auroc import AUROC
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 
 suite = BenchmarkSuite(timeout=60 * 10,
                        benchmark_file='auroc',
@@ -32,7 +31,7 @@ suite.add_datasets(['../../../examples'],
 
 aa = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-oc1 = OC1SplittingStrategy(num_restarts=10, num_jumps=5)  # 13:56
+
 classifiers = [
     DecisionTree([aa, logreg], Entropy(), 'logreg-ent'),
     DecisionTree([aa, logreg], AUROC(), 'logreg-auroc'),
