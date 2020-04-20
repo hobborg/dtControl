@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="/assets/css/styles.css">
     <link rel="stylesheet" href="/assets/css/pygment_trac.css">
+    <link rel="icon" href="/assets/images/favicon-32.png" sizes="32x32">
     <meta name="viewport" content="width=device-width">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -15,8 +16,11 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>dtControl</h1>
-        <p>{{ page.summary }}</p>
+        <div style="overflow:hidden">
+          <img src="{{ page.logo }}" alt="dtControl logo" style="max-height: 130px; margin-left: 0px; margin-bottom: 20px">
+          <h1>dtControl</h1>
+          <p>{{ page.summary }}</p>
+        </div>
         
         <ul>
           <li><a href="https://pypi.org/project/dtcontrol/">Install<strong>using PIP</strong></a></li>

@@ -1,6 +1,8 @@
 ---
 layout: default
 
+logo: /assets/images/logo.png
+
 title: dtControl
 
 summary: Represent CPS controllers as decision trees. Improve memory footprint, boost explainability while preserving guarantees.
