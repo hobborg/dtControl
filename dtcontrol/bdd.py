@@ -111,7 +111,6 @@ class BDD(BenchmarkSuiteClassifier):
                 break
 
         print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
-        self.bdd.dump("10rooms.pdf")
 
 ################### Helper methods for fit #####################
 
@@ -177,6 +176,7 @@ class BDD(BenchmarkSuiteClassifier):
             return dataset.get_single_labels()
 
     def checkValid(self, dataset):
+        return True # TODO: NOT CHECKING VALIDITY RIGHT NOW
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
         row_num = -1

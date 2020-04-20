@@ -23,10 +23,10 @@ suite.add_datasets(['examples', 'examples/prism'],
                        # "firewire_abst",
                        # "wlan0",
                        # "mer10"
-                        "cartpole",
+                       # "cartpole",
                        # "tworooms-noneuler-latest",
                        # "helicopter",
-                       # "cruise-latest",
+                        "cruise-latest",
                        # "dcdc",
                        # "10rooms",
                        # "truck_trailer",
@@ -52,9 +52,9 @@ bdd_actUL_minnorm = BDD(1, label_pre_processor=NormPreProcessor(min))
 # dataset = normprocessor.preprocess(dataset)
 # bdd_actUL = BDD(1, normpreprocessor)
 classifiers = [
-#    bdd_actOR,
+    bdd_actOR,
     bdd_actOR_minnorm,
-#    bdd_actUL,
+    bdd_actUL,
     bdd_actUL_minnorm
     #DecisionTree([aa], Entropy(), 'CART'),
     #DecisionTree([aa], Entropy(), 'Min', label_pre_processor=NormPreProcessor(min)),
