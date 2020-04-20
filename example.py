@@ -23,18 +23,18 @@ suite.add_datasets(['examples', 'examples/prism'],
                        # "firewire_abst",
                        # "wlan0",
                        # "mer10"
-                        "cartpole",
+                       # "cartpole",
                        # "tworooms-noneuler-latest",
-                        "helicopter",
+                       # "helicopter",
                         "cruise-latest",
                        # "dcdc",
-                        "10rooms",
+                       # "10rooms",
                        # "truck_trailer",
                        # "traffic_1m",
                        # "traffic_10m",
                        # "traffic_30m",
-                        "vehicle",
-                        "aircraft"
+                       # "vehicle",
+                       # "aircraft"
                    ]
                    )
 
