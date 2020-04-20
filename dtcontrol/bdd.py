@@ -23,7 +23,7 @@ class BDD(BenchmarkSuiteClassifier):
     """
 
     def __init__(self, all_or_unique_label, label_pre_processor=None):
-        self.name = f"BDD_{'actOR' if all_or_unique_label==0 else 'UL'}"
+        self.name = f"BDD_{'actOR' if all_or_unique_label==0 else 'UL'}" + ("_prepro" if label_pre_processor!=None else "")
         self.bdd = _bdd.BDD()
         self.bdd.configure(reordering=False)
         self.name2node = dict()
@@ -183,7 +183,7 @@ class BDD(BenchmarkSuiteClassifier):
         sols = [x for x in self.bdd.pick_iter(self.result)]
 
         # We can check containment of dataset in sols; other way round is more difficult, so additionally we check that they have same number of solutions
-        num_dataset_sols = len(dataset.x) if self.all_or_unique_label == 1 else sum([sum([1 for x in ds.get_single_labels()[i] if x != -1]) for i in range(0,len(ds.get_single_labels()))])
+        num_dataset_sols = len(dataset.x) if self.all_or_unique_label == 1 else sum([sum([1 for x in dataset.get_single_labels()[i] if x != -1]) for i in range(0,len(dataset.get_single_labels()))])
         if not len(sols) == num_dataset_sols:
             raise Exception(f"BDD has {len(sols)} solutions, but dataset has {num_dataset_sols}")
         
