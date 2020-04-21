@@ -72,6 +72,15 @@
           "bandwidth": 4
         },
         "time": "00:00:00.108"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 9,
+          "inner nodes": 3,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.129"
       }
     },
     "metadata": {
@@ -202,6 +211,15 @@
           "bandwidth": 6
         },
         "time": "00:00:00.611"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 71,
+          "inner nodes": 26,
+          "paths": 45,
+          "bandwidth": 6
+        },
+        "time": "00:00:01.123"
       }
     },
     "metadata": {
@@ -355,6 +373,15 @@
           "bandwidth": 7
         },
         "time": "00:00:01.463"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 85,
+          "inner nodes": 33,
+          "paths": 52,
+          "bandwidth": 6
+        },
+        "time": "00:00:01.376"
       }
     },
     "metadata": {
@@ -508,6 +535,15 @@
           "bandwidth": 6
         },
         "time": "00:00:01.796"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 76,
+          "inner nodes": 29,
+          "paths": 47,
+          "bandwidth": 6
+        },
+        "time": "00:00:02.060"
       }
     },
     "metadata": {
@@ -661,6 +697,15 @@
           "bandwidth": 4
         },
         "time": "00:00:00.039"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 14,
+          "inner nodes": 5,
+          "paths": 9,
+          "bandwidth": 4
+        },
+        "time": "00:00:00.062"
       }
     },
     "metadata": {
@@ -812,6 +857,15 @@
           "bandwidth": 6
         },
         "time": "00:00:00.184"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 49,
+          "inner nodes": 19,
+          "paths": 30,
+          "bandwidth": 5
+        },
+        "time": "00:00:00.299"
       }
     },
     "metadata": {
@@ -985,6 +1039,15 @@
           "bandwidth": 7
         },
         "time": "00:00:00.706"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 154,
+          "inner nodes": 61,
+          "paths": 93,
+          "bandwidth": 7
+        },
+        "time": "00:00:01.295"
       }
     },
     "metadata": {
@@ -1180,6 +1243,15 @@
           "bandwidth": 7
         },
         "time": "00:00:01.599"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 148,
+          "inner nodes": 65,
+          "paths": 83,
+          "bandwidth": 7
+        },
+        "time": "00:00:02.220"
       }
     },
     "metadata": {
@@ -1375,6 +1447,15 @@
           "bandwidth": 8
         },
         "time": "00:00:01.256"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 169,
+          "inner nodes": 66,
+          "paths": 103,
+          "bandwidth": 7
+        },
+        "time": "00:00:01.449"
       }
     },
     "metadata": {
@@ -1536,6 +1617,15 @@
           "bandwidth": 8
         },
         "time": "00:00:15.956"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 335,
+          "inner nodes": 162,
+          "paths": 173,
+          "bandwidth": 8
+        },
+        "time": "00:00:07.657"
       }
     },
     "metadata": {
@@ -1732,6 +1822,15 @@
           "bandwidth": 6
         },
         "time": "00:00:05.595"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 43,
+          "inner nodes": 17,
+          "paths": 26,
+          "bandwidth": 5
+        },
+        "time": "00:00:01.803"
       }
     },
     "metadata": {
@@ -1885,6 +1984,15 @@
           "bandwidth": 5
         },
         "time": "00:00:05.144"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 32,
+          "inner nodes": 13,
+          "paths": 19,
+          "bandwidth": 5
+        },
+        "time": "00:00:01.421"
       }
     },
     "metadata": {
@@ -2038,6 +2146,15 @@
           "bandwidth": 7
         },
         "time": "00:00:03.820"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 149,
+          "inner nodes": 66,
+          "paths": 83,
+          "bandwidth": 7
+        },
+        "time": "00:00:05.832"
       }
     },
     "metadata": {
@@ -2233,6 +2350,15 @@
           "bandwidth": 8
         },
         "time": "00:00:04.561"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 225,
+          "inner nodes": 87,
+          "paths": 138,
+          "bandwidth": 8
+        },
+        "time": "00:00:05.289"
       }
     },
     "metadata": {
@@ -2394,6 +2520,15 @@
           "bandwidth": 4
         },
         "time": "00:00:00.060"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 9,
+          "inner nodes": 3,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.154"
       }
     },
     "metadata": {
@@ -2524,6 +2659,15 @@
           "bandwidth": 4
         },
         "time": "00:00:00.081"
+      },
+      "logreg-tol 1e-5": {
+        "stats": {
+          "nodes": 9,
+          "inner nodes": 3,
+          "paths": 6,
+          "bandwidth": 3
+        },
+        "time": "00:00:00.121"
       }
     },
     "metadata": {

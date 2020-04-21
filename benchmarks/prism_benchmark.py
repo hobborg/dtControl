@@ -30,10 +30,10 @@ logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', p
 oc1 = OC1SplittingStrategy()
 
 classifiers = [
-    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, logreg], Entropy(), 'logreg'),
-    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, oc1], Entropy(), 'oc1'),
+    DecisionTree([aa, tol_small, logreg], Entropy(), 'logreg-tol 1e-5'),
+    # DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi, oc1], Entropy(), 'oc1'),
     # DecisionTree(NonDeterminizer(), [aa, categorical_single], Entropy(), 'single'),
-    DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi], Entropy(), 'multi'),
+    # DecisionTree(LabelPowersetDeterminizer(), [aa, categorical_multi], Entropy(), 'multi'),
     # DecisionTree(NonDeterminizer(), [aa, tol0], Entropy(), 'tol 0'),
     # DecisionTree(NonDeterminizer(), [aa, tol_small], Entropy(), 'tol 1e-5'),
     # DecisionTree(NonDeterminizer(), [aa, tol_medium], Entropy(), 'tol .2'),
