@@ -17,7 +17,7 @@ class TwoingRule(DeterminizingImpurityMeasure):
         num_labels = len(dataset)
         twoing_value = (len(left) / num_labels) * (len(right) / num_labels)
         s = 0
-        unique = np.unique(y)
+        unique = np.unique(np.append(left, right))
         for u in unique:
             num_left = len(left[left == u])
             num_right = len(right[right == u])
