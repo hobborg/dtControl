@@ -6,11 +6,23 @@ logo: /assets/images/logo.png
 title: dtControl
 
 summary: Represent CPS controllers as decision trees. Improve memory footprint, boost explainability while preserving guarantees.
+
+demoVideoId: qS8FQ3pCeE4
 ---
 
-![block diagram](/assets/images/block-diagram.png)
+{% include youtubePlayer.html id=page.demoVideoId %}
 
-**dtControl** is a tool for compressing memoryless controllers arising out of automatic controller synthesis of cyber-physical systems (CPS). dtControl takes as input a controller synthesised by various formal verification tools and represents them in the form of decision trees. In the process, the size of the controller is reduced greatly, and at the same time, it becomes more explainable. While in principle, memoryless strategies in any format can be handled by dtControl, currently it supports controllers output by two tools: [SCOTS](https://gitlab.lrz.de/matthias/SCOTSv0.2) and [Uppaal Stratego](https://people.cs.aau.dk/~marius/stratego/index.html).
+**dtControl** is a tool for compressing memoryless controllers arising out of automatic controller synthesis of 
+cyber-physical systems (CPS). dtControl takes as input a controller synthesised by various formal verification 
+tools and represents them in the form of decision trees. In the process, the size of the controller is reduced 
+greatly, and at the same time, it becomes more explainable. Currently dtControl supports controllers output by three tools: 
+[SCOTS](https://gitlab.lrz.de/matthias/SCOTSv0.2), 
+[Uppaal Stratego](https://people.cs.aau.dk/~marius/stratego/index.html) and [PRISM Model Checker](https://www.prismmodelchecker.org).
+
+To learn more about dtControl and representing controllers using decision trees, you may want to watch our [demo](https://www.youtube.com/watch?v=qS8FQ3pCeE4)
+or [talk](https://www.youtube.com/watch?v=K6d3pS6Ege0) at HSCC 2020, take a look at our 
+[tool manual](https://dtcontrol.readthedocs.io), read our [paper](https://arxiv.org/abs/2002.04991) or [contact us](mailto:jackerme@in.tum.de,ashok@in.tum.de,maxi.weininger@tum.de).
+ 
 
 ## Quick Start
 
@@ -45,17 +57,19 @@ The above command, if executed successfully, will generate a files `benchmark.ht
 
 Our complete documentation including user and developer manuals are available at [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io). Please ensure that you are referring to the correct version of the documentation.
 
-## Publications
+## Citing
 
 Cite **dtControl** in academic publications as:
 
 - *Pranav Ashok, Mathias Jackermeier, Pushpak Jagtap, Jan Kretínský, Maximilian Weininger, Majid Zamani.*
 **dtControl: Decision Tree Learning Algorithms for Controller Representation.**
-*HSCC 2020 (to appear).*
+*HSCC 2020.*
 <br />
-[bibtex](https://dblp.uni-trier.de/rec/bibtex/journals/corr/abs-2002-04991) / [pre-print](https://arxiv.org/abs/2002.04991) 
+[view](https://dl.acm.org/doi/abs/10.1145/3365365.3382220) / [bibtex](https://dblp.uni-trier.de/rec/bibtex/journals/corr/abs-2002-04991) / [pre-print](https://arxiv.org/abs/2002.04991) 
 
-Other closely related publications:
+## Related Publications
+
+Other closely related publications include:
 
 - *Pranav Ashok, Tomás Brázdil, Krishnendu Chatterjee, Jan Kretínský, Christoph H. Lampert, Viktor Toman.*
 **Strategy Representation by Decision Trees with Linear Classifiers.**
@@ -69,3 +83,8 @@ Other closely related publications:
 <br />
 [view](https://doi.org/10.1007/978-3-030-30281-8_9) / [bibtex](https://dblp.uni-trier.de/rec/bibtex/conf/qest/AshokKLCTW19) / [pre-print](http://arxiv.org/abs/1906.10640) 
 
+- *Tomás Brázdil, Krishnendu Chatterjee, Martin Chmelik, Andreas Fellner, Jan Kretínsk*.
+**Counterexample Explanation by Learning Small Strategies in Markov Decision Processes.**
+*CAV 2015*
+<br />
+[view](https://doi.org/10.1007/978-3-319-21690-4_10) / [bibtex](https://dblp.org/rec/bibtex/conf/cav/BrazdilCCFK15) / [pre-print](https://arxiv.org/abs/1502.02834)
