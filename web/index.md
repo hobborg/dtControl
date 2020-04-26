@@ -15,7 +15,7 @@ cyber-physical systems (CPS). dtControl takes as input a controller synthesised 
 tools and represents them in the form of decision trees. An example is shown below:
 
 <div class="image-container">
-  <div class="fixed"><img src="assets/images/10rooms.gif" /><div class="caption">Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS</div></div>
+  <div class="fixed"><img src="assets/images/10rooms-norepeat.gif" /><div class="caption">Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS</div></div>
   <div class="flex-item"><img src="assets/images/10rooms-dt.png" /><div class="caption">Small and explainable decision tree of the same controller (determinized) as output by dtControl</div></div>
 </div>
 
