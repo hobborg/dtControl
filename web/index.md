@@ -15,7 +15,7 @@ cyber-physical systems (CPS). dtControl takes as input a controller synthesised 
 tools and represents them in the form of decision trees. An example is shown below:
 
 <div class="image-container">
-  <div class="fixed"><img src="assets/images/10rooms-norepeat.gif" /><div class="caption">Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS</div></div>
+  <div class="fixed"><img src="assets/images/10rooms-pause-loop.gif" /><div class="caption">Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS</div></div>
   <div class="flex-item"><img src="assets/images/10rooms-dt.png" /><div class="caption">Small and explainable decision tree of the same controller (determinized) as output by dtControl</div></div>
 </div>
 
@@ -25,7 +25,7 @@ Currently dtControl supports controllers output by three tools:
 
 To learn more about dtControl and representing controllers using decision trees, you may want to watch our [demo](https://www.youtube.com/watch?v=qS8FQ3pCeE4)
 or [talk](https://www.youtube.com/watch?v=K6d3pS6Ege0) at HSCC 2020, take a look at our 
-[tool manual](https://dtcontrol.readthedocs.io), read our [paper](https://arxiv.org/abs/2002.04991) or [contact us](mailto:jackerme@in.tum.de,ashok@in.tum.de,maxi.weininger@tum.de).
+[tool manual](https://dtcontrol.readthedocs.io) or read our [paper](https://arxiv.org/abs/2002.04991).
  
 
 ## Quick Start
@@ -60,6 +60,10 @@ The above command, if executed successfully, will generate a files `benchmark.ht
 ## Manuals / Documentation
 
 Our complete documentation including user and developer manuals are available at [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io). Please ensure that you are referring to the correct version of the documentation.
+
+## Contact
+
+For questions, suggestions and comments, you may contact [Mathias](mailto:jackerme@in.tum.de), [Pranav](ashok@in.tum.de), [Maxi](maxi.weininger@tum.de) or [Jan](jan.kretinsky@tum.de). We would also be glad to help you incorporate dtControl into your controller synthesis/usage workflow. Other feature requests are also welcome.
 
 ## Citing
 
