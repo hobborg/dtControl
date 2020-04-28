@@ -18,6 +18,12 @@ presets:
   oc1:
     numeric-predicates: ['oc1']
 
+  # Categorical
+  avg:
+    categorical-predicates: ['valuegrouping']
+  singlesplit:
+    categorical-predicates: ['singlesplit']
+
   # Deterministic
   maxfreq:
     determinize: 'maxfreq'

@@ -1,0 +1,49 @@
+storm --jani zeroconf_dl.jani --janiproperty deadline_min --constants N=1000,K=1,reset=true,deadline=10 --timemem --exportscheduler zeroconf_dl.1000.1.true.10.deadline_min.storm.json --buildstateval --buildchoiceorig
+storm --jani zeroconf_dl.jani --janiproperty deadline_max --constants N=1000,K=1,reset=true,deadline=10 --timemem --exportscheduler zeroconf_dl.1000.1.true.10.deadline_max.storm.json --buildstateval --buildchoiceorig
+storm --jani zeroconf.jani --janiproperty correct_max --constants N=1000,K=4,reset=true --timemem --exportscheduler zeroconf.1000.4.true.correct_max.storm.json --buildstateval --buildchoiceorig
+storm --jani zeroconf.jani --janiproperty correct_min --constants N=1000,K=4,reset=true --timemem --exportscheduler zeroconf.1000.4.true.correct_min.storm.json --buildstateval --buildchoiceorig
+storm --jani wlan_dl.0.jani --janiproperty --constants deadline=80 --timemem --buildstateval --buildchoiceorig  --exportscheduler wlan_dl.0.80.deadline.storm.json
+storm --jani wlan.1.jani --janiproperty cost_max --constants COL=0 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler wlan.1.0.cost_max.storm.json
+storm --jani wlan.1.jani --janiproperty cost_min --constants COL=0 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler wlan.1.0.cost_min.storm.json
+storm --jani wlan.1.jani --janiproperty num_collisions --constants COL=0 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler wlan.1.0.num_collisions.storm.json
+storm --jani wlan.1.jani --janiproperty time_max --constants COL=0 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler wlan.1.0.time_max.storm.json
+storm --jani wlan.1.jani --janiproperty time_min --constants COL=0 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler wlan.1.0.time_min.storm.json
+storm --jani triangle-tireworld.9.jani --janiproperty --timemem --buildstateval --buildchoiceorig  --exportscheduler triangle-tireworld.9.storm.json
+storm --jani rectangle-tireworld.11.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler rectangle-tireworld.11.storm.json
+storm --jani rabin.3.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler rabin.3.storm.json
+storm --jani pnueli-zuck.5.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler pnueli-zuck.5.storm.json
+storm --jani philosophers-mdp.3.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler philosophers-mdp.3.storm.json
+storm --jani pacman.jani --janiproperty --constants MAXSTEPS=5 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler pacman.5.storm.json
+storm --jani ij.10.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler ij.10.storm.json
+storm --jani firewire_dl.jani --janiproperty --constants delay=3,deadline=200 --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire_dl.3.200.deadline.storm.json
+storm --jani firewire_abst.jani --janiproperty rounds --constants delay=3 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire_abst.3.rounds.storm.json
+storm --jani firewire_abst.jani --janiproperty time_max --constants delay=3 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire_abst.3.time_max.storm.json
+storm --jani firewire_abst.jani --janiproperty time_min --constants delay=3 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire_abst.3.time_min.storm.json
+storm --jani firewire.true.jani --janiproperty time_max --constants delay=3,deadline=200 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire.true.3.200.time_max.storm.json
+storm --jani firewire.true.jani --janiproperty time_min --constants delay=3,deadline=200 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire.true.3.200.time_min.storm.json
+storm --jani firewire.true.jani --janiproperty time_sending --constants delay=3,deadline=200 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire.true.3.200.time_sending.storm.json
+storm --jani firewire.true.jani --janiproperty deadline --constants delay=3,deadline=200 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler firewire.true.3.200.deadline.storm.json
+storm --jani exploding-blocksworld.5.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler exploding-blocksworld.5.storm.json
+storm --jani elevators.a-3-3.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler elevators.a-3-3.storm.json
+storm --jani elevators.a-11-9.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler elevators.a-11-9.storm.json
+storm --jani echoring.jani --janiproperty MinFailed --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MinFailed.storm.json
+storm --jani echoring.jani --janiproperty MinOffline1 --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MinOffline1.storm.json
+storm --jani echoring.jani --janiproperty MaxOffline1 --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MaxOffline1.storm.json
+storm --jani echoring.jani --janiproperty MinOffline2 --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MinOffline2.storm.json
+storm --jani echoring.jani --janiproperty MaxOffline2 --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MaxOffline2.storm.json
+storm --jani echoring.jani --janiproperty MinOffline3 --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MinOffline3.storm.json
+storm --jani echoring.jani --janiproperty MaxOffline3 --constants ITERATIONS=2 --timemem --buildstateval --buildchoiceorig  --exportscheduler echoring.MaxOffline3.storm.json
+storm --jani eajs.2.jani --janiproperty ExpUtil --constants energy_capacity=100,B=5 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler eajs.2.100.5.ExpUtil.storm.json
+storm --jani csma.2-4.jani --janiproperty all_before_max --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler csma.2-4.all_before_max.storm.json
+storm --jani csma.2-4.jani --janiproperty all_before_min --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler csma.2-4.all_before_min.storm.json
+storm --jani csma.2-4.jani --janiproperty some_before --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler csma.2-4.some_before.storm.json
+storm --jani csma.2-4.jani --janiproperty time_max --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler csma.2-4.time_max.storm.json
+storm --jani csma.2-4.jani --janiproperty time_min --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler csma.2-4.time_min.storm.json
+storm --jani consensus.2.jani --janiproperty c2 --constants K=16 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler consensus.2.c2.storm.json
+storm --jani consensus.2.jani --janiproperty disagree --constants K=16 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler consensus.2.disagree.storm.json
+storm --jani consensus.2.jani --janiproperty steps_max --constants K=16 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler consensus.2.steps_max.storm.json
+storm --jani consensus.2.jani --janiproperty steps_min --constants K=16 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler consensus.2.steps_min.storm.json
+storm --jani cdrive.10.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler cdrive.10.storm.json
+storm --jani blocksworld.5.jani --janiproperty --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler blocksworld.5.storm.json
+storm --jani beb.3-4.jani --janiproperty LineSeized --constants N=3 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler beb.3-4.LineSeized.storm.json
+storm --jani beb.3-4.jani --janiproperty GaveUp --constants N=3 --exact --timemem --buildstateval --buildchoiceorig  --exportscheduler beb.3-4.GaveUp.storm.json
