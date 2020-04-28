@@ -79,18 +79,18 @@ class StormDatasetLoader(DatasetLoader):
         x_metadata["categorical"] = []
         x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
         x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
-        x_metadata["step_size"] = None  # todo
+        x_metadata["step_size"] = [1 for _ in x[0]]
 
         index_to_actual = {i+1: i for i in index_to_choice.keys()}
 
         y_metadata = dict()
         y_metadata["categorical"] = [0]  # we always have exactly one output, and it is categorical
         y_metadata["category_names"] = {0: [v.strip() for v in sorted(choice_to_index.keys(), key=choice_to_index.get)]}
-        y_metadata["min"] = None
-        y_metadata["max"] = None
-        y_metadata["step_size"] = None  # todo
-        #
-        # logging.debug(x_metadata)
-        # logging.debug(y_metadata)
-        #
+        y_metadata["min"] = [min(index_to_actual.values())]
+        y_metadata["max"] = [max(index_to_actual.values())]
+        y_metadata["step_size"] = [int((y_metadata["max"][0] - y_metadata["min"][0]) / (len(index_to_actual) - 1))]
+
+        logging.debug(x_metadata)
+        logging.debug(y_metadata)
+
         return (x, x_metadata, y, y_metadata, index_to_actual)
