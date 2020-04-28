@@ -16,7 +16,6 @@ from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMulti
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
 
-
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
                  early_stopping_num_examples=None, early_stopping_optimized=False):
@@ -145,6 +144,7 @@ class Node:
         pre_determinize = isinstance(self.impurity_measure, DeterminizingImpurityMeasure) and \
                           self.impurity_measure.determinizer.is_pre_split()
         if pre_determinize:
+            self.impurity_measure.determinizer.pre_determinized_labels = None
             determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
             self.impurity_measure.determinizer.pre_determinized_labels = determinized_labels
         splits = [strategy.find_split(dataset, self.impurity_measure) for strategy in self.splitting_strategies]
