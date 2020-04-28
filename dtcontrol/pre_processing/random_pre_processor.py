@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from dtcontrol.decision_tree.pre_processing.label_pre_processor import LabelPreProcessor
+from dtcontrol.pre_processing.label_pre_processor import LabelPreProcessor
 
 class RandomPreProcessor(LabelPreProcessor):
     """

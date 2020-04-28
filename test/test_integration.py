@@ -9,10 +9,10 @@ from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 from dtcontrol.decision_tree.impurity.multi_label_entropy import MultiLabelEntropy
-from dtcontrol.decision_tree.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
+from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 
 class IntegrationTest(unittest.TestCase):
     def setUp(self):

@@ -27,10 +27,9 @@ from tabulate import tabulate
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 # Import determinizers
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
-
 # Import impurity measures
 from dtcontrol.decision_tree.impurity.auroc import AUROC
 from dtcontrol.decision_tree.impurity.entropy import Entropy
@@ -40,11 +39,6 @@ from dtcontrol.decision_tree.impurity.multi_label_entropy import MultiLabelEntro
 from dtcontrol.decision_tree.impurity.multi_label_gini_index import MultiLabelGiniIndex
 from dtcontrol.decision_tree.impurity.multi_label_twoing_rule import MultiLabelTwoingRule
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
-
-# Import preprocessing strategies
-from dtcontrol.decision_tree.pre_processing.norm_pre_processor import NormPreProcessor
-from dtcontrol.decision_tree.pre_processing.random_pre_processor import RandomPreProcessor
-
 # Import splitting strategies
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
@@ -52,7 +46,9 @@ from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSing
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
-
+# Import preprocessing strategies
+from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
+from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
 def main():
     def is_valid_file_or_folder(parser, arg):
