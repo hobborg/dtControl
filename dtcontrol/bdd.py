@@ -1,12 +1,10 @@
 import math
-import pickle
 import random
-import numpy
+import sys
 
-from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
-from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
+import numpy
 # from dd import cudd as _bdd # TODO: use cudd?
-from dd import autoref as _bdd  
+from dd import autoref as _bdd
 from tqdm import tqdm
 
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
@@ -23,7 +21,8 @@ class BDD(BenchmarkSuiteClassifier):
     """
 
     def __init__(self, all_or_unique_label, label_pre_processor=None):
-        self.name = f"BDD_{'actOR' if all_or_unique_label==0 else 'UL'}" + ("_prepro" if label_pre_processor!=None else "")
+        self.name = f"BDD_{'actOR' if all_or_unique_label == 0 else 'UL'}" + (
+            "_prepro" if label_pre_processor != None else "")
         self.bdd = _bdd.BDD()
         self.bdd.configure(reordering=False)
         self.name2node = dict()
@@ -45,7 +44,7 @@ class BDD(BenchmarkSuiteClassifier):
             dataset = self.label_pre_processor.preprocess(dataset)
         self.x_metadata = dataset.x_metadata
         if "variables" not in self.x_metadata.keys():
-            self.x_metadata["variables"] = [f"x{i}" for i in range(0,len(dataset.x[0]))]
+            self.x_metadata["variables"] = [f"x{i}" for i in range(0, len(dataset.x[0]))]
         # generate blasted vars for state vars, add them to BDD 
         self.blast_vars(self.x_metadata)
 
@@ -80,7 +79,7 @@ class BDD(BenchmarkSuiteClassifier):
             if self.all_or_unique_label == 0:
                 for a in range(0, len(dataset.get_single_labels()[row_num])):
                     if dataset.get_single_labels()[row_num][a] == -1:
-                        break # end of sensible actions
+                        break  # end of sensible actions
                     single_act_result = self.bdd_for(dataset.get_single_labels()[row_num][a], self.act_metadata, 0)
                     act_result = single_act_result if a == 0 else self.bdd.apply('or', act_result, single_act_result)
             elif self.all_or_unique_label == 1:
@@ -112,18 +111,21 @@ class BDD(BenchmarkSuiteClassifier):
 
         print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
 
-################### Helper methods for fit #####################
+    ################### Helper methods for fit #####################
 
     # generate blasted vars for vars, add them to BDD 
     # Usual means that we take num_bits = ceil( ld( (max-min)/step_size ) )
     def blast_vars(self, metadata):
         for i in range(0, len(metadata["variables"])):
-            #num_bits = ceil( ld( (max-min)/step_size ) )
-            num_bits = 1 + int(math.log(((metadata["max"][i] - metadata["min"][i]) / metadata["step_size"][i]), 2))
+            # num_bits = ceil( ld( (max-min)/step_size ) )
+            if metadata["max"][i] == metadata["min"][i]:
+                num_bits = 0  # catch corner case of useless vars, e.g. in cruise
+            else:
+                num_bits = 1 + int(math.log(((metadata["max"][i] - metadata["min"][i]) / metadata["step_size"][i]), 2))
             for j in range(0, num_bits):
                 blasted_name = metadata["variables"][i] + f"_{j}"
                 self.bdd.declare(blasted_name)
-                self.name2node[blasted_name] = self.bdd.var(blasted_name)  
+                self.name2node[blasted_name] = self.bdd.var(blasted_name)
 
     def reorder_randomly(self):
         my_order = dict()
@@ -152,7 +154,9 @@ class BDD(BenchmarkSuiteClassifier):
         min_val = metadata["min"][i]
         max_val = metadata["max"][i]
         step_size = metadata["step_size"][i]
-        num_bits = 1 + int(math.log(((max_val-min_val) / step_size), 2))
+        if max_val == min_val:
+            return self.bdd.true
+        num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
         label = int(round((value - min_val) / step_size))
 
         # go over label in reverse order, set bits in BDD
@@ -163,12 +167,13 @@ class BDD(BenchmarkSuiteClassifier):
                 bit_result = self.name2node[bit_varname]
             else:
                 bit_result = self.bdd.apply('not', self.name2node[bit_varname])
-            var_result = bit_result if i == num_bits-1 else self.bdd.apply('and', var_result, bit_result)
+            var_result = bit_result if i == num_bits - 1 else self.bdd.apply('and', var_result, bit_result)
         if label != 0:
-            raise Exception(f"Fatal error: Bitblasting variable {varname} did not succeed with remaining label {label} for value {value}.")
+            raise Exception(
+                f"Fatal error: Bitblasting variable {varname} did not succeed with remaining label {label} for value {value}.")
         return var_result
-        
-################ Reading the BDD ##############
+
+    ################ Reading the BDD ##############
     def predict(self, dataset, actual_values=True):
         if actual_values == True:
             raise Exception("Predict with actual_values==True not supported by BDD")
@@ -176,22 +181,24 @@ class BDD(BenchmarkSuiteClassifier):
             return dataset.get_single_labels()
 
     def checkValid(self, dataset):
-        return True # TODO: NOT CHECKING VALIDITY RIGHT NOW
+        return True  # TODO: NOT CHECKING VALIDITY RIGHT NOW
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
         row_num = -1
         sols = [x for x in self.bdd.pick_iter(self.result)]
 
         # We can check containment of dataset in sols; other way round is more difficult, so additionally we check that they have same number of solutions
-        num_dataset_sols = len(dataset.x) if self.all_or_unique_label == 1 else sum([sum([1 for x in dataset.get_single_labels()[i] if x != -1]) for i in range(0,len(dataset.get_single_labels()))])
+        num_dataset_sols = len(dataset.x) if self.all_or_unique_label == 1 else sum(
+            [sum([1 for x in dataset.get_single_labels()[i] if x != -1]) for i in
+             range(0, len(dataset.get_single_labels()))])
         if not len(sols) == num_dataset_sols:
             raise Exception(f"BDD has {len(sols)} solutions, but dataset has {num_dataset_sols}")
-        
 
         # If number of rows is equal, just need to check that every row is contained in sols
         for row in tqdm(dataset.x):
             row_num += 1
-            allowed_actions = dataset.get_single_labels()[row_num] if self.all_or_unique_label == 0 else [dataset.get_unique_labels()[row_num]]
+            allowed_actions = dataset.get_single_labels()[row_num] if self.all_or_unique_label == 0 else [
+                dataset.get_unique_labels()[row_num]]
             for act in allowed_actions:
                 if act == -1:
                     continue
@@ -199,20 +206,20 @@ class BDD(BenchmarkSuiteClassifier):
                     continue
                 else:
                     action_str = f"allowed action {act} of {allowed_actions} (all or)" if self.all_or_unique_label == 0 else "allowed unique label {act}"
-                    raise Exception(f"Row {row} with {action_str} is not contained in BDD sols")               
+                    raise Exception(f"Row {row} with {action_str} is not contained in BDD sols")
         return True
 
-    #TODO: we could use this also when constructing the BDD, but that changes structure and I don't want to refactor right now. However, this way I copy pasted a lot of code.
+    # TODO: we could use this also when constructing the BDD, but that changes structure and I don't want to refactor right now. However, this way I copy pasted a lot of code.
     def get_bit_values(self, row, act):
         bit_values = dict()
 
-        #bit_values for the state vars
+        # bit_values for the state vars
         for i in range(0, len(row)):
             varname = self.x_metadata["variables"][i]
             min_val = self.x_metadata["min"][i]
             max_val = self.x_metadata["max"][i]
             step_size = self.x_metadata["step_size"][i]
-            num_bits = 1 + int(math.log(((max_val-min_val) / step_size), 2))
+            num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
             label = int(round((row[i] - min_val) / step_size))
 
             # go over label in reverse order, set bits in result table
@@ -224,14 +231,15 @@ class BDD(BenchmarkSuiteClassifier):
                 else:
                     bit_values[bit_varname] = 0
             if label != 0:
-                raise Exception(f"Fatal error: Bitblasting variable {varname} did not succeed with remaining label {label} for value {row[i]}.")
-        
-        #bit_values for the action (too lazy to avoid duplicating); also note that this only works for SingleOutputDatasets
+                raise Exception(
+                    f"Fatal error: Bitblasting variable {varname} did not succeed with remaining label {label} for value {row[i]}.")
+
+        # bit_values for the action (too lazy to avoid duplicating); also note that this only works for SingleOutputDatasets
         varname = self.act_metadata["variables"][0]
         min_val = self.act_metadata["min"][0]
         max_val = self.act_metadata["max"][0]
         step_size = self.act_metadata["step_size"][0]
-        num_bits = 1 + int(math.log(((max_val-min_val) / step_size), 2))
+        num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
         label = int(round((act - min_val) / step_size))
 
         # go over label in reverse order, set bits in result table
@@ -243,9 +251,9 @@ class BDD(BenchmarkSuiteClassifier):
             else:
                 bit_values[bit_varname] = 0
         if label != 0:
-            raise Exception(f"Fatal error: Bitblasting variable {varname} did not succeed with remaining label {label} for value {act}.")
-        
-  
+            raise Exception(
+                f"Fatal error: Bitblasting variable {varname} did not succeed with remaining label {label} for value {act}.")
+
         return bit_values
 
     def save(self, file):
@@ -257,13 +265,11 @@ class BDD(BenchmarkSuiteClassifier):
     def print_c(self):
         return self.result.to_expr()
 
-#ds = SingleOutputDataset("../dumps/cruise-small-latest.dump")
-#ds = MultiOutputDataset("../examples/10rooms.scs")
-#ds = SingleOutputDataset("../examples/cartpole.scs")
-#ds.load_if_necessary()
-#bdd_classifier = BDD(0)
-#bdd_classifier.fit(ds)
-#bdd_classifier.checkValid(ds)
-#print("Everything is valid!")
-
-        
+# ds = SingleOutputDataset("../dumps/cruise-small-latest.dump")
+# ds = MultiOutputDataset("../examples/10rooms.scs")
+# ds = SingleOutputDataset("../examples/cartpole.scs")
+# ds.load_if_necessary()
+# bdd_classifier = BDD(0)
+# bdd_classifier.fit(ds)
+# bdd_classifier.checkValid(ds)
+# print("Everything is valid!")
