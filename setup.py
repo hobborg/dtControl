@@ -52,6 +52,7 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=[
+        'dd==0.5.5',
         'Jinja2==2.10.3',
         'pandas==0.25.2',
         'psutil==5.6.7',
