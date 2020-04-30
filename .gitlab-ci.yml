@@ -4,7 +4,7 @@ stages:
   - build
 
 test:python3.7:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
   stage: test
   script:
     - /usr/bin/python3.7 --version
@@ -18,7 +18,7 @@ test:python3.7:
       - decision_trees/
 
 test:python3.8:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
   stage: test
   script:
     - /usr/bin/python3.8 --version
