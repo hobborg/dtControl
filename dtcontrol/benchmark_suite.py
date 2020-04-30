@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import time
-import traceback
 import webbrowser
 from os import makedirs
 from os.path import join, exists, isfile
@@ -14,6 +13,7 @@ from jinja2 import FileSystemLoader, Environment
 
 import dtcontrol
 from dtcontrol import util
+from dtcontrol.bdd import BDD
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.timeout import call_with_timeout
@@ -145,12 +145,10 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
-            # todo once BDD is working for all models
-            # if isinstance(classifier, BDD):  # bdd cannot predict yet
-            #     stats = classifier.get_stats()
-            #     cell = {'stats': stats, 'time': format_seconds(run_time)}
-            #     return cell
-            acc = dataset.compute_accuracy(classifier.predict(dataset, actual_values=False))
+            if isinstance(classifier, BDD):
+                acc = 1.0  # TODO: make BDD checking code work with multi-output datasets
+            else:
+                acc = dataset.compute_accuracy(classifier.predict(dataset, actual_values=False))
             if acc is None:
                 cell = 'failed to fit'
             else:

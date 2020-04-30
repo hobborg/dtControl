@@ -1,4 +1,3 @@
-import logging
 import math
 import random
 import sys
@@ -67,14 +66,7 @@ class BDD(BenchmarkSuiteClassifier):
         self.blast_vars(self.act_metadata)
 
         # Random starting order
-        # Need to try-catch due to bug(?) in BDD library
-        success = False
-        while not success:
-            try:
-                self.reorder_randomly()
-                success = True
-            except KeyError:
-                logging.debug('Error during random reordering of BDD. Retrying...')
+        self.reorder_randomly()
 
         # Finally construct the BDD
         row_num = -1
@@ -186,7 +178,7 @@ class BDD(BenchmarkSuiteClassifier):
         if actual_values == True:
             raise Exception("Predict with actual_values==True not supported by BDD")
         if self.checkValid(dataset):
-            return dataset.get_single_labels()
+            return dataset.get_single_labels()  # TODO: this doesn't work for multi-output
 
     def checkValid(self, dataset):
         return True  # TODO: NOT CHECKING VALIDITY RIGHT NOW
