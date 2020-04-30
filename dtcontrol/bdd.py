@@ -1,3 +1,4 @@
+import logging
 import math
 import random
 import sys
@@ -66,7 +67,14 @@ class BDD(BenchmarkSuiteClassifier):
         self.blast_vars(self.act_metadata)
 
         # Random starting order
-        self.reorder_randomly()
+        # Need to try-catch due to bug(?) in BDD library
+        success = False
+        while not success:
+            try:
+                self.reorder_randomly()
+                success = True
+            except KeyError:
+                logging.debug('Error during random reordering of BDD. Retrying...')
 
         # Finally construct the BDD
         row_num = -1
