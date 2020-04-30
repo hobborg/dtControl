@@ -38,6 +38,11 @@ presets:
     determinize: 'minnorm'
     numeric-predicates: ['axisonly', 'linear-logreg']
 
+  # Multilabel
+  mlentropy:
+    determinize: auto
+    impurity: multilabelentropy
+
   # Previous papers
   sos:
     determinize: none
