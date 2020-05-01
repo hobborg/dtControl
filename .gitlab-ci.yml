@@ -2,6 +2,7 @@ stages:
   - test
   - version
   - build
+  - deplot
 
 test:python3.7:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
@@ -58,8 +59,17 @@ gen:
   only:
     - master
 
-jekyll:
-  stage: build
+deploy_staging:
+  stage: deploy
+  environment: "staging"
+  script:
+    - pip install -U twine
+    - ls -l dist/*
+    - twine upload dist/*
+  when: manual
+
+deploy_website:
+  stage: deploy
   image: ruby:2.7
   cache:
     key: ${CI_COMMIT_REF_SLUG}
