@@ -2,7 +2,7 @@ stages:
   - test
   - version
   - build
-  - deplot
+  - deploy
 
 test:python3.7:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
