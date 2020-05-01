@@ -5,7 +5,7 @@ stages:
   - deploy
 
 test:python3.7:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: test
   script:
     - /usr/bin/python3.7 --version
@@ -19,7 +19,7 @@ test:python3.7:
       - decision_trees/
 
 test:python3.8:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: test
   script:
     - /usr/bin/python3.8 --version
@@ -33,7 +33,7 @@ test:python3.8:
       - decision_trees/
 
 version:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: version
   script:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -48,7 +48,7 @@ version:
     - master
 
 gen_wheel:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: build
   script:
     - python3.7 setup.py bdist_wheel
@@ -60,7 +60,7 @@ gen_wheel:
     - master
 
 deploy_staging:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: deploy
   environment: "staging"
   script:
@@ -69,7 +69,7 @@ deploy_staging:
   when: manual
 
 deploy_release:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: deploy
   environment: "release"
   script:
