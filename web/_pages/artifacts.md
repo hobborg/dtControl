@@ -14,16 +14,25 @@ summary: Represent CPS controllers as decision trees. Improve memory footprint, 
 # Artifact Evaluation Instructions
 
 Here we explain how to reproduce the results of the QEST 2020 submission **Compact and explainable strategy representations using dtControl**.
-More concretely, we show how to install our tool dtControl, how to obtain the input files and how to run dtControl on them.
-In the end, you will be able to check all the numbers reported in Table 1 of the paper.
+More concretely, we show how to 
+1. Install all requirements
+2. Install dtControl
+3. Download and unpack the case studies
+4. Run dtControl
+5. Interpret the output
+
+In the end, you will obtain Figure 1 and all the numbers reported in Table 1.
 
 ## Paper abstract 
+<details>
+<summary>Click to expand</summary>
 
 Recent advances have shown how decision trees are apt data structures for concisely representing strategies arising out of both model checking as well as controller synthesis for cyber-physical systems.
 Moreover, they make the strategy explainable and help boost understanding and trust.
 This tool demonstration paper presents dtControl -- a tool that can represent strategies arising from strategy synthesis using tools like [PRISM](https://www.prismmodelchecker.org/), [Storm](www.stormchecker.org/), [UPPAAL STRATEGO](https://people.cs.aau.dk/~marius/stratego/), and [SCOTS](https://gitlab.lrz.de/hcs/scots).
 We demonstrate the ease-of-use both when employing dtControl as a black box as well as when controlling all hyper-parameters.
 We compare the decision tree representation to BDDs and also demonstrate the possibility of obtaining even smaller decision trees using the specialized algorithms available in the tool.
+</details>
 
 ## Requirements
 
