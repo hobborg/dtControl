@@ -75,6 +75,14 @@ $ brew install python3
 
 On Windows, one of the ways to install Python 3 and `pip` could be using [Chocolatey](https://docs.python-guide.org/starting/install3/win/).
 
+
+### Installing graphviz 
+
+If you want to reproduce Figure 1, you need to convert a dot-file to a pdf. For this, you need graphviz. Since you have python, you can install it using
+```
+$ pip install graphviz
+```
+
 ### Creating a virtual environment
 
 We use `virtualenv` to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Install `virtualenv` by running 
