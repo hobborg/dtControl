@@ -168,8 +168,6 @@ $ python qest20-artifact.py
 
 We estimate the execution to take upto 3 hours depending on your machine specifications and will require atleast 22GB of RAM.
 If you want to run a smaller subset that takes only 15 mins and requires only 1GB of RAM, you can instead use [qest20-artifact-subset.py][2].
-[1]:{{ site.url }}/files/qest20-artifact.py
-[2]:{{ site.url }}/files/qest20-artifact-subset.py
 
 
 ## Reading the output
@@ -208,6 +206,5 @@ There you can see:
 Inside the folder, you can see the possible instantiations for each of these hyper-parameters.
 - The outputting is taken care of by the `print_dot` and `print_c`methods in the `decision_tree/decision_tree.py`.
 
-
-
-
+[1]:{{ site.url }}/files/qest20-artifact.py
+[2]:{{ site.url }}/files/qest20-artifact-subset.py
