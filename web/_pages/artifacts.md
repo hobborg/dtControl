@@ -56,6 +56,7 @@ The commands in this tutorial assume you are using command line, but an advanced
 <summary>Click to expand</summary>
 
 ### Installing git
+
 You will clone a git repository to obtain the case studies.
 If you do not have it, install git by following their advice [on their official downloads website](https://git-scm.com/downloads).
 
@@ -64,11 +65,13 @@ If you do not have it, install git by following their advice [on their official 
 Make sure you have Python 3.6.8 (or newer) and `pip3`
 
 On Ubuntu 16.10 or newer:
+
 ```
 $ sudo apt-get install python3 python3-pip
 ```
 
 On MacOS:
+
 ```
 $ brew install python3
 ```
@@ -79,6 +82,7 @@ On Windows, one of the ways to install Python 3 and `pip` could be using [Chocol
 ### Installing graphviz 
 
 If you want to reproduce Figure 1, you need to convert a dot-file to a pdf. For this, you need graphviz. Since you have python, you can install it using
+
 ```
 $ pip install graphviz
 ```
@@ -86,21 +90,27 @@ $ pip install graphviz
 ### Creating a virtual environment
 
 We use `virtualenv` to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Install `virtualenv` by running 
+
 ```
 $ sudo pip3 install virtualenv
 ```
+
 Then run 
+
 ```
 $ virtualenv -p python3 ~/dtcontrol/venv
 ```
+
 to create a virtual environment for dtControl. 
 This will create the folder `dtcontrol` in your home directoy along with the virtual environment installed into `dtcontrol/venv`. 
 After evaluating our artifact, you can delete this folder and thereby all traces of the python packages you installed for reproducing our results.
 
 To activate the virtual environment, run
+
 ```
 $ source ~/dtcontrol/venv/bin/activate
 ```
+
 </details>
 
 
@@ -112,9 +122,11 @@ $ source ~/dtcontrol/venv/bin/activate
 
 
 After activating the virtual environment, execute
+
 ```
 $ pip install dtcontrol
 ```
+
 </details>
 
 ## Obtaining the case studies
@@ -123,17 +135,23 @@ $ pip install dtcontrol
 <summary>Click to expand</summary>
 
 To obtain all case studies, first go to the dtcontrol directory
+
 ```
 $ cd ~/dtcontrol
 ```
+
 and then download the examples by executing
+
 ```
 $ git clone https://gitlab.lrz.de/i7/dtcontrol-examples.git
 ```
+
 Most of the input files are zipped. You can unpack them by executing
+
 ```
 $ cd dtcontrol-examples && ./unzip_qest.sh
 ```
+
 </details>
 
 
@@ -145,9 +163,11 @@ $ cd dtcontrol-examples && ./unzip_qest.sh
 <summary>Expand to see how to run on a single case study</summary>
 
 To run dtControl on a single case study, execute the following (assuming you have activated the virtual environment, installed dtControl and unzipped the case studies) from the `~/dtcontrol` folder:
+
 ```
 $ dtcontrol --input ~/dtcontrol/dtcontrol-examples/<case_study> --use-preset <preset>
 ```
+
 where `<case_study>` is the file name of the case study, e.g. cartpole.scs
 and `<preset>` is one of the available presets. For the paper, we used the `avg` preset for the MDP case studies and `mlentropy` preset for the CPS case studies.
 
@@ -162,9 +182,11 @@ Since we want to execute several algorithms of dtControl on multiple case studie
 Download the file [qest20-artifact.py][1] and put it into the `~/dtcontrol` directory. 
 This is important, as this file uses relative paths to access the case studies.
 Then (assuming you have activated the virtual environment where dtControl is installed) execute
+
 ```
 $ python qest20-artifact.py
 ```
+
 We estimate the execution to take upto 3 hours depending on your machine specifications and will require atleast 22GB of RAM.
 If you want to run a smaller subset that takes only 15 mins and requires only 1GB of RAM, you can instead use [qest20-artifact-subset.py][2].
 [1]:{{ site.url }}/files/qest20-artifact.py
@@ -177,6 +199,7 @@ If you want to run a smaller subset that takes only 15 mins and requires only 1G
 <summary>Click to expand</summary>
 
 ### Table 1
+
 Running dtControl creates several files. One of them is `~/dtcontrol/benchmark.html`. Open this file in a browser, and you will see a table containing the results of all the case study - algorithm combinations which were executed.
 Every row corresponds to one of the case studies in Table 1 of the paper, although some of their names here contain more information (e.g. `beb.3-4.LineSeized` instead of `beb`).
 
@@ -187,15 +210,19 @@ There also are two BDD columns (if you used the full script), as there are two p
 Also, we randomize the initial variable ordering of the BDD, so the numbers you get can be different from those in Table 1. The order of magnitude should still match.
 
 ### Figure 1
+
 For every resulting decision tree, dtControl procudes a dot file for visualization. 
 The one used in Figure 1 is located in `~/dtControl/decision_trees/AVG/firewire_abst.dot`.
 Execute
+
 ```
 $ dot -Tpdf ~/dtControl/decision_trees/AVG/firewire_abst.dot -o Figure1.pdf
 ```
+
 to produce a pdf from the dot-file and then open Figure1.pdf with you favourite PDF-viewer.
 
 ### Figure 2
+
 Figure 2 shows an overview of the modular structure of dtControl. 
 To verify this structure, you can download the [source code as zip](https://gitlab.lrz.de/i7/dtcontrol/-/archive/master/dtcontrol-master.zip) or [view it on gitlab](https://gitlab.lrz.de/i7/dtcontrol).
 The source code is in the dtcontrol folder. 
