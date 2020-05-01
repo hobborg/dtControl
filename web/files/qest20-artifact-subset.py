@@ -14,6 +14,7 @@ suite = BenchmarkSuite(save_folder='saved_classifiers',
 suite.add_datasets(['dtcontrol-examples', 'dtcontrol-examples/prism'],
                    include=[
                        "firewire_abst",
+                       "ij.10",
                        "leader4",
                        "beb.3-4.LineSeized",
                        "csma2_4_max",
