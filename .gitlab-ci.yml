@@ -67,6 +67,8 @@ deploy_staging:
     - ls -l dist/*
     - twine upload dist/*
   when: manual
+  only:
+    - master
 
 deploy_release:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
@@ -76,7 +78,9 @@ deploy_release:
     - ls -l dist/*
     - twine upload dist/*
   when: manual
-
+  only:
+    - master
+    
 deploy_website:
   stage: deploy
   image: ruby:2.7
