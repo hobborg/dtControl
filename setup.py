@@ -2,7 +2,7 @@ import os
 import subprocess
 import setuptools
 
-with open("README.rst", "r") as fh:
+with open("README.rst", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 def git(*args):
@@ -23,8 +23,8 @@ setuptools.setup(
     name="dtcontrol",
     version=version,
     description="A small tool which can convert automatically synthesised formally verified controllers into concise decision trees.",
-    long_description_content_type="text/markdown",
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     author='Mathias Jackermeier',
     author_email='mathias.jackermeier@outlook.de',
     license='MIT',
