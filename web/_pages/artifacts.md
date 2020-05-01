@@ -24,6 +24,12 @@ More concretely, we show how to
 
 In the end, you will obtain Figure 1 and all the numbers reported in Table 1.
 
+Here is a demonstration video from which you may copy-paste the commands.
+
+<script id="asciicast-3NugWnvM7h2KXN7pcUsm18XME" src="https://asciinema.org/a/3NugWnvM7h2KXN7pcUsm18XME.js" async></script>
+
+More detailed instructions follow.
+
 ## Paper abstract 
 
 Recent advances have shown how decision trees are apt data structures for concisely representing strategies arising out of both model checking as well as controller synthesis for cyber-physical systems.
@@ -47,7 +53,6 @@ The commands in this tutorial assume you are using command line, but an advanced
 
 
 ## Preparation
-
 
 ### Installing git
 
@@ -136,8 +141,6 @@ Most of the input files are zipped. You can unpack them by executing
 ```
 $ cd dtcontrol-examples && ./unzip_qest.sh
 ```
-
-
 
 
 ## Running dtControl
