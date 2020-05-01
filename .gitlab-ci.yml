@@ -33,7 +33,7 @@ test:python3.8:
       - decision_trees/
 
 version:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
   stage: version
   script:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -47,8 +47,8 @@ version:
   only:
     - master
 
-gen:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.5
+gen_wheel:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
   stage: build
   script:
     - python3.7 setup.py bdist_wheel
@@ -60,10 +60,19 @@ gen:
     - master
 
 deploy_staging:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
   stage: deploy
   environment: "staging"
   script:
-    - pip install -U twine
+    - ls -l dist/*
+    - twine upload dist/*
+  when: manual
+
+deploy_release:
+  image: gitlab.lrz.de:5005/i7/dtcontrol:1.6
+  stage: deploy
+  environment: "release"
+  script:
     - ls -l dist/*
     - twine upload dist/*
   when: manual
