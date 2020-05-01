@@ -47,39 +47,29 @@ version:
   only:
     - master
 
-gen_wheel:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
-  stage: build
-  script:
-    - python3.7 setup.py bdist_wheel
-    - python3.8 setup.py bdist_wheel
-  artifacts:
-    paths:
-      - dist/*.whl
-  only:
-    - master
-
 deploy_staging:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: deploy
   environment: "staging"
   script:
+    - python3.7 setup.py bdist_wheel
     - ls -l dist/*
     - twine upload dist/*
   when: manual
   only:
-    - master
+    - tags
 
 deploy_release:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.7
   stage: deploy
   environment: "release"
   script:
+    - python3.7 setup.py bdist_wheel
     - ls -l dist/*
     - twine upload dist/*
   when: manual
   only:
-    - master
+    - tags
     
 deploy_website:
   stage: deploy
