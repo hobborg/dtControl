@@ -1,7 +1,7 @@
 ---
 permalink: "/artifacts/"
 
-layout: default
+layout: artifacts
 
 logo: /assets/images/logo.png
 
@@ -9,6 +9,7 @@ title: dtControl
 
 summary: Represent CPS controllers as decision trees. Improve memory footprint, boost explainability while preserving guarantees.
 
+toc: true
 ---
 
 # Artifact Evaluation Instructions
@@ -24,19 +25,15 @@ More concretely, we show how to
 In the end, you will obtain Figure 1 and all the numbers reported in Table 1.
 
 ## Paper abstract 
-<details>
-<summary>Click to expand</summary>
 
 Recent advances have shown how decision trees are apt data structures for concisely representing strategies arising out of both model checking as well as controller synthesis for cyber-physical systems.
 Moreover, they make the strategy explainable and help boost understanding and trust.
 This tool demonstration paper presents dtControl -- a tool that can represent strategies arising from strategy synthesis using tools like [PRISM](https://www.prismmodelchecker.org/), [Storm](www.stormchecker.org/), [UPPAAL STRATEGO](https://people.cs.aau.dk/~marius/stratego/), and [SCOTS](https://gitlab.lrz.de/hcs/scots).
 We demonstrate the ease-of-use both when employing dtControl as a black box as well as when controlling all hyper-parameters.
 We compare the decision tree representation to BDDs and also demonstrate the possibility of obtaining even smaller decision trees using the specialized algorithms available in the tool.
-</details>
+
 
 ## Requirements
-<details>
-<summary>Click to expand</summary>
 
 To run dtControl, you need an up-to-date version of Python 3 (>=3.6.8) and the Python package installer pip.
 Additionally, for downloading the case studies, we also require that you have Git installed.
@@ -47,13 +44,10 @@ All of these are installed together with our tool, since it is distributed using
 The experiments reported in the paper have been conducted on an Ubuntu Linux machine with 192GB of RAM and a Intel Xeon CPU E5-2630 v4 @ 2.20GHz. 
 The full set of experiments require 22GB of RAM and takes about 2-3 hours to complete, however we also provide a reduced set of experiments which require only 1GB of RAM and finishes in less than 15 minutes.
 The commands in this tutorial assume you are using command line, but an advanced user should be able to transfer the commands given here and make it work on Windows.
-</details>
-
 
 
 ## Preparation
-<details>
-<summary>Click to expand</summary>
+
 
 ### Installing git
 
@@ -111,14 +105,8 @@ To activate the virtual environment, run
 $ source ~/dtcontrol/venv/bin/activate
 ```
 
-</details>
-
-
 
 ## Installing dtControl
-
-<details>
-<summary>Click to expand</summary>
 
 
 After activating the virtual environment, execute
@@ -127,12 +115,9 @@ After activating the virtual environment, execute
 $ pip install dtcontrol
 ```
 
-</details>
+
 
 ## Obtaining the case studies
-
-<details>
-<summary>Click to expand</summary>
 
 To obtain all case studies, first go to the dtcontrol directory
 
@@ -152,15 +137,12 @@ Most of the input files are zipped. You can unpack them by executing
 $ cd dtcontrol-examples && ./unzip_qest.sh
 ```
 
-</details>
+
 
 
 ## Running dtControl
 
 ### Single case-study: Command line interface
-
-<details>
-<summary>Expand to see how to run on a single case study</summary>
 
 To run dtControl on a single case study, execute the following (assuming you have activated the virtual environment, installed dtControl and unzipped the case studies) from the `~/dtcontrol` folder:
 
@@ -171,12 +153,9 @@ $ dtcontrol --input ~/dtcontrol/dtcontrol-examples/<case_study> --use-preset <pr
 where `<case_study>` is the file name of the case study, e.g. cartpole.scs
 and `<preset>` is one of the available presets. For the paper, we used the `avg` preset for the MDP case studies and `mlentropy` preset for the CPS case studies.
 
-</details>
+
 
 ### Complete table: Python bindings
-
-<details>
-<summary>Expand to see how to run all experiments with our prepared script</summary>
 
 Since we want to execute several algorithms of dtControl on multiple case studies, it is quicker to use the built-in benchmarking functionality.
 Download the file [qest20-artifact.py][1] and put it into the `~/dtcontrol` directory. 
@@ -191,12 +170,9 @@ We estimate the execution to take upto 3 hours depending on your machine specifi
 If you want to run a smaller subset that takes only 15 mins and requires only 1GB of RAM, you can instead use [qest20-artifact-subset.py][2].
 [1]:{{ site.url }}/files/qest20-artifact.py
 [2]:{{ site.url }}/files/qest20-artifact-subset.py
-</details>
+
 
 ## Reading the output
-
-<details>
-<summary>Click to expand</summary>
 
 ### Table 1
 
@@ -232,6 +208,6 @@ There you can see:
 Inside the folder, you can see the possible instantiations for each of these hyper-parameters.
 - The outputting is taken care of by the `print_dot` and `print_c`methods in the `decision_tree/decision_tree.py`.
 
-</details>
+
 
 

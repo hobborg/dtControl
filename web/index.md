@@ -7,16 +7,26 @@ title: dtControl
 
 summary: Represent CPS controllers as decision trees. Improve memory footprint, boost explainability while preserving guarantees.
 
-demoVideoId: qS8FQ3pCeE4
 ---
 
 **dtControl** is a tool for compressing memoryless controllers arising out of automatic controller synthesis of 
 cyber-physical systems (CPS). dtControl takes as input a controller synthesised by various formal verification 
 tools and represents them in the form of decision trees. An example is shown below:
 
+{::options parse_block_html="true" /}
 <div class="image-container">
-  <div class="fixed"><img src="assets/images/10rooms-pause-loop.gif" /><div class="caption">Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS</div></div>
-  <div class="flex-item"><img src="assets/images/10rooms-dt.png" /><div class="caption">Small and explainable decision tree of the same controller (determinized) as output by dtControl</div></div>
+<div class="fixed">
+<img src="assets/images/10rooms-pause-loop.gif" />
+<div class="caption">
+Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS
+</div>
+</div>
+<div class="flex-item">
+<img src="assets/images/10rooms-dt.png" />
+<div class="caption">
+Small and explainable decision tree of the same controller (determinized) as output by dtControl
+</div>
+</div>
 </div>
 
 Currently dtControl supports controllers output by three tools: 

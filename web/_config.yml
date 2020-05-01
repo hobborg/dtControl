@@ -1,1 +1,14 @@
 include: ['_pages']
+markdown: kramdown
+kramdown:
+  parse_block_html: true
+plugins:
+  - jekyll-toc
+toc:
+  min_level: 2
+  max_level: 2
+  no_toc_section_class: no_toc_section
+  list_class: section-nav
+  sublist_class: ''
+  item_class: toc-entry
+  item_prefix: toc-

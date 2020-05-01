@@ -27,6 +27,7 @@ h1 {
 h2 {
   color:#393939;
   font-weight: 500;
+  margin-top: 50px;
 }
 
 h3, h4, h5, h6 {
@@ -105,37 +106,38 @@ img {
 
 header {
   width:270px;
+  height:100%;
   float:left;
   position:fixed;
   -webkit-font-smoothing:subpixel-antialiased;
 }
 
-header ul {
+ul.buttons {
   list-style:none;
   height:40px;
   padding:0;
   background: #f4f4f4;
   border-radius:5px;
   border:1px solid #e0e0e0;
-  width:270px;
+  width:268px;
 }
 
-header li {
-  width:89px;
+.buttons li {
+  width:88px;
   float:left;
   border-right:1px solid #e0e0e0;
   height:40px;
 }
 
-header li:first-child a {
+.buttons li:first-child a {
   border-radius:5px 0 0 5px;
 }
 
-header li:last-child a {
+.buttons li:last-child a {
   border-radius:0 5px 5px 0;
 }
 
-header ul a {
+ul.buttons a {
   line-height:1;
   font-size:11px;
   color:#999;
@@ -145,11 +147,11 @@ header ul a {
   height:34px;
 }
 
-header ul a:hover {
+ul.buttons a:hover {
   color:#999;
 }
 
-header ul a:active {
+ul.buttons a:active {
   background-color:#f0f0f0;
 }
 
@@ -158,15 +160,44 @@ strong {
   font-weight:500;
 }
 
-header ul li + li + li {
+ul.buttons li + li + li {
   border-right:none;
   width:89px;
 }
 
-header ul a strong {
+ul.buttons a strong {
   font-size:14px;
   display:block;
   color:#222;
+}
+
+#sidebar-nav {
+  /*margin-bottom: 1em;
+  position: fixed;
+  float: right !important;
+  right: 0;
+  width: 270px;
+  margin-right: 100px;
+  padding-left: 1em;
+  padding-top: 1em !important;
+  z-index: 10;*/
+  width: 100%;
+  background: #f5f5f5;
+  border-radius: 15px;
+  margin: 0px 0px 10px -15px;
+  padding: 15px 15px 1px 25px;
+  position: absolute;
+  bottom: 170px;
+}
+
+#sidebar-nav span {
+  font-weight: 600;
+}
+
+#sidebar-nav ul {
+  list-style-type: none;
+  margin-top: 10px;
+  padding: 0;
 }
 
 section {
@@ -266,10 +297,15 @@ footer {
     display:inline;
   }
 
-  header ul {
+  ul.buttons {
     position:absolute;
     right:50px;
     top:52px;
+  }
+
+  #sidebar-nav {
+    position: relative;
+    bottom: 0;
   }
 }
 
@@ -282,7 +318,7 @@ footer {
     padding:0;
   }
 
-  header ul, header p.view {
+  ul.buttons, header p.view {
     position:static;
   }
 
@@ -296,11 +332,11 @@ footer {
     padding:15px;
   }
 
-  header ul {
+  ul.buttons {
     width:99%;
   }
 
-  header li, header ul li + li + li {
+  .buttons li, ul.buttons li + li + li {
     width:33%;
   }
 }
