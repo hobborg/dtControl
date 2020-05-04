@@ -36,7 +36,7 @@ bdd_actOR = BDD(0, label_pre_processor=NormPreProcessor(min))
 bdd_actUL = BDD(1, label_pre_processor=NormPreProcessor(min))
 classifiers = [
     DecisionTree([aa], MultiLabelEntropy(), 'Multi-label', early_stopping=True),
-    DecisionTree([cat], Entropy(), 'AVG'),
+    DecisionTree([aa, cat], Entropy(), 'AVG'),
     bdd_actOR,
     bdd_actUL
 ]
