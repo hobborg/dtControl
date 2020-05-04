@@ -11,17 +11,23 @@ from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 
 aa = AxisAlignedSplittingStrategy()
 cat = CategoricalMultiSplittingStrategy(value_grouping=True)
-cat2 = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=sys.maxsize)
+cat2 = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=sys.maxsize)  # this is AVG with a different
+# tolerance setting; in the paper we always report the best out of all
 bdd_actOR = BDD(0, label_pre_processor=NormPreProcessor(min))
 bdd_actUL = BDD(1, label_pre_processor=NormPreProcessor(min))
 
 mdp_classifiers = [
-    DecisionTree([aa, cat], Entropy(), 'AVG'),
-    DecisionTree([aa, cat2], Entropy(), 'AVG2'),
+    DecisionTree([aa, cat], Entropy(), 'DT'),
     bdd_actUL,
-    bdd_actOR]
+    bdd_actOR
+]
+mdp_classifiers2 = [
+    DecisionTree([aa, cat2], Entropy(), 'DT'),
+    bdd_actUL,
+    bdd_actOR
+]
 cps_classifiers = [
-    DecisionTree([aa], MultiLabelEntropy(), 'Multi-label', early_stopping=True),
+    DecisionTree([aa], MultiLabelEntropy(), 'DT', early_stopping=True),
     bdd_actOR,
     bdd_actUL
 ]
@@ -31,17 +37,21 @@ suite = BenchmarkSuite(benchmark_file='benchmark')
 suite.add_datasets(['dtcontrol-examples', 'dtcontrol-examples/prism'], include=[
     "firewire_abst",
     "ij.10",
-    "leader4",
     "beb.3-4.LineSeized",
-    "csma2_4_max",
     "eajs.2.100.5.ExpUtil",
-    "wlan2",
     "zeroconf",
-    "mer30",
     "exploding-blocksworld.5",
     "firewire.true.3.200.time_min",
 ])
 suite.benchmark(mdp_classifiers)
+
+suite.add_datasets(['dtcontrol-examples', 'dtcontrol-examples/prism'], include=[
+    "leader4",
+    "csma2_4_max",
+    "wlan2",
+    "mer30",
+])
+suite.benchmark(mdp_classifiers2)
 
 suite.add_datasets(['dtcontrol-examples'], include=[
     "cartpole",
