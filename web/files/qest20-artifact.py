@@ -31,7 +31,7 @@ suite.add_datasets(['dtcontrol-examples', 'dtcontrol-examples/prism'],
                    )
 
 aa = AxisAlignedSplittingStrategy()
-cat = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=0.05)
+cat = CategoricalMultiSplittingStrategy(value_grouping=True)
 bdd_actOR = BDD(0, label_pre_processor=NormPreProcessor(min))
 bdd_actUL = BDD(1, label_pre_processor=NormPreProcessor(min))
 classifiers = [
