@@ -110,6 +110,8 @@ class DecisionTree(BenchmarkSuiteClassifier):
 class Node:
     def __init__(self, splitting_strategies, impurity_measure, early_stopping=False, early_stopping_num_examples=None,
                  early_stopping_optimized=False, depth=0):
+        self.logger = logging.getLogger("node_logger")
+        self.logger.setLevel(logging.ERROR)
         self.splitting_strategies = splitting_strategies
         self.impurity_measure = impurity_measure
         self.early_stopping = early_stopping
@@ -150,7 +152,7 @@ class Node:
         splits = [strategy.find_split(dataset, self.impurity_measure) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
         if not splits:
-            logging.error("Aborting branch: no split possible.")
+            self.logger.warning("Aborting branch: no split possible.")
             if pre_determinize:
                 self.impurity_measure.determinizer.pre_determinized_labels = None
             return
@@ -161,7 +163,7 @@ class Node:
         subsets = self.split.split(dataset)
         assert len(subsets) > 1
         if any(len(s.x) == 0 for s in subsets):
-            logging.error("Aborting branch: no split possible. "
+            self.logger.warning("Aborting branch: no split possible. "
                           "You might want to consider adding more splitting strategies.")
             return
         for subset in subsets:
@@ -175,9 +177,9 @@ class Node:
     def check_done(self, dataset):
         if self.depth >= 100 and not self.logged_depth_problem:
             self.logged_depth_problem = True
-            logging.info("Depth >= 100. Maybe something is going wrong?")
+            self.logger.info("Depth >= 100. Maybe something is going wrong?")
         if self.depth >= 500:
-            logging.error("Aborting branch: depth >= 500.")
+            self.logger.warning("Aborting branch: depth >= 500.")
             return True
 
         y = dataset.get_single_labels()
