@@ -61,21 +61,23 @@ If you do not have it, install git by following their advice [on their official 
 
 ### Installing python
 
-Make sure you have Python 3.6.8 (or newer) and `pip3`
+Make sure you have Python 3.6.8 (or newer), `pip3` and `python3-venv` for creating virtual environments.
 
-On Ubuntu 16.10 or newer:
+On **Ubuntu** 16.10 or newer:
 
 ```
-$ sudo apt-get install python3 python3-pip
+$ sudo apt-get install python3 python3-pip python3-venv
 ```
 
-On MacOS:
+On **MacOS**, you can install with the help of the package manager [Homebrew](https://brew.sh/).
 
 ```
 $ brew install python3
 ```
 
-On Windows, one of the ways to install Python 3 and `pip` could be using [Chocolatey](https://docs.python-guide.org/starting/install3/win/).
+or refer to this [tutorial](https://docs.python-guide.org/starting/install3/osx/) if you don't have Homebrew installed.
+
+On **Windows**, one may follow [this](https://docs.python-guide.org/starting/install3/win/) or [this](https://installpython3.com/windows/) tutorial.
 
 
 ### Installing graphviz 
@@ -83,25 +85,19 @@ On Windows, one of the ways to install Python 3 and `pip` could be using [Chocol
 If you want to reproduce Figure 1, you need to convert a dot-file to a pdf. For this, you need graphviz. Since you have python, you can install it using
 
 ```
-$ pip install graphviz
+$ pip3 install graphviz
 ```
 
 ### Creating a virtual environment
 
-We use `virtualenv` to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. Install `virtualenv` by running 
+We use a [virtual environment](https://docs.python.org/3/library/venv.html) to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. 
+
+For the purpose of this artifact evaluation, let us create a folder `dtcontrol` in your home directory and place our virtual environment in the folder `~/dtcontrol/venv`. This can be accomplished by running:
 
 ```
-$ sudo pip3 install virtualenv
+$ python3 -m venv ~/dtcontrol/venv
 ```
 
-Then run 
-
-```
-$ virtualenv -p python3 ~/dtcontrol/venv
-```
-
-to create a virtual environment for dtControl. 
-This will create the folder `dtcontrol` in your home directoy along with the virtual environment installed into `dtcontrol/venv`. 
 After evaluating our artifact, you can delete this folder and thereby all traces of the python packages you installed for reproducing our results.
 
 To activate the virtual environment, run
@@ -117,9 +113,8 @@ $ source ~/dtcontrol/venv/bin/activate
 After activating the virtual environment, execute
 
 ```
-$ pip install dtcontrol
+$ pip3 install dtcontrol
 ```
-
 
 
 ## Obtaining the case studies
@@ -189,14 +184,14 @@ Also, we randomize the initial variable ordering of the BDD, so the numbers you 
 ### Figure 1
 
 For every resulting decision tree, dtControl procudes a dot file for visualization. 
-The one used in Figure 1 is located in `~/dtControl/decision_trees/AVG/firewire_abst.dot`.
+The one used in Figure 1 is located in `~/dtControl/decision_trees/AVG/firewire_abst/AVG.dot`.
 Execute
 
 ```
-$ dot -Tpdf ~/dtControl/decision_trees/AVG/firewire_abst.dot -o Figure1.pdf
+$ dot -Tpdf ~/dtControl/decision_trees/AVG/firewire_abst/AVG.dot -o Figure1.pdf
 ```
 
-to produce a pdf from the dot-file and then open Figure1.pdf with you favourite PDF-viewer.
+to produce a pdf from the dot-file and then open `Figure1.pdf` with you favourite PDF-viewer.
 
 ### Figure 2
 
