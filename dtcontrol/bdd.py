@@ -269,6 +269,9 @@ class BDD(BenchmarkSuiteClassifier):
     def print_c(self):
         return self.result.to_expr()
 
+    def print_pdf(self, filename):
+        self.bdd.dump(filename, filetype='pdf')
+
 # ds = SingleOutputDataset("../dumps/cruise-small-latest.dump")
 # ds = MultiOutputDataset("../examples/10rooms.scs")
 # ds = SingleOutputDataset("../examples/cartpole.scs")
