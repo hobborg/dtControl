@@ -48,7 +48,7 @@ All of these are installed together with our tool, since it is distributed using
 
 
 The experiments reported in the paper have been conducted on an Ubuntu Linux machine with 192GB of RAM and a Intel Xeon CPU E5-2630 v4 @ 2.20GHz. 
-The full set of experiments require 22GB of RAM and takes about 2-3 hours to complete, however we also provide a reduced set of experiments which require only 1GB of RAM and finishes in less than 15 minutes.
+The full set of experiments require 22GB of RAM and takes about 2-3 hours to complete, however we also provide a reduced set of experiments which require only 1GB of RAM and finishes in less than 5 minutes.
 The commands in this tutorial assume you are using command line, but an advanced user should be able to transfer the commands given here and make it work on Windows.
 
 
@@ -140,6 +140,32 @@ $ cd dtcontrol-examples && ./unzip_qest.sh
 
 ## Running dtControl
 
+### Complete table: Python bindings
+
+Since we want to execute several algorithms of dtControl on multiple case studies, it is quicker to use the built-in benchmarking functionality.
+Download the file [qest20-artifact.py][1] and put it into the `~/dtcontrol` directory or run
+```
+$ cd ~/dtcontrol
+$ wget https://dtcontrol.model.in.tum.de/files/qest20-artifact.py
+```
+
+This file must be placed inside the `~/dtcontrol` folder as it uses relative paths to access the case studies.
+Then (assuming you have activated the virtual environment where dtControl is installed) execute
+
+```
+$ python qest20-artifact.py
+```
+
+We estimate the execution to take upto 3 hours depending on your machine specifications and will require atleast 22GB of RAM.
+If you want to run a smaller subset that takes only 15 mins and requires only 1GB of RAM, you can instead use [qest20-artifact-subset.py][2]
+```
+$ cd ~/dtcontrol
+$ wget https://dtcontrol.model.in.tum.de/files/qest20-artifact-subset.py
+```
+
+*Note that you might see many warnings and messages during execution, however, as long as all experiments run, it should be safe to ignore them.*
+
+
 ### Single case-study: Command line interface
 
 To run dtControl on a single case study, execute the following (assuming you have activated the virtual environment, installed dtControl and unzipped the case studies) from the `~/dtcontrol` folder:
@@ -150,24 +176,6 @@ $ dtcontrol --input ~/dtcontrol/dtcontrol-examples/<case_study> --use-preset <pr
 
 where `<case_study>` is the file name of the case study, e.g. cartpole.scs
 and `<preset>` is one of the available presets. For the paper, we used the `avg` preset for the MDP case studies and `mlentropy` preset for the CPS case studies.
-
-
-
-### Complete table: Python bindings
-
-Since we want to execute several algorithms of dtControl on multiple case studies, it is quicker to use the built-in benchmarking functionality.
-Download the file [qest20-artifact.py][1] and put it into the `~/dtcontrol` directory. 
-This is important, as this file uses relative paths to access the case studies.
-Then (assuming you have activated the virtual environment where dtControl is installed) execute
-
-```
-$ python qest20-artifact.py
-```
-
-We estimate the execution to take upto 3 hours depending on your machine specifications and will require atleast 22GB of RAM.
-If you want to run a smaller subset that takes only 15 mins and requires only 1GB of RAM, you can instead use [qest20-artifact-subset.py][2].
-
-*Note that you might see many warnings and messages during execution, however, as long as all experiments run, it should be safe to ignore them.*
 
 
 ## Reading the output
@@ -181,7 +189,8 @@ Every row corresponds to one of the case studies in Table 1 of the paper, althou
 
 In this table, there are more columns than in Table 1 of the paper.
 There are two decision tree algorithms, namely *AVG* and *Multi-label*. In the paper, we report the results of AVG for the MDPs and of Multi-label for the CPS.
-The other algorithm is only run since our benchmark suite runs every classifier on every model. Note that AVG does not work on the CPS, as those do not contain categorical variables, but numeric ones (the "failed to fit" error message in the cells can be safely ignored). The number of nodes for AVG and Multi-label correspond exactly to those in Table 1 of the paper.
+Note that AVG only works on the MDP case studies as those contain categorical variables in addition to numeric ones. On the other hand, Multi-label only works on the CPS case studies that contain exclusively numeric variables.
+The number of nodes for AVG and Multi-label correspond exactly to those in Table 1 of the paper.
 There also are two BDD columns (if you used the full script), as there are two possible approaches to encode the information in a BDD, and there is no clear winner among them.
 Also, we randomize the initial variable ordering of the BDD, so the numbers you get can be different from those in Table 1. The order of magnitude should still match.
 
@@ -206,7 +215,7 @@ There you can see:
 - The abstract dataset_loader in the folder dataset, with all the instantiations for the different tools
 - A folder for the Determinizer, the Predicate Generator (called splitting) and the Predicate Selector (called impurity) in the folder decision_tree. 
 Inside the folder, you can see the possible instantiations for each of these hyper-parameters.
-- The outputting is taken care of by the `print_dot` and `print_c`methods in the `decision_tree/decision_tree.py`.
+- The outputting is taken care of by the `print_dot` and `print_c` methods in the `decision_tree/decision_tree.py`.
 
 [1]:{{ site.url }}/files/qest20-artifact.py
 [2]:{{ site.url }}/files/qest20-artifact-subset.py
