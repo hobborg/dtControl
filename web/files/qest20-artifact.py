@@ -1,3 +1,5 @@
+import sys
+
 from dtcontrol.bdd import BDD
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
@@ -9,11 +11,13 @@ from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 
 aa = AxisAlignedSplittingStrategy()
 cat = CategoricalMultiSplittingStrategy(value_grouping=True)
+cat2 = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=sys.maxsize)
 bdd_actOR = BDD(0, label_pre_processor=NormPreProcessor(min))
 bdd_actUL = BDD(1, label_pre_processor=NormPreProcessor(min))
 
 mdp_classifiers = [
     DecisionTree([aa, cat], Entropy(), 'AVG'),
+    DecisionTree([aa, cat2], Entropy(), 'AVG2'),
     bdd_actUL,
     bdd_actOR]
 cps_classifiers = [
