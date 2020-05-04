@@ -275,7 +275,7 @@ class BenchmarkSuite:
             with open(filename) as f:
                 is_det = "NON-PERMISSIVE" in f.readline()
                 return is_det
-        elif "prism" in ext:
+        elif "prism" in ext or "storm" in ext:
             return True  # PRISM is always deterministic (?)
         else:
             return False  # UPPAAL is always non-deterministic
