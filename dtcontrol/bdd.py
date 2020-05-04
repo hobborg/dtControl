@@ -1,3 +1,5 @@
+import logging
+
 import math
 import random
 import sys
@@ -5,6 +7,7 @@ import sys
 import numpy
 # from dd import cudd as _bdd # TODO: use cudd?
 from dd import autoref as _bdd
+logging.getLogger("dd").setLevel(logging.CRITICAL)
 from tqdm import tqdm
 
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
@@ -94,14 +97,14 @@ class BDD(BenchmarkSuiteClassifier):
             self.result = row_result if row_num == 0 else self.bdd.apply('or', self.result, row_result)
 
         # collect garbage and reorder heuristics
-        print("Before collecting garbage: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        # print("Before collecting garbage: result %s, BDD %s" % (len(self.result), len(self.bdd)))
         self.bdd.collect_garbage()
-        print("After: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        # print("After: result %s, BDD %s" % (len(self.result), len(self.bdd)))
 
         # reorder with dd until convergence
         i = 0
         while True:
-            print(str(i) + ": result %s, BDD %s" % (len(self.result), len(self.bdd)))
+            # print(str(i) + ": result %s, BDD %s" % (len(self.result), len(self.bdd)))
             i += 1
             bdd_size = len(self.bdd)
             _bdd.reorder(self.bdd)
@@ -109,7 +112,7 @@ class BDD(BenchmarkSuiteClassifier):
                 print("Reordering did not change size, local optimum BDD computed.")
                 break
 
-        print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        # print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
 
     ################### Helper methods for fit #####################
 
