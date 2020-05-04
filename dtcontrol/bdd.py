@@ -64,7 +64,7 @@ class BDD(BenchmarkSuiteClassifier):
             self.act_metadata["min"] = [0]
             self.act_metadata["step_size"] = [1]
         else:
-            print("Invalid value for all_or_unique_label, namely" + str(self.all_or_unique_label))
+            logging.error("Invalid value for all_or_unique_label, namely" + str(self.all_or_unique_label))
             sys.exit()
         self.blast_vars(self.act_metadata)
 
@@ -73,6 +73,7 @@ class BDD(BenchmarkSuiteClassifier):
 
         # Finally construct the BDD
         row_num = -1
+        logging.info("Loading data and constructing BDD...")
         for row in tqdm(dataset.x):
             row_num += 1
             # AND all state vars
@@ -89,7 +90,7 @@ class BDD(BenchmarkSuiteClassifier):
                 # Unique label
                 act_result = self.bdd_for(dataset.get_unique_labels()[row_num], self.act_metadata, 0)
             else:
-                print("Invalid value for all_or_unique_label, namely" + str(self.all_or_unique_label))
+                logging.error("Invalid value for all_or_unique_label, namely" + str(self.all_or_unique_label))
                 sys.exit()
 
             row_result = self.bdd.apply('and', row_result, act_result)
@@ -109,7 +110,7 @@ class BDD(BenchmarkSuiteClassifier):
             bdd_size = len(self.bdd)
             _bdd.reorder(self.bdd)
             if bdd_size == len(self.bdd):
-                print("Reordering did not change size, local optimum BDD computed.")
+                # print("Reordering did not change size, local optimum BDD computed.")
                 break
 
         # print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
