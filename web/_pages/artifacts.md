@@ -80,14 +80,6 @@ or refer to this [tutorial](https://docs.python-guide.org/starting/install3/osx/
 On **Windows**, one may follow [this](https://docs.python-guide.org/starting/install3/win/) or [this](https://installpython3.com/windows/) tutorial.
 
 
-### Installing graphviz 
-
-If you want to reproduce Figure 1, you need to convert a dot-file to a pdf. For this, you need graphviz. Since you have python, you can install it using
-
-```
-$ pip3 install graphviz
-```
-
 ### Creating a virtual environment
 
 We use a [virtual environment](https://docs.python.org/3/library/venv.html) to make sure that the installation is clean and easy, and does not interfere with the python packages installed in your system. 
@@ -185,26 +177,22 @@ Here, we assume that you have finished running either the [complete script][1] o
 ### Table 1
 
 Running dtControl creates several files. One of them is `~/dtcontrol/benchmark.html`. Open this file in a browser, and you will see a table containing the results of all the case study - algorithm combinations which were executed.
-Every row corresponds to one of the case studies in Table 1 of the paper, although some of their names here contain more information (e.g. `beb.3-4.LineSeized` instead of `beb`).
 
-In this table, there are more columns than in Table 1 of the paper.
-There are two decision tree algorithms, namely *AVG* and *Multi-label*. In the paper, we report the results of AVG for the MDPs and of Multi-label for the CPS.
-Note that AVG only works on the MDP case studies as those contain categorical variables in addition to numeric ones. On the other hand, Multi-label only works on the CPS case studies that contain exclusively numeric variables.
-The number of nodes for AVG and Multi-label correspond exactly to those in Table 1 of the paper.
-There also are two BDD columns (if you used the full script), as there are two possible approaches to encode the information in a BDD, and there is no clear winner among them.
-Also, we randomize the initial variable ordering of the BDD, so the numbers you get can be different from those in Table 1. The order of magnitude should still match.
+The contents of the table are the following.
+- Every row corresponds to one of the case studies in Table 1 of the paper, although some of their names here contain more information (e.g. `beb.3-4.LineSeized` instead of `beb`).
+- The name of each case study is accompanied with two numbers `#(s,a)`, the number of state-action pairs, and `#doc`, the domain of controller. We report `#doc` under the "Lookup table" column of Table 1 in the paper. This is size of the domain when the strategy is seen as a map from states to set of allowed actions (f: S ➔ 2ᴬ).
+- The column DT which give the number of nodes in the decision tree directly correspond to the DT column in Table 1.
+- There also are two BDD columns (if you ran the full script), as there are two possible approaches to encode the information in a BDD, and there is no clear winner among them. In Table 1, we report the best of the numbers we obtained. Note that we randomize the initial variable ordering of the BDD and run reordering heuristics until convergence, so the numbers you get can be different from those in Table 1. The order of magnitude should still match.
+
+
+*Extra details for the curious*: All the CPS case studies use the *Multi-label Entropy* approach which exploits the non-determinism in the controller. For the MDP case studies, we use the *Attribute-value Grouping* approach which works with categorical variables.
+
 
 ### Figure 1
 
-For every resulting decision tree, dtControl procudes a dot file for visualization. 
-The one used in Figure 1 is located in `~/dtControl/decision_trees/AVG/firewire_abst/AVG.dot`.
-Execute
+To reproduce Figure 1, you may open `~/dtcontrol/benchmark.html` in a browser and click on the "DOT" link in the DT column for `firewire_abst`.
 
-```
-$ dot -Tpdf ~/dtControl/decision_trees/AVG/firewire_abst/AVG.dot -o Figure1.pdf
-```
-
-to produce a pdf from the dot-file and then open `Figure1.pdf` with you favourite PDF-viewer.
+dtControl also stores the source of this image in [Graphviz/DOT](https://graphviz.org/) format in the file `~/dtControl/decision_trees/DT/firewire_abst/DT.dot`.
 
 ### Figure 2
 
