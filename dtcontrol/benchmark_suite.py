@@ -125,6 +125,7 @@ class BenchmarkSuite:
             cell = self.results[dataset.get_name()]['classifiers'][classifier.get_name()]
         elif not classifier.is_applicable(dataset):
             computed = False
+            dataset.load_if_necessary()
             cell = 'not applicable'
         else:
             computed = True
