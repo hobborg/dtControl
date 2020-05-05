@@ -26,17 +26,20 @@ Manual Installation
 
 *Note: In case of difficulty when following any of the instructions in this section, please check the section 'Common Installation Issues' below*
 
-1. Make sure you have ``python3.6.8`` (or newer) and ``pip3``.
+1. Make sure you have Python 3.6.8 (or newer), `pip3` and `python3-venv` for creating virtual environments.
 
-   On Ubuntu 16.10 or newer::
+   On **Ubuntu** 16.10 or newer::
 
-       $ sudo apt-get install python3.6 python3-pip
+    $ sudo apt-get install python3 python3-pip python3-venv
 
-   On MacOS::
+   On **MacOS**, you can install with the help of the package manager `Homebrew <https://brew.sh/>`_::
 
-       $ brew install python3
+    $ brew install python3
 
-   On Windows, you could, for example install Python 3 and ``pip`` via `Chocolatey <https://docs.python-guide.org/starting/install3/win/>`_.
+   or refer to this `tutorial <https://docs.python-guide.org/starting/install3/osx/>`_ if you don't have Homebrew installed.
+
+   On **Windows**, one may follow `this <https://docs.python-guide.org/starting/install3/win/>`__ or `this <https://installpython3.com/windows/>`__ tutorial.
+
 2. Use a virtual environment to make sure that the installation is clean and easy, and does not interfere with any other python packages installed in your system. Create a new folder ``dtcontrol`` and create a virtual environment inside it and activate the virtual environment::
 
        $ mkdir dtcontrol
@@ -66,7 +69,16 @@ Common Installation Issues
 Running the experiments
 ***********************
 
-This section assumes you have installed *dtControl* so that upon entering dtControl in your command line, the help text is displayed. Additionally it assumes that you have unzip-ed all examples in ``./dtcontrol/examples``. If you installed dtControl via ``pip`` and you do not have the examples folder, you can `download dtControl examples <https://gitlab.lrz.de/i7/dtcontrol/-/archive/master/dtcontrol-master.zip?path=examples>`_ and extract them into ``./dtcontrol/examples``.
+This section assumes you have installed *dtControl* so that upon entering dtControl in your command line, the help text is displayed. Additionally it assumes that you have unzip-ed all examples in ``./dtcontrol/examples``. You can `download dtControl examples <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_ and extract them into `./dtcontrol/examples` or run the following from the terminal::
+
+    $ cd ./dtcontrol
+    $ git clone https://gitlab.lrz.de/i7/dtcontrol-examples.git examples
+
+Further, you may either manually unzip the specific case study you would like to run or use the following command to unzip all case studies at once::
+
+    $ find . -name "*.zip" | while read filename; do unzip -o -d "`dirname "$filename"`" "$filename"; done;
+
+However, be warned that this would use up about 13GB of space.
 
 To execute a single algorithm on a single model, run a command like::
 
