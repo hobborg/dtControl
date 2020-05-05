@@ -48,7 +48,7 @@ All of these are installed together with our tool, since it is distributed using
 
 
 The experiments reported in the paper have been conducted on an Ubuntu Linux machine with 192GB of RAM and a Intel Xeon CPU E5-2630 v4 @ 2.20GHz. 
-The full set of experiments require 22GB of RAM and takes about 2-3 hours to complete, however we also provide a reduced set of experiments which require only 1GB of RAM and finishes in less than 5 minutes.
+The full set of experiments require 6GB of RAM and takes about 1-2 hours to complete, however we also provide a reduced set of experiments which require only 1GB of RAM and finishes in less than 15 minutes.
 The commands in this tutorial assume you are using command line, but an advanced user should be able to transfer the commands given here and make it work on Windows.
 
 
@@ -108,6 +108,9 @@ After activating the virtual environment, execute
 $ pip3 install dtcontrol
 ```
 
+You can check if dtControl was sucessfully installed by running `dtcontrol --help`. This should display the help message.
+
+On some machines, one may see `error: invalid command 'bdist_wheel'` during the installation, but dtControl still installs successfully.
 
 ## Obtaining the case studies
 
@@ -135,25 +138,32 @@ $ cd dtcontrol-examples && ./unzip_qest.sh
 ### Complete table: Python bindings
 
 Since we want to execute several algorithms of dtControl on multiple case studies, it is quicker to use the built-in benchmarking functionality.
-Download the file [qest20-artifact.py][1] and put it into the `~/dtcontrol` directory or run
+Download the file [qest20-artifact.py][1] into the `~/dtcontrol` directory by running
 ```
 $ cd ~/dtcontrol
 $ wget https://dtcontrol.model.in.tum.de/files/qest20-artifact.py
 ```
 
-This file must be placed inside the `~/dtcontrol` folder as it uses relative paths to access the case studies.
-Then (assuming you have activated the virtual environment where dtControl is installed) execute
-
-```
-$ python qest20-artifact.py
-```
-
-We estimate the execution to take upto 3 hours depending on your machine specifications and will require atleast 22GB of RAM.
-If you want to run a smaller subset that takes only 15 mins and requires only 1GB of RAM, you can instead use [qest20-artifact-subset.py][2]
+We estimate that running the full set of experiments will take 1-2 hours depending on your machine specifications and will use around 6GB of RAM.
+We also provide a script containing a smaller subset of experiments, which takes only 15 mins and requires only 1GB of RAM. 
+You can download [qest20-artifact-subset.py][2] by running
 ```
 $ cd ~/dtcontrol
 $ wget https://dtcontrol.model.in.tum.de/files/qest20-artifact-subset.py
 ```
+
+In case you don't have `wget` on your machine, you can also manually perform the download or install `wget` by running `sudo apt install wget` (on Ubuntu).
+However, this file must be placed inside the `~/dtcontrol` folder as it uses relative paths to access the case studies.
+
+Next, to start the full set of experiments, execute (assuming you have activated the virtual environment where dtControl is installed)
+```
+$ python qest20-artifact.py
+```
+or to run the subset
+```
+$ python qest20-artifact-subset.py
+```
+
 
 *Note that you might see many warnings and messages during execution, however, as long as all experiments run, it should be safe to ignore them.*
 
@@ -182,10 +192,10 @@ The contents of the table are the following.
 - Every row corresponds to one of the case studies in Table 1 of the paper, although some of their names here contain more information (e.g. `beb.3-4.LineSeized` instead of `beb`).
 - The name of each case study is accompanied with two numbers `#(s,a)`, the number of state-action pairs, and `#doc`, the domain of controller. We report `#doc` under the "Lookup table" column of Table 1 in the paper. This is size of the domain when the strategy is seen as a map from states to set of allowed actions (f: S ➔ 2ᴬ).
 - The column DT which give the number of nodes in the decision tree directly correspond to the DT column in Table 1.
-- There also are two BDD columns (if you ran the full script), as there are two possible approaches to encode the information in a BDD, and there is no clear winner among them. In Table 1, we report the best of the numbers we obtained. Note that we randomize the initial variable ordering of the BDD and run reordering heuristics until convergence, so the numbers you get can be different from those in Table 1. The order of magnitude should still match.
+- There also are two BDD columns as there are two possible approaches to encode the information in a BDD, and there is no clear winner among them. In Table 1, we report the best of the numbers we obtained. Note that we randomize the initial variable ordering of the BDD and run reordering heuristics until convergence, so the numbers you get can be different from those in Table 1. The order of magnitude should still match.
 
 
-*Extra details for the curious*: All the CPS case studies use the *Multi-label Entropy* approach which exploits the non-determinism in the controller. For the MDP case studies, we use the *Attribute-value Grouping* approach which works with categorical variables.
+*Extra details for the curious*: All the CPS case studies use the *Multi-label Entropy* approach which exploits the non-determinism in the controller. For the MDP case studies, we use the *Attribute-value Grouping* approach which works with categorical variables. This approach takes in a `tolerance` parameter, which we set to `1e-5` for some case studies, and to `MAX_INT` for some other case studies. The choice, as described in the paper, was made purely on an empirical basis.
 
 
 ### Figure 1
