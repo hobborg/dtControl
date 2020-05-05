@@ -32,6 +32,11 @@ cps_classifiers = [
     bdd_actUL
 ]
 
+print("*"*100)
+print("This script will run a total of 30 benchmarks, divided into 3 groups (for technical reasons).\n\
+       The first group contains 15 executions, the second 9 and the third 6.")
+print("*"*100)
+
 suite = BenchmarkSuite(benchmark_file='benchmark')
 
 suite.add_datasets(['dtcontrol-examples', 'dtcontrol-examples/prism'], include=[
