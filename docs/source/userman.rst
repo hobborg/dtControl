@@ -38,27 +38,27 @@ we provide the most essential information here.
 
 Once you have a recent version of Python 3 installed, you may run::
 
-    $ python3 -m venv dtcontrol-venv
+    $ python3 -m venv venv
 
-to create the virtual environment in a folder called ``dtcontrol-venv`` located in your current directory. You can enter the
+to create the virtual environment in a folder called ``venv`` located in your current directory. You can enter the
 virtual environment by running::
 
-    $ source dtcontrol-venv/bin/activate
+    $ source venv/bin/activate
 
 Typically, your shell might indicate that the virtual environment is activated by changing the prompt symbol ``$`` to
-something like ``(dtcontrol-venv) $``. You can now proceed with installing dtControl from PyPI using ``pip``::
+something like ``(venv) $``. You can now proceed with installing dtControl from PyPI using ``pip``::
 
-    (dtcontrol-venv) $ pip install dtcontrol
+    (venv) $ pip install dtcontrol
 
 .. note::
     In case you want to get the development version of dtControl, you could instead run::
 
-        (dtcontrol-venv) $ pip install git+https://gitlab.lrz.de/i7/dtcontrol.git
+        (venv) $ pip install git+https://gitlab.lrz.de/i7/dtcontrol.git
 
 Once the dtControl package is installed, the command line interface can be accessed using the ``dtcontrol`` command.
 Try running::
 
-   (dtcontrol-venv) $ dtcontrol -h
+   (venv) $ dtcontrol -h
 
 If your installation has run successfully, you will now see the help page detailing the usage and arguments.::
 
@@ -101,8 +101,8 @@ If your installation has run successfully, you will now see the help page detail
     Display all presets available with dtcontrol
         dtcontrol preset --config user-config.yml --list
 
-    Run the 'my-config' preset on the SCOTS model located at 'examples/cartpole.scs'
-        dtcontrol --input examples/cartpole.scs --config user-config.yml --use-preset my-config
+    Run the 'my-config' preset on the SCOTS model located at 'examples/cps/cartpole.scs'
+        dtcontrol --input examples/cps/cartpole.scs --config user-config.yml --use-preset my-config
 
 Input format
 ^^^^^^^^^^^^
@@ -178,18 +178,18 @@ The Command-line Interface
 
 This section shows how to configure and run dtControl. For this purpose, we assume that you have an ``examples`` folder
 in your current directory containing ``cartpole.scs``. You can choose to download all of our examples from our
-`Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol/-/tree/master/examples>`_ via this
-`zip archive <https://gitlab.lrz.de/i7/dtcontrol/-/archive/master/dtcontrol-master.zip?path=examples>`_. Extract the
-contents of the archive into a folder called ``examples`` and unzip ``cartpole.scs.zip``. Alternatively, you can
-run the following commands::
+`Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol-examples>`_ via this
+`zip archive <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_ or using `git`.
+Extract the contents of the archive into a folder called ``examples`` and unzip ``cartpole.scs.zip``. Alternatively, you
+can run the following commands::
 
     $ mkdir -p examples && cd examples
-    $ wget https://gitlab.lrz.de/i7/dtcontrol/-/raw/master/examples/cartpole.scs.zip
-    $ unzip cartpole.scs.zip
+    $ wget -P examples/cps https://gitlab.lrz.de/i7/dtcontrol-examples/-/raw/master/cps/cartpole.scs.zip
+    $ unzip -d ./examples/cps ./examples/cps/cartpole.scs.zip
 
 Next, activate the virtual environment you installed dtControl in::
 
-    $ source dtcontrol-venv/bin/activate
+    $ source venv/bin/activate
 
 .. _running-your-first-command:
 
@@ -198,7 +198,7 @@ Running your first command
 
 Finally, you can run dtControl with the default parameters on the *cartpole* example (``cartpole.scs``), use the following command::
 
-    (dtcontrol-venv) $ dtcontrol --input examples/cartpole.scs
+    (venv) $ dtcontrol --input examples/cps/cartpole.scs
 
 This will produce some new files and folders in the current folder::
 
@@ -223,7 +223,7 @@ presets can be chosen using the ``--use-preset`` switch and the configuration fi
 switch. For your convenience, we have pre-defined a bunch of preset configurations that we believe are interesting.
 You can list the available presets by running::
 
-    (dtcontrol-venv) $ dtcontrol preset --list
+    (venv) $ dtcontrol preset --list
 
 This should produce the following table of presets.
 
@@ -322,11 +322,11 @@ must be defined inside a ``.yml`` file as follows::
 
 The above sample presets can be generated automatically and wrote into a ``user-config.yml`` file by running::
 
-    (dtcontrol-venv) $ dtcontrol preset --sample > user-config.yml
+    (venv) $ dtcontrol preset --sample > user-config.yml
 
 Now, dtControl can be run on the *cartpole* example with the ``my-config`` preset by running::
 
-    (dtcontrol-venv) $ dtcontrol --input examples/cartpole.scs --config user-config.yml --use-preset my-config
+    (venv) $ dtcontrol --input examples/cps/cartpole.scs --config user-config.yml --use-preset my-config
 
 
 .. _understanding-the-output:
@@ -360,7 +360,7 @@ By default, the decision trees are stored in the ``decision_trees`` folder and t
 and ``benchmark.html`` files. This can however be customized with the help of the ``--output`` and the ``--benchmark-file``
 switches. For example::
 
-   (dtcontrol-venv) $ dtcontrol --input examples/cartpole.scs \
+   (venv) $ dtcontrol --input examples/cps/cartpole.scs \
                                 --config user-config.yml \
                                 --use-preset my-config \
                                 --output cartpole_trees \
@@ -394,7 +394,7 @@ By default, new results are appended to ``benchmark.json`` (or the file passed t
 experiments are not re-run if results already exist. In case you want to re-run a method and overwrite existing results,
 use the ``--rerun`` flag.::
 
-   $ dtcontrol --input examples/cartpole.scs --rerun
+   $ dtcontrol --input examples/cps/cartpole.scs --rerun
 
 
 Quick Start with the Python Interface
