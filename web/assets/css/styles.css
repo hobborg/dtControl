@@ -247,7 +247,7 @@ footer {
     margin-bottom:20px;
 }
 .image-container img {
-  height: 100%;
+  max-width: 98%;
 }
 .fixed {
     width: 50%;
