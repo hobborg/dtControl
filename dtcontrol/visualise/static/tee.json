@@ -1,0 +1,85 @@
+[
+  {
+    "name": "Top Level",
+    "parent": "null",
+    "coleur": "red",
+    "children": [
+      {
+        "name": "Level 2: A",
+        "parent": "Top Level",
+        "coleur": "red",
+        "children": [
+          {
+            "name": "Son of A",
+            "parent": "Level 2: A",
+            "coleur": "red",
+            "children":[{
+              "name": "Son2 of A",
+              "parent": "Level 2: A",
+              "coleur": "blue"
+            }]
+          },
+          {
+            "name": "Son2 of A",
+            "parent": "Level 2: A",
+            "coleur": "blue"
+          },{
+            "name": "Son of A",
+            "parent": "Level 2: A",
+            "coleur": "black"
+          },
+          {
+            "name": "Son2 of A",
+            "parent": "Level 2: A",
+            "coleur": "white",
+            "children": [
+              {
+                "name": "Son of AA1",
+                "parent": "Level 2: A",
+                "coleur": "red"
+              },
+              
+              {
+                "name": "Son of AA4",
+                "parent": "Level 2: A",
+                "coleur": "red"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Level 2: Bs",
+        "parent": "Top Level",
+        "coleur": "blue",
+        "children": [
+          {
+            "name": "Son of A",
+            "parent": "Level 2: A",
+            "coleur": "black",
+            "children": [{
+              "name": "Son123 of A",
+              "parent": "Level 3: A",
+              "coleur": "black"
+            },
+            {
+              "name": "Son222 of A",
+              "parent": "Level 3: A",
+              "coleur": "black"
+            }]
+          },
+          {
+            "name": "Daughter1 of A",
+            "parent": "Level 2: A",
+            "coleur": "white"
+          },
+          {
+            "name": "Daughter2 of A",
+            "parent": "Level 2: A",
+            "coleur": "white"
+          }
+        ]
+      }
+    ]
+  }
+]
