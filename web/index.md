@@ -101,7 +101,7 @@ Other closely related publications include:
 <br />
 [view](https://doi.org/10.1007/978-3-030-30281-8_9) / [bibtex](https://dblp.uni-trier.de/rec/bibtex/conf/qest/AshokKLCTW19) / [pre-print](http://arxiv.org/abs/1906.10640) 
 
-- *Tomás Brázdil, Krishnendu Chatterjee, Martin Chmelik, Andreas Fellner, Jan Kretínsk*.
+- *Tomás Brázdil, Krishnendu Chatterjee, Martin Chmelik, Andreas Fellner, Jan Kretínský*.
 **Counterexample Explanation by Learning Small Strategies in Markov Decision Processes.**
 *CAV 2015*
 <br />
