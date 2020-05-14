@@ -1,5 +1,3 @@
-import tkinter as tk
-from tkinter import simpledialog
 from sympy import *
 from sympy.parsing.latex import parse_latex, LaTeXParsingError
 import re
@@ -16,48 +14,131 @@ import re
 
 class PredicateParser():
 
-    def __init__(self):
-        ROOT = tk.Tk()
-        ROOT.withdraw()
-
     def get_predicate(self):
-
         """
         Predicate Parser for the user input.
-        :variable user_input: String obtained from user.
+        :variable user_input: String obtained from file: input_predicates.txt
         :returns: a sympy expression (to later use as predicate)
         """
 
-        user_input = simpledialog.askstring(title="dtcontrol", prompt="Is there a predicate to start with?")
-
-        # TODO: Catch edge cases
+        with open("input_predicates.txt", "r") as file:
+            predicates = [predicate.rstrip() for predicate in file]
 
         relation_list = ["<=", ">=", "!=", "<", ">", "="]
-        for sign in relation_list:
-            if sign in user_input:
-                foo = user_input.split(sign)
-                left_formula = foo[0]
-                right_formula = foo[1]
-                expression = simplify(sympify(left_formula) - sympify(right_formula))
-                variables = re.findall("x_(\d+)", user_input)
-                try:
-                    # return parse_latex(user_input)
-                    return variables, expression, sign
-                except:
-                    raise Exception(
-                        "Predicat can't be parsed.\nPlease try giving the predicat in a valid sympy format.")
+        output = []
+        for single_predicate in predicates:
+            for sign in relation_list:
+                if sign in single_predicate:
+                    split_pred = single_predicate.split(sign)
+                    left_formula = simplify(sympify(split_pred[0]))
+                    interval = self.get_interval(split_pred[1].strip())
+                    print("INPUT: ", split_pred[1])
+                    print("OUTPUT: ", interval)
+                    print("TYPE: ", type(interval), "\n\n")
+                    variables = re.findall("x_(\d+)", split_pred[0])
+                    output.append((variables, left_formula, sign))
+                    break
+        return output
 
-# TESTING
+    def get_interval(self, user_input):
+        """
+        Predicate Parser for the interval result.
+        :variable user_input: Interval as string
+        :returns: a sympy expression (to later use as predicate)
 
-# foo = PredicateParser().get_predicate()
-# pprint(foo)
-#
-# vars = {}
-# for i in range(1001):
-#     vars["x_"+str(i)] = Symbol("x_"+str(i))
-#     vars["y_" + str(i)] = Symbol("y_" + str(i))
-# print(vars)
-#
-# foo1 = sympify("(x_1+32 )* x_2")
-# print(foo1)
-# print(expand(foo1))
+        Option 1: user_input = $i
+        --> Just use the value to obtain the best impurity
+
+        Option 2: user_input is an interval
+        Option 2.1: user_input = [a,b]
+        --> Interval with closed boundary --> {x | a <= x <= b}
+        Option 2.2: user_input = (a,b)
+        --> Interval with open boundary --> {x | a < x < b}
+        Option 2.3: user_input = (a.b]
+        Option 2.4: user_input = [a,b)
+
+        Option 3: user_input = {1,2,3,4,5}
+        --> Finite set
+
+        Option 4: user_input = [0,1) ∪ (8,9) ∪ [-oo, 1)
+        --> Union of sets with ∪
+
+
+        Grammar G for an user given interval:
+
+        G = (V, Σ, P, predicate)
+        V = {predicate, combination, interval, real_interval, bracket_left, bracket_right, number, finite_interval, number_finit, num}
+        Σ = {$i, (, [, ), ], R, +oo, -oo, , ∪}
+        P:
+        PREDICATE       -->     $i | COMBINATION
+        COMBINATION     -->     INTERVAL | INTERVAL ∪ COMBINATION
+        INTERVAL        -->     REAL_INTERVAL | FINITE_INTERVAL
+        REAL_INTERVAL   -->     BRACKET_LEFT NUMBER , NUMBER BRACKET_RIGHT
+        BRACKET_LEFT    -->     ( | [
+        BRACKET_RIGHT   -->     ) | ]
+        NUMBER          -->     {x | x ∊ R} | +oo | -oo
+        FINITE_INTERVAL -->     {NUMBER_FINITE NUM}
+        NUMBER_FINITE   -->     {x | x ∊ R}
+        NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
+
+        """
+
+        if user_input == "$i":
+            return user_input
+
+        interval_list = []
+
+        user_input = user_input.split("∪")
+        user_input = [x.strip() for x in user_input]
+        for interval in user_input:
+            print(interval)
+            # FINITE_INTERVAL
+            if (interval[0] == "{") & (interval[-1] == "}"):
+                members = interval[1:-1].split(",")
+                interval_list.append(FiniteSet(*members))
+                continue
+
+            if interval[0] == "(":
+                left_open = True
+            elif interval[0] == "[":
+                left_open = False
+
+            if interval[-1] == ")":
+                right_open = True
+                tmp = interval[1:-1].split(",")
+                interval_list.append(
+                    Interval(int(tmp[0]), int(tmp[1]), right_open=right_open, left_open=left_open))
+            elif interval[-1] == "]":
+                right_open = False
+                tmp = interval[1:-1].split(",")
+                interval_list.append(
+                    Interval(int(tmp[0]), int(tmp[1]), right_open=right_open, left_open=left_open))
+            print("worked")
+
+        final_interval = interval_list[0]
+        if len(interval_list) > 1:
+            for item in interval_list:
+                final_interval = Union(final_interval, item)
+
+        return final_interval
+
+
+
+# relation_list = ["<=", ">=", "!=", "<", ">", "="]
+# output = []
+# for single_predicate in predicates:
+#     for sign in relation_list:
+#         if sign in single_predicate:
+#             split_pred = single_predicate.split(sign)
+#             left_formula = split_pred[0]
+#             right_formula = split_pred[1]
+#             expression = simplify(sympify(left_formula) - sympify(right_formula))
+#             variables = re.findall("x_(\d+)", single_predicate)
+#             output.append((variables, expression, sign))
+#             break
+# return output
+
+
+# Testing
+foo = PredicateParser().get_predicate()
+print("ENDERGEBNIS:\n", foo)
