@@ -5,13 +5,12 @@ from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 
 # context_aware
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.numerical_single_equal import CategoricalSingleEqualSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.experimental_split import ExperimentalSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier_user_input import LinearClassifierSplittingStrategy as UIS
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.user_predicat_split import UserPredicatSplittingStrategy
+from dtcontrol.decision_tree.splitting.smarter_predicates.numerical_single_equal import CategoricalSingleEqualSplittingStrategy
+from dtcontrol.decision_tree.splitting.smarter_predicates.experimental_split import ExperimentalSplittingStrategy
+from dtcontrol.decision_tree.splitting.smarter_predicates.linear_type_classifier import LinearClassifierSplittingStrategy
+from dtcontrol.decision_tree.splitting.smarter_predicates.linear_type_classifier_user_input import LinearClassifierSplittingStrategy as UIS
+from dtcontrol.decision_tree.splitting.smarter_predicates.user_predicat_split import UserPredicatSplittingStrategy
 
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach import WeinhuberApproachSplittingStrategy
 
 # splitting
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
@@ -36,9 +35,6 @@ smart_lin = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs'
 smart_UIS = UIS(LogisticRegression, solver='lbfgs', penalty='none')
 user_predicat = UserPredicatSplittingStrategy()
 
-
-weinhuber = WeinhuberApproachSplittingStrategy(alternative_splitting_strategy=smart_lin)
-
 # splitting
 aa = AxisAlignedSplittingStrategy()
 # oc1 = OC1SplittingStrategy()
@@ -46,9 +42,8 @@ cat = CategoricalSingleSplittingStrategy()
 
 
 classifiers = [
-    DecisionTree([weinhuber], Entropy(), 'Testing')
     # DecisionTree([smart_equal], Entropy(), 'Categorical Single Equal'),
-    # DecisionTree([smart_exp], Entropy(), 'Experimental'),
+     DecisionTree([smart_exp], Entropy(), 'Experimental'),
     # DecisionTree([smart_lin], Entropy(), 'Type: Linear Classifier'),
     # DecisionTree([smart_UIS], Entropy(), 'User Input Predicat '),
     # DecisionTree([user_predicat], Entropy(), 'User Predicat Splitting')

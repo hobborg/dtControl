@@ -15,6 +15,7 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
+from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import ContextAwareSplittingStrategy
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
@@ -63,6 +64,9 @@ class DecisionTree(BenchmarkSuiteClassifier):
             dataset = self.label_pre_processor.preprocess(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                          self.early_stopping_num_examples, self.early_stopping_optimized)
+        for split_strat in self.splitting_strategies:
+            if isinstance(split_strat,ContextAwareSplittingStrategy):
+                split_strat.set_root(self.root)
         self.root.fit(dataset)
 
     def predict(self, dataset, actual_values=True):
@@ -169,8 +173,13 @@ class Node:
         for subset in subsets:
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                         self.early_stopping_num_examples, self.early_stopping_optimized, self.depth + 1)
-            node.fit(subset)
+
+            for split_strat in self.splitting_strategies:
+                if isinstance(split_strat, ContextAwareSplittingStrategy):
+                    split_strat.set_current_Node(node)
+
             self.children.append(node)
+            node.fit(subset)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
         self.num_inner_nodes = 1 + sum([c.num_inner_nodes for c in self.children])
 
