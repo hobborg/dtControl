@@ -7,7 +7,7 @@ import sympy as sp
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, start_predicate=-1, alternative_splitting_strategy=None):
+    def __init__(self, start_predicate=True, alternative_splitting_strategy=None):
         super().__init__()
         self.start_predicate = start_predicate
         self.alternative_splitting_strategy = alternative_splitting_strategy
@@ -68,11 +68,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 print(i.split.print_dot())
         print("#########")
 
-        if self.start_predicate == -1:
-            variables, predicate, relation = PredicateParser().get_predicate()
-            self.start_predicate = WeinhuberApproachSplit(variables, predicate, relation)
-            print("RETURN VALUE: ", self.start_predicate.print_dot())
-            return self.start_predicate
+        if self.start_predicate == True:
+            predicate_list = PredicateParser().get_predicate()
+            self.start_predicate = []
+            for predicat in predicate_list:
+                variables, predicate, relation, interval = predicat
+                self.start_predicate.append(WeinhuberApproachSplit(variables, predicate, relation, interval))
+            return self.start_predicate[0]
 
         #### Begin of alternative splitting strategy
         if self.alternative_splitting_strategy:

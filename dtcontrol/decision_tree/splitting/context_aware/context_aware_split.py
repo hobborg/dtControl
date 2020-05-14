@@ -6,10 +6,11 @@ class ContextAwareSplit(Split, ABC):
     """
     Represents an arbitrary split with starting split given by user
     """
-    def __init__(self, variables, predicate, relation):
+    def __init__(self, variables, predicate, relation, interval):
         self.variables = variables
         self.predicate = predicate
         self.relation = relation
+        self.interval = interval
 
 
     @abstractmethod

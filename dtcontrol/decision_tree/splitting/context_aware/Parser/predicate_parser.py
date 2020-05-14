@@ -21,7 +21,7 @@ class PredicateParser():
         :returns: a sympy expression (to later use as predicate)
         """
 
-        with open("input_predicates.txt", "r") as file:
+        with open("dtcontrol/decision_tree/splitting/context_aware/Parser/input_predicates.txt", "r") as file:
             predicates = [predicate.rstrip() for predicate in file]
 
         relation_list = ["<=", ">=", "!=", "<", ">", "="]
@@ -32,11 +32,8 @@ class PredicateParser():
                     split_pred = single_predicate.split(sign)
                     left_formula = simplify(sympify(split_pred[0]))
                     interval = self.get_interval(split_pred[1].strip())
-                    print("INPUT: ", split_pred[1])
-                    print("OUTPUT: ", interval)
-                    print("TYPE: ", type(interval), "\n\n")
                     variables = re.findall("x_(\d+)", split_pred[0])
-                    output.append((variables, left_formula, sign))
+                    output.append((variables, left_formula, sign, interval))
                     break
         return output
 
@@ -91,7 +88,6 @@ class PredicateParser():
         user_input = user_input.split("∪")
         user_input = [x.strip() for x in user_input]
         for interval in user_input:
-            print(interval)
             # FINITE_INTERVAL
             if (interval[0] == "{") & (interval[-1] == "}"):
                 members = interval[1:-1].split(",")
@@ -113,7 +109,7 @@ class PredicateParser():
                 tmp = interval[1:-1].split(",")
                 interval_list.append(
                     Interval(int(tmp[0]), int(tmp[1]), right_open=right_open, left_open=left_open))
-            print("worked")
+
 
         final_interval = interval_list[0]
         if len(interval_list) > 1:
@@ -139,6 +135,3 @@ class PredicateParser():
 # return output
 
 
-# Testing
-foo = PredicateParser().get_predicate()
-print("ENDERGEBNIS:\n", foo)
