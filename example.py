@@ -20,7 +20,7 @@ from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSing
 
 
 
-suite = BenchmarkSuite(timeout=60,
+suite = BenchmarkSuite(timeout=999,
                        save_folder='saved_classifiers',
                        benchmark_file='benchmark',
                        rerun=True)

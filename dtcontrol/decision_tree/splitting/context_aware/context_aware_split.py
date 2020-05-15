@@ -8,7 +8,7 @@ class ContextAwareSplit(Split, ABC):
     Represents an arbitrary split with starting split given by user
     """
 
-    def __init__(self, variables, predicate, relation, interval, hard_interval_boundary=None, result=0):
+    def __init__(self, variables, predicate, relation, interval, hard_interval_boundary=True, result=0):
         self.variables = variables
         self.predicate = predicate
         self.relation = relation

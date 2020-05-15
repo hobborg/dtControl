@@ -86,6 +86,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
     def calculate_best_result_for_predicate(self, dataset, split, impurity_measure):
         x_numeric = dataset.get_numeric_x()
         possible_values_inside_interval = {}
+        possible_values_outside_interval = {}
         for i in range(x_numeric.shape[0]):
             subs_list = []
             features = x_numeric[i, :]
@@ -94,9 +95,34 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 subs_list.append(("x_" + str(k), features[k]))
             tmp_result = copy_split.predicate.subs(subs_list)
             copy_split.result = tmp_result.evalf()
-            possible_values_inside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset, copy_split)
 
-        return min(possible_values_inside_interval.keys(), key=possible_values_inside_interval.get)
+            # Frage: Wohin füge ich mein neues split object hinzu?
+            if copy_split.interval.contains(copy_split.result):
+                possible_values_inside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset,
+                                                                                                         copy_split)
+            else:
+                possible_values_outside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset, copy_split)
+
+            # Checken welche Boundary
+            if possible_values_inside_interval:
+                return min(possible_values_inside_interval.keys(), key=possible_values_inside_interval.get)
+            else:
+                if copy_split.hard_interval_boundary:
+                    supremum = copy_split.interval.sup
+                    infimum = copy_split.interval.inf
+
+                    # (-oo,+oo) kann nicht vorkommen, sonst würden wir hier nicht in diese abbruch bedingung kommen
+                    if supremum == sp.sympify("+oo"):
+                        return infimum
+                    elif infimum == sp.sympify("-oo"):
+                        return supremum
+                    else:
+                        return (infimum+supremum)/2
+                else:
+                    return min(possible_values_outside_interval.keys(), key=possible_values_outside_interval.get)
+
+
+
 
 
 class WeinhuberApproachSplit(ContextAwareSplit):
