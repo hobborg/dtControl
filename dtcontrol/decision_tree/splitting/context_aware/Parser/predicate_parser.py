@@ -1,6 +1,6 @@
 from sympy import *
 import re
-
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import WeinhuberApproachSplit
 
 class PredicateParser:
     """
@@ -47,7 +47,7 @@ class PredicateParser:
                     if interval == EmptySet:
                         break
                     variables = re.findall("x_(\d+)", split_pred[0])
-                    output.append((variables, left_formula, sign, interval))
+                    output.append(WeinhuberApproachSplit(variables, left_formula, sign, interval))
                     break
         return output
 

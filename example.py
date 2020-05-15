@@ -11,7 +11,7 @@ from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classi
 from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier_user_input import LinearClassifierSplittingStrategy as UIS
 from dtcontrol.decision_tree.splitting.context_aware.OldDraft.user_predicat_split import UserPredicatSplittingStrategy
 
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach import WeinhuberApproachSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import WeinhuberApproachSplittingStrategy
 
 # splitting
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy

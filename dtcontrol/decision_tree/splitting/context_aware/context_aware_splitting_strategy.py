@@ -4,8 +4,8 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 
 class ContextAwareSplittingStrategy(SplittingStrategy, ABC):
     """
-    Represents a splitting strategy especially used inside weinhuber_approach.py
-    (dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach.py)
+    Represents a splitting strategy especially used inside weinhuber_approach_splitting_strategy.py
+    (dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach_splitting_strategy.py)
 
     """
 
