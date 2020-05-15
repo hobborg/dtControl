@@ -70,11 +70,11 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # Adding the result to all predicates of the list: self.user_given_splits
         for single_split in self.user_given_splits:
-            single_split.result = self.calculate_best_result_for_split(dataset, single_split, impurity_measure)
-
+            split_copy = deepcopy(single_split)
+            split_copy.result = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
             # Adding all these predicates from self.user_given_splits to a dict with:
             # Key:Splitobject   Value:Impurity of the split
-            splits[single_split] = impurity_measure.calculate_impurity(dataset, single_split)
+            splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         # Edge case no start_predicates --> no split objects inside splits dict
         if not splits:
@@ -82,9 +82,11 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # Returning the split with the lowest impurity
         weinhuber_split = min(splits.keys(), key=splits.get)
+        # print(weinhuber_split.print_c())
         alternative_split = self.alternative_splitting_strategy.find_split(dataset, impurity_measure)
 
-
+        print(impurity_measure.calculate_impurity(dataset, weinhuber_split))
+        print(impurity_measure.calculate_impurity(dataset, alternative_split))
         if impurity_measure.calculate_impurity(dataset, weinhuber_split) <= impurity_measure.calculate_impurity(dataset,
                                                                                                                 alternative_split):
             return weinhuber_split
@@ -113,7 +115,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 subs_list.append(("x_" + str(k), features[k]))
 
             # calculating the result for that specific row
-            copy_split.result = copy_split.predicate.subs(subs_list)
+            copy_split.result = copy_split.predicate.subs(subs_list).evalf(6)
 
             # evaluating where to store this split object (for more information look at documentation of hard_interval_boundary)
             # Key: result   Value: Impurity of that result

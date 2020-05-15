@@ -10,23 +10,24 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         # Iterating over every possible value and creating a substitution list
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
-        result = self.predicate.subs(subs_list)
-        result = result.evalf()
-        print(result)
+        evaluated_predicate = self.predicate.subs(subs_list)
+        evaluated_predicate = evaluated_predicate.evalf(6)
+
 
         # Checking the result
         if self.relation == "<=":
-            check = sp.sympify(result, "<=" ,self.result)
+            check = evaluated_predicate <= self.result
         elif self.relation == ">=":
-            check = sp.sympify(result, ">=" ,self.result)
+            check = evaluated_predicate >= self.result
         elif self.relation == "!=":
-            check = sp.sympify(result, "!=" ,self.result)
+            check = evaluated_predicate != self.result
         elif self.relation == ">":
-            check = sp.sympify(result, ">" ,self.result)
+            check = evaluated_predicate > self.result
         elif self.relation == "<":
-            check = sp.sympify(result, "<" ,self.result)
+            check = evaluated_predicate < self.result
         else:
-            check = sp.sympify(result, "==" ,self.result)
+            check = evaluated_predicate == self.result
+
 
         if check:
             return 0
