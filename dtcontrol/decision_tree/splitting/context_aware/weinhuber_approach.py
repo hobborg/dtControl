@@ -16,13 +16,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
     def get_parent_nodes(self, current_node, parent_nbr, path=[]):
 
         """
-        :param current_node: current node being looked at
+        :param current_node: current node to search
         :param parent_nbr: number of parent nodes to return later
         :param path: list containing the path to the current node
         :returns: list of path from root to node, containing only the last parent_nbr parents
         """
 
-        # Standard Depth first search
+        # standard depth first search
         path_copy = path.copy()
         path_copy.append(current_node)
         if self.current_node in current_node.children:
@@ -61,22 +61,31 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # gets nearest k splits of self.current_node
         k = 20
         tmp = self.get_parent_nodes(self.root, k)
-        # self.print_parents(tmp)
+        self.print_parents(tmp)
         splits = {}
 
         if self.start_predicate == True:
             predicate_list = PredicateParser().get_predicate()
             self.start_predicate = []
+
+            # Adding all the predicates from input_predicates.txt to the list: self.start_predicate
             for single_predicate in predicate_list:
                 variables, predicate, relation, interval = single_predicate
                 self.start_predicate.append(WeinhuberApproachSplit(variables, predicate, relation, interval))
 
+            # Adding the result to all predicates of the list: self.start_predicate
             for single_split in self.start_predicate:
                 single_split.result = self.calculate_best_result_for_predicate(dataset, single_split, impurity_measure)
+
+                # Adding all these predicates from self.start_predicate to a dict with:
+                # Key:Splitobject   Value:Impurity of the split
                 splits[single_split] = impurity_measure.calculate_impurity(dataset, single_split)
 
+            # Edge case no start_predicates --> no split objects inside splits dict
             if not splits:
                 return None
+
+            # Returning the split with the lowest impurity
             return min(splits.keys(), key=splits.get)
 
         #### Begin of alternative splitting strategy
@@ -84,45 +93,57 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             return self.alternative_splitting_strategy.find_split(dataset, impurity_measure)
 
     def calculate_best_result_for_predicate(self, dataset, split, impurity_measure):
+
+        """
+        :param dataset: the subset of data at the current split
+        :param split: split to compute the best result for
+        :param impurity_measure: the impurity measure to determine the quality of a potential split
+        :returns: best value for split.result
+        """
+
         x_numeric = dataset.get_numeric_x()
         possible_values_inside_interval = {}
         possible_values_outside_interval = {}
+
+        # iterating over every row from dataset
         for i in range(x_numeric.shape[0]):
             subs_list = []
             features = x_numeric[i, :]
             copy_split = deepcopy(split)
             for k in range(len(features)):
                 subs_list.append(("x_" + str(k), features[k]))
+
+            # calculating the result for that specific row
             tmp_result = copy_split.predicate.subs(subs_list)
             copy_split.result = tmp_result.evalf()
 
-            # Frage: Wohin füge ich mein neues split object hinzu?
+            # evaluating where to store this split object (for more information look at documentation of hard_interval_boundary)
+            # Key: result   Value: Impurity of that result
             if copy_split.interval.contains(copy_split.result):
                 possible_values_inside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset,
                                                                                                          copy_split)
             else:
-                possible_values_outside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset, copy_split)
+                possible_values_outside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset,
+                                                                                                          copy_split)
 
-            # Checken welche Boundary
+            # return result with (best) result with result inside the interval
             if possible_values_inside_interval:
                 return min(possible_values_inside_interval.keys(), key=possible_values_inside_interval.get)
             else:
+                # If no possible result fits inside the interval (for more information look at documentation of hard_interval_boundary)
                 if copy_split.hard_interval_boundary:
                     supremum = copy_split.interval.sup
                     infimum = copy_split.interval.inf
 
-                    # (-oo,+oo) kann nicht vorkommen, sonst würden wir hier nicht in diese abbruch bedingung kommen
+                    # Important note: (-oo,+oo) would be impossible at this place --> only one infinity sign would reach this state
                     if supremum == sp.sympify("+oo"):
                         return infimum
                     elif infimum == sp.sympify("-oo"):
                         return supremum
                     else:
-                        return (infimum+supremum)/2
+                        return (infimum + supremum) / 2
                 else:
                     return min(possible_values_outside_interval.keys(), key=possible_values_outside_interval.get)
-
-
-
 
 
 class WeinhuberApproachSplit(ContextAwareSplit):
@@ -130,10 +151,13 @@ class WeinhuberApproachSplit(ContextAwareSplit):
     def predict(self, features):
         subs_list = []
 
+        # Iterating over every possible value and creating a substitution list
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
         result = self.predicate.subs(subs_list)
         result = result.evalf()
+
+        # Checking the result
         if self.relation == "<=":
             check = result <= self.result
         elif self.relation == ">=":
@@ -155,6 +179,8 @@ class WeinhuberApproachSplit(ContextAwareSplit):
     def get_masks(self, dataset):
         data = dataset.get_numeric_x()
         mask = []
+
+        # Using the predict function and iterating over row
         for i in range(np.shape(dataset.get_numeric_x())[0]):
             tmp1 = self.predict(np.array([data[i, :]]))
             if tmp1 == 0:
