@@ -8,9 +8,9 @@ from copy import deepcopy
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, start_predicate=True, alternative_splitting_strategy=None):
+    def __init__(self, user_given_predicate=True, alternative_splitting_strategy=None):
         super().__init__()
-        self.start_predicate = start_predicate
+        self.user_given_predicate = user_given_predicate
         self.alternative_splitting_strategy = alternative_splitting_strategy
 
     def get_parent_nodes(self, current_node, parent_nbr, path=[]):
@@ -61,23 +61,23 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # gets nearest k splits of self.current_node
         k = 20
         tmp = self.get_parent_nodes(self.root, k)
-        self.print_parents(tmp)
+        # self.print_parents(tmp)
         splits = {}
 
-        if self.start_predicate == True:
+        if self.user_given_predicate == True:
             predicate_list = PredicateParser().get_predicate()
-            self.start_predicate = []
+            self.user_given_predicate = []
 
-            # Adding all the predicates from input_predicates.txt to the list: self.start_predicate
+            # Adding all the predicates from input_predicates.txt to the list: self.user_given_predicate
             for single_predicate in predicate_list:
                 variables, predicate, relation, interval = single_predicate
-                self.start_predicate.append(WeinhuberApproachSplit(variables, predicate, relation, interval))
+                self.user_given_predicate.append(WeinhuberApproachSplit(variables, predicate, relation, interval))
 
-            # Adding the result to all predicates of the list: self.start_predicate
-            for single_split in self.start_predicate:
+            # Adding the result to all predicates of the list: self.user_given_predicate
+            for single_split in self.user_given_predicate:
                 single_split.result = self.calculate_best_result_for_predicate(dataset, single_split, impurity_measure)
 
-                # Adding all these predicates from self.start_predicate to a dict with:
+                # Adding all these predicates from self.user_given_predicate to a dict with:
                 # Key:Splitobject   Value:Impurity of the split
                 splits[single_split] = impurity_measure.calculate_impurity(dataset, single_split)
 
