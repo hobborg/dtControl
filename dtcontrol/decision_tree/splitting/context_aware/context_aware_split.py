@@ -2,16 +2,19 @@ from abc import ABC, abstractmethod
 from dtcontrol.decision_tree.splitting.split import Split
 from sympy import *
 
+
 class ContextAwareSplit(Split, ABC):
     """
     Represents an arbitrary split with starting split given by user
     """
-    def __init__(self, variables, predicate, relation, interval):
+
+    def __init__(self, variables, predicate, relation, interval, hard_interval_boundary=None, result=0):
         self.variables = variables
         self.predicate = predicate
         self.relation = relation
         self.interval = interval
-
+        self.hard_interval_boundary = hard_interval_boundary
+        self.result = result
 
     @abstractmethod
     def predict(self, features):

@@ -4,6 +4,7 @@ from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_str
 from dtcontrol.decision_tree.splitting.context_aware.Parser.predicate_parser import PredicateParser
 import numpy as np
 import sympy as sp
+from copy import deepcopy
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
@@ -15,7 +16,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
     def get_parent_nodes(self, currentNode, parent_nbr, path=[]):
 
         """
-        :param currentNode: currentNode beeing looked at
+        :param currentNode: currentNode being looked at
         :param parent_nbr: number of parent nodes to return later
         :param path: list containing the path to the current node
         :returns: list of path from root to node, containing only the last parent_nbr parents
@@ -38,20 +39,16 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     return result
             return None
 
-        # path.append(currentNode)
-        # if currentNode == self.current_Node:
-        #     for node in path:
-        #         if node.split is None:
-        #             path.remove(node)
-        #     return path[-parent_nbr:]
-        # elif not currentNode.children:
-        #     return None
-        # else:
-        #     for node in currentNode.children:
-        #         result = self.get_parent_nodes(node, parent_nbr, path)
-        #         if result:
-        #             return result
-        #     return None
+    def print_parents(self, split_list):
+
+        # Printing the nearest k splits
+        print("\n----------------------------")
+        if split_list:
+            for i in split_list:
+                print("Parent Split: ", i.split.print_dot())
+        else:
+            print("No parent splits yet")
+        print("----------------------------")
 
     def find_split(self, dataset, impurity_measure):
 
@@ -61,26 +58,45 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :returns: a split object
         """
 
-        tmp = self.get_parent_nodes(self.root, 20)
-        print("#########")
-        if tmp:
-            for i in tmp:
-                print(i.split.print_dot())
-        print("#########")
+        # gets nearest k splits of self.current_node
+        k = 20
+        tmp = self.get_parent_nodes(self.root, k)
+        # self.print_parents(tmp)
+        splits = {}
 
         if self.start_predicate == True:
             predicate_list = PredicateParser().get_predicate()
             self.start_predicate = []
-            for predicat in predicate_list:
-                variables, predicate, relation, interval = predicat
+            for single_predicate in predicate_list:
+                variables, predicate, relation, interval = single_predicate
                 self.start_predicate.append(WeinhuberApproachSplit(variables, predicate, relation, interval))
-            return self.start_predicate[0]
+
+            for single_split in self.start_predicate:
+                single_split.result = self.calculate_best_result_for_predicate(dataset, single_split, impurity_measure)
+                splits[single_split] = impurity_measure.calculate_impurity(dataset, single_split)
+
+            if not splits:
+                return None
+            return min(splits.keys(), key=splits.get)
 
         #### Begin of alternative splitting strategy
         if self.alternative_splitting_strategy:
-            print("RETURN VALUE: ",
-                  self.alternative_splitting_strategy.find_split(dataset, impurity_measure).print_dot())
             return self.alternative_splitting_strategy.find_split(dataset, impurity_measure)
+
+    def calculate_best_result_for_predicate(self, dataset, split, impurity_measure):
+        x_numeric = dataset.get_numeric_x()
+        possible_values_inside_interval = {}
+        for i in range(x_numeric.shape[0]):
+            subs_list = []
+            features = x_numeric[i, :]
+            copy_split = deepcopy(split)
+            for k in range(len(features)):
+                subs_list.append(("x_" + str(k), features[k]))
+            tmp_result = copy_split.predicate.subs(subs_list)
+            copy_split.result = tmp_result.evalf()
+            possible_values_inside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset, copy_split)
+
+        return min(possible_values_inside_interval.keys(), key=possible_values_inside_interval.get)
 
 
 class WeinhuberApproachSplit(ContextAwareSplit):
@@ -91,19 +107,19 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
         result = self.predicate.subs(subs_list)
-
+        result = result.evalf()
         if self.relation == "<=":
-            check = result <= 0
+            check = result <= self.result
         elif self.relation == ">=":
-            check = result >= 0
+            check = result >= self.result
         elif self.relation == "!=":
-            check = result != 0
+            check = result != self.result
         elif self.relation == ">":
-            check = result > 0
+            check = result > self.result
         elif self.relation == "<":
-            check = result < 0
+            check = result < self.result
         else:
-            check = result == 0
+            check = result == self.result
 
         if check:
             return 0
@@ -123,14 +139,10 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         return [mask, ~mask]
 
     def print_dot(self, variables=None, category_names=None):
-        return sp.pretty(self.predicate) + " " + self.relation + " " + "0"
+        return sp.pretty(self.predicate) + " " + self.relation + " " + str(self.result)
 
     def print_c(self):
         return self.print_dot()
 
     def print_vhdl(self):
         return self.print_dot()
-
-# TODO: Display pow
-# expr = "x_1**2"
-# sp.pprint(sp.sympify(expr))

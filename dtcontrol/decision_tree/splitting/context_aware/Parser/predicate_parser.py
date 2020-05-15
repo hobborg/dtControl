@@ -103,13 +103,12 @@ class PredicateParser():
                 right_open = True
                 tmp = interval[1:-1].split(",")
                 interval_list.append(
-                    Interval(int(tmp[0]), int(tmp[1]), right_open=right_open, left_open=left_open))
+                    Interval(sympify(tmp[0]), sympify(tmp[1]), right_open=right_open, left_open=left_open))
             elif interval[-1] == "]":
                 right_open = False
                 tmp = interval[1:-1].split(",")
                 interval_list.append(
-                    Interval(int(tmp[0]), int(tmp[1]), right_open=right_open, left_open=left_open))
-
+                    Interval(sympify(tmp[0]), sympify(tmp[1]), right_open=right_open, left_open=left_open))
 
         final_interval = interval_list[0]
         if len(interval_list) > 1:
@@ -117,8 +116,6 @@ class PredicateParser():
                 final_interval = Union(final_interval, item)
 
         return final_interval
-
-
 
 # relation_list = ["<=", ">=", "!=", "<", ">", "="]
 # output = []
@@ -133,5 +130,3 @@ class PredicateParser():
 #             output.append((variables, expression, sign))
 #             break
 # return output
-
-
