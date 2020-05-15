@@ -19,10 +19,28 @@ class ContextAwareSplit(Split, ABC):
             self.relation               =       '<='
             self.interval               =       Union(Interval.open(0, 1), Interval(12, 15))
             self.hard_interval_boundary =       True
-            self.result                 =       0
+            self.result                 =       0.5
 
-        (For more information about the way the predicates get parsed exactly, take a look at the documentation inside
-        dtcontrol/decision_tree/splitting/context_aware/Parser/predicate_parser.py)
+        self.result contains the result of self.predicate in order to achieve the 'best' impurity.
+
+        self.hard_interval_boundary is a boolean which gives information about the way to continue if self.result
+        doesn't fit inside the interval of self.interval.
+
+        If self.hard_interval == True:
+            self.result is only allowed to be a value that fits inside self.interval. If all possible values for
+            self.result doesn't fit inside self.interval, then the whole split won't be used.
+        If self.hard_interval == False:
+            If all possible values for self.result doesn't fit inside self.interval, then the split will be still used
+            and therefore the interval will be ignored.
+
+
+        For more information about the way the predicate attributes: variables, predicate, relation or interval get
+        parsed exactly, take a look inside
+        dtcontrol/decision_tree/splitting/context_aware/Parser/predicate_parser.py
+
+        For more information about the way hard_interval_boundary or result are computed exactly, take a look inside
+        dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach.py
+
         """
 
         self.variables = variables

@@ -29,5 +29,5 @@ class ContextAwareSplittingStrategy(SplittingStrategy, ABC):
     def set_root(self, root):
         self.root = root
 
-    def set_current_Node(self, current_Node):
-        self.current_node = current_Node
+    def set_current_Node(self, current_node):
+        self.current_node = current_node
