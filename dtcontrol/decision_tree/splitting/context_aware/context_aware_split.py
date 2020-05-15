@@ -1,14 +1,30 @@
 from abc import ABC, abstractmethod
 from dtcontrol.decision_tree.splitting.split import Split
-from sympy import *
 
 
 class ContextAwareSplit(Split, ABC):
     """
-    Represents an arbitrary split with starting split given by user
+    Represents an arbitrary split obtained by an user.
+    Input path: dtcontrol/decision_tree/splitting/context_aware/Parser/input_predicates.txt
+    Especially used inside weinhuber_approach.py (dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach.py)
     """
 
     def __init__(self, variables, predicate, relation, interval, hard_interval_boundary=True, result=0):
+        """
+        e.g.:
+            11*x_1 + 2*x_2 - 11 <= (0,1) ∪ [12, 15]
+
+            self.variables              =       ['1', '2'] --> list of used x variables
+            self.predicate              =       1*x_1 + 2*x_2 - 11 --> sympy expression
+            self.relation               =       '<='
+            self.interval               =       Union(Interval.open(0, 1), Interval(12, 15))
+            self.hard_interval_boundary =       True
+            self.result                 =       0
+
+        (For more information about the way the predicates get parsed exactly, take a look at the documentation inside
+        dtcontrol/decision_tree/splitting/context_aware/Parser/predicate_parser.py)
+        """
+
         self.variables = variables
         self.predicate = predicate
         self.relation = relation

@@ -13,10 +13,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.start_predicate = start_predicate
         self.alternative_splitting_strategy = alternative_splitting_strategy
 
-    def get_parent_nodes(self, currentNode, parent_nbr, path=[]):
+    def get_parent_nodes(self, current_node, parent_nbr, path=[]):
 
         """
-        :param currentNode: currentNode being looked at
+        :param current_node: current node being looked at
         :param parent_nbr: number of parent nodes to return later
         :param path: list containing the path to the current node
         :returns: list of path from root to node, containing only the last parent_nbr parents
@@ -24,16 +24,16 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # Standard Depth first search
         path_copy = path.copy()
-        path_copy.append(currentNode)
-        if self.current_Node in currentNode.children:
+        path_copy.append(current_node)
+        if self.current_node in current_node.children:
             for node in path:
                 if node.split is None:
                     path_copy.remove(node)
             return path_copy[-parent_nbr:]
-        elif not currentNode.children:
+        elif not current_node.children:
             return None
         else:
-            for node in currentNode.children:
+            for node in current_node.children:
                 result = self.get_parent_nodes(node, parent_nbr, path_copy)
                 if result:
                     return result

@@ -32,6 +32,8 @@ class PredicateParser():
                     variables = re.findall("x_(\d+)", split_pred[0])
                     output.append((variables, left_formula, sign, interval))
                     break
+        for i in output:
+            print(i)
         return output
 
     def get_interval(self, user_input):
