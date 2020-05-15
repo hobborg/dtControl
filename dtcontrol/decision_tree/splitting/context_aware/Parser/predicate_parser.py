@@ -8,9 +8,6 @@ import re
 
 # SAMPLE INPUTS:
 # LatexInput: "\frac {1 + \sqrt {\a}} {\b}"
-# SympyInput: "(10+x_1)*123*x_4 = 0"
-#             "11*x_2-32 <= 0" "11*x_2-30.5 - sqrt(2) <= 0" "11*x_2-30- sqrt(2)**2 <= 0" "11*x_2-28.86 <= pi" "11*x_2-28.86 > pi"
-
 
 class PredicateParser():
 
@@ -80,13 +77,14 @@ class PredicateParser():
 
         """
 
-        if user_input == "$i":
-            return user_input
+        if user_input == '$i':
+            return Interval(-oo, +oo)
 
         interval_list = []
 
         user_input = user_input.split("∪")
         user_input = [x.strip() for x in user_input]
+
         for interval in user_input:
             # FINITE_INTERVAL
             if (interval[0] == "{") & (interval[-1] == "}"):
@@ -117,16 +115,5 @@ class PredicateParser():
 
         return final_interval
 
-# relation_list = ["<=", ">=", "!=", "<", ">", "="]
-# output = []
-# for single_predicate in predicates:
-#     for sign in relation_list:
-#         if sign in single_predicate:
-#             split_pred = single_predicate.split(sign)
-#             left_formula = split_pred[0]
-#             right_formula = split_pred[1]
-#             expression = simplify(sympify(left_formula) - sympify(right_formula))
-#             variables = re.findall("x_(\d+)", single_predicate)
-#             output.append((variables, expression, sign))
-#             break
-# return output
+
+
