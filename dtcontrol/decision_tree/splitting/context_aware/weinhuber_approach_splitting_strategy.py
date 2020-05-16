@@ -8,14 +8,16 @@ from copy import deepcopy
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, user_given_splits=None, alternative_splitting_strategy=None):
+    def __init__(self, base_prio=None, fallback_prio=None, user_given_splits=None, fallback_strategy=None):
         super().__init__()
 
-        self.alternative_splitting_strategy = alternative_splitting_strategy
+        self.fallback_strategy = fallback_strategy
         if user_given_splits is None:
             self.user_given_splits = self.get_predicate()
         else:
             self.user_given_splits = user_given_splits
+        self.base_prio = base_prio
+        self.fallback_prio = fallback_prio
 
     def get_parent_nodes(self, current_node, parent_nbr, path=[]):
 
@@ -82,7 +84,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         """
 
         splits = {}
-
+        # Getting the 'best' possible split with user predicate/split
         for single_split in self.user_given_splits:
             split_copy = deepcopy(single_split)
             split_copy.result = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
@@ -92,16 +94,47 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         if not splits:
             return None
 
-        # Getting the 'best' possible splits of current and alternative splitting strategy
         weinhuber_split = min(splits.keys(), key=splits.get)
-        alternative_split = self.alternative_splitting_strategy.find_split(dataset, impurity_measure)
 
-        # TODO new rating system to determine which split is going to be returned
-        if impurity_measure.calculate_impurity(dataset, weinhuber_split) <= impurity_measure.calculate_impurity(dataset,
-                                                                                                                alternative_split):
+        fallback_splits = {}
+        # Getting the 'best' possible splits of fallback strategy
+        for single_fallback_strat in self.fallback_strategy:
+            split = single_fallback_strat.find_split(dataset, impurity_measure)
+            fallback_splits[split] = impurity_measure.calculate_impurity(dataset, split)
+
+        fallback_split = min(fallback_splits.keys(), key=splits.get)
+
+        """
+        Calculating return split with rating formula, based on priority.
+        Formula:
+                                    ,-
+                                    ⎮ 0                             Prio_A = 1
+        New_Impurity_A(Imp_A) =    -⎮ max_int                       Prio_A = 0
+                                    ⎮ Imp_A - (Imp_A * Prio_A)      0 < Prio_A < 1 
+                                    `-
+                                    
+        If base_prio == None && fallback_prio == None 
+        return split with lowest impurity
+        
+        
+        """
+
+        if (self.base_prio is None) and (self.fallback_prio is None):
+            return weinhuber_split if splits[weinhuber_split] <= fallback_splits[fallback_split] else fallback_split
+
+        # TODO: more edge case handling --> what if only one of them is None?
+
+        if self.base_prio == 1:
             return weinhuber_split
+        elif self.base_prio == 0:
+            return fallback_split
         else:
-            return alternative_split
+            weinhuber_impurity = splits[weinhuber_split] - (splits[weinhuber_split] * self.base_prio)
+            fallback_impurity = fallback_splits[fallback_split] - (fallback_splits[fallback_split] * self.fallback_prio)
+            if weinhuber_impurity <= fallback_impurity:
+                return weinhuber_split
+            else:
+                return fallback_split
 
     def calculate_best_result_for_split(self, dataset, split, impurity_measure):
 

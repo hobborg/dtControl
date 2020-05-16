@@ -5,20 +5,22 @@ from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 
 # context_aware
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.numerical_single_equal import CategoricalSingleEqualSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.OldDraft.numerical_single_equal import \
+    CategoricalSingleEqualSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.OldDraft.experimental_split import ExperimentalSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier_user_input import LinearClassifierSplittingStrategy as UIS
+from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier import \
+    LinearClassifierSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier_user_input import \
+    LinearClassifierSplittingStrategy as UIS
 from dtcontrol.decision_tree.splitting.context_aware.OldDraft.user_predicat_split import UserPredicatSplittingStrategy
 
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import WeinhuberApproachSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import \
+    WeinhuberApproachSplittingStrategy
 
 # splitting
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 # from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
-
-
 
 suite = BenchmarkSuite(timeout=999,
                        save_folder='saved_classifiers',
@@ -27,8 +29,6 @@ suite = BenchmarkSuite(timeout=999,
 
 suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['fruits_dataset'])
 
-
-
 # context_aware
 smart_equal = CategoricalSingleEqualSplittingStrategy()
 smart_exp = ExperimentalSplittingStrategy()
@@ -36,14 +36,12 @@ smart_lin = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs'
 smart_UIS = UIS(LogisticRegression, solver='lbfgs', penalty='none')
 user_predicat = UserPredicatSplittingStrategy()
 
-
-weinhuber = WeinhuberApproachSplittingStrategy(alternative_splitting_strategy=smart_lin)
+weinhuber = WeinhuberApproachSplittingStrategy(base_prio=1, fallback_prio=0, fallback_strategy=[smart_lin])
 
 # splitting
 aa = AxisAlignedSplittingStrategy()
 # oc1 = OC1SplittingStrategy()
 cat = CategoricalSingleSplittingStrategy()
-
 
 classifiers = [
     DecisionTree([weinhuber], Entropy(), 'Testing')
