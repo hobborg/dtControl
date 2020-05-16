@@ -43,7 +43,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     return result
             return None
 
-    def print_parents(self, split_list):
+    def print_parent_nodes(self, split_list):
 
         # Printing the nearest k splits
         print("\n----------------------------")
@@ -64,8 +64,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # gets nearest k splits of self.current_node
         k = 20
-        tmp = self.get_parent_nodes(self.root, k)
-        # self.print_parents(tmp)
+        # self.print_parent_nodes(self.get_parent_nodes(self.root, k))
+
         splits = {}
 
         # Adding the result to all predicates of the list: self.user_given_splits
@@ -80,13 +80,11 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         if not splits:
             return None
 
-        # Returning the split with the lowest impurity
+        # Getting the 'best' possible splits of current and alternative splitting strategy
         weinhuber_split = min(splits.keys(), key=splits.get)
-        # print(weinhuber_split.print_c())
         alternative_split = self.alternative_splitting_strategy.find_split(dataset, impurity_measure)
 
-        print(impurity_measure.calculate_impurity(dataset, weinhuber_split))
-        print(impurity_measure.calculate_impurity(dataset, alternative_split))
+        # TODO new rating system to determine which split is going to be returned
         if impurity_measure.calculate_impurity(dataset, weinhuber_split) <= impurity_measure.calculate_impurity(dataset,
                                                                                                                 alternative_split):
             return weinhuber_split

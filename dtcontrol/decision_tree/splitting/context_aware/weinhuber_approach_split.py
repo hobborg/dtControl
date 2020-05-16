@@ -2,6 +2,7 @@ from dtcontrol.decision_tree.splitting.context_aware.context_aware_split import 
 import numpy as np
 import sympy as sp
 
+
 class WeinhuberApproachSplit(ContextAwareSplit):
 
     def predict(self, features):
@@ -12,7 +13,6 @@ class WeinhuberApproachSplit(ContextAwareSplit):
             subs_list.append(("x_" + str(i), features[0, i]))
         evaluated_predicate = self.predicate.subs(subs_list)
         evaluated_predicate = evaluated_predicate.evalf(6)
-
 
         # Checking the result
         if self.relation == "<=":
@@ -27,7 +27,6 @@ class WeinhuberApproachSplit(ContextAwareSplit):
             check = evaluated_predicate < self.result
         else:
             check = evaluated_predicate == self.result
-
 
         if check:
             return 0
@@ -56,4 +55,3 @@ class WeinhuberApproachSplit(ContextAwareSplit):
 
     def print_vhdl(self):
         return self.print_dot()
-
