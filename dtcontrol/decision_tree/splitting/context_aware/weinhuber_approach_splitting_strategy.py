@@ -20,13 +20,16 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
     def get_parent_nodes(self, current_node, parent_nbr, path=[]):
 
         """
+        Standard depth first search.
+        Always starting from self.root.
+        Always searching for current_node.
+
         :param current_node: current node to search
         :param parent_nbr: number of parent nodes to return later
         :param path: list containing the path to the current node
         :returns: list of path from root to node, containing only the last parent_nbr parents
         """
 
-        # standard depth first search
         path_copy = path.copy()
         path_copy.append(current_node)
         if self.current_node in current_node.children:
@@ -45,7 +48,12 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
     def print_parent_nodes(self, split_list):
 
-        # Printing the nearest k splits
+        """
+        Super simple printing function for the result of get_parent_nodes().
+        :param split_list: list of path from self.root to self.current_node
+        :returns: nothing. Just visual output for terminal
+        """
+
         print("\n----------------------------")
         if split_list:
             for i in split_list:
@@ -66,14 +74,18 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         k = 20
         # self.print_parent_nodes(self.get_parent_nodes(self.root, k))
 
+        """
+        Iterating over every user given predicate/split and adjusting it to the current dataset,
+        to achieve the 'best' impurity possible with the user given predicate/split.
+        All adjusted predicate/split objects will be stored inside the dict: splits with 
+        Key: split object   Value:Impurity of the split
+        """
+
         splits = {}
 
-        # Adding the result to all predicates of the list: self.user_given_splits
         for single_split in self.user_given_splits:
             split_copy = deepcopy(single_split)
             split_copy.result = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
-            # Adding all these predicates from self.user_given_splits to a dict with:
-            # Key:Splitobject   Value:Impurity of the split
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         # Edge case no start_predicates --> no split objects inside splits dict

@@ -5,8 +5,8 @@ from dtcontrol.decision_tree.splitting.split import Split
 class ContextAwareSplit(Split, ABC):
     """
     Represents an arbitrary split obtained by an user.
-    Input path: dtcontrol/decision_tree/splitting/context_aware/Parser/input_predicates.txt
-    Especially used inside weinhuber_approach_splitting_strategy.py (dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach_splitting_strategy.py)
+    Path of user input: dtcontrol/decision_tree/splitting/context_aware/input_predicates.txt
+    Object is especially used inside weinhuber_approach_split.py
     """
 
     def __init__(self, variables, predicate, relation, interval, hard_interval_boundary=False, result=None):
@@ -34,11 +34,12 @@ class ContextAwareSplit(Split, ABC):
             and therefore the interval will be ignored.
 
 
-        For more information about the way the predicate attributes: variables, predicate, relation or interval get
-        parsed exactly, take a look inside
-        dtcontrol/decision_tree/splitting/context_aware/Parser/predicate_parser.py
+        For more information about the way the attributes: variables, predicate, relation or interval get
+        parsed exactly, take a look inside the function get_predicate() inside
+        dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach_splitting_strategy.py
 
-        For more information about the way hard_interval_boundary or result are computed exactly, take a look inside
+        For more information about the way hard_interval_boundary behaves or result is being computed, take a look inside the function
+        calculate_best_result_for_split() inside
         dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach_splitting_strategy.py
 
         """
