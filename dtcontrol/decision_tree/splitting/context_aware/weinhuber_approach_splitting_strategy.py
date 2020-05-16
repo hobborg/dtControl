@@ -90,10 +90,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             split_copy.result = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
-        # Edge case no start_predicates --> no split objects inside splits dict
-        if not splits:
-            return None
-
         weinhuber_split = min(splits.keys(), key=splits.get)
 
         fallback_splits = {}
@@ -105,7 +101,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         fallback_split = min(fallback_splits.keys(), key=splits.get)
 
         """
-        Calculating return split with rating formula, based on priority.
+        Calculating return split with this rating formula based on priority.
         Formula:
                                     ,-
                                     ⎮ 0                             Prio_A = 1
@@ -115,14 +111,17 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                                     
         If base_prio == None && fallback_prio == None 
         return split with lowest impurity
-        
-        
         """
 
-        if (self.base_prio is None) and (self.fallback_prio is None):
+        # No priority given. Return the split (from weinhuber_split or fallback) with the lowest impurity
+        if ((self.base_prio is None) and (self.fallback_prio is None)) or (
+                (self.base_prio == 1) and (self.fallback_prio == 1)):
             return weinhuber_split if splits[weinhuber_split] <= fallback_splits[fallback_split] else fallback_split
 
-        # TODO: more edge case handling --> what if only one of them is None?
+        # edge case handling
+        if (
+                self.base_prio == 0 and self.fallback_prio == 0) or self.base_prio > 1 or self.fallback_prio > 1 or self.base_prio < 0 or self.fallback_prio < 0:
+            return None
 
         if self.base_prio == 1:
             return weinhuber_split

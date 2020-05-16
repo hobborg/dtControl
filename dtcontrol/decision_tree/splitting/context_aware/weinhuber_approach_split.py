@@ -48,7 +48,7 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         return [mask, ~mask]
 
     def print_dot(self, variables=None, category_names=None):
-        return sp.pretty(self.predicate) + "\\n " + self.relation + " " + sp.pretty(self.result)
+        return sp.pretty(self.predicate).replace("+", "\\n+").replace("-", "\\n-") + "\\n " + self.relation + "\\n " + sp.pretty(self.result)
 
     def print_c(self):
         return self.print_dot()
