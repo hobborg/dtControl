@@ -8,7 +8,15 @@ from copy import deepcopy
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, base_prio=None, fallback_prio=None, user_given_splits=None, fallback_strategy=None):
+    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, base_prio=None, fallback_prio=None,
+                 user_given_splits=None, fallback_strategy=None):
+
+        """
+        :param fallback_strategy: splitting strategy to continue with, once weinhuber strategy doesn't work anymore
+        :param user_given_splits: predicates/splits obtained by user to work with
+        :param predicate_structure_difference: allowed difference in structure of predicate
+        :param predicate_dt_range: range of distance to search in dt (being build)
+        """
         super().__init__()
 
         self.fallback_strategy = fallback_strategy
@@ -18,6 +26,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             self.user_given_splits = user_given_splits
         self.base_prio = base_prio
         self.fallback_prio = fallback_prio
+        self.predicate_structure_difference = predicate_structure_difference
+        self.predicate_dt_range = predicate_dt_range
 
     def get_parent_nodes(self, current_node, parent_nbr, path=[]):
 
