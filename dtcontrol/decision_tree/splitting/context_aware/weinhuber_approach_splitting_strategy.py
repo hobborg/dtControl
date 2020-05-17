@@ -5,11 +5,13 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split im
 import sympy as sp
 import re
 from copy import deepcopy
+from apted import APTED
+from apted.helpers import Tree
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, base_prio=None, fallback_prio=None,
-                 user_given_splits=None, fallback_strategy=None):
+    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, user_given_splits=None,
+                 fallback_strategy=None):
 
         """
         :param fallback_strategy: splitting strategy to continue with, once weinhuber strategy doesn't work anymore
@@ -24,12 +26,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             self.user_given_splits = self.parse_user_predicate()
         else:
             self.user_given_splits = user_given_splits
-        self.base_prio = base_prio
-        self.fallback_prio = fallback_prio
         self.predicate_structure_difference = predicate_structure_difference
         self.predicate_dt_range = predicate_dt_range
 
-    def get_parent_nodes(self, current_node, parent_nbr, path=[]):
+    def get_parent_splits(self, current_node, parent_nbr, path=[]):
 
         """
         Standard depth first search.
@@ -53,15 +53,49 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             return None
         else:
             for node in current_node.children:
-                result = self.get_parent_nodes(node, parent_nbr, path_copy)
+                result = self.get_parent_splits(node, parent_nbr, path_copy)
                 if result:
                     return result
             return None
 
+    def tree_distance_format(self, tree):
+
+        """
+        Function to transform tree format from sympy format to APTED format
+        e.g.
+        Sympy format: Add(Mul(Integer(11), Symbol('x_1')), Mul(Integer(2), Symbol('x_2')), Integer(-11))
+        APTED format: {Add{Mul{{Variable}{Symbol1}}Mul{{Variable}{Symbol2}}{Variable}}}
+
+        :param tree: syntax tree of sympy expression
+        :returns: formatted string of tree in APTED format
+        """
+
+        formated_tree = re.sub("Integer\(.+?\)|Float\(.+?\)|Rational\(.+?\)", "{Variable}", tree)
+        formated_tree = formated_tree.replace("(", "{").replace(")", "}").replace("{'x_", "").replace("'}", "").replace(
+            ", ", "")
+        formated_tree = "{" + re.sub("(Symbol\d+)", "{\\1}", formated_tree) + "}"
+
+        return formated_tree
+
+    def get_tree_distance(self, predicate1, predicate2):
+        tree1 = Tree.from_text(self.tree_distance_format(sp.srepr(predicate1)))
+        tree2 = Tree.from_text(self.tree_distance_format(sp.srepr(predicate2)))
+        # tree2 = Tree.from_text("{Add{Mul{{Variable}{Symbol2}}{Variable}}}")
+
+        # TERMINAL COMMAND: python -m apted -t tree1 tree2 -mv
+
+        apted = APTED(tree1, tree2)
+        ted = apted.compute_edit_distance()
+        mapping = apted.compute_edit_mapping()
+        # print("Comparing: \nTree1: ",self.tree_distance_format(sp.srepr(predicate1)))
+        # print("Tree2: {Add{Mul{{Variable}{Symbol2}}{Variable}}}")
+        # print("Distance: ", ted)
+        return ted
+
     def print_parent_nodes(self, split_list):
 
         """
-        Super simple printing function for the result of get_parent_nodes().
+        Super simple printing function for the result of get_parent_splits().
         :param split_list: list of path from self.root to self.current_node
         :returns: nothing. Just visual output for terminal
         """
@@ -70,6 +104,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         if split_list:
             for i in split_list:
                 print("Parent Split: ", i.split.print_dot())
+                # self.get_tree_distance(i.split.predicate, None)
+
         else:
             print("No parent splits yet")
         print("----------------------------")
@@ -81,10 +117,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: a split object
         """
-
-        # gets nearest k splits of self.current_node
-        k = 20
-        # self.print_parent_nodes(self.get_parent_nodes(self.root, k))
 
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
@@ -110,40 +142,46 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         fallback_split = min(fallback_splits.keys(), key=splits.get)
 
-        """
-        Calculating return split with this rating formula based on priority.
-        Formula:
-                                    ,-
-                                    ⎮ 0                             Prio_A = 1
-        New_Impurity_A(Imp_A) =    -⎮ max_int                       Prio_A = 0
-                                    ⎮ Imp_A - (Imp_A * Prio_A)      0 < Prio_A < 1 
-                                    `-
-                                    
-        If base_prio == None && fallback_prio == None 
-        return split with lowest impurity
-        """
+        # """
+        # Calculating return split with this rating formula based on priority.
+        # Formula:
+        #                             ,-
+        #                             ⎮ 0                             Prio_A = 1
+        # New_Impurity_A(Imp_A) =    -⎮ max_int                       Prio_A = 0
+        #                             ⎮ Imp_A - (Imp_A * Prio_A)      0 < Prio_A < 1
+        #                             `-
+        #
+        # If base_prio == None && fallback_prio == None
+        # return split with lowest impurity
+        # """
+        #
+        # # No priority given. Return the split (from weinhuber_split or fallback) with the lowest impurity
+        # if ((self.base_prio is None) and (self.fallback_prio is None)) or (
+        #         (self.base_prio == 1) and (self.fallback_prio == 1)):
+        #     return weinhuber_split if splits[weinhuber_split] <= fallback_splits[fallback_split] else fallback_split
+        #
+        # # edge case handling
+        # if (
+        #         self.base_prio == 0 and self.fallback_prio == 0) or self.base_prio > 1 or self.fallback_prio > 1 or self.base_prio < 0 or self.fallback_prio < 0:
+        #     return None
+        #
+        # if self.base_prio == 1:
+        #     return weinhuber_split
+        # elif self.base_prio == 0:
+        #     return fallback_split
+        # else:
+        #     weinhuber_impurity = splits[weinhuber_split] - (splits[weinhuber_split] * self.base_prio)
+        #     fallback_impurity = fallback_splits[fallback_split] - (fallback_splits[fallback_split] * self.fallback_prio)
+        #     if weinhuber_impurity <= fallback_impurity:
+        #         return weinhuber_split
+        #     else:
+        #         return fallback_split
 
-        # No priority given. Return the split (from weinhuber_split or fallback) with the lowest impurity
-        if ((self.base_prio is None) and (self.fallback_prio is None)) or (
-                (self.base_prio == 1) and (self.fallback_prio == 1)):
-            return weinhuber_split if splits[weinhuber_split] <= fallback_splits[fallback_split] else fallback_split
+        # gets nearest k splits of self.current_node
+        k = 20
+        # self.print_parent_nodes(self.get_parent_splits(self.root, k))
 
-        # edge case handling
-        if (
-                self.base_prio == 0 and self.fallback_prio == 0) or self.base_prio > 1 or self.fallback_prio > 1 or self.base_prio < 0 or self.fallback_prio < 0:
-            return None
-
-        if self.base_prio == 1:
-            return weinhuber_split
-        elif self.base_prio == 0:
-            return fallback_split
-        else:
-            weinhuber_impurity = splits[weinhuber_split] - (splits[weinhuber_split] * self.base_prio)
-            fallback_impurity = fallback_splits[fallback_split] - (fallback_splits[fallback_split] * self.fallback_prio)
-            if weinhuber_impurity <= fallback_impurity:
-                return weinhuber_split
-            else:
-                return fallback_split
+        return weinhuber_split
 
     def calculate_best_result_for_split(self, dataset, split, impurity_measure):
 
