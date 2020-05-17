@@ -35,7 +35,7 @@ class ContextAwareSplit(Split, ABC):
 
 
         For more information about the way the attributes: variables, predicate, relation or interval get
-        parsed exactly, take a look inside the function get_predicate() inside
+        parsed exactly, take a look inside the function parse_user_predicate() inside
         dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach_splitting_strategy.py
 
         For more information about the way hard_interval_boundary behaves or result is being computed, take a look inside the function

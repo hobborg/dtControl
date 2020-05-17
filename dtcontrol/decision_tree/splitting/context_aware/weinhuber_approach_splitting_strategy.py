@@ -21,7 +21,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         self.fallback_strategy = fallback_strategy
         if user_given_splits is None:
-            self.user_given_splits = self.get_predicate()
+            self.user_given_splits = self.parse_user_predicate()
         else:
             self.user_given_splits = user_given_splits
         self.base_prio = base_prio
@@ -197,7 +197,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 else:
                     return min(possible_values_outside_interval.keys(), key=possible_values_outside_interval.get)
 
-    def get_predicate(self):
+    def parse_user_predicate(self):
+
         """
         Predicate parser for user input obtained from
         dtcontrol/decision_tree/splitting/context_aware/Parser/input_predicates.txt
@@ -228,7 +229,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     left_formula = sp.simplify(sp.sympify(split_pred[0]))
 
                     # Accessing the interval parser, since the intervals can also contain unions etc
-                    interval = self.get_interval(split_pred[1].strip())
+                    interval = self.parse_user_interval(split_pred[1].strip())
 
                     # Edge case in case interval is an empty interval
                     if interval == sp.EmptySet:
@@ -238,7 +239,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     break
         return output
 
-    def get_interval(self, user_input):
+    def parse_user_interval(self, user_input):
         """
         Predicate Parser for the interval.
         :variable user_input: Interval as a string
