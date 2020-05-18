@@ -307,6 +307,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         Option 1: user_input = $i
         --> self.result of ContextAwareSplit will be the value to achieve the 'best' impurity
 
+        (with a,b ∊ R)
         Option 2: user_input is an interval
         Option 2.1: user_input = [a,b]
         --> Interval with closed boundary --> {x | a <= x <= b}
