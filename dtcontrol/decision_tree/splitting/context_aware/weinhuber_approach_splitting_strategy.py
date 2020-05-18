@@ -118,6 +118,15 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :returns: a split object
         """
 
+        # Checking whether used variables in user_given_splits are actually represented in dataset
+        new_user_splits = []
+        allowed_var_index = dataset.get_numeric_x().shape[1] - 1
+        for single_split in self.user_given_splits:
+            if int(single_split.variables[-1]) <= allowed_var_index:
+                new_user_splits.append(single_split)
+
+        self.user_given_splits = new_user_splits
+
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
         to achieve the 'best' impurity possible with the user given predicate/split.
@@ -132,7 +141,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             split_copy.result = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
-        weinhuber_split = min(splits.keys(), key=splits.get)
+        weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
 
         fallback_splits = {}
         # Getting the 'best' possible splits of fallback strategy
@@ -181,7 +190,19 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         k = 20
         # self.print_parent_nodes(self.get_parent_splits(self.root, k))
 
-        return weinhuber_split
+        # return weinhuber_split
+
+        weinhuber_impurity = splits[weinhuber_split] if weinhuber_split else None
+        fallback_impurity = fallback_splits[fallback_split] if fallback_split else None
+
+        if (weinhuber_split is None) and (fallback_split is None):
+            return None
+        elif (weinhuber_split is not None) and (fallback_split is not None):
+            return weinhuber_split if weinhuber_impurity <= fallback_impurity else fallback_split
+        elif weinhuber_split is not None:
+            return weinhuber_split
+        else:
+            return fallback_split
 
     def calculate_best_result_for_split(self, dataset, split, impurity_measure):
 

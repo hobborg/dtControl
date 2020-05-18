@@ -7,7 +7,6 @@ class WeinhuberApproachSplit(ContextAwareSplit):
 
     def predict(self, features):
         subs_list = []
-
         # Iterating over every possible value and creating a substitution list
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
