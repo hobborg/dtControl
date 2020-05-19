@@ -190,7 +190,28 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         k = 20
         # self.print_parent_nodes(self.get_parent_splits(self.root, k))
 
-        # return weinhuber_split
+        return weinhuber_split
+
+        """
+        When to return what kind of split object?
+        
+        BEGINNING PHASE:
+        START: Use the predicate from user_input with lowest impurity
+        If no user predicate is suitable just use the fallback split
+        
+        MID PHASE: Once dt depth has grown a bit
+        1. Filter user predicates with tree edit distance 5 (compared to parent split)
+        2. Take result with best impurity
+        3. If there is no predicate in tree edit distance 5 just return user_predicate with best impurity ( or stepwise increment tree edit distance)
+        
+        If no user predicate is suitable just use the fallback split
+        
+        ADDITIONS:
+        - Set impurity threshold/value whenever to activate fallback strat
+        - Add feature to come up with smart new predicates, similar to structure of existing predicates in dt range 5
+        (- Already implemented one formula with 2 params which uses the imp_measure) 
+         
+        """
 
         weinhuber_impurity = splits[weinhuber_split] if weinhuber_split else None
         fallback_impurity = fallback_splits[fallback_split] if fallback_split else None

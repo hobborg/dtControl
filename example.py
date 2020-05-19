@@ -36,9 +36,8 @@ smart_lin = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs'
 smart_UIS = UIS(LogisticRegression, solver='lbfgs', penalty='none')
 user_predicat = UserPredicatSplittingStrategy()
 
-
-
-weinhuber = WeinhuberApproachSplittingStrategy(fallback_strategy=[AxisAlignedSplittingStrategy()])
+weinhuber = WeinhuberApproachSplittingStrategy(predicate_structure_difference=5, predicate_dt_range=5,
+                                               fallback_strategy=[AxisAlignedSplittingStrategy()])
 
 """
 Idea:
