@@ -40,14 +40,11 @@ weinhuber = WeinhuberApproachSplittingStrategy(predicate_structure_difference=5,
                                                fallback_strategy=[AxisAlignedSplittingStrategy()])
 
 """
-Idea:
-
-christoph = WeinhuberApproachSplittingStrategy(priority=1)
-fallback = AxisAlignedSplittingStrategy(priority=0)
-
+aa Priority = 1
+lin Priority = 0.5
 ...
+DecisionTree([aa, lin])
 
-DecisionTree([christoph, fallback], Entropy(), 'Testing')
 
 """
 

@@ -14,6 +14,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
         :param tolerance: the absolute increase in impurity measure a value grouping may produce in order to still be
         considered a better candidate than the original (non-grouped) split
         """
+        super().__init__()
         self.value_grouping = value_grouping
         self.tolerance = tolerance
 

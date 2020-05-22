@@ -363,6 +363,18 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         """
 
+
+        # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
+        user_input = user_input.replace("or", "∪")
+        user_input = user_input.replace("Or", "∪")
+        user_input = user_input.replace("OR", "∪")
+        user_input = user_input.replace("u", "∪")
+
+        # Modify user_input and convert every "Inf" to sympy supported symbol for infinity "oo"
+        user_input = user_input.replace("Inf", "oo")
+        user_input = user_input.replace("inf", "oo")
+        user_input = user_input.replace("INF", "oo")
+
         if user_input == '$i':
             return sp.Interval(sp.sympify("-oo"), sp.sympify("+oo"))
 
@@ -402,5 +414,4 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         if len(interval_list) > 1:
             for item in interval_list:
                 final_interval = sp.Union(final_interval, item)
-
         return final_interval

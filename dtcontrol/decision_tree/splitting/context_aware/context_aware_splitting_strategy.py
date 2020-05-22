@@ -12,6 +12,7 @@ class ContextAwareSplittingStrategy(SplittingStrategy, ABC):
         self.root contains a reference to the root node of the current DT to access the DT while it is being build
         self.current_node contains a reference to the current_node which is beeing
         """
+        super().__init__()
         self.root = None
         self.current_node = None
 
