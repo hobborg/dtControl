@@ -13,19 +13,19 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         evaluated_predicate = self.predicate.subs(subs_list)
         evaluated_predicate = evaluated_predicate.evalf(6)
 
-        # Checking the result
+        # Checking the offset
         if self.relation == "<=":
-            check = evaluated_predicate <= self.result
+            check = evaluated_predicate <= self.offset
         elif self.relation == ">=":
-            check = evaluated_predicate >= self.result
+            check = evaluated_predicate >= self.offset
         elif self.relation == "!=":
-            check = evaluated_predicate != self.result
+            check = evaluated_predicate != self.offset
         elif self.relation == ">":
-            check = evaluated_predicate > self.result
+            check = evaluated_predicate > self.offset
         elif self.relation == "<":
-            check = evaluated_predicate < self.result
+            check = evaluated_predicate < self.offset
         else:
-            check = evaluated_predicate == self.result
+            check = evaluated_predicate == self.offset
 
         if check:
             return 0
@@ -47,7 +47,7 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         return [mask, ~mask]
 
     def print_dot(self, variables=None, category_names=None):
-        return sp.pretty(self.predicate).replace("+", "\\n+").replace("-", "\\n-") + "\\n " + self.relation + "\\n " + sp.pretty(self.result)
+        return sp.pretty(self.predicate).replace("+", "\\n+").replace("-", "\\n-") + "\\n " + self.relation + "\\n " + sp.pretty(self.offset)
 
     def print_c(self):
         return self.print_dot()

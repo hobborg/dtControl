@@ -58,7 +58,7 @@ class PredicateParser:
         :returns: a sympy expression (to later use in self.interval of ContextAwareSplit objects)
 
         Option 1: user_input = $i
-        --> self.result of ContextAwareSplit will be the value to achieve the 'best' impurity
+        --> self.offset of ContextAwareSplit will be the value to achieve the 'best' impurity
 
         Option 2: user_input is an interval
         Option 2.1: user_input = [a,b]

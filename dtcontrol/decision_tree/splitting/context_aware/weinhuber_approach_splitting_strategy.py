@@ -95,7 +95,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
     def print_parent_nodes(self, split_list):
 
         """
-        Super simple printing function for the result of get_parent_splits().
+        Super simple printing function for the return of get_parent_splits().
         :param split_list: list of path from self.root to self.current_node
         :returns: nothing. Just visual output for terminal
         """
@@ -138,7 +138,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # Getting the 'best' possible split with user predicate/split
         for single_split in self.user_given_splits:
             split_copy = deepcopy(single_split)
-            split_copy.result = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
+            split_copy.offset = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
@@ -229,9 +229,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         """
         :param dataset: the subset of data at the current split
-        :param split: split to compute the best result for
+        :param split: split to compute the best offset for
         :param impurity_measure: the impurity measure to determine the quality of a potential split
-        :returns: best value for split.result
+        :returns: best value for split.offset
         """
 
         x_numeric = dataset.get_numeric_x()
@@ -246,23 +246,23 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             for k in range(len(features)):
                 subs_list.append(("x_" + str(k), features[k]))
 
-            # calculating the result for that specific row
-            copy_split.result = copy_split.predicate.subs(subs_list).evalf(6)
+            # calculating the offset for that specific row
+            copy_split.offset = copy_split.predicate.subs(subs_list).evalf(6)
 
             # evaluating where to store this split object (for more information look at documentation of hard_interval_boundary)
-            # Key: result   Value: Impurity of that result
-            if copy_split.interval.contains(copy_split.result):
-                possible_values_inside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset,
+            # Key: offset   Value: Impurity of that offset
+            if copy_split.interval.contains(copy_split.offset):
+                possible_values_inside_interval[copy_split.offset] = impurity_measure.calculate_impurity(dataset,
                                                                                                          copy_split)
             else:
-                possible_values_outside_interval[copy_split.result] = impurity_measure.calculate_impurity(dataset,
+                possible_values_outside_interval[copy_split.offset] = impurity_measure.calculate_impurity(dataset,
                                                                                                           copy_split)
 
-            # return result with (best) result with result inside the interval
+            # return offset with (best) offset with offset inside the interval
             if possible_values_inside_interval:
                 return min(possible_values_inside_interval.keys(), key=possible_values_inside_interval.get)
             else:
-                # If no possible result fits inside the interval (for more information look at documentation of hard_interval_boundary)
+                # If no possible offset fits inside the interval (for more information look at documentation of hard_interval_boundary)
                 if copy_split.hard_interval_boundary:
                     supremum = copy_split.interval.sup
                     infimum = copy_split.interval.inf
@@ -326,7 +326,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :returns: a sympy expression (to later use in self.interval of ContextAwareSplit objects)
 
         Option 1: user_input = $i
-        --> self.result of ContextAwareSplit will be the value to achieve the 'best' impurity
+        --> self.offset of ContextAwareSplit will be the value to achieve the 'best' impurity
 
         (with a,b ∊ R)
         Option 2: user_input is an interval

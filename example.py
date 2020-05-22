@@ -63,6 +63,8 @@ classifiers = [
     # DecisionTree([smart_lin], Entropy(), 'Type: Linear Classifier'),
     # DecisionTree([smart_UIS], Entropy(), 'User Input Predicat '),
     # DecisionTree([user_predicat], Entropy(), 'User Predicat Splitting')
+    # DecisionTree([lin, aa], Entropy(), 'Old Version'),
+    # DecisionTree([aa], Entropy(), 'Old Version'),
     # DecisionTree([lin], Entropy(), 'Old Version'),
     # DecisionTree([oc1], Entropy(), 'OC1'),
     # DecisionTree([cat], Entropy(), 'BUGGY: Categorical Single Splitting'),

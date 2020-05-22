@@ -160,6 +160,7 @@ class Node:
             if pre_determinize:
                 self.impurity_measure.determinizer.pre_determinized_labels = None
             return
+        # TODO
         self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, s))
         if pre_determinize:
             self.impurity_measure.determinizer.pre_determinized_labels = None
