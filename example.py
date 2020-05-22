@@ -36,40 +36,13 @@ smart_lin = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs'
 smart_UIS = UIS(LogisticRegression, solver='lbfgs', penalty='none')
 user_predicat = UserPredicatSplittingStrategy()
 
-weinhuber = WeinhuberApproachSplittingStrategy(predicate_structure_difference=5, predicate_dt_range=5,
-                                               fallback_strategy=[AxisAlignedSplittingStrategy()])
-
-"""
-aa Priority = 1
-lin Priority = 0.5
-...
-DecisionTree([aa, lin])
-
-
-"""
-
-# splitting
+weinhuber = WeinhuberApproachSplittingStrategy(predicate_structure_difference=5, predicate_dt_range=5)
+weinhuber.priority = 1
 aa = AxisAlignedSplittingStrategy()
-# oc1 = OC1SplittingStrategy()
-cat = CategoricalSingleSplittingStrategy()
+aa.priority = 1
 
 classifiers = [
-    DecisionTree([weinhuber], Entropy(), 'Testing')
-    # DecisionTree([smart_equal], Entropy(), 'Categorical Single Equal'),
-    # DecisionTree([smart_exp], Entropy(), 'Experimental'),
-    # DecisionTree([smart_lin], Entropy(), 'Type: Linear Classifier'),
-    # DecisionTree([smart_UIS], Entropy(), 'User Input Predicat '),
-    # DecisionTree([user_predicat], Entropy(), 'User Predicat Splitting')
-    # DecisionTree([lin, aa], Entropy(), 'Old Version'),
-    # DecisionTree([aa], Entropy(), 'Old Version'),
-    # DecisionTree([lin], Entropy(), 'Old Version'),
-    # DecisionTree([oc1], Entropy(), 'OC1'),
-    # DecisionTree([cat], Entropy(), 'BUGGY: Categorical Single Splitting'),
-    # DecisionTree([aa], Entropy(), 'CART'),
-    # DecisionTree([aa, logreg], Entropy(), 'LogReg'),
-    # DecisionTree([aa], Entropy(), 'Early-stopping', early_stopping=True),
-    # DecisionTree([aa], Entropy(MaxFreqDeterminizer()), 'MaxFreq', early_stopping=True),
-    # DecisionTree([aa], MultiLabelEntropy(), 'MultiLabelEntropy', early_stopping=True)
+    DecisionTree([weinhuber, aa], Entropy(), 'Testing')
 ]
 suite.benchmark(classifiers)
 suite.display_html()

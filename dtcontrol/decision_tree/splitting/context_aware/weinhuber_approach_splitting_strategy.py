@@ -10,8 +10,7 @@ from apted.helpers import Tree
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, user_given_splits=None,
-                 fallback_strategy=None):
+    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, user_given_splits=None):
 
         """
         :param fallback_strategy: splitting strategy to continue with, once weinhuber strategy doesn't work anymore
@@ -20,8 +19,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param predicate_dt_range: range of distance to search in dt (being build)
         """
         super().__init__()
-
-        self.fallback_strategy = fallback_strategy
         if user_given_splits is None:
             self.user_given_splits = self.parse_user_predicate()
         else:
@@ -142,88 +139,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
-
-        fallback_splits = {}
-        # Getting the 'best' possible splits of fallback strategy
-        for single_fallback_strat in self.fallback_strategy:
-            split = single_fallback_strat.find_split(dataset, impurity_measure)
-            fallback_splits[split] = impurity_measure.calculate_impurity(dataset, split)
-
-        fallback_split = min(fallback_splits.keys(), key=splits.get)
-
-        # """
-        # Calculating return split with this rating formula based on priority.
-        # Formula:
-        #                             ,-
-        #                             ⎮ 0                             Prio_A = 1
-        # New_Impurity_A(Imp_A) =    -⎮ max_int                       Prio_A = 0
-        #                             ⎮ Imp_A - (Imp_A * Prio_A)      0 < Prio_A < 1
-        #                             `-
-        #
-        # If base_prio == None && fallback_prio == None
-        # return split with lowest impurity
-        # """
-        #
-        # # No priority given. Return the split (from weinhuber_split or fallback) with the lowest impurity
-        # if ((self.base_prio is None) and (self.fallback_prio is None)) or (
-        #         (self.base_prio == 1) and (self.fallback_prio == 1)):
-        #     return weinhuber_split if splits[weinhuber_split] <= fallback_splits[fallback_split] else fallback_split
-        #
-        # # edge case handling
-        # if (
-        #         self.base_prio == 0 and self.fallback_prio == 0) or self.base_prio > 1 or self.fallback_prio > 1 or self.base_prio < 0 or self.fallback_prio < 0:
-        #     return None
-        #
-        # if self.base_prio == 1:
-        #     return weinhuber_split
-        # elif self.base_prio == 0:
-        #     return fallback_split
-        # else:
-        #     weinhuber_impurity = splits[weinhuber_split] - (splits[weinhuber_split] * self.base_prio)
-        #     fallback_impurity = fallback_splits[fallback_split] - (fallback_splits[fallback_split] * self.fallback_prio)
-        #     if weinhuber_impurity <= fallback_impurity:
-        #         return weinhuber_split
-        #     else:
-        #         return fallback_split
+        weinhuber_split.priority = self.priority
 
         # gets nearest k splits of self.current_node
         k = 20
         # self.print_parent_nodes(self.get_parent_splits(self.root, k))
 
         return weinhuber_split
-
-        """
-        When to return what kind of split object?
-        
-        BEGINNING PHASE:
-        START: Use the predicate from user_input with lowest impurity
-        If no user predicate is suitable just use the fallback split
-        
-        MID PHASE: Once dt depth has grown a bit
-        1. Filter user predicates with tree edit distance 5 (compared to parent split)
-        2. Take result with best impurity
-        3. If there is no predicate in tree edit distance 5 just return user_predicate with best impurity ( or stepwise increment tree edit distance)
-        
-        If no user predicate is suitable just use the fallback split
-        
-        ADDITIONS:
-        - Set impurity threshold/value whenever to activate fallback strat
-        - Add feature to come up with smart new predicates, similar to structure of existing predicates in dt range 5
-        (- Already implemented one formula with 2 params which uses the imp_measure) 
-         
-        """
-
-        weinhuber_impurity = splits[weinhuber_split] if weinhuber_split else None
-        fallback_impurity = fallback_splits[fallback_split] if fallback_split else None
-
-        if (weinhuber_split is None) and (fallback_split is None):
-            return None
-        elif (weinhuber_split is not None) and (fallback_split is not None):
-            return weinhuber_split if weinhuber_impurity <= fallback_impurity else fallback_split
-        elif weinhuber_split is not None:
-            return weinhuber_split
-        else:
-            return fallback_split
 
     def calculate_best_result_for_split(self, dataset, split, impurity_measure):
 
@@ -362,7 +284,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
 
         """
-
 
         # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
         user_input = user_input.replace("or", "∪")

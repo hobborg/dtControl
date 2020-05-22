@@ -15,7 +15,9 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
-from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import ContextAwareSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
+    ContextAwareSplittingStrategy
+
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
@@ -65,7 +67,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                          self.early_stopping_num_examples, self.early_stopping_optimized)
         for split_strat in self.splitting_strategies:
-            if isinstance(split_strat,ContextAwareSplittingStrategy):
+            if isinstance(split_strat, ContextAwareSplittingStrategy):
                 split_strat.set_root(self.root)
         self.root.fit(dataset)
 
@@ -160,8 +162,33 @@ class Node:
             if pre_determinize:
                 self.impurity_measure.determinizer.pre_determinized_labels = None
             return
-        # TODO
-        self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, s))
+
+        fallback_dict = {}
+        split_dict = {}
+
+        # Edge case: Only priorities inside [0,1] allowed
+        for split in splits:
+            if split.priority == 0:
+                fallback_dict[split] = self.impurity_measure.calculate_impurity(dataset, split)
+            elif split.priority <= 1 or split.priority >= 0:
+                # Only add possible/productive splits to dict
+                impurity = self.impurity_measure.calculate_impurity(dataset, split)
+                if impurity < 9223372036854775807:
+                    split_dict[split] = impurity / split.priority
+            else:
+                # One split appeared with split.priority > 1 or split.priority < 0:
+                self.logger.warning("Aborting: only splitting strategy priorities between 0 and 1 allowed.")
+                # TODO: ASK: return in this case or just forget about that illegal split and continue ???
+                # Remember to add an additional edge check in "Choosing the right split" if there is no return
+                return
+
+        # Choosing the right split
+        if not split_dict:
+            # Using the best fallback split
+            self.split = min(fallback_dict.keys(), key=fallback_dict.get)
+        else:
+            self.split = min(split_dict.keys(), key=split_dict.get)
+
         if pre_determinize:
             self.impurity_measure.determinizer.pre_determinized_labels = None
 
@@ -169,7 +196,7 @@ class Node:
         assert len(subsets) > 1
         if any(len(s.x) == 0 for s in subsets):
             self.logger.warning("Aborting branch: no split possible. "
-                          "You might want to consider adding more splitting strategies.")
+                                "You might want to consider adding more splitting strategies.")
             return
         for subset in subsets:
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
