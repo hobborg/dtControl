@@ -297,7 +297,7 @@ function refreshPage(d){
       }
   };
 
-  xhr.open('get','./tee');
+  xhr.open('get','./testjson');
   xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
   xhr.setRequestHeader('cache-control', 'max-age=0');
   xhr.setRequestHeader('expires', '0');
@@ -318,7 +318,7 @@ function refreshPage(d){
         }
     };
 
-  xhr.open('get','./tee');
+  xhr.open('get','./testjson');
   xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
   xhr.setRequestHeader('cache-control', 'max-age=0');
   xhr.setRequestHeader('expires', '0');
@@ -326,9 +326,9 @@ function refreshPage(d){
   xhr.setRequestHeader('pragma', 'no-cache');
   xhr.send();
 
-window.setInterval(function(){
-  refreshPage(root);
-}, 3000);
+// window.setInterval(function(){
+//   refreshPage(root);
+// }, 3000);
 
 </script>
 	
