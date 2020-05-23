@@ -7,6 +7,7 @@ import re
 from copy import deepcopy
 from apted import APTED
 from apted.helpers import Tree
+from pathlib import Path
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
@@ -210,7 +211,7 @@ class PredicateParser:
 
     @classmethod
     def parse_user_predicate(cls,
-                             input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_predicates.txt"):
+                             input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
 
         """
         Predicate parser for user input obtained from
@@ -220,7 +221,7 @@ class PredicateParser:
         e.g.:
             11*x_1 + 2*x_2 - 11 <= (0,1) ∪ [12, 15]
 
-            variables              =       ['1', '2'] --> list of used x variables
+            variables              =       ['1', '2'] --> list of used x variables (sorted)
             predicate              =       1*x_1 + 2*x_2 - 11 --> sympy expression
             relation               =       '<='
             interval               =       Union(Interval.open(0, 1), Interval(12, 15))
@@ -230,7 +231,6 @@ class PredicateParser:
             with open(input_file_path, "r") as file:
                 predicates = [predicate.rstrip() for predicate in file]
         except FileNotFoundError:
-            print("DID NOT FIND FILE")
             cls._logger().warning("Aborting: input file with user predicates not found.")
             return
 
@@ -253,10 +253,11 @@ class PredicateParser:
                     # Accessing the interval parser, since the intervals can also contain unions etc
                     interval = cls.parse_user_interval(split_pred[1].strip())
 
-                    # Edge case in case interval is an empty interval
-                    if interval == sp.EmptySet:
+                    variables = sorted(set(re.findall("x_(\d+)", split_pred[0])))
+
+                    # Edge case in case interval is an empty interval or no x is used
+                    if interval == sp.EmptySet or not variables:
                         break
-                    variables = re.findall("x_(\d+)", split_pred[0])
                     output.append(WeinhuberApproachSplit(variables, left_formula, sign, interval))
                     break
         return output
