@@ -1,7 +1,7 @@
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
-
+import logging
 import sympy as sp
 import re
 from copy import deepcopy
@@ -22,6 +22,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.user_given_splits = PredicateParser.parse_user_predicate() if user_given_splits is None else user_given_splits
         self.predicate_structure_difference = predicate_structure_difference
         self.predicate_dt_range = predicate_dt_range
+
+        self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
+        self.logger.setLevel(logging.ERROR)
 
     def get_parent_splits(self, current_node, parent_nbr, path=[]):
 
@@ -200,7 +203,14 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 class PredicateParser:
 
     @classmethod
-    def parse_user_predicate(cls):
+    def _logger(cls):
+        logger = logging.getLogger("PredicateParser_logger")
+        logger.setLevel(logging.ERROR)
+        return logger
+
+    @classmethod
+    def parse_user_predicate(cls,
+                             input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_predicates.txt"):
 
         """
         Predicate parser for user input obtained from
@@ -216,9 +226,18 @@ class PredicateParser:
             interval               =       Union(Interval.open(0, 1), Interval(12, 15))
 
         """
+        try:
+            with open(input_file_path, "r") as file:
+                predicates = [predicate.rstrip() for predicate in file]
+        except FileNotFoundError:
+            print("DID NOT FIND FILE")
+            cls._logger().warning("Aborting: input file with user predicates not found.")
+            return
 
-        with open("dtcontrol/decision_tree/splitting/context_aware/input_predicates.txt", "r") as file:
-            predicates = [predicate.rstrip() for predicate in file]
+        # Edge Case user input == ""
+        if not predicates:
+            cls._logger().warning("Aborting: input file with user predicates is empty.")
+            return
 
         # Currently supported types of relations
         relation_list = ["<=", ">=", "!=", "<", ">", "="]
