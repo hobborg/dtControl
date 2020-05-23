@@ -39,7 +39,7 @@ user_predicat = UserPredicatSplittingStrategy()
 weinhuber = WeinhuberApproachSplittingStrategy(predicate_structure_difference=5, predicate_dt_range=5)
 weinhuber.priority = 1
 aa = AxisAlignedSplittingStrategy()
-aa.priority = 1
+aa.priority = 0
 
 classifiers = [
     DecisionTree([weinhuber, aa], Entropy(), 'Testing')
