@@ -309,7 +309,7 @@ class PredicateParser:
         :returns: a sympy expression (to later use in self.interval of ContextAwareSplit objects)
         (IN INVALID EDGE CASES THIS CLASS RETURNS AN EMPTY SET)
 
-        Option 1: user_input = $i
+        Option 1: user_input = (-oo, oo) = [-oo, oo]
         --> self.offset of ContextAwareSplit will be the value to achieve the 'best' impurity
 
         (with a,b ∊ R)
@@ -332,10 +332,9 @@ class PredicateParser:
 
         G = (V, Σ, P, predicate)
         V = {predicate, combination, interval, real_interval, bracket_left, bracket_right, number, finite_interval, number_finit, num}
-        Σ = {$i, (, [, ), ], R, +oo, -oo, , ∪}
+        Σ = { (, [, ), ], R, +oo, -oo, ,, ∪, -Inf, Inf, -INF, INF, -inf, inf, or, Or, OR, u}
         P:
-        PREDICATE       -->     $i | COMBINATION
-        COMBINATION     -->     INTERVAL | INTERVAL ∪ COMBINATION
+        PREDICATE       -->     INTERVAL | INTERVAL ∪ COMBINATION
         INTERVAL        -->     REAL_INTERVAL | FINITE_INTERVAL
         REAL_INTERVAL   -->     BRACKET_LEFT NUMBER , NUMBER BRACKET_RIGHT
         BRACKET_LEFT    -->     ( | [
@@ -350,11 +349,11 @@ class PredicateParser:
         if not user_input.strip():
             cls._logger().warning("Warning: no interval found.")
             return sp.EmptySet
-        elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[" and user_input.strip() != "$i":
+        elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[":
             cls._logger().warning("Warning: interval starts with an invalid char."
                                   "Invalid interval: ", user_input)
             return sp.EmptySet
-        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[-1] is not "]" and user_input.strip() != "$i":
+        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[-1] is not "]":
             cls._logger().warning("Warning: interval ends with an invalid char."
                                   "Invalid interval: ", user_input)
             return sp.EmptySet
@@ -370,8 +369,6 @@ class PredicateParser:
         user_input = user_input.replace("inf", "oo")
         user_input = user_input.replace("INF", "oo")
 
-        if user_input == '$i':
-            return sp.Interval(sp.sympify("-oo"), sp.sympify("+oo"))
 
         # appending all intervals into this list and later union all of them
         interval_list = []
