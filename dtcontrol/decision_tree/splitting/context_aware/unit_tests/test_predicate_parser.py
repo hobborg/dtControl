@@ -27,7 +27,7 @@ class TestPredicateParser(unittest.TestCase):
                                         |   sqrrrt(2)*x_12 != {123}
                                         |   löög(10)*x_0 - x_1 < {13}
         --------------------------------|----------------------------------------
-        test_file4.txt                  |   invalid relations
+        test_file4.txt                  |   only invalid relations
                                         |   e.g.
                                         |   12*x_1*pi ? {1}
                                         |   2 / x_0 =9 {1,2}
@@ -54,7 +54,7 @@ class TestPredicateParser(unittest.TestCase):
 
         test_input_file4 = open("../input_data/test_file4.txt", "w+")
         test_input_file4.write(
-            "sqrqasdasdaserrt(2)*x_12 != {123}"
+            "12*x_1*pi ? {1}\n 2 / x_0 =9 {1,2}\nx_1 [1,9)\nx_12 = x_2137\n1233\nsqrt(123) = \n 2123*x_12 / x_120+132 >9 {1,22,33}\n29/x_9 + 781 <$! [1,9)\n x_2 + x_2 +x_3 / x_0 >=9 {1,2}\nx_1 !ja= [1,9)"
         )
         test_input_file4.close()
 
@@ -115,5 +115,12 @@ class TestPredicateParser(unittest.TestCase):
         # Typos only dataset
         self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file3.txt"), None)
 
+    def test_parse_user_predicate_invalid_relations(self):
+        # USAGE OF FILE 4
+        foo = PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file4.txt")
+        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file4.txt"), None)
+
 if __name__ == '__main__':
     unittest.main()
+
+# TODO Invalid intervals with $i{123) stuff

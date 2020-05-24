@@ -307,6 +307,7 @@ class PredicateParser:
         Predicate Parser for the interval.
         :variable user_input: Interval as a string
         :returns: a sympy expression (to later use in self.interval of ContextAwareSplit objects)
+        (IN INVALID EDGE CASES THIS CLASS RETURNS AN EMPTY SET)
 
         Option 1: user_input = $i
         --> self.offset of ContextAwareSplit will be the value to achieve the 'best' impurity
@@ -345,6 +346,18 @@ class PredicateParser:
         NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
 
         """
+        # Edge case check
+        if not user_input.strip():
+            cls._logger().warning("Warning: no interval found.")
+            return sp.EmptySet
+        elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[" and user_input.strip() != "$i":
+            cls._logger().warning("Warning: interval starts with an invalid char."
+                                  "Invalid interval: ", user_input)
+            return sp.EmptySet
+        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[-1] is not "]" and user_input.strip() != "$i":
+            cls._logger().warning("Warning: interval ends with an invalid char."
+                                  "Invalid interval: ", user_input)
+            return sp.EmptySet
 
         # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
         user_input = user_input.replace("or", "∪")
@@ -365,6 +378,7 @@ class PredicateParser:
 
         user_input = user_input.split("∪")
         user_input = [x.strip() for x in user_input]
+
 
         for interval in user_input:
             # finite intervals like {1,2,3}
