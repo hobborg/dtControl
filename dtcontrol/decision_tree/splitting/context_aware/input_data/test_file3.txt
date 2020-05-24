@@ -1,4 +1,0 @@
-sqrqasdasdaserrt(2)*x_12 != {123}
-f(x_2) >= [21, 22]
-g(f(sqrt(x_123))) < {1,23}
- sqrt(x_1 = {123}
