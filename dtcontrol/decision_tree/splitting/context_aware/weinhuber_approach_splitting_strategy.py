@@ -120,7 +120,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         new_user_splits = []
         allowed_var_index = dataset.get_numeric_x().shape[1] - 1
         for single_split in self.user_given_splits:
-            if int(single_split.variables[-1]) <= allowed_var_index:
+            if single_split.variables[-1] <= allowed_var_index:
                 new_user_splits.append(single_split)
 
         self.user_given_splits = new_user_splits
@@ -214,9 +214,8 @@ class PredicateParser:
                              input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
 
         """
-        Predicate parser for user input obtained from
-        dtcontrol/decision_tree/splitting/context_aware/Parser/input_predicates.txt
-        :returns: list with tuples of structure (variables, predicate, relation, interval)
+        Predicate parser for user input obtained
+        :returns: list of WeinhuberApproachSplit Objects
 
         e.g.:
             11*x_1 + 2*x_2 - 11 <= (0,1) ∪ [12, 15]
@@ -226,7 +225,19 @@ class PredicateParser:
             relation               =       '<='
             interval               =       Union(Interval.open(0, 1), Interval(12, 15))
 
+
+        EDGE CASE                                   |   BEHAVIOR
+        --------------------------------------------|------------------------------------------
+        input file does not exist                   |   Aborting: returns None
+        --------------------------------------------|------------------------------------------
+        input file empty                            |   Aborting: returns None
+        --------------------------------------------|------------------------------------------
+        invalid structure of one single predicate   |   Warning: this single predicate will be skipped
+        --------------------------------------------|------------------------------------------
+        invalid structure of every predicate        |   Aborting: returns None
+        --------------------------------------------|------------------------------------------
         """
+
         try:
             with open(input_file_path, "r") as file:
                 predicates = [predicate.rstrip() for predicate in file]
@@ -247,20 +258,42 @@ class PredicateParser:
         for single_predicate in predicates:
             for sign in relation_list:
                 if sign in single_predicate:
-                    split_pred = single_predicate.split(sign)
-                    left_formula = sp.simplify(sp.sympify(split_pred[0]))
+                    try:
+                        split_pred = single_predicate.split(sign)
+                        left_formula = sp.simplify(sp.sympify(split_pred[0]))
+                        # Accessing the interval parser, since the intervals can also contain unions etc
+                        interval = cls.parse_user_interval(split_pred[1].strip())
+                        variables = [str(var) for var in left_formula.free_symbols]
 
-                    # Accessing the interval parser, since the intervals can also contain unions etc
-                    interval = cls.parse_user_interval(split_pred[1].strip())
+                        # variables = sorted(re.findall("x_(\d+)", split_pred[0]))
+                    except SyntaxError:
+                        cls._logger().warning("Warning: one predicate does not have a valid structure."
+                                              "Invalid predicate: ", str(single_predicate))
+                    except sp.SympifyError:
+                        cls._logger().warning("Warning: one predicate does not have a valid structure."
+                                              "Invalid predicate: ", str(single_predicate))
+                    else:
+                        # Checking correct usage of variables
+                        for var in variables:
+                            if not re.match(r"x_\d+", var):
+                                cls._logger().warning("Warning: usage of invalid variable."
+                                                      "Invalid predicate: ", str(single_predicate))
+                                variables = None
+                        # Check valid structure
+                        if not split_pred or not left_formula or interval == sp.EmptySet or not variables:
+                            cls._logger().warning("Warning: one predicate does not have a valid structure."
+                                                  "Invalid predicate: ", str(single_predicate))
+                        else:
+                            output.append(WeinhuberApproachSplit(sorted([int(var.split("x_")[1]) for var in variables]),
+                                                                 left_formula, sign, interval))
 
-                    variables = sorted(set(re.findall("x_(\d+)", split_pred[0])))
-
-                    # Edge case in case interval is an empty interval or no x is used
-                    if interval == sp.EmptySet or not variables:
-                        break
-                    output.append(WeinhuberApproachSplit(variables, left_formula, sign, interval))
                     break
-        return output
+
+        if not output:
+            cls._logger().warning("Aborting: input file has invalid structure.")
+            return
+        else:
+            return output
 
     @classmethod
     def parse_user_interval(cls, user_input):
