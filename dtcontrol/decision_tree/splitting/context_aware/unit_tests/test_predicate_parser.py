@@ -9,30 +9,65 @@ class TestPredicateParser(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Creating test input files (general)
+
+        """
+
+        FILE NAME                       |   BEHAVIOR
+        --------------------------------|----------------------------------------
+        test_file1.txt                  |   useful /correct predicates
+        --------------------------------|----------------------------------------
+        test_file2.txt                  |   predicates which do not use dataset
+                                        |   -> No /wrong usage of variables
+                                        |   e.g.
+                                        |   12*pi >= {1}
+                                        |   x__!23 * 123 = {1,2,3}
+        --------------------------------|----------------------------------------
+        test_file3.txt                  |   predicates with general typos or use of unknown functions
+                                        |   e.g.
+                                        |   sqrrrt(2)*x_12 != {123}
+                                        |   löög(10)*x_0 - x_1 < {13}
+        --------------------------------|----------------------------------------
+        test_file4.txt                  |   invalid relations
+                                        |   e.g.
+                                        |   12*x_1*pi ? {1}
+                                        |   2 / x_0 =9 {1,2}
+                                        |   x_1 [1,9)
+        --------------------------------|----------------------------------------
+
+        """
+
         test_input_file1 = open("../input_data/test_file1.txt", "w+")
         test_input_file1.write(
             "x_0+11*x_2-30.5*x_1  <= $i\n11*x_2-30*x_1 >= (0,1) ∪ [12, 15]\n11*x_0-28.86-pi != [0,1)\n11*x_2-28.86-pi < {1,2,3,4,5,6} ∪ {6,7,8}\n11*x_2**x_1-28.86*x_2-pi > {1,2,3,4,5,6} ∪ {6,7,8} ∪ [12, 15]\nx_2 = {1,2} ∪ (12, 15]\npi = {1}")
         test_input_file1.close()
 
-        # Creating test input files (wrong variables only)
         test_input_file2 = open("../input_data/test_file2.txt", "w+")
         test_input_file2.write(
-            "x+11*x_2-30.5*x_1  <= $i\n11*x_ 2-30*x_1 >= (0,1) ∪ [12, 15]\n11*x _0-28.86-pi != [0,1)\n11*_2-28.86-pi < {1,2,3,4,5,6} ∪ {6,7,8}\n11*x__2**x_1-28.86*xx_2-pi > {1,2,3,4,5,6} ∪ {6,7,8} ∪ [12, 15]\ny_2 = {1,2} ∪ (12, 15]")
+            "x1 = [12,123]\nx__!23 * 123 = {1,2,3}\n12*pi >= [1,2]\nx+11*x_2-30.5*x_1  <= $i\n11*x_ 2-30*x_1 >= (0,1) ∪ [12, 15]\n11*x _0-28.86-pi != [0,1)\n11*_2-28.86-pi < {1,2,3,4,5,6} ∪ {6,7,8}\n11*x__2**x_1-28.86*xx_2-pi > {1,2,3,4,5,6} ∪ {6,7,8} ∪ [12, 15]\ny_2 = {1,2} ∪ (12, 15]")
         test_input_file2.close()
 
-        # test_input_file2 = open("../input_data/test_file2.txt", "w+")
-        # test_input_file2.write(
-        #    "<= $i\nBaum*x_1 >= (0,1) ∪ [12, 15]\n11*dx0-dds28.a86-!pi != [0,1)\n11*x_2-28.86-pi < {1,2,3,4,5,6} ∪ {6,7,8}\n11*x_2**x_1-28.86*x_2-pi > {1,2,3,4,5,6} ∪ {6,7,8} ∪ [12, 15]\nx_2 = {1,2} ∪ (12, 15]\npi = {1}x_0+11*x_2-30.5*x_1  <= $i\n11*x_2-30*x_1 >= (0,1) ∪ [12, 15]\n11*x_0-28.86-pi != [-10,-12)\n11*x_2-28.86-pi < ∪ {6,7,8}\n11*x_2**x_1-28.86*x_2-pi > \nx_2 = {1,2}15]\npi*x_!%$ {1}\npi*x_! = \n[12,213]\npi*x_1 = [2231;23]\npi*x_3 = {2:3<= $i\nBaum*x_1 >=asd (0,1) ∪ [12, 15\n11222*dx0-dds28.a86-!pi != s0,1)\n11*x_2df-28.d86-pi <# {1,fsa2,3,4,5,6}  {13as6,7,8}\n11*x_2-30*x_1 >= (0,1) ∪ [12, 15] 113*sqrt(2)*pi*x_3 >= (-10,1.213)")
-        # test_input_file2.close()
+        test_input_file3 = open("../input_data/test_file3.txt", "w+")
+        test_input_file3.write(
+            "sqrqasdasdaserrt(2)*x_12 != {123}\nf(x_2) >= [21, 22]\ng(f(sqrt(x_123))) < {1,23}\n sqrt(x_1 = {123}"
+        )
+        test_input_file3.close()
+
+        test_input_file4 = open("../input_data/test_file4.txt", "w+")
+        test_input_file4.write(
+            "sqrqasdasdaserrt(2)*x_12 != {123}"
+        )
+        test_input_file4.close()
 
     @classmethod
     def tearDownClass(cls):
         # Deleting test input files
         os.unlink("../input_data/test_file1.txt")
         os.unlink("../input_data/test_file2.txt")
+        os.unlink("../input_data/test_file3.txt")
+        os.unlink("../input_data/test_file4.txt")
 
-    def test_parse_user_predicate_file1(self):
+    def test_parse_user_predicate_useful_predicates(self):
+        # USAGE OF FILE 1
 
         # Non existing input file
         self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="None"), None)
@@ -70,10 +105,15 @@ class TestPredicateParser(unittest.TestCase):
                                            sympy.Union(sympy.FiniteSet(1, 2, 3, 4, 5, 6, 7, 8), sympy.Interval(12, 15)),
                                            sympy.Union(sympy.FiniteSet(1, 2), sympy.Interval.Lopen(12, 15))])
 
-    def test_parse_user_predicate_file2(self):
+    def test_parse_user_predicate_wrong_variables(self):
+        # USAGE OF FILE 2
         # Wrong variables only dataset
         self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file2.txt"), None)
 
+    def test_parse_user_predicate_unknown_functions(self):
+        # USAGE OF FILE 3
+        # Typos only dataset
+        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file3.txt"), None)
 
 if __name__ == '__main__':
     unittest.main()

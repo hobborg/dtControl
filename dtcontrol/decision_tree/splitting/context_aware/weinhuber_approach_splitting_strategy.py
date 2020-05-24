@@ -264,8 +264,6 @@ class PredicateParser:
                         # Accessing the interval parser, since the intervals can also contain unions etc
                         interval = cls.parse_user_interval(split_pred[1].strip())
                         variables = [str(var) for var in left_formula.free_symbols]
-
-                        # variables = sorted(re.findall("x_(\d+)", split_pred[0]))
                     except SyntaxError:
                         cls._logger().warning("Warning: one predicate does not have a valid structure."
                                               "Invalid predicate: ", str(single_predicate))
@@ -276,11 +274,19 @@ class PredicateParser:
                         # Checking correct usage of variables
                         for var in variables:
                             if not re.match(r"x_\d+", var):
-                                cls._logger().warning("Warning: usage of invalid variable."
-                                                      "Invalid predicate: ", str(single_predicate))
+                                # Found an invalid variable
                                 variables = None
+                                # logger will be handled later to reduce the complexity
+                                break
+
+                        # Substitute dummy values for the variables to check if result would end up in a number
+                        subs_list = [(var,1) for var in left_formula.free_symbols]
+                        dummy = left_formula.subs(subs_list).evalf(6)
+                        if not isinstance(dummy, sp.Number):
+                            cls._logger().warning("Warning: one predicate is using an unknown function."
+                                                  "Invalid predicate: ", str(single_predicate))
                         # Check valid structure
-                        if not split_pred or not left_formula or interval == sp.EmptySet or not variables:
+                        elif not split_pred or not left_formula or interval == sp.EmptySet or not variables:
                             cls._logger().warning("Warning: one predicate does not have a valid structure."
                                                   "Invalid predicate: ", str(single_predicate))
                         else:
