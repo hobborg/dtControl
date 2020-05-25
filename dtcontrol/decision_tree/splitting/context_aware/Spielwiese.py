@@ -1,2 +1,2 @@
 import sympy
-print(sympy.sympify("123456789").evalf().round(2))
+print(sympy.sympify("log(12)").evalf())
