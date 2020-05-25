@@ -3,6 +3,7 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splittin
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
 import os
 import sympy
+import random
 
 
 class TestPredicateParser(unittest.TestCase):
@@ -122,9 +123,15 @@ class TestPredicateParser(unittest.TestCase):
 
         test_input_file5 = open("../input_data/test_file5.txt", "w+")
         test_input_file5.write(
-            ""
+            "x_1 = (-10, 100)\nx_1 = (20.231313, 123)\nx_1 =(123, 200)\nx_1 = (0.000013, 0.0015)\nx_1 =(-Inf, 0.000013)\nx_1 =(-INF, inf)\nx_1 =(90909, Inf)"
         )
         test_input_file5.close()
+
+        test_input_file6 = open("../input_data/test_file6.txt", "w+")
+        test_input_file6.write(
+            "x_1 = -10, 100)\nx_1 = (,20.231313, 123)\nx_1 =(12as3,s 200)\nx_1 = s(0.000013, 0.0015d)\nx_1 =(x_1-Inf, 0.000013!)\nx_1 =(-INF, inf#\nx_1 =((99090909, Inf)\nx_1 =(99090909, Inf))"
+        )
+        test_input_file6.close()
 
     @classmethod
     def tearDownClass(cls):
@@ -134,6 +141,7 @@ class TestPredicateParser(unittest.TestCase):
         os.unlink("../input_data/test_file3.txt")
         os.unlink("../input_data/test_file4.txt")
         os.unlink("../input_data/test_file5.txt")
+        os.unlink("../input_data/test_file6.txt")
 
     def test_parse_user_predicate_useful_predicates(self):
         # USAGE OF FILE 1
@@ -186,16 +194,34 @@ class TestPredicateParser(unittest.TestCase):
 
     def test_parse_user_predicate_invalid_relations(self):
         # USAGE OF FILE 4
-        foo = PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file4.txt")
+        # Invalid relations
         self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file4.txt"), None)
 
     def test_parse_user_interval_open(self):
         # USAGE OF FILE 5
-        # Valid intervals
+        # Valid open intervals
+        output = [obj.interval for obj in
+                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file5.txt")]
+        self.assertEqual(output, [sympy.Interval.open(sympy.sympify(-10.0000).evalf(), sympy.sympify(100.000).evalf()),
+                                  sympy.Interval.open(sympy.sympify(20.231313).evalf(), sympy.sympify(123.000).evalf()),
+                                  sympy.Interval.open(sympy.sympify(123.000).evalf(), sympy.sympify(200.000).evalf()),
+                                  sympy.Interval.open(sympy.sympify(0.0000130000).evalf(), sympy.sympify(0.00150000).evalf()),
+                                  sympy.Interval.open(sympy.sympify("-oo"), sympy.sympify(0.0000130000).evalf()),
+                                  sympy.Interval(sympy.sympify("-oo"), sympy.sympify("oo")),
+                                  sympy.Interval.open(sympy.sympify("90909").evalf(), sympy.sympify("oo"))])
+
+
+        # Random input checker
+        for i in range(1000):
+            a = random.randint(-1000000000, 1000000000)
+            b = random.randint(-1000000000, 1000000000)
+            if a != b:
+                self.assertEqual(PredicateParser.parse_user_interval(f"({min(a,b)},{max(a,b)})"), sympy.Interval.open(min(a,b), max(a,b)))
 
         # USAGE OF FILE 6
         # Invalid intervals
-        pass
+        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file6.txt"),
+                         None)
 
     def test_parse_user_interval_close(self):
         # USAGE OF FILE 7
@@ -240,6 +266,5 @@ class TestPredicateParser(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
 
 # TODO: 12*pi*x_1 >= (1,1] allowed or not?

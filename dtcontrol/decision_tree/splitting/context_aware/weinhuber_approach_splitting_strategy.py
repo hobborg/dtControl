@@ -136,7 +136,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # Getting the 'best' possible split with user predicate/split
         for single_split in self.user_given_splits:
             split_copy = deepcopy(single_split)
-            split_copy.offset = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf(6)
+            split_copy.offset = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf()
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
@@ -170,7 +170,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 subs_list.append(("x_" + str(k), features[k]))
 
             # calculating the offset for that specific row
-            copy_split.offset = copy_split.predicate.subs(subs_list).evalf(6)
+            copy_split.offset = copy_split.predicate.subs(subs_list).evalf()
 
             # evaluating where to store this split object (for more information look at documentation of hard_interval_boundary)
             # Key: offset   Value: Impurity of that offset
@@ -264,10 +264,7 @@ class PredicateParser:
                         # Accessing the interval parser, since the intervals can also contain unions etc
                         interval = cls.parse_user_interval(split_pred[1].strip())
                         variables = [str(var) for var in left_formula.free_symbols]
-                    except SyntaxError:
-                        cls._logger().warning("Warning: one predicate does not have a valid structure."
-                                              "Invalid predicate: ", str(single_predicate))
-                    except sp.SympifyError:
+                    except Exception:
                         cls._logger().warning("Warning: one predicate does not have a valid structure."
                                               "Invalid predicate: ", str(single_predicate))
                     else:
@@ -280,8 +277,8 @@ class PredicateParser:
                                 break
 
                         # Substitute dummy values for the variables to check if result would end up in a number
-                        subs_list = [(var,1) for var in left_formula.free_symbols]
-                        dummy = left_formula.subs(subs_list).evalf(6)
+                        subs_list = [(var, 1) for var in left_formula.free_symbols]
+                        dummy = left_formula.subs(subs_list).evalf()
                         if not isinstance(dummy, sp.Number):
                             cls._logger().warning("Warning: one predicate is using an unknown function."
                                                   "Invalid predicate: ", str(single_predicate))
@@ -345,7 +342,7 @@ class PredicateParser:
         NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
 
         """
-        # Edge case check
+        # super basic beginning and end char check of whole input
         if not user_input.strip():
             cls._logger().warning("Warning: no interval found.")
             return sp.EmptySet
@@ -353,7 +350,8 @@ class PredicateParser:
             cls._logger().warning("Warning: interval starts with an invalid char."
                                   "Invalid interval: ", user_input)
             return sp.EmptySet
-        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[-1] is not "]":
+        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[
+            -1] is not "]":
             cls._logger().warning("Warning: interval ends with an invalid char."
                                   "Invalid interval: ", user_input)
             return sp.EmptySet
@@ -369,38 +367,93 @@ class PredicateParser:
         user_input = user_input.replace("inf", "oo")
         user_input = user_input.replace("INF", "oo")
 
-
         # appending all intervals into this list and later union all of them
         interval_list = []
 
         user_input = user_input.split("∪")
         user_input = [x.strip() for x in user_input]
 
-
+        # Parsing of every single interval
         for interval in user_input:
-            # finite intervals like {1,2,3}
-            if (interval[0] == "{") & (interval[-1] == "}"):
-                members = interval[1:-1].split(",")
-                interval_list.append(sp.FiniteSet(*members))
-                continue
+            """
+            Basic idea: Evaluate/Parse every single predicate and later union them (if needed)
+            Path is chosen based on first char of interval
+            possible first char of an interval:
+                --> {
+                --> ( or [ (somehow belong to the same "family")
+                
+            """
 
-            # normal intervals
-            if interval[0] == "(":
-                left_open = True
-            elif interval[0] == "[":
-                left_open = False
+            if interval[0] == "{":
+                # finite intervals like {1,2,3}
+                if interval[-1] == "}":
+                    unchecked_members = interval[1:-1].split(",")
+                    # Check each member whether they are valid
+                    checked_members = []
+                    for var in unchecked_members:
+                        tmp = sp.sympify(var).evalf()
+                        if isinstance(tmp, sp.Number):
+                            checked_members.append(tmp)
+                        else:
+                            cls._logger().warning("Warning: Invalid member found in finite interval."
+                                                  "Invalid member: ", str(tmp), " Invalid interval: ", interval)
+                    # Edge case: if no member is valid, just an empty set will be returned.
+                    interval_list.append(sp.FiniteSet(*checked_members))
+                else:
+                    # Interval starts with { but does not end with }
+                    cls._logger().warning("Warning: Invalid char at end of interval found."
+                                          "Invalid interval: ", interval)
+            elif interval[0] == "(" or interval[0] == "[":
+                # normal intervals of structure (1,2] etc
 
-            if interval[-1] == ")":
-                right_open = True
+                # Checking of first char
+                if interval[0] == "(":
+                    left_open = True
+                elif interval[0] == "[":
+                    left_open = False
+                else:
+                    cls._logger().warning("Warning: interval starts with an invalid char."
+                                          "Invalid interval: ", user_input)
+                    interval_list.append(sp.EmptySet)
+                    continue
+
+                # Checking boundaries of interval
                 tmp = interval[1:-1].split(",")
-                interval_list.append(
-                    sp.Interval(sp.sympify(tmp[0]), sp.sympify(tmp[1]), right_open=right_open, left_open=left_open))
-            elif interval[-1] == "]":
-                right_open = False
-                tmp = interval[1:-1].split(",")
-                interval_list.append(
-                    sp.Interval(sp.sympify(tmp[0]), sp.sympify(tmp[1]), right_open=right_open, left_open=left_open))
+                if len(tmp) > 2:
+                    cls._logger().warning("Warning: too many numbers inside an interval."
+                                          "Invalid interval: ", user_input)
+                    interval_list.append(sp.EmptySet)
+                    continue
+                try:
+                    a = sp.sympify(tmp[0]).evalf()
+                    b = sp.sympify(tmp[1]).evalf()
+                except Exception:
+                    cls._logger().warning("Warning: Invalid member found inside interval."
+                                          "Invalid interval: ", interval)
+                    interval_list.append(sp.EmptySet)
+                    continue
+                else:
+                    if isinstance(a, sp.Number) and isinstance(b, sp.Number):
+                        # Checking of last char
+                        if interval[-1] == ")":
+                            right_open = True
 
+                        elif interval[-1] == "]":
+                            right_open = False
+
+                        interval_list.append(
+                            sp.Interval(a, b, right_open=right_open,
+                                        left_open=left_open))
+                    else:
+                        cls._logger().warning("Warning: Invalid member found inside interval."
+                                              "Invalid interval: ", interval)
+                        interval_list.append(sp.EmptySet)
+            else:
+                cls._logger().warning("Warning: Invalid char found inside interval."
+                                      "Invalid interval: ", str(interval))
+                interval_list.append(sp.EmptySet)
+
+        # Union
         final_interval = interval_list[0]
 
         # union with all other intervals

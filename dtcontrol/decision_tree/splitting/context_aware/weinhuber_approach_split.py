@@ -11,7 +11,7 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
         evaluated_predicate = self.predicate.subs(subs_list)
-        evaluated_predicate = evaluated_predicate.evalf(6)
+        evaluated_predicate = evaluated_predicate.evalf()
 
         # Checking the offset
         if self.relation == "<=":
