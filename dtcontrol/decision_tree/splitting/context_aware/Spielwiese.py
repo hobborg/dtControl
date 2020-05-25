@@ -1,2 +1,2 @@
 import sympy
-print(sympy.sympify("log(12)").evalf())
+print(sympy.Interval(1,1))

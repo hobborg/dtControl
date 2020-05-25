@@ -158,7 +158,7 @@ class TestPredicateParser(unittest.TestCase):
         # invalid closed and open intervals
         test_input_file10 = open("../input_data/test_file10.txt", "w+")
         test_input_file10.write(
-            "x_1 = (y-10, 100]\nx_1 = (,20.231313, 123]\nx_1 =[12as3,s 200)\nx_1 = s(0.000013, 0.0015d]\nx_1 =(x_1-Inf, 0.000013!]\nx_1 =(-INF, inf&]\nx_1 =[(99090909, Inf]\nx_1 =(99090909, Inf]]\n12*pi*x_1 >= (,-1]\n12*pi*x_1 >= (1,x_0]\n12*pi*x_1 >= (1,]\n12*pi*x_1 >= [)\n12*pi*x_1 >= [[(1,1]])"
+            "x_1 = (y-10, 100]\nx_1 = (,20.231313, 123]\nx_1 =[12as3,s 200)\nx_1 = s(0.000013, 0.0015d]\nx_1 =(x_1-Inf, 0.000013!]\nx_1 =(-INF, inf&]\nx_1 =[(99090909, Inf]\nx_1 =(99090909, Inf]]\n12*pi*x_1 >= (,-1]\n12*pi*x_1 >= (1,x_0]\n12*pi*x_1 >= (1,]\n12*pi*x_1 >= [)\n12*pi*x_1 >= [[(1,1]])\nx_1 = (1,1]"
         )
         test_input_file10.close()
 
