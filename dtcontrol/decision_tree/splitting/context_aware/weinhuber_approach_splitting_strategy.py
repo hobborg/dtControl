@@ -140,7 +140,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
-        weinhuber_split.priority = self.priority
+        if weinhuber_split:
+            weinhuber_split.priority = self.priority
 
         # gets nearest k splits of self.current_node
         k = 20

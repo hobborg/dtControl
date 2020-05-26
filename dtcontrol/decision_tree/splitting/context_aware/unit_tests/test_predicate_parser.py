@@ -368,6 +368,4 @@ class TestPredicateParser(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-# TODO: 12*pi*x_1 >= (1,1] allowed or not?
 # TODO: add to the other tests values like sqrt(2), log(2) , sqrt(12381239+12313) + log(1239) etc ...
-# TODO: add the examples from the table into real the datasets
