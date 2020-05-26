@@ -9,7 +9,7 @@ class ContextAwareSplit(Split, ABC):
     Object is especially used inside weinhuber_approach_split.py
     """
 
-    def __init__(self, variables, predicate, relation, interval, priority=None, hard_interval_boundary=True, offset=None):
+    def __init__(self, variables, predicate, relation, interval, hard_interval_boundary=True, offset=None):
         """
         e.g.:
             11*x_1 + 2*x_2 - 11 <= (0,1) ∪ [12, 15]
@@ -43,13 +43,14 @@ class ContextAwareSplit(Split, ABC):
         dtcontrol/decision_tree/splitting/context_aware/weinhuber_approach_splitting_strategy.py
 
         """
-
+        super().__init__()
         self.variables = variables
         self.predicate = predicate
         self.relation = relation
         self.interval = interval
         self.hard_interval_boundary = hard_interval_boundary
         self.offset = offset
+
 
     @abstractmethod
     def predict(self, features):

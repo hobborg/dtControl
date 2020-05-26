@@ -19,7 +19,7 @@ aa = AxisAlignedSplittingStrategy()
 aa.priority = 0
 
 classifiers = [
-    DecisionTree([weinhuber, aa], Entropy(), 'Testing')
+    DecisionTree([weinhuber, aa], Entropy(), 'Weinhuber Strategy')
 ]
 suite.benchmark(classifiers)
 suite.display_html()

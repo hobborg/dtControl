@@ -10,7 +10,8 @@ class AxisAlignedSplittingStrategy(SplittingStrategy):
             for i in range(len(values) - 1):
                 threshold = (values[i] + values[i + 1]) / 2
                 real_feature = dataset.map_numeric_feature_back(feature)
-                split = AxisAlignedSplit(real_feature, threshold, self.priority)
+                split = AxisAlignedSplit(real_feature, threshold)
+                split.priority = self.priority
                 splits[split] = impurity_measure.calculate_impurity(dataset, split)
         if not splits:
             return None
@@ -21,10 +22,12 @@ class AxisAlignedSplit(Split):
     Represents an axis aligned split of the form x[i] <= b.
     """
 
-    def __init__(self, feature, threshold, priority):
+    def __init__(self, feature, threshold):
+
+        super().__init__()
         self.feature = feature
         self.threshold = threshold
-        self.priority = priority
+
 
     def get_masks(self, dataset):
         mask = dataset.x[:, self.feature] <= self.threshold

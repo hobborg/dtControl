@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 
 class SplittingStrategy(ABC):
-    def __init__(self, priority=1):
-        self.priority = priority
+    def __init__(self):
+        self.priority = 1
 
     @abstractmethod
     def find_split(self, dataset, impurity_measure):
