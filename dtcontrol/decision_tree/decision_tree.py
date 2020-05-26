@@ -170,7 +170,7 @@ class Node:
         for split in splits:
             if split.priority == 0:
                 fallback_dict[split] = self.impurity_measure.calculate_impurity(dataset, split)
-            elif split.priority <= 1 or split.priority >= 0:
+            elif split.priority <= 1 or split.priority > 0:
                 # Only add possible/productive splits to dict
                 impurity = self.impurity_measure.calculate_impurity(dataset, split)
                 if impurity < 9223372036854775807:
@@ -178,16 +178,22 @@ class Node:
             else:
                 # One split appeared with split.priority > 1 or split.priority < 0:
                 self.logger.warning("Aborting: only splitting strategy priorities between 0 and 1 allowed.")
-                # TODO: ASK: return in this case or just forget about that illegal split and continue ???
-                # Remember to add an additional edge check in "Choosing the right split" if there is no return
                 return
 
-        # Choosing the right split
-        if not split_dict:
+        # Choosing the right split for self.split
+        if split_dict:
+            # Using the best split from split_dict
+            self.split = min(split_dict.keys(), key=split_dict.get)
+        elif fallback_dict:
             # Using the best fallback split
             self.split = min(fallback_dict.keys(), key=fallback_dict.get)
         else:
-            self.split = min(split_dict.keys(), key=split_dict.get)
+            self.logger.warning("Aborting branch: no split possible.")
+            # TODO: ASK: what does pre_determinize do? Is it important here?
+            if pre_determinize:
+                self.impurity_measure.determinizer.pre_determinized_labels = None
+            return
+
 
         if pre_determinize:
             self.impurity_measure.determinizer.pre_determinized_labels = None
@@ -204,7 +210,7 @@ class Node:
 
             for split_strat in self.splitting_strategies:
                 if isinstance(split_strat, ContextAwareSplittingStrategy):
-                    split_strat.set_current_Node(node)
+                    split_strat.set_current_node(node)
 
             self.children.append(node)
             node.fit(subset)
