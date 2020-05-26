@@ -357,16 +357,14 @@ class PredicateParser:
                                   "Invalid interval: ", user_input)
             return sp.EmptySet
 
+        user_input = user_input.lower()
         # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
         user_input = user_input.replace("or", "∪")
-        user_input = user_input.replace("Or", "∪")
-        user_input = user_input.replace("OR", "∪")
         user_input = user_input.replace("u", "∪")
 
         # Modify user_input and convert every "Inf" to sympy supported symbol for infinity "oo"
-        user_input = user_input.replace("Inf", "oo")
         user_input = user_input.replace("inf", "oo")
-        user_input = user_input.replace("INF", "oo")
+        user_input = user_input.replace("infinity", "oo")
 
         # appending all intervals into this list and later union all of them
         interval_list = []
