@@ -10,8 +10,7 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         # Iterating over every possible value and creating a substitution list
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
-        evaluated_predicate = self.predicate.subs(subs_list)
-        evaluated_predicate = evaluated_predicate.evalf()
+        evaluated_predicate = self.predicate.subs(subs_list).evalf()
 
         # Checking the offset
         if self.relation == "<=":
@@ -27,10 +26,7 @@ class WeinhuberApproachSplit(ContextAwareSplit):
         else:
             check = evaluated_predicate == self.offset
 
-        if check:
-            return 0
-        else:
-            return 1
+        return 0 if check else 1
 
     def get_masks(self, dataset):
         data = dataset.get_numeric_x()

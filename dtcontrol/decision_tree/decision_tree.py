@@ -168,11 +168,12 @@ class Node:
 
         for split in splits:
             impurity = self.impurity_measure.calculate_impurity(dataset, split)
+            # TODO max_int...
             if impurity < 9223372036854775807:
                 if split.priority == 0:
-                    fallback_dict[split] = self.impurity_measure.calculate_impurity(dataset, split)
+                    fallback_dict[split] = impurity
                 elif split.priority <= 1 or split.priority > 0:
-                    split_dict[split] = self.impurity_measure.calculate_impurity(dataset, split) / split.priority
+                    split_dict[split] = impurity / split.priority
                 else:
                     # One split appeared with split.priority > 1 or split.priority < 0:
                     self.logger.warning("Aborting: only splitting strategy priorities between 0 and 1 allowed.")
@@ -187,7 +188,7 @@ class Node:
             self.split = min(fallback_dict.keys(), key=fallback_dict.get)
         else:
             self.logger.warning("Aborting branch: no split possible.")
-            # TODO: ASK: what does pre_determinize do? Is it important here?
+            # TODO change error message
             if pre_determinize:
                 self.impurity_measure.determinizer.pre_determinized_labels = None
             return

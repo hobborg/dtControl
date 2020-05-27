@@ -439,6 +439,11 @@ class PredicateParser:
 
                         elif interval[-1] == "]":
                             right_open = False
+                        else:
+                            cls._logger().warning("Warning: interval ends with an invalid char."
+                                                  "Invalid interval: ", user_input)
+                            interval_list.append(sp.EmptySet)
+                            continue
 
                         interval_list.append(
                             sp.Interval(a, b, right_open=right_open,
