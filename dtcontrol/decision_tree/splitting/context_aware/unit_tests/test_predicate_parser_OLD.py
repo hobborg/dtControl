@@ -1,5 +1,5 @@
 import unittest
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import PredicateParser
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import PredicateParser_OLD
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
 import os
 import sympy
@@ -200,10 +200,10 @@ class TestPredicateParser(unittest.TestCase):
         # USAGE OF FILE 1
 
         # Non existing input file
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="None"), None)
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="None"), None)
 
         # Check if test input file 1 was parsed correctly
-        output = PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file1.txt")
+        output = PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file1.txt")
 
         # Checking right instance
         for obj in output:
@@ -238,23 +238,23 @@ class TestPredicateParser(unittest.TestCase):
     def test_parse_user_predicate_wrong_variables(self):
         # USAGE OF FILE 2
         # Wrong variables only dataset
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file2.txt"), None)
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file2.txt"), None)
 
     def test_parse_user_predicate_unknown_functions(self):
         # USAGE OF FILE 3
         # Typos only dataset
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file3.txt"), None)
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file3.txt"), None)
 
     def test_parse_user_predicate_invalid_relations(self):
         # USAGE OF FILE 4
         # Invalid relations
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file4.txt"), None)
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file4.txt"), None)
 
     def test_parse_user_interval_open(self):
         # USAGE OF FILE 5
         # Valid open intervals
         output = [obj.interval for obj in
-                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file5.txt")]
+                  PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file5.txt")]
         self.assertEqual(output, [sympy.Interval.open(-10.0000, 100.000),
                                   sympy.Interval.open(20.231313, 123.000),
                                   sympy.Interval.open(123.000, 200.000),
@@ -268,7 +268,7 @@ class TestPredicateParser(unittest.TestCase):
             a = random.randint(-1000000000, 1000000000)
             b = random.randint(-1000000000, 1000000000)
             if a != b:
-                interval = PredicateParser.parse_user_interval(f"({min(a, b)},{max(a, b)})")
+                interval = PredicateParser_OLD.parse_user_interval(f"({min(a, b)},{max(a, b)})")
                 interval_sym = sympy.Interval.open(min(a, b), max(a, b))
                 self.assertEqual(interval, interval_sym)
                 self.assertFalse(interval.contains(a))
@@ -277,14 +277,14 @@ class TestPredicateParser(unittest.TestCase):
 
         # USAGE OF FILE 6
         # Invalid intervals
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file6.txt"),
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file6.txt"),
                          None)
 
     def test_parse_user_interval_close(self):
         # USAGE OF FILE 7
         # Valid closed intervals
         output = [obj.interval for obj in
-                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file7.txt")]
+                  PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file7.txt")]
         self.assertEqual(output, [sympy.Interval(-10.0000, 100.000),
                                   sympy.Interval(20.231313, 123.000),
                                   sympy.Interval(123.000, 200.000),
@@ -298,7 +298,7 @@ class TestPredicateParser(unittest.TestCase):
             a = random.randint(-1000000000, 1000000000)
             b = random.randint(-1000000000, 1000000000)
             if a != b:
-                interval = PredicateParser.parse_user_interval(f"[{min(a, b)},{max(a, b)}]")
+                interval = PredicateParser_OLD.parse_user_interval(f"[{min(a, b)},{max(a, b)}]")
                 interval_sym = sympy.Interval(min(a, b), max(a, b))
                 self.assertEqual(interval, interval_sym)
                 self.assertTrue(interval.contains(a))
@@ -307,14 +307,14 @@ class TestPredicateParser(unittest.TestCase):
 
         # USAGE OF FILE 8
         # Invalid closed intervals
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file8.txt"),
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file8.txt"),
                          None)
 
     def test_parse_user_interval_open_and_close(self):
         # USAGE OF FILE 9
         # Valid intervals
         output = [obj.interval for obj in
-                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file9.txt")]
+                  PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file9.txt")]
         self.assertEqual(output, [sympy.Interval.Lopen(-10.0000, 100.000),
                                   sympy.Interval.Ropen(20.231313, 123.000),
                                   sympy.Interval.Lopen(123.000, 200.000),
@@ -326,14 +326,14 @@ class TestPredicateParser(unittest.TestCase):
         # USAGE OF FILE 10
         # Invalid intervals
         # KNOWN BUG (or Feature??) -> (0, inf#) would evaluate to (0,inf) but '#' seems to be the only special character where that works
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file10.txt"),
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file10.txt"),
                          None)
 
     def test_parse_user_interval_finite(self):
         # USAGE OF FILE 11
         # Valid finite intervals
         output = [obj.interval for obj in
-                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file11.txt")]
+                  PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file11.txt")]
         self.assertEqual(output, [sympy.FiniteSet(sympy.sympify("sqrt(2)").evalf(), 1233.123, 123213.0),
                                   sympy.FiniteSet(sympy.sympify("sqrt(2)").evalf(), sympy.sympify("log(12)").evalf(),
                                                   123213.0),
@@ -341,14 +341,14 @@ class TestPredicateParser(unittest.TestCase):
 
         # USAGE OF FILE 12
         # Invalid intervals
-        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file12.txt"),
+        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file12.txt"),
                          None)
 
     def test_parse_user_interval_union(self):
         # USAGE OF FILE 13
         # Valid union intervals
         output = [obj.interval for obj in
-                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file13.txt")]
+                  PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file13.txt")]
         self.assertEqual(output, [sympy.Union(sympy.FiniteSet(-4, -3, -2, 123213), sympy.Interval.Ropen(-1, 0),
                                         sympy.Interval.open(1, 2),
                                         sympy.Interval.open(3, 4),
@@ -361,7 +361,7 @@ class TestPredicateParser(unittest.TestCase):
         # USAGE OF FILE 14
         # Invalid union intervals
         output = [obj.interval for obj in
-                  PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file14.txt")]
+                  PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file14.txt")]
         self.assertEqual(output,[sympy.FiniteSet(123.0), sympy.Interval.Lopen(8, 9)])
 
 
