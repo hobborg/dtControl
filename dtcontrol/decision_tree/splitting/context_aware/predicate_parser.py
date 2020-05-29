@@ -35,6 +35,14 @@ class PredicateParser:
 
         The whole predicate will be transferred to following structure:
         term - bias <= 0
+
+        TODO: Referencing columns with direct column name
+        Column Referenciation:
+        - Currently only allowing x_1, x_2, ...
+            --> Will be checked in find_split if x_i really references a valid column
+        Coef:
+        - Currently allowing "almost everything", expect already reserved expr like x_i, sqrt(2), ...
+
         """
 
         try:
@@ -63,10 +71,10 @@ class PredicateParser:
 
                         term = sp.sympify(split_term[0] + "-(" + split_term[1] + ")")
                         coef_interval = {}
-                        column_var = {}
+                        column_interval = {}
 
                         for i in range(len(split_pred) - 1):
-                            split_coef_definition = split_pred[i + 1].split("in",1)
+                            split_coef_definition = split_pred[i + 1].split("in", 1)
                             interval = cls.parse_user_interval(split_coef_definition[1])
                             if interval == sp.EmptySet:
                                 cls._logger().warning("Aborting: one coefficient is an empty set."
@@ -74,13 +82,13 @@ class PredicateParser:
                                 return
                             else:
                                 coef_interval[sp.sympify(split_coef_definition[0])] = interval
-
+                        # Currently only allowing x_ for column referenciation
                         for var in term.free_symbols:
                             if re.match(r"x_\d+", str(var)):
                                 if not coef_interval.__contains__(var):
-                                    column_var[var] = sp.Interval(sp.sympify("-oo"), sp.sympify("oo"))
+                                    column_interval[var] = sp.Interval(sp.sympify("-oo"), sp.sympify("oo"))
                                 else:
-                                    column_var[var] = coef_interval[var]
+                                    column_interval[var] = coef_interval[var]
                                     coef_interval.__delitem__(var)
 
 
@@ -97,7 +105,7 @@ class PredicateParser:
                                                   "Undefined function: ", term.atoms(AppliedUndef), "Invalid predicate: ",
                                                   str(single_predicate))
                             return
-                        elif not column_var:
+                        elif not column_interval:
                             cls._logger().warning("Aborting: one predicate does not contain variables to reference columns."
                                                   "Invalid predicate: ", str(single_predicate))
                             return
@@ -105,19 +113,19 @@ class PredicateParser:
                             cls._logger().warning("Aborting: one predicate does evaluate to zero"
                                                   "Invalid predicate: ", str(single_predicate))
                             return
-                        elif not split_pred or not term or not column_var:
+                        elif not split_pred or not term or not column_interval:
                             cls._logger().warning("Aborting: one predicate does not have a valid structure."
                                                   "Invalid predicate: ", str(single_predicate))
                             return
                         else:
                             # Check if every value in column_interval has a valid structure of x_\d+
-                            for var in column_var:
+                            for var in column_interval:
                                 if not re.match(r"x_\d+", str(var)):
                                     # Found an invalid variable
                                     cls._logger().warning("Aborting: one predicate uses an invalid variable to reference a column."
                                                           "Invalid predicate: ", str(single_predicate))
 
-                            output.append(WeinhuberApproachSplit(column_var, coef_interval, term, relation))
+                            output.append(WeinhuberApproachSplit(column_interval, coef_interval, term, relation))
                     break
 
         if not output:

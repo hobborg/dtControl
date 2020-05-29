@@ -1,17 +1,19 @@
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
+from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 import logging
 import sympy as sp
+import numpy as np
 import re
 from copy import deepcopy
 from apted import APTED
 from apted.helpers import Tree
-from pathlib import Path
+from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, user_given_splits=None):
+    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, user_given_splits=None,
+                 determinizer=LabelPowersetDeterminizer()):
 
         """
         :param fallback_strategy: splitting strategy to continue with, once weinhuber strategy doesn't work anymore
@@ -20,9 +22,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param predicate_dt_range: range of distance to search in dt (being build)
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.parse_user_predicate() if user_given_splits is None else user_given_splits
+        self.user_given_splits = PredicateParser.get_predicate() if user_given_splits is None else user_given_splits
         self.predicate_structure_difference = predicate_structure_difference
         self.predicate_dt_range = predicate_dt_range
+        self.determinizer = determinizer
 
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
         self.logger.setLevel(logging.ERROR)
@@ -117,351 +120,28 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         """
 
         # Checking whether used variables in user_given_splits are actually represented in dataset
-        new_user_splits = []
-        allowed_var_index = dataset.get_numeric_x().shape[1] - 1
         for single_split in self.user_given_splits:
-            if single_split.variables[-1] <= allowed_var_index:
-                new_user_splits.append(single_split)
-
-        self.user_given_splits = new_user_splits
+            if not single_split.check_valid_column_reference(dataset):
+                self.logger.warning("Aborting: one predicate uses an invalid column reference."
+                                    "Invalid predicate: ", str(single_split))
+                return
 
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
-        to achieve the 'best' impurity possible with the user given predicate/split.
-        All adjusted predicate/split objects will be stored inside the dict: splits with 
+        to achieve the lowest impurity possible with the user given predicate/split.
+        All adjusted predicate/split objects will be stored inside a dict: 
         Key: split object   Value:Impurity of the split
         """
 
         splits = {}
-        # Getting the 'best' possible split with user predicate/split
         for single_split in self.user_given_splits:
             split_copy = deepcopy(single_split)
-            split_copy.offset = self.calculate_best_result_for_split(dataset, split_copy, impurity_measure).evalf()
-            splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+            split_copy.fit(dataset)
+
+            if single_split.is_applicable(dataset):
+                split_copy.priority = self.priority
+                splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
-        if weinhuber_split:
-            weinhuber_split.priority = self.priority
-
-        # gets nearest k splits of self.current_node
-        k = 20
-        # self.print_parent_nodes(self.get_parent_splits(self.root, k))
 
         return weinhuber_split
-
-    def calculate_best_result_for_split(self, dataset, split, impurity_measure):
-
-        """
-        :param dataset: the subset of data at the current split
-        :param split: split to compute the best offset for
-        :param impurity_measure: the impurity measure to determine the quality of a potential split
-        :returns: best value for split.offset
-        """
-
-        x_numeric = dataset.get_numeric_x()
-        possible_values_inside_interval = {}
-        possible_values_outside_interval = {}
-
-        # iterating over every row from dataset
-        for i in range(x_numeric.shape[0]):
-            subs_list = []
-            features = x_numeric[i, :]
-            copy_split = deepcopy(split)
-            for k in range(len(features)):
-                subs_list.append(("x_" + str(k), features[k]))
-
-            # calculating the offset for that specific row
-            copy_split.offset = copy_split.predicate.subs(subs_list).evalf()
-
-            # evaluating where to store this split object (for more information look at documentation of hard_interval_boundary)
-            # Key: offset   Value: Impurity of that offset
-            if copy_split.interval.contains(copy_split.offset):
-                possible_values_inside_interval[copy_split.offset] = impurity_measure.calculate_impurity(dataset,
-                                                                                                         copy_split)
-            else:
-                possible_values_outside_interval[copy_split.offset] = impurity_measure.calculate_impurity(dataset,
-                                                                                                          copy_split)
-
-            # return offset with (best) offset with offset inside the interval
-            if possible_values_inside_interval:
-                return min(possible_values_inside_interval.keys(), key=possible_values_inside_interval.get)
-            else:
-                # If no possible offset fits inside the interval (for more information look at documentation of hard_interval_boundary)
-                if copy_split.hard_interval_boundary:
-                    supremum = copy_split.interval.sup
-                    infimum = copy_split.interval.inf
-
-                    # Important note: (-oo,+oo) would be impossible at this place --> only one infinity sign would reach this state
-                    if supremum == sp.sympify("+oo"):
-                        return infimum
-                    elif infimum == sp.sympify("-oo"):
-                        return supremum
-                    else:
-                        return (infimum + supremum) / 2
-                else:
-                    return min(possible_values_outside_interval.keys(), key=possible_values_outside_interval.get)
-
-
-class PredicateParser:
-
-    @classmethod
-    def _logger(cls):
-        logger = logging.getLogger("PredicateParser_logger")
-        logger.setLevel(logging.ERROR)
-        return logger
-
-    @classmethod
-    def parse_user_predicate(cls,
-                             input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
-
-        """
-        Predicate parser for user input obtained
-        :returns: list of WeinhuberApproachSplit Objects
-
-        e.g.:
-            11*x_1 + 2*x_2 - 11 <= (0,1) ∪ [12, 15]
-
-            variables              =       ['1', '2'] --> list of used x variables (sorted)
-            predicate              =       1*x_1 + 2*x_2 - 11 --> sympy expression
-            relation               =       '<='
-            interval               =       Union(Interval.open(0, 1), Interval(12, 15))
-
-
-        EDGE CASE                                   |   BEHAVIOR
-        --------------------------------------------|------------------------------------------
-        input file does not exist                   |   Aborting: returns None
-        --------------------------------------------|------------------------------------------
-        input file empty                            |   Aborting: returns None
-        --------------------------------------------|------------------------------------------
-        invalid structure of one single predicate   |   Warning: this single predicate will be skipped
-        --------------------------------------------|------------------------------------------
-        invalid structure of every predicate        |   Aborting: returns None
-        --------------------------------------------|------------------------------------------
-        """
-
-        try:
-            with open(input_file_path, "r") as file:
-                predicates = [predicate.rstrip() for predicate in file]
-        except FileNotFoundError:
-            cls._logger().warning("Aborting: input file with user predicates not found.")
-            return
-
-        # Edge Case user input == ""
-        if not predicates:
-            cls._logger().warning("Aborting: input file with user predicates is empty.")
-            return
-
-        # Currently supported types of relations
-        relation_list = ["<=", ">=", "!=", "<", ">", "="]
-
-        # List containing all predicates parsed in tuple form
-        output = []
-        for single_predicate in predicates:
-            for sign in relation_list:
-                if sign in single_predicate:
-                    try:
-                        split_pred = single_predicate.split(sign)
-                        left_formula = sp.simplify(sp.sympify(split_pred[0]))
-                        # Accessing the interval parser, since the intervals can also contain unions etc
-                        interval = cls.parse_user_interval(split_pred[1].strip())
-                        variables = [str(var) for var in left_formula.free_symbols]
-                    except Exception:
-                        cls._logger().warning("Warning: one predicate does not have a valid structure."
-                                              "Invalid predicate: ", str(single_predicate))
-                    else:
-                        # Checking correct usage of variables
-                        for var in variables:
-                            if not re.match(r"x_\d+", var):
-                                # Found an invalid variable
-                                variables = None
-                                # logger will be handled later to reduce the complexity
-                                break
-
-                        # Substitute dummy values for the variables to check if result would end up in a number
-                        subs_list = [(var, 1) for var in left_formula.free_symbols]
-                        dummy = left_formula.subs(subs_list).evalf()
-                        if not isinstance(dummy, sp.Number):
-                            cls._logger().warning("Warning: one predicate is using an unknown function."
-                                                  "Invalid predicate: ", str(single_predicate))
-                        # Check valid structure
-                        elif not split_pred or not left_formula or interval == sp.EmptySet or not variables:
-                            cls._logger().warning("Warning: one predicate does not have a valid structure."
-                                                  "Invalid predicate: ", str(single_predicate))
-                        else:
-                            output.append(WeinhuberApproachSplit(sorted([int(var.split("x_")[1]) for var in variables]),
-                                                                 left_formula, sign, interval))
-
-                    break
-
-        if not output:
-            cls._logger().warning("Aborting: input file has invalid structure.")
-            return
-        else:
-            return output
-
-    @classmethod
-    def parse_user_interval(cls, user_input):
-        """
-        Predicate Parser for the interval.
-        :variable user_input: Interval as a string
-        :returns: a sympy expression (to later use in self.interval of ContextAwareSplit objects)
-        (IN INVALID EDGE CASES THIS CLASS RETURNS AN EMPTY SET)
-
-        Option 1: user_input = (-oo, oo) = [-oo, oo]
-        --> self.offset of ContextAwareSplit will be the value to achieve the 'best' impurity
-
-        (with a,b ∊ R)
-        Option 2: user_input is an interval
-        Option 2.1: user_input = [a,b]
-        --> Interval with closed boundary --> {x | a <= x <= b}
-        Option 2.2: user_input = (a,b)
-        --> Interval with open boundary --> {x | a < x < b}
-        Option 2.3: user_input = (a.b]
-        Option 2.4: user_input = [a,b)
-
-        Option 3: user_input = {1,2,3,4,5}
-        --> Finite set
-
-        Option 4: user_input = [0,1) ∪ (8,9) ∪ [-oo, 1)
-        --> Union of intervals
-
-
-        Grammar G for an user given interval:
-
-        G = (V, Σ, P, predicate)
-        V = {predicate, combination, interval, real_interval, bracket_left, bracket_right, number, finite_interval, number_finit, num}
-        Σ = { (, [, ), ], R, +oo, -oo, ,, ∪, -Inf, Inf, -INF, INF, -inf, inf, or, Or, OR, u}
-        P:
-        PREDICATE       -->     INTERVAL | INTERVAL ∪ COMBINATION
-        INTERVAL        -->     REAL_INTERVAL | FINITE_INTERVAL
-        REAL_INTERVAL   -->     BRACKET_LEFT NUMBER , NUMBER BRACKET_RIGHT
-        BRACKET_LEFT    -->     ( | [
-        BRACKET_RIGHT   -->     ) | ]
-        NUMBER          -->     {x | x ∊ R} | +oo | -oo
-        FINITE_INTERVAL -->     {NUMBER_FINITE NUM}
-        NUMBER_FINITE   -->     {x | x ∊ R}
-        NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
-
-        """
-        # super basic beginning and end char check of whole input
-        if not user_input.strip():
-            cls._logger().warning("Warning: no interval found.")
-            return sp.EmptySet
-        elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[":
-            cls._logger().warning("Warning: interval starts with an invalid char."
-                                  "Invalid interval: ", user_input)
-            return sp.EmptySet
-        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[
-            -1] is not "]":
-            cls._logger().warning("Warning: interval ends with an invalid char."
-                                  "Invalid interval: ", user_input)
-            return sp.EmptySet
-
-        user_input = user_input.lower()
-        # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
-        user_input = user_input.replace("or", "∪")
-        user_input = user_input.replace("u", "∪")
-
-        # Modify user_input and convert every "Inf" to sympy supported symbol for infinity "oo"
-        user_input = user_input.replace("inf", "oo")
-        user_input = user_input.replace("infinity", "oo")
-
-        # appending all intervals into this list and later union all of them
-        interval_list = []
-
-        user_input = user_input.split("∪")
-        user_input = [x.strip() for x in user_input]
-
-        # Parsing of every single interval
-        for interval in user_input:
-            """
-            Basic idea: Evaluate/Parse every single predicate and later union them (if needed)
-            Path is chosen based on first char of interval
-            possible first char of an interval:
-                --> {
-                --> ( or [ (somehow belong to the same "family")
-                
-            """
-
-            if interval[0] == "{":
-                # finite intervals like {1,2,3}
-                if interval[-1] == "}":
-                    unchecked_members = interval[1:-1].split(",")
-                    # Check each member whether they are valid
-                    checked_members = []
-                    for var in unchecked_members:
-                        tmp = sp.sympify(var).evalf()
-                        if isinstance(tmp, sp.Number):
-                            checked_members.append(tmp)
-                        else:
-                            cls._logger().warning("Warning: Invalid member found in finite interval."
-                                                  "Invalid member: ", str(tmp), " Invalid interval: ", interval)
-                    # Edge case: if no member is valid, just an empty set will be returned.
-                    interval_list.append(sp.FiniteSet(*checked_members))
-                else:
-                    # Interval starts with { but does not end with }
-                    cls._logger().warning("Warning: Invalid char at end of interval found."
-                                          "Invalid interval: ", interval)
-            elif interval[0] == "(" or interval[0] == "[":
-                # normal intervals of structure (1,2] etc
-
-                # Checking of first char
-                if interval[0] == "(":
-                    left_open = True
-                elif interval[0] == "[":
-                    left_open = False
-                else:
-                    cls._logger().warning("Warning: interval starts with an invalid char."
-                                          "Invalid interval: ", user_input)
-                    interval_list.append(sp.EmptySet)
-                    continue
-
-                # Checking boundaries of interval
-                tmp = interval[1:-1].split(",")
-                if len(tmp) > 2:
-                    cls._logger().warning("Warning: too many numbers inside an interval."
-                                          "Invalid interval: ", user_input)
-                    interval_list.append(sp.EmptySet)
-                    continue
-                try:
-                    a = sp.sympify(tmp[0]).evalf()
-                    b = sp.sympify(tmp[1]).evalf()
-                except Exception:
-                    cls._logger().warning("Warning: Invalid member found inside interval."
-                                          "Invalid interval: ", interval)
-                    interval_list.append(sp.EmptySet)
-                    continue
-                else:
-                    if isinstance(a, sp.Number) and isinstance(b, sp.Number):
-                        # Checking of last char
-                        if interval[-1] == ")":
-                            right_open = True
-
-                        elif interval[-1] == "]":
-                            right_open = False
-                        else:
-                            cls._logger().warning("Warning: interval ends with an invalid char."
-                                                  "Invalid interval: ", user_input)
-                            interval_list.append(sp.EmptySet)
-                            continue
-
-                        interval_list.append(
-                            sp.Interval(a, b, right_open=right_open,
-                                        left_open=left_open))
-                    else:
-                        cls._logger().warning("Warning: Invalid member found inside interval."
-                                              "Invalid interval: ", interval)
-                        interval_list.append(sp.EmptySet)
-            else:
-                cls._logger().warning("Warning: Invalid char found inside interval."
-                                      "Invalid interval: ", str(interval))
-                interval_list.append(sp.EmptySet)
-
-        # Union
-        final_interval = interval_list[0]
-
-        # union with all other intervals
-        if len(interval_list) > 1:
-            for item in interval_list:
-                final_interval = sp.Union(final_interval, item)
-        return final_interval
