@@ -86,7 +86,7 @@ class PredicateParser:
                         for var in term.free_symbols:
                             if re.match(r"x_\d+", str(var)):
                                 if not coef_interval.__contains__(var):
-                                    column_interval[var] = sp.Interval(sp.sympify("-oo"), sp.sympify("oo"))
+                                    column_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
                                 else:
                                     column_interval[var] = coef_interval[var]
                                     coef_interval.__delitem__(var)
@@ -180,7 +180,7 @@ class PredicateParser:
         """
         # simplest special case:
         if user_input == "$i":
-            return sp.Interval(sp.sympify("-oo"), sp.sympify("oo"))
+            return sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
 
         # super basic beginning and end char check of whole input
         if not user_input.strip():

@@ -44,7 +44,12 @@ class WeinhuberApproachSplit(Split):
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
         :param x: feature columns of a dataset
         :param y: labels of a dataset
+
+        Reference: https://towardsdatascience.com/logistic-regression-as-a-nonlinear-classifier-bdc6746db734
         """
+        # term has to have a range from -inf to +inf
+
+
         # TODO !!!!!!!!!!!!!!!!1!!1
         # Right now it is just using the first item out of an interval
         coef_assignment = {}
