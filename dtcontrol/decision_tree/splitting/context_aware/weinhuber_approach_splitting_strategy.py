@@ -132,11 +132,24 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         All adjusted predicate/split objects will be stored inside a dict: 
         Key: split object   Value:Impurity of the split
         """
+        # See Linear Classifier
+        x_numeric = dataset.get_numeric_x()
+        if x_numeric.shape[1] == 0:
+            return None
 
+        y = self.determinizer.determinize(dataset)
         splits = {}
+
         for single_split in self.user_given_splits:
             split_copy = deepcopy(single_split)
-            split_copy.fit(dataset)
+
+            for label in np.unique(y):
+                new_y = np.copy(y)
+                label_mask = (new_y == label)
+                new_y[label_mask] = 1
+                new_y[~label_mask] = -1
+                baum = new_y
+                split_copy.fit(x_numeric, new_y)
 
             if single_split.is_applicable(dataset):
                 split_copy.priority = self.priority

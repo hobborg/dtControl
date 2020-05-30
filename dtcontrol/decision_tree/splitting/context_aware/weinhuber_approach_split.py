@@ -39,7 +39,7 @@ class WeinhuberApproachSplit(Split):
             self.coef_interval) + "\nterm: " + str(self.term) + "\nrelation: " + str(self.relation) + "\ncoef_assignment: " + str(
             self.coef_assignment)
 
-    def fit(self, dataset):
+    def fit(self, x, y):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
         :param x: feature columns of a dataset
@@ -48,7 +48,6 @@ class WeinhuberApproachSplit(Split):
         Reference: https://towardsdatascience.com/logistic-regression-as-a-nonlinear-classifier-bdc6746db734
         """
         # term has to have a range from -inf to +inf
-
 
         # TODO !!!!!!!!!!!!!!!!1!!1
         # Right now it is just using the first item out of an interval
@@ -93,7 +92,7 @@ class WeinhuberApproachSplit(Split):
         for column_reference in self.column_interval:
             index = int(str(column_reference).split("x_")[1])
             interval = self.column_interval.get(column_reference)
-            column = x_numeric[:,index]
+            column = x_numeric[:, index]
             for val in column:
                 if not interval.contains(val):
                     return False
