@@ -21,28 +21,32 @@ class PredicateParser:
         :returns: list of WeinhuberApproachSplit Objects representing all predicates obtained from the user
 
         e.g.
-        Input:  c1 * x_3 - c2 + x_4 - c3 <= 0; x_2 in {1,2,3}; c1 in (-inf, inf); c2 in {1,2,3}; c3 in {5, 10, 32, 40}
+        Input:  c_1 * x_3 - c_2 + x_4 - c_3 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
         Output: WeinhuberApproachSplit Object with:
 
-        column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                   --> Key: Sympy Symbol Value: Sympy Interval
-        Every column reference without a specific defined Interval will be assigned to (-Inf, Inf)
-        coef_interval       =       {c1:(-Inf,Inf), c2:{1,2,3}, c3:{5,10,32,40}     --> Key: Sympy Symbol Value: Sympy Interval
-        term                =       c1 * x_3 - c2 + x_4 - c3                        --> sympy expression
-        relation            =       '<='                                            --> String
+        column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                           --> Key: Sympy Symbol Value: Sympy Interval
+        coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c_3:{5,10,32,40}          --> Key: Sympy Symbol Value: Sympy Interval
+        term                =       c_1 * x_3 - c_2 + x_4 - c_3                             --> sympy expression
+        relation            =       '<='                                                    --> String
 
-        In case the predicate obtained from an user has following structure:
-        term <= bias (with bias != 0)
+        Every column reference or coef without a specific defined Interval will be assigned this interval: (-Inf, Inf)
+
+        In case the predicate obtained from the user has following structure:
+        term relation bias (with bias != 0)
 
         The whole predicate will be transferred to following structure:
-        term - bias <= 0
+        term - relation <= 0
 
-        TODO: Referencing columns with direct column name
-        Column Referenciation:
-        - Currently only allowing x_1, x_2, ...
-            --> Will be checked in find_split if x_i really references a valid column
-        Coef:
-        - Currently allowing "almost everything", expect already reserved expr like x_i, sqrt(2), ...
 
+
+
+
+        ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
+        |                  COLUMN REFERENCING ONLY WITH VARIABLES OF STRUCTURE: x_i                |
+        |                  COEFS ONLY WITH VARIABLES OF STRUCTURE: c_j                             |
+        --------------------------------------------------------------------------------------------
+
+        TODO: Allowing different structure for column refs and coefs!!!!!!!!
         """
 
         try:
@@ -66,13 +70,15 @@ class PredicateParser:
             for relation in supported_relation:
                 if relation in single_predicate:
                     try:
+                        # Cutting the input into separate parts
                         split_pred = single_predicate.split(";")
                         split_term = split_pred[0].split(relation)
-
                         term = sp.sympify(split_term[0] + "-(" + split_term[1] + ")")
-                        coef_interval = {}
+                        all_interval_defs = {}
                         column_interval = {}
+                        coef_interval = {}
 
+                        # Parsing all additional given intervals and storing them inside --> all_interval_defs
                         for i in range(len(split_pred) - 1):
                             split_coef_definition = split_pred[i + 1].split("in", 1)
                             interval = cls.parse_user_interval(split_coef_definition[1])
@@ -81,26 +87,47 @@ class PredicateParser:
                                                       "Invalid interval: ", str(interval))
                                 return
                             else:
-                                coef_interval[sp.sympify(split_coef_definition[0])] = interval
-                        # Currently only allowing x_ for column referenciation
+                                all_interval_defs[sp.sympify(split_coef_definition[0])] = interval
+
+                        """
+                        ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
+                        |                  COLUMN REFERENCING ONLY WITH VARIABLES OF STRUCTURE: x_i                |
+                        |                  COEFS ONLY WITH VARIABLES OF STRUCTURE: c_j                             |
+                        --------------------------------------------------------------------------------------------
+                        """
+                        # Iterating over every symbol/variable and deciding whether it is a column reference or a coef
                         for var in term.free_symbols:
                             if re.match(r"x_\d+", str(var)):
-                                if not coef_interval.__contains__(var):
+                                if not all_interval_defs.__contains__(var):
                                     column_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
                                 else:
-                                    column_interval[var] = coef_interval[var]
-                                    coef_interval.__delitem__(var)
-
-
-
-                    except IndentationError:
+                                    column_interval[var] = all_interval_defs[var]
+                            elif re.match(r"c_\d+", str(var)):
+                                if not all_interval_defs.__contains__(var):
+                                    coef_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
+                                else:
+                                    # CHECKING: coefs are only allowed to have 2 kinds of intervals: FiniteSet or (-Inf,Inf)
+                                    check_interval = all_interval_defs[var]
+                                    infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
+                                    if isinstance(check_interval, sp.FiniteSet) or check_interval == infinity:
+                                        coef_interval[var] = all_interval_defs[var]
+                                    else:
+                                        cls._logger().warning("Aborting: invalid interval for a coefficient."
+                                                              "Invalid coefficient: ", str(var), "Invalid interval: ", str(check_interval),
+                                                              "Invalid predicate: ", str(single_predicate))
+                                        return
+                            else:
+                                cls._logger().warning("Aborting: one symbol inside one predicate does not have a valid structure."
+                                                      "Invalid symbol: ", str(var), "Invalid predicate: ", str(single_predicate))
+                                return
+                    except Exception:
                         cls._logger().warning("Aborting: one predicate does not have a valid structure."
                                               "Invalid predicate: ", str(single_predicate))
                         return
                     else:
                         # Checking valid structure of predicate
                         if term.atoms(AppliedUndef):
-                            # e.g. f(x) * c1 * x_3 >= 1 --> f(x) is an undefined function
+                            # e.g. f(x) * c1 * x_3 >= 1 --> f(x) is an undefined function <--- NOT ALLOWED!
                             cls._logger().warning("Aborting: one predicate contains an undefined function."
                                                   "Undefined function: ", term.atoms(AppliedUndef), "Invalid predicate: ",
                                                   str(single_predicate))
@@ -109,8 +136,8 @@ class PredicateParser:
                             cls._logger().warning("Aborting: one predicate does not contain variables to reference columns."
                                                   "Invalid predicate: ", str(single_predicate))
                             return
-                        elif term == 0:
-                            cls._logger().warning("Aborting: one predicate does evaluate to zero"
+                        elif term == 0 or term.evalf() == 0:
+                            cls._logger().warning("Aborting: one predicate does evaluate to zero."
                                                   "Invalid predicate: ", str(single_predicate))
                             return
                         elif not split_pred or not term or not column_interval:
@@ -118,13 +145,6 @@ class PredicateParser:
                                                   "Invalid predicate: ", str(single_predicate))
                             return
                         else:
-                            # Check if every value in column_interval has a valid structure of x_\d+
-                            for var in column_interval:
-                                if not re.match(r"x_\d+", str(var)):
-                                    # Found an invalid variable
-                                    cls._logger().warning("Aborting: one predicate uses an invalid variable to reference a column."
-                                                          "Invalid predicate: ", str(single_predicate))
-
                             output.append(WeinhuberApproachSplit(column_interval, coef_interval, term, relation))
                     break
 
