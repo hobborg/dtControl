@@ -148,7 +148,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 label_mask = (new_y == label)
                 new_y[label_mask] = 1
                 new_y[~label_mask] = -1
-                baum = new_y
                 split_copy.fit(x_numeric, new_y)
 
             if single_split.is_applicable(dataset):

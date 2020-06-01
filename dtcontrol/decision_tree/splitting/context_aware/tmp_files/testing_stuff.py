@@ -5,6 +5,9 @@ from inspect import Parameter, signature, Signature
 
 from scipy.optimize import curve_fit
 
+for i in range(4):
+    print(i)
+
 term = sp.sympify("c0*x_0 + c1*x_1 + c2*x_2 + c3*x_3 + c4")
 
 x = np.array(

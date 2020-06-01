@@ -2,7 +2,7 @@ import numpy as np
 
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.predicate_parser import PredicateParser
+from dtcontrol.decision_tree.splitting.context_aware.tmp_files.OldDraft.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import ContextAwareSplittingStrategy
 
 class LinearClassifierSplittingStrategy(ContextAwareSplittingStrategy):

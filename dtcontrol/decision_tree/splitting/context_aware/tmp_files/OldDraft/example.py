@@ -5,14 +5,14 @@ from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.impurity.entropy import Entropy
 
 # context_aware
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.numerical_single_equal import \
+from dtcontrol.decision_tree.splitting.context_aware.tmp_files.OldDraft.numerical_single_equal import \
     CategoricalSingleEqualSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.experimental_split import ExperimentalSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier import \
+from dtcontrol.decision_tree.splitting.context_aware.tmp_files.OldDraft.experimental_split import ExperimentalSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.tmp_files.OldDraft.linear_type_classifier import \
     LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.linear_type_classifier_user_input import \
+from dtcontrol.decision_tree.splitting.context_aware.tmp_files.OldDraft.linear_type_classifier_user_input import \
     LinearClassifierSplittingStrategy as UIS
-from dtcontrol.decision_tree.splitting.context_aware.OldDraft.user_predicat_split import UserPredicatSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.tmp_files.OldDraft.user_predicat_split import UserPredicatSplittingStrategy
 
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import \
     WeinhuberApproachSplittingStrategy
@@ -20,7 +20,6 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splittin
 # splitting
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 # from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
-from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 
 suite = BenchmarkSuite(timeout=999,
                        save_folder='saved_classifiers',

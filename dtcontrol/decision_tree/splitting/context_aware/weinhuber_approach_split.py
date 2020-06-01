@@ -3,6 +3,7 @@ import numpy as np
 import sympy as sp
 import logging
 from copy import deepcopy
+from scipy.optimize import curve_fit
 
 
 class WeinhuberApproachSplit(Split):
@@ -12,11 +13,11 @@ class WeinhuberApproachSplit(Split):
 
         column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                   --> Key: Sympy Symbol Value: Sympy Interval
         Every column reference without a specific defined Interval will be assigned to (-Inf, Inf)
-        coef_interval       =       {c1:(-Inf,Inf), c2:{1,2,3}, c3:{5,10,32,40}     --> Key: Sympy Symbol Value: Sympy Interval
-        term                =       c1 * x_3 - c2 + x_4 - c3                        --> sympy expression
+        coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c3:{5,10,32,40}}    --> Key: Sympy Symbol Value: Sympy Interval
+        term                =       c_1 * x_3 - c_2 + x_4 - c_3                        --> sympy expression
         relation            =       '<='                                            --> String
 
-        coef_assignment      =       {c1:-8.23, c2:2, c3:40}                        --> Key: Sympy Symbol Value: Integer/Float
+        coef_assignment      =       {c_1:-8.23, c_2:2, c_3:40}                        --> Key: Sympy Symbol Value: Integer/Float
         coef_assignment will be determined later on after calling the fit function.
         It describes a specific assignment of all variables to a value inside their interval in order to achieve the lowest impurity.
 
@@ -44,16 +45,31 @@ class WeinhuberApproachSplit(Split):
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
         :param x: feature columns of a dataset
         :param y: labels of a dataset
-
-        Reference: https://towardsdatascience.com/logistic-regression-as-a-nonlinear-classifier-bdc6746db734
         """
-        # term has to have a range from -inf to +inf
+        # Edge Case: Less Data than coefficients
+        if x.shape[0] < len(self.coef_interval):
+            return
 
-        # TODO !!!!!!!!!!!!!!!!1!!1
-        # Right now it is just using the first item out of an interval
+        def adapter_function(x, *args):
+            out = []
+            for features in range(x.shape[0]):
+                subs_list = []
+                for arg_index in range(len(args)):
+                    subs_list.append(("c_" + str(arg_index), args[arg_index]))
+                for i in range(len(x[features, :])):
+                    subs_list.append(("x_" + str(i), x[features, i]))
+                result = float(self.term.subs(subs_list).evalf())
+                out.append(result)
+            return np.array(out)
+
+        guess = [1 for coef in self.coef_interval]
+        c, cov = curve_fit(adapter_function, x, y, guess)
+
         coef_assignment = {}
-        for single_coef in self.coef_interval:
-            coef_assignment[single_coef] = self.coef_interval.get(single_coef).args[0]
+        for coef_index in range(len(c)):
+            coef_symbol = "c_" + str(coef_index)
+            coef_assignment[coef_symbol] = c[coef_index]
+
         self.coef_assignment = coef_assignment
 
     def check_valid_column_reference(self, dataset):
@@ -81,7 +97,7 @@ class WeinhuberApproachSplit(Split):
         :param dataset: the dataset to be split
         :return: boolean
 
-        Checks if the column intervals, contain all of the column values.
+        Checks if the column intervals, contain all of the values inside a column.
             e.g.
             column_interval = {x_2:{1,3}} --> all values from the third column must be inside {1,3}
             :param dataset: the dataset to be split
