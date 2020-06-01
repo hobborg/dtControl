@@ -3,6 +3,7 @@ import logging
 import re
 import sympy as sp
 from sympy.core.function import AppliedUndef
+import numpy as np
 
 
 class PredicateParser:
@@ -160,7 +161,6 @@ class PredicateParser:
         Predicate Parser for the interval.
         :variable user_input: Interval as a string
         :returns: a sympy expression (to later use in self.interval of ContextAwareSplit objects)
-        (IN INVALID EDGE CASES THIS CLASS RETURNS AN EMPTY SET)
 
         Option 1: user_input = (-oo, oo) = [-oo, oo]
         --> self.offset of ContextAwareSplit will be the value to achieve the 'best' impurity
@@ -205,16 +205,16 @@ class PredicateParser:
         # super basic beginning and end char check of whole input
         if not user_input.strip():
             cls._logger().warning("Warning: no interval found.")
-            return sp.EmptySet
+            return
         elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[":
             cls._logger().warning("Warning: interval starts with an invalid char."
                                   "Invalid interval: ", user_input)
-            return sp.EmptySet
+            return
         elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[
             -1] is not "]":
             cls._logger().warning("Warning: interval ends with an invalid char."
                                   "Invalid interval: ", user_input)
-            return sp.EmptySet
+            return
 
         user_input = user_input.lower()
         # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
@@ -249,18 +249,39 @@ class PredicateParser:
                     # Check each member whether they are valid
                     checked_members = []
                     for var in unchecked_members:
-                        tmp = sp.sympify(var).evalf()
-                        if isinstance(tmp, sp.Number):
+                        try:
+                            tmp = sp.sympify(var).evalf()
+                        except Exception:
+                            cls._logger().warning("Warning: invalid member found."
+                                                  "Invalid interval: ", user_input)
+                            return
+                        if tmp == sp.nan:
+                            cls._logger().warning("Warning: invalid NaN member found."
+                                                  "Invalid interval: ", user_input)
+                            return
+                        elif tmp == sp.S.Infinity or tmp == sp.S.NegativeInfinity:
+                            cls._logger().warning("Warning: infinity is an invalid member."
+                                                  "Invalid interval: ", user_input)
+                            return
+                        elif isinstance(tmp, sp.Number):
                             checked_members.append(tmp)
                         else:
                             cls._logger().warning("Warning: Invalid member found in finite interval."
                                                   "Invalid member: ", str(tmp), " Invalid interval: ", interval)
-                    # Edge case: if no member is valid, just an empty set will be returned.
-                    interval_list.append(sp.FiniteSet(*checked_members))
+                            return
+                    # Edge case: if no member is valid --> empty set will be returned.
+                    out = sp.FiniteSet(*checked_members)
+                    if out == sp.EmptySet:
+                        cls._logger().warning("Warning: Invalid empty interval found."
+                                              "Invalid interval: ", interval)
+                        return
+                    else:
+                        interval_list.append(out)
                 else:
                     # Interval starts with { but does not end with }
                     cls._logger().warning("Warning: Invalid char at end of interval found."
                                           "Invalid interval: ", interval)
+                    return
             elif interval[0] == "(" or interval[0] == "[":
                 # normal intervals of structure (1,2] etc
 
@@ -272,24 +293,24 @@ class PredicateParser:
                 else:
                     cls._logger().warning("Warning: interval starts with an invalid char."
                                           "Invalid interval: ", user_input)
-                    interval_list.append(sp.EmptySet)
-                    continue
-
+                    return
                 # Checking boundaries of interval
                 tmp = interval[1:-1].split(",")
                 if len(tmp) > 2:
                     cls._logger().warning("Warning: too many numbers inside an interval."
                                           "Invalid interval: ", user_input)
-                    interval_list.append(sp.EmptySet)
-                    continue
+                    return
                 try:
                     a = sp.sympify(tmp[0]).evalf()
                     b = sp.sympify(tmp[1]).evalf()
+                    if a == sp.nan or b == sp.nan:
+                        cls._logger().warning("Warning: invalid NaN interval boundary found."
+                                              "Invalid interval: ", user_input)
+                        return
                 except Exception:
                     cls._logger().warning("Warning: Invalid member found inside interval."
                                           "Invalid interval: ", interval)
-                    interval_list.append(sp.EmptySet)
-                    continue
+                    return
                 else:
                     if isinstance(a, sp.Number) and isinstance(b, sp.Number):
                         # Checking of last char
@@ -301,20 +322,22 @@ class PredicateParser:
                         else:
                             cls._logger().warning("Warning: interval ends with an invalid char."
                                                   "Invalid interval: ", user_input)
-                            interval_list.append(sp.EmptySet)
-                            continue
-
-                        interval_list.append(
-                            sp.Interval(a, b, right_open=right_open,
-                                        left_open=left_open))
+                            return
+                        out = sp.Interval(a, b, right_open=right_open, left_open=left_open)
+                        if out == sp.EmptySet:
+                            cls._logger().warning("Warning: Invalid empty interval found."
+                                                  "Invalid interval: ", interval)
+                            return
+                        else:
+                            interval_list.append(out)
                     else:
                         cls._logger().warning("Warning: Invalid member found inside interval."
                                               "Invalid interval: ", interval)
-                        interval_list.append(sp.EmptySet)
+                        return
             else:
                 cls._logger().warning("Warning: Invalid char found inside interval."
                                       "Invalid interval: ", str(interval))
-                interval_list.append(sp.EmptySet)
+                return
 
         # Union
         final_interval = interval_list[0]
