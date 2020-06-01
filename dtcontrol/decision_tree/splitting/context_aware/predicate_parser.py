@@ -16,13 +16,13 @@ class PredicateParser:
 
     @classmethod
     def get_predicate(cls, input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
-
         """
-        Predicate parser for predicates obtained from user
-        :returns: list of WeinhuberApproachSplit Objects representing all predicates obtained from the user
+        Function to parse predicates obtained from user (stored in input_file_path)
+        :param input_file_path: path with file containing user predicates (in every line one predicate)
+        :returns: List of WeinhuberApproachSplit Objects (if valid/successful else None)
 
         e.g.
-        Input:  c_1 * x_3 - c_2 + x_4 - c_3 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
+        Input_line:  c_1 * x_3 - c_2 + x_4 - c_3 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
         Output: WeinhuberApproachSplit Object with:
 
         column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                           --> Key: Sympy Symbol Value: Sympy Interval
@@ -30,15 +30,16 @@ class PredicateParser:
         term                =       c_1 * x_3 - c_2 + x_4 - c_3                             --> sympy expression
         relation            =       '<='                                                    --> String
 
+        EDGE CASE BEHAVIOR:
         Every column reference or coef without a specific defined Interval will be assigned this interval: (-Inf, Inf)
+        Allowed interval types for columns: All (expect Empty Set)
+        Allowed interval types for coef: Finite or (-Inf,Inf)
 
         In case the predicate obtained from the user has following structure:
         term relation bias (with bias != 0)
 
         The whole predicate will be transferred to following structure:
         term - relation <= 0
-
-
 
 
 
@@ -103,15 +104,17 @@ class PredicateParser:
                                     column_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
                                 else:
                                     column_interval[var] = all_interval_defs[var]
+                                    all_interval_defs.__delitem__(var)
                             elif re.match(r"c_\d+", str(var)):
                                 if not all_interval_defs.__contains__(var):
                                     coef_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
                                 else:
                                     # CHECKING: coefs are only allowed to have 2 kinds of intervals: FiniteSet or (-Inf,Inf)
                                     check_interval = all_interval_defs[var]
+                                    all_interval_defs.__delitem__(var)
                                     infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
                                     if isinstance(check_interval, sp.FiniteSet) or check_interval == infinity:
-                                        coef_interval[var] = all_interval_defs[var]
+                                        coef_interval[var] = check_interval
                                     else:
                                         cls._logger().warning("Aborting: invalid interval for a coefficient."
                                                               "Invalid coefficient: ", str(var), "Invalid interval: ", str(check_interval),
@@ -121,6 +124,12 @@ class PredicateParser:
                                 cls._logger().warning("Aborting: one symbol inside one predicate does not have a valid structure."
                                                       "Invalid symbol: ", str(var), "Invalid predicate: ", str(single_predicate))
                                 return
+                        # Checking if every (symbol in interval)-Definition, occurs in in the term.
+                        # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term
+                        if all_interval_defs:
+                            cls._logger().warning("Aborting: invalid symbol in interval definition without symbol usage in the term."
+                                                  "Invalid symbol(s): ", str(all_interval_defs), "Invalid predicate: ", str(single_predicate))
+                            return
                     except Exception:
                         cls._logger().warning("Aborting: one predicate does not have a valid structure."
                                               "Invalid predicate: ", str(single_predicate))

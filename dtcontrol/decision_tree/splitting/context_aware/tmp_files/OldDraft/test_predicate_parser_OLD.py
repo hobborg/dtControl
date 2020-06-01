@@ -1,9 +1,9 @@
 import unittest
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import PredicateParser_OLD
+from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
 import os
 import sympy
-import random
+
 
 
 class TestPredicateParser(unittest.TestCase):
@@ -200,10 +200,10 @@ class TestPredicateParser(unittest.TestCase):
         # USAGE OF FILE 1
 
         # Non existing input file
-        self.assertEqual(PredicateParser_OLD.parse_user_predicate(input_file_path="None"), None)
+        self.assertEqual(PredicateParser.parse_user_predicate(input_file_path="None"), None)
 
         # Check if test input file 1 was parsed correctly
-        output = PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file1.txt")
+        output = PredicateParser.parse_user_predicate(input_file_path="../input_data/test_file1.txt")
 
         # Checking right instance
         for obj in output:
@@ -363,6 +363,7 @@ class TestPredicateParser(unittest.TestCase):
         output = [obj.interval for obj in
                   PredicateParser_OLD.parse_user_predicate(input_file_path="../input_data/test_file14.txt")]
         self.assertEqual(output,[sympy.FiniteSet(123.0), sympy.Interval.Lopen(8, 9)])
+
 
 
 if __name__ == '__main__':
