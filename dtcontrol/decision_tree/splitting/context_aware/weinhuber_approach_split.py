@@ -1,9 +1,12 @@
+import warnings
+
 from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
 import logging
 from copy import deepcopy
 from scipy.optimize import curve_fit
+from scipy.optimize import OptimizeWarning
 
 
 class WeinhuberApproachSplit(Split):
@@ -14,10 +17,10 @@ class WeinhuberApproachSplit(Split):
         column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                   --> Key: Sympy Symbol Value: Sympy Interval
         Every column reference without a specific defined Interval will be assigned to (-Inf, Inf)
         coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c3:{5,10,32,40}}    --> Key: Sympy Symbol Value: Sympy Interval
-        term                =       c_1 * x_3 - c_2 + x_4 - c_3                        --> sympy expression
-        relation            =       '<='                                            --> String
+        term                =       c_1 * x_3 - c_2 + x_4 - c_3                       --> sympy expression
+        relation            =       '<='                                              --> String
 
-        coef_assignment      =       {c_1:-8.23, c_2:2, c_3:40}                        --> Key: Sympy Symbol Value: Integer/Float
+        coef_assignment      =       {c_1:-8.23, c_2:2, c_3:40}                       --> Key: Sympy Symbol Value: Integer/Float
         coef_assignment will be determined later on after calling the fit function.
         It describes a specific assignment of all variables to a value inside their interval in order to achieve the lowest impurity.
 
@@ -46,31 +49,41 @@ class WeinhuberApproachSplit(Split):
         :param x: feature columns of a dataset
         :param y: labels of a dataset
         """
-        # Edge Case: Less Data than coefficients
-        if x.shape[0] < len(self.coef_interval):
-            return
 
+        # adapter function representing the term
+        coef_list = list(self.coef_interval)
+        print(x)
+        print(y)
         def adapter_function(x, *args):
             out = []
-            for features in range(x.shape[0]):
+            for row_index in range(x.shape[0]):
                 subs_list = []
-                for arg_index in range(len(args)):
-                    subs_list.append(("c_" + str(arg_index), args[arg_index]))
-                for i in range(len(x[features, :])):
-                    subs_list.append(("x_" + str(i), x[features, i]))
+                for i in range(len(coef_list)):
+                    subs_list.append((coef_list[i], args[i]))
+                for column_index in range(len(x[row_index, :])):
+                    subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
                 result = float(self.term.subs(subs_list).evalf())
                 out.append(result)
+            print(out)
             return np.array(out)
 
         guess = [1 for coef in self.coef_interval]
-        c, cov = curve_fit(adapter_function, x, y, guess)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", OptimizeWarning)
+            try:
+                c, cov = curve_fit(adapter_function, x, y, guess, absolute_sigma=True)
+            except OptimizeWarning:
+                return None
+            except Exception:
+                return None
 
         coef_assignment = {}
         for coef_index in range(len(c)):
-            coef_symbol = "c_" + str(coef_index)
-            coef_assignment[coef_symbol] = c[coef_index]
+            coef_assignment[coef_list[coef_index]] = c[coef_index]
 
         self.coef_assignment = coef_assignment
+        print(self)
 
     def check_valid_column_reference(self, dataset):
         """
@@ -169,7 +182,7 @@ class WeinhuberApproachSplit(Split):
 
     def print_dot(self, variables=None, category_names=None):
         subs_list = list(self.coef_assignment.items())
-        evaluated_predicate = self.term.subs(subs_list).evalf()
+        evaluated_predicate = self.term.subs(subs_list).evalf(5)
         return sp.pretty(evaluated_predicate).replace("+", "\\n+").replace("-", "\\n-") + "\\n" + self.relation + " 0"
 
     def print_c(self):

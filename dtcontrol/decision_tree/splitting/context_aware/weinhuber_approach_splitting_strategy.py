@@ -155,5 +155,4 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
-
         return weinhuber_split
