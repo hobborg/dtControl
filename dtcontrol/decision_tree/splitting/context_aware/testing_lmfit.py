@@ -19,7 +19,7 @@ def func(x, c_0, c_1, c_2, c_3, c_4):
     for row in range(x.shape[0]):
         term = c_0 * x[row, 0] + c_1 * x[row, 1] + c_2 * x[row, 2] + c_3 * x[row, 3] - c_4
         result.append(term)
-    return np.array(result)
+    return np.array(result).flatten()
 
 model = Model(func)
 params = model.make_params(c_0=1, c_1=1, c_2=1, c_3=1, c_4=1)

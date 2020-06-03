@@ -51,9 +51,12 @@ class WeinhuberApproachSplit(Split):
         """
 
         # adapter function representing the term
+        if not self.coef_interval:
+            return
         coef_list = list(self.coef_interval)
-        print(x)
-        print(y)
+
+
+
         def adapter_function(x, *args):
             out = []
             for row_index in range(x.shape[0]):
@@ -64,7 +67,7 @@ class WeinhuberApproachSplit(Split):
                     subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
                 result = float(self.term.subs(subs_list).evalf())
                 out.append(result)
-            print(out)
+
             return np.array(out)
 
         guess = [1 for coef in self.coef_interval]
@@ -83,7 +86,7 @@ class WeinhuberApproachSplit(Split):
             coef_assignment[coef_list[coef_index]] = c[coef_index]
 
         self.coef_assignment = coef_assignment
-        print(self)
+
 
     def check_valid_column_reference(self, dataset):
         """
@@ -133,17 +136,21 @@ class WeinhuberApproachSplit(Split):
         :param features: the features of the instance
         :returns: the child index (0/1 for a binary split)
         """
+        #
+        # # fit() must be called before calling predict.
+        # if self.coef_assignment is None:
+        #     self.logger.warning("Aborting: coefficient assignment has to be determined first.")
+        #     return
 
-        # fit() must be called before calling predict.
-        if self.coef_assignment is None:
-            self.logger.warning("Aborting: coefficient assignment has to be determined first.")
-            return
+        subs_list = list(self.coef_assignment.items()) if self.coef_assignment else []
 
-        subs_list = list(self.coef_assignment.items())
         # Iterating over every possible value and creating a substitution list
         for i in range(len(features[0, :])):
             subs_list.append(("x_" + str(i), features[0, i]))
+
         evaluated_predicate = self.term.subs(subs_list).evalf()
+        if evaluated_predicate.free_symbols:
+            return None
 
         # Checking the offset
         if self.relation == "<=":
@@ -158,6 +165,7 @@ class WeinhuberApproachSplit(Split):
             check = evaluated_predicate < 0
         else:
             check = evaluated_predicate == 0
+
 
         return 0 if check else 1
 
@@ -181,7 +189,7 @@ class WeinhuberApproachSplit(Split):
         return [mask, ~mask]
 
     def print_dot(self, variables=None, category_names=None):
-        subs_list = list(self.coef_assignment.items())
+        subs_list = list(self.coef_assignment.items()) if self.coef_assignment else []
         evaluated_predicate = self.term.subs(subs_list).evalf(5)
         return sp.pretty(evaluated_predicate).replace("+", "\\n+").replace("-", "\\n-") + "\\n" + self.relation + " 0"
 
