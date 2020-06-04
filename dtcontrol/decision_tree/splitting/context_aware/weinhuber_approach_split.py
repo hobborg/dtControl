@@ -54,8 +54,8 @@ class WeinhuberApproachSplit(Split):
         if not self.coef_interval:
             return
         coef_list = list(self.coef_interval)
-
-
+        self.new_y = []
+        c = None
 
         def adapter_function(x, *args):
             out = []
@@ -68,6 +68,9 @@ class WeinhuberApproachSplit(Split):
                 result = float(self.term.subs(subs_list).evalf())
                 out.append(result)
 
+            for index in range(len(out)):
+                if (out[index] >= 0 and y[index] >= 0) or (out[index] < 0 and y[index] < 0):
+                    self.new_y = out
             return np.array(out)
 
         guess = [1 for coef in self.coef_interval]
@@ -76,16 +79,23 @@ class WeinhuberApproachSplit(Split):
             warnings.simplefilter("error", OptimizeWarning)
             try:
                 c, cov = curve_fit(adapter_function, x, y, guess, absolute_sigma=True)
-            except OptimizeWarning:
-                return None
             except Exception:
-                return None
+                pass
 
-        coef_assignment = {}
-        for coef_index in range(len(c)):
-            coef_assignment[coef_list[coef_index]] = c[coef_index]
+        if self.new_y:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", OptimizeWarning)
+                try:
+                    c, cov = curve_fit(adapter_function, x, self.new_y, guess, absolute_sigma=True)
+                except Exception:
+                    pass
 
-        self.coef_assignment = coef_assignment
+        if c is not None:
+            coef_assignment = {}
+            for coef_index in range(len(c)):
+                coef_assignment[coef_list[coef_index]] = c[coef_index]
+
+            self.coef_assignment = coef_assignment
 
 
     def check_valid_column_reference(self, dataset):

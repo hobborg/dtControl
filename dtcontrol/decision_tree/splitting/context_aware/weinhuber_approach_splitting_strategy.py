@@ -120,6 +120,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         """
 
         # Checking whether used variables in user_given_splits are actually represented in dataset
+        if not self.user_given_splits:
+            return
+
         for single_split in self.user_given_splits:
             if not single_split.check_valid_column_reference(dataset):
                 self.logger.warning("Aborting: one predicate uses an invalid column reference."
@@ -139,20 +142,19 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         y = self.determinizer.determinize(dataset)
         splits = {}
-
+        print("##################")
         for single_split in self.user_given_splits:
-            split_copy = deepcopy(single_split)
-
             for label in np.unique(y):
+                split_copy = deepcopy(single_split)
                 new_y = np.copy(y)
                 label_mask = (new_y == label)
                 new_y[label_mask] = 1
                 new_y[~label_mask] = -1
                 split_copy.fit(x_numeric, new_y)
-
-            if single_split.is_applicable(dataset):
-                split_copy.priority = self.priority
-                splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                if single_split.is_applicable(dataset):
+                    split_copy.priority = self.priority
+                    splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
+        print(weinhuber_split)
         return weinhuber_split
