@@ -54,8 +54,9 @@ class WeinhuberApproachSplit(Split):
         if not self.coef_interval:
             return
         coef_list = list(self.coef_interval)
-        self.new_y = []
+        guess = [1 for coef in coef_list]
         c = None
+        self.y = None
 
         def adapter_function(x, *args):
             out = []
@@ -67,34 +68,29 @@ class WeinhuberApproachSplit(Split):
                     subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
                 result = float(self.term.subs(subs_list).evalf())
                 out.append(result)
-
             for index in range(len(out)):
-                if (out[index] >= 0 and y[index] >= 0) or (out[index] < 0 and y[index] < 0):
-                    self.new_y = out
+                if not ((out[index] <= 0 and y[index] <= 0) or (out[index] > 0 and y[index] > 0)):
+                    return np.array(out)
+            self.y = out
             return np.array(out)
-
-        guess = [1 for coef in self.coef_interval]
 
         with warnings.catch_warnings():
             warnings.simplefilter("error", OptimizeWarning)
             try:
-                c, cov = curve_fit(adapter_function, x, y, guess, absolute_sigma=True)
+                for run in range(2):
+                    # Run 1: Determining more suitable y
+                    # Run 2: Determining coefs
+                    c, cov = curve_fit(adapter_function, x, y, guess, absolute_sigma=True)
+                    y = self.y
             except Exception:
                 pass
 
-        if self.new_y:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", OptimizeWarning)
-                try:
-                    c, cov = curve_fit(adapter_function, x, self.new_y, guess, absolute_sigma=True)
-                except Exception:
-                    pass
-
+        # Checking if curve fit was able to compute some coefs
         if c is not None:
+            # Assigning these coefs to coef_assignment
             coef_assignment = {}
             for coef_index in range(len(c)):
                 coef_assignment[coef_list[coef_index]] = c[coef_index]
-
             self.coef_assignment = coef_assignment
 
 
@@ -175,7 +171,6 @@ class WeinhuberApproachSplit(Split):
             check = evaluated_predicate < 0
         else:
             check = evaluated_predicate == 0
-
 
         return 0 if check else 1
 

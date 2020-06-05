@@ -142,7 +142,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         y = self.determinizer.determinize(dataset)
         splits = {}
-        print("##################")
         for single_split in self.user_given_splits:
             for label in np.unique(y):
                 split_copy = deepcopy(single_split)
@@ -151,10 +150,14 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 new_y[label_mask] = 1
                 new_y[~label_mask] = -1
                 split_copy.fit(x_numeric, new_y)
-                if single_split.is_applicable(dataset):
+                if split_copy.is_applicable(dataset):
                     split_copy.priority = self.priority
                     splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                    print("\n\n\n###############################")
+                    print(split_copy)
+                    print(impurity_measure.calculate_impurity(dataset, split_copy))
+                    print(label)
+                    print(split_copy.y)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
-        print(weinhuber_split)
         return weinhuber_split
