@@ -10,7 +10,6 @@ def func(x, c_0, c_1, c_2, c_3, c_4):
     for row in range(x.shape[0]):
         term = c_0 * x[row, 0] + c_1 * x[row, 1] + c_2 * x[row, 2] + c_3 * x[row, 3] - c_4
         result.append(term)
-    print(result)
     return np.array(result)
 
 
@@ -33,6 +32,6 @@ params.add_many(('c_0', 1, True, None, None, None, None), ('c_1', 1, True, None,
                 ('c_2', 1, True, None, None, None, None), ('c_3', 1, True, None, None, None, None),
                 ('c_4', 1, True, None, None, None, None))
 
-result = gmodel.fit(y.flatten(), params, x=x.flatten(), max_nfev=99999)
+result = gmodel.fit(y.flatten(), params, x=x.flatten())
 
 print(result.fit_report())
