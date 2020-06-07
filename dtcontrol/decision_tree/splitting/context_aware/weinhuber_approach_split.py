@@ -43,12 +43,15 @@ class WeinhuberApproachSplit(Split):
             self.coef_interval) + "\nterm: " + str(self.term) + "\nrelation: " + str(self.relation) + "\ncoef_assignment: " + str(
             self.coef_assignment)
 
-    def fit(self, x, y):
+    def fit_curve_fit(self, x, y):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
         :param x: feature columns of a dataset
         :param y: labels of a dataset
         """
+
+        # TODO 1: run with intervals for coefs
+        # -> Creating new subs list for every curve run with itertools combinations
 
         # adapter function representing the term
         if not self.coef_interval:

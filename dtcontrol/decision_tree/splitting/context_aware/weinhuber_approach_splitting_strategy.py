@@ -150,14 +150,15 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 new_y[label_mask] = 1
                 new_y[~label_mask] = -1
                 split_copy.fit(x_numeric, new_y)
+                # Checking if x is in Interval
                 if split_copy.is_applicable(dataset):
                     split_copy.priority = self.priority
                     splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-                    print("\n\n\n###############################")
-                    print(split_copy)
-                    print(impurity_measure.calculate_impurity(dataset, split_copy))
-                    print(label)
-                    print(split_copy.y)
+                    # print("\n\n\n###############################")
+                    # print(split_copy)
+                    # print(impurity_measure.calculate_impurity(dataset, split_copy))
+                    # print(label)
+                    # print(split_copy.y)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
         return weinhuber_split
