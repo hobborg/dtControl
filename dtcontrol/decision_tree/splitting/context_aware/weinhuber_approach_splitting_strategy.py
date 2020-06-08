@@ -150,7 +150,14 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 label_mask = (new_y == label)
                 new_y[label_mask] = 1
                 new_y[~label_mask] = -1
+                # TODO: INTERATE OVER EVERY POSSIBLE COMBINATION OF ALREADY FIXED COEFS
+                new_coef_dict = {}
+                for coef in split_copy.coef_interval:
+                    if isinstance(split_copy.coef_interval[coef], sp.FiniteSet):
+                        new_coef_dict[coef] = list(split_copy.coef_interval[coef].args)
+                print(new_coef_dict)
                 
+
                 split_copy.fit([], x_numeric, new_y)
 
                 # Checking if every column reference is in its Interval
