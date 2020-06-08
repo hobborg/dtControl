@@ -9,6 +9,7 @@ from copy import deepcopy
 from apted import APTED
 from apted.helpers import Tree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
+from itertools import product
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
@@ -149,16 +150,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 label_mask = (new_y == label)
                 new_y[label_mask] = 1
                 new_y[~label_mask] = -1
-                split_copy.fit(x_numeric, new_y)
-                # Checking if x is in Interval
+                
+                split_copy.fit([], x_numeric, new_y)
+
+                # Checking if every column reference is in its Interval
                 if split_copy.is_applicable(dataset):
                     split_copy.priority = self.priority
                     splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-                    # print("\n\n\n###############################")
-                    # print(split_copy)
-                    # print(impurity_measure.calculate_impurity(dataset, split_copy))
-                    # print(label)
-                    # print(split_copy.y)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
         return weinhuber_split

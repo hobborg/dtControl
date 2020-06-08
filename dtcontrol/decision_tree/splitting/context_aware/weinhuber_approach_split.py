@@ -43,33 +43,38 @@ class WeinhuberApproachSplit(Split):
             self.coef_interval) + "\nterm: " + str(self.term) + "\nrelation: " + str(self.relation) + "\ncoef_assignment: " + str(
             self.coef_assignment)
 
-    def fit_curve_fit(self, x, y):
+    def fit(self, given_coefs, x, y):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
+        :param given_coefs: Substitution list of tuples containing already determined coef values [(c_1, 2.5), ... ]
         :param x: feature columns of a dataset
         :param y: labels of a dataset
         """
+        # TODO: Edge Case Handling
 
-        # TODO 1: run with intervals for coefs
-        # -> Creating new subs list for every curve run with itertools combinations
-
-        # adapter function representing the term
         if not self.coef_interval:
             return
-        coef_list = list(self.coef_interval)
-        guess = [1 for coef in coef_list]
+
+        coefs_to_determine = list(set(self.coef_interval).difference(set([c for (c, _) in given_coefs])))
+        inital_guess = [1 for coef in coefs_to_determine]
+
+        # Values that will be calculated later on
         c = None
         self.y = None
 
+        # adapter function representing the term (for curve_fit usage)
         def adapter_function(x, *args):
             out = []
+            subs_list = deepcopy(given_coefs)
+
+            for i in range(len(coefs_to_determine)):
+                subs_list.append((coefs_to_determine[i], args[i]))
+
             for row_index in range(x.shape[0]):
-                subs_list = []
-                for i in range(len(coef_list)):
-                    subs_list.append((coef_list[i], args[i]))
+                new_subs_list = deepcopy(subs_list)
                 for column_index in range(len(x[row_index, :])):
-                    subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
-                result = float(self.term.subs(subs_list).evalf())
+                    new_subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
+                result = float(self.term.subs(new_subs_list).evalf())
                 out.append(result)
             for index in range(len(out)):
                 if not ((out[index] <= 0 and y[index] <= 0) or (out[index] > 0 and y[index] > 0)):
@@ -77,25 +82,29 @@ class WeinhuberApproachSplit(Split):
             self.y = out
             return np.array(out)
 
+        # Run 1: Determining more suitable y
         with warnings.catch_warnings():
             warnings.simplefilter("error", OptimizeWarning)
             try:
-                for run in range(2):
-                    # Run 1: Determining more suitable y
-                    # Run 2: Determining coefs
-                    c, cov = curve_fit(adapter_function, x, y, guess, absolute_sigma=True)
-                    y = self.y
+                c, cov = curve_fit(adapter_function, x, y, inital_guess, absolute_sigma=True)
             except Exception:
                 pass
-
-        # Checking if curve fit was able to compute some coefs
+        # Run 2: Determining coefs
+        if self.y is not None:
+            y = self.y
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", OptimizeWarning)
+                try:
+                    c, cov = curve_fit(adapter_function, x, y, inital_guess, absolute_sigma=True)
+                except Exception:
+                    pass
+        # Checking if curve fit was able to compute some coefs. (If not, coef_assignment will stay None)
         if c is not None:
             # Assigning these coefs to coef_assignment
             coef_assignment = {}
             for coef_index in range(len(c)):
-                coef_assignment[coef_list[coef_index]] = c[coef_index]
+                coef_assignment[coefs_to_determine[coef_index]] = c[coef_index]
             self.coef_assignment = coef_assignment
-
 
     def check_valid_column_reference(self, dataset):
         """

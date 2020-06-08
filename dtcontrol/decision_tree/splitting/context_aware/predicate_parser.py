@@ -72,6 +72,9 @@ class PredicateParser:
             for relation in supported_relation:
                 if relation in single_predicate:
                     try:
+                        # Deleting additional semi colon at the end
+                        if single_predicate[-1] == ";":
+                            single_predicate = single_predicate[:-1]
                         # Cutting the input into separate parts
                         split_pred = single_predicate.split(";")
                         split_term = split_pred[0].split(relation)
