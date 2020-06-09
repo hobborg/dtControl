@@ -43,10 +43,10 @@ class WeinhuberApproachSplit(Split):
             self.coef_interval) + "\nterm: " + str(self.term) + "\nrelation: " + str(self.relation) + "\ncoef_assignment: " + str(
             self.coef_assignment)
 
-    def fit(self, given_coefs, x, y):
+    def fit(self, fixed_coefs, x, y):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
-        :param given_coefs: Substitution list of tuples containing already determined coef values [(c_1, 2.5), ... ]
+        :param fixed_coefs: Substitution list of tuples containing already determined coef values [(c_1, 2.5), ... ]
         :param x: feature columns of a dataset
         :param y: labels of a dataset
         """
@@ -55,7 +55,7 @@ class WeinhuberApproachSplit(Split):
         if not self.coef_interval:
             return
 
-        coefs_to_determine = list(set(self.coef_interval).difference(set([c for (c, _) in given_coefs])))
+        coefs_to_determine = list(set(self.coef_interval).difference(set([c for (c, _) in fixed_coefs])))
         inital_guess = [1 for coef in coefs_to_determine]
 
         # Values that will be calculated later on
@@ -65,7 +65,7 @@ class WeinhuberApproachSplit(Split):
         # adapter function representing the term (for curve_fit usage)
         def adapter_function(x, *args):
             out = []
-            subs_list = deepcopy(given_coefs)
+            subs_list = deepcopy(fixed_coefs)
 
             for i in range(len(coefs_to_determine)):
                 subs_list.append((coefs_to_determine[i], args[i]))

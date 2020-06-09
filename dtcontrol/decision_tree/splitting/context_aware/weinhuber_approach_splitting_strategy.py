@@ -144,26 +144,50 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         y = self.determinizer.determinize(dataset)
         splits = {}
         for single_split in self.user_given_splits:
-            for label in np.unique(y):
-                split_copy = deepcopy(single_split)
-                new_y = np.copy(y)
-                label_mask = (new_y == label)
-                new_y[label_mask] = 1
-                new_y[~label_mask] = -1
-                # TODO: INTERATE OVER EVERY POSSIBLE COMBINATION OF ALREADY FIXED COEFS
-                new_coef_dict = {}
-                for coef in split_copy.coef_interval:
-                    if isinstance(split_copy.coef_interval[coef], sp.FiniteSet):
-                        new_coef_dict[coef] = list(split_copy.coef_interval[coef].args)
-                print(new_coef_dict)
-                
+            # Checking if every column reference is in its Interval
+            if single_split.is_applicable(dataset):
+                for label in np.unique(y):
+                    # Creating the label mask (see linear classifier)
+                    new_y = np.copy(y)
+                    label_mask = (new_y == label)
+                    new_y[label_mask] = 1
+                    new_y[~label_mask] = -1
 
-                split_copy.fit([], x_numeric, new_y)
+                    """
+                    Applying fit function for every possible combination of already fixed coefs
 
-                # Checking if every column reference is in its Interval
-                if split_copy.is_applicable(dataset):
-                    split_copy.priority = self.priority
-                    splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                    e.g.
+                    Split: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3+c_4 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
+
+                    -->         combinations = [[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)],
+                                                [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)],
+                                                [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]
+
+                    --> The other coefs (c_0, c_3, c_4) still have to be determined by fit (curve_fit)
+
+                    """
+
+                    fixed_coefs = {}
+                    # Checking if coef_interval is containing finite sets with fixed coefs
+                    for coef in single_split.coef_interval:
+                        if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
+                            fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
+                    if fixed_coefs:
+                        # unzipping
+                        coef, val = zip(*fixed_coefs.items())
+                        # calculation all combinations and zipping back together
+                        combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+                        for comb in combinations:
+                            split_copy = deepcopy(single_split)
+                            split_copy.fit(comb, x_numeric, new_y)
+                            split_copy.priority = self.priority
+                            splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+
+                    else:
+                        split_copy = deepcopy(single_split)
+                        split_copy.fit([], x_numeric, new_y)
+                        split_copy.priority = self.priority
+                        splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
         return weinhuber_split
