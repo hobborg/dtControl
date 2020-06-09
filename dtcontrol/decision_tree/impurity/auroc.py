@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
@@ -9,13 +7,13 @@ from dtcontrol.decision_tree.impurity.determinizing_impurity_measure import Dete
 class AUROC(DeterminizingImpurityMeasure):
     def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
-            return sys.maxsize
+            return np.inf
         scores = []
         for mask in split.get_masks(dataset):
             subset_labels = self.determinizer.determinize(dataset.from_mask_optimized(mask))
             scores.append(self.calculate_auroc(dataset.x[mask], subset_labels))
         if any([s == 0 for s in scores]):
-            return sys.maxsize
+            return np.inf
         return 1 / sum(scores)
 
     @staticmethod

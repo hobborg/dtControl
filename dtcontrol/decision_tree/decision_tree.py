@@ -169,7 +169,7 @@ class Node:
         for split in splits:
             impurity = self.impurity_measure.calculate_impurity(dataset, split)
             # TODO max_int...
-            if impurity < 9223372036854775807:
+            if impurity < np.inf:
                 if split.priority == 0:
                     fallback_dict[split] = impurity
                 elif split.priority <= 1 or split.priority > 0:
