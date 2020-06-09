@@ -172,6 +172,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     for coef in single_split.coef_interval:
                         if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
                             fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
+                            
                     if fixed_coefs:
                         # unzipping
                         coef, val = zip(*fixed_coefs.items())
