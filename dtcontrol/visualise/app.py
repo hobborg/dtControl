@@ -3,7 +3,7 @@ import webbrowser
 import yaml
 import json
 from flask import Flask, render_template, url_for, json, request, Response, jsonify, request
-from dtcontrol import frontFns 
+from dtcontrol import frontFns, cartClassify
 
 app = Flask(__name__)
 
@@ -11,18 +11,22 @@ app = Flask(__name__)
 def home():
     return render_template("basic_form.html")
 
-@app.route("/final")
-def loadTree():
-    return render_template("tree_progress.html")
+@app.route("/simulator")
+def simulator():
+    return render_template("simulator.html")
 
-@app.route("/testjson")
-def tst():
-    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
-    json_url = os.path.join(SITE_ROOT, 'static', 'testjson.json')
-    data = json.load(open(json_url))
-    return jsonify(data)
+# @app.route("/final")
+# def loadTree():
+#     return render_template("tree_progress.html")
 
-@app.route("/midRoute", methods=['POST','GET'])
+# @app.route("/testjson")
+# def tst():
+#     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
+#     json_url = os.path.join(SITE_ROOT, 'static', 'testjson.json')
+#     data = json.load(open(json_url))
+#     return jsonify(data)
+
+@app.route("/midRoute", methods=['POST'])
 def loadText():
     cont = request.form.get('controller') #if key doesn't exist, returns None
     config = request.form.get('config')
@@ -30,17 +34,44 @@ def loadText():
 
     # is a dict
     classi = frontFns.main_parse(ToParserDict)
-    # json_object = json.dumps(classi) 
   
-    # Writing to testjson.json 
-    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
-    with open(os.path.join(SITE_ROOT, 'static', 'testjson.json'), "w") as outfile: 
-        # outfile.write(json_object) 
-        json.dump([classi],outfile)
-    
+    # SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
+    # with open(os.path.join(SITE_ROOT, 'static', 'testjson.json'), "w") as outfile: 
+    #     json.dump([classi],outfile)
+
+    # return render_template("tree_progress.html")
+    # return classi
     # return '''<h1>The controller is: {} and {}</h1>'''.format(cont,config)
-    # Currently turned off continuous refresh
-    return render_template("tree_progress.html")
+    return jsonify([classi])
+
+@app.route("/simRoute", methods=['POST'])
+def simroute():
+    cont = request.form.get('controller') #if key doesn't exist, returns None
+    config = request.form.get('config')
+    ToParserDict = {"controller": cont, "config" : config }
+
+    # is a dict
+    classi = frontFns.main_parse(ToParserDict)
+    return jsonify([classi])
+
+@app.route("/initRoute", methods=['POST'])
+def initroute():
+    x0 = request.form.get('x0') #if key doesn't exist, returns None
+    x1 = request.form.get('x1')
+    initDecision = cartClassify.classify(x0,x1)
+    returnDict = {"decision":str(initDecision[0]),"path":initDecision[1]}
+    return jsonify(returnDict)
+
+@app.route("/stepRoute", methods=['POST'])
+def stepRoute():
+    x0 = request.form.get('x0') #if key doesn't exist, returns None
+    x1 = request.form.get('x1')
+    u = request.form.get('u')
+
+    x_new  = cartClassify.step([x0,x1],u)
+
+    returnDict = {"x_new":x_new}
+    return jsonify(returnDict)
 
 @app.route("/tee")
 def showjson():
@@ -74,5 +105,6 @@ def yamlread():
 
 def runFlask():
     print('##########Opening browser##########')
-    webbrowser.open('http://127.0.0.1:5000/')
+    chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
+    webbrowser.get(chrome_path).open('http://127.0.0.1:5000/simulator')
     app.run(debug=False)
