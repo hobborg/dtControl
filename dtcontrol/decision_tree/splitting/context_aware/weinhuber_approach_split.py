@@ -14,7 +14,7 @@ class WeinhuberApproachSplit(Split):
     e.g.
     c1 * x_3 - c2 + x_4 - c3 <= 0; x_2 in {1,2,3}; c1 in (-inf, inf); c2 in {1,2,3}; c3 in {5, 10, 32, 40}
 
-        column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                   --> Key: Sympy Symbol Value: Sympy Interval
+        column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                     --> Key: Sympy Symbol Value: Sympy Interval
         Every column reference without a specific defined Interval will be assigned to (-Inf, Inf)
         coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c3:{5,10,32,40}}    --> Key: Sympy Symbol Value: Sympy Interval
         term                =       c_1 * x_3 - c_2 + x_4 - c_3                       --> sympy expression
@@ -55,11 +55,15 @@ class WeinhuberApproachSplit(Split):
         if not self.coef_interval:
             return
 
-        coefs_to_determine = list(set(self.coef_interval).difference(set([c for (c, _) in fixed_coefs])))
+        coefs_to_determine = list(set(self.coef_interval).difference(set([c_i for (c_i, _) in fixed_coefs])))
+
+        if not coefs_to_determine:
+            return
+
         inital_guess = [1 for coef in coefs_to_determine]
 
         # Values that will be calculated later on
-        c = None
+        calculated_coefs = None
         self.y = None
 
         # adapter function representing the term (for curve_fit usage)
@@ -84,26 +88,24 @@ class WeinhuberApproachSplit(Split):
 
         # Run 1: Determining more suitable y
         with warnings.catch_warnings():
-            warnings.simplefilter("error", OptimizeWarning)
+            warnings.filterwarnings("ignore")
             try:
-                c, cov = curve_fit(adapter_function, x, y, inital_guess, absolute_sigma=True)
+                calculated_coefs, cov = curve_fit(adapter_function, x, y, inital_guess)
+                # Run 2: Determining coefs
+                if self.y is not None:
+                    if calculated_coefs is not None:
+                        calculated_coefs, cov = curve_fit(adapter_function, x, self.y, calculated_coefs)
+                    else:
+                        calculated_coefs, cov = curve_fit(adapter_function, x, self.y, inital_guess)
             except Exception:
                 pass
-        # Run 2: Determining coefs
-        if self.y is not None:
-            y = self.y
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", OptimizeWarning)
-                try:
-                    c, cov = curve_fit(adapter_function, x, y, inital_guess, absolute_sigma=True)
-                except Exception:
-                    pass
+
         # Checking if curve fit was able to compute some coefs. (If not, coef_assignment will stay None)
-        if c is not None:
+        if calculated_coefs is not None:
             # Assigning these coefs to coef_assignment
             coef_assignment = {}
-            for coef_index in range(len(c)):
-                coef_assignment[coefs_to_determine[coef_index]] = c[coef_index]
+            for coef_index in range(len(calculated_coefs)):
+                coef_assignment[coefs_to_determine[coef_index]] = calculated_coefs[coef_index]
             self.coef_assignment = coef_assignment
 
     def check_valid_column_reference(self, dataset):
