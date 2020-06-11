@@ -11,6 +11,9 @@ bound_x1 = 2
 world_dim_x = 10
 steps_beyond_done = None
 
+def getBounds():
+    return  [[lb_x0,ub_x0],[-bound_x1,bound_x1]]
+
 def classify(x0,x1):
     dumstr = ""
 
