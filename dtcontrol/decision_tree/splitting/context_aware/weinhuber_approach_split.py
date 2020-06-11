@@ -207,11 +207,14 @@ class WeinhuberApproachSplit(Split):
 
     def print_dot(self, variables=None, category_names=None):
         subs_list = list(self.coef_assignment.items()) if self.coef_assignment else []
-        evaluated_predicate = self.term.subs(subs_list).evalf(5)
-        return sp.pretty(evaluated_predicate).replace("+", "\\n+").replace("-", "\\n-") + "\\n" + self.relation + " 0"
+        evaluated_predicate = sp.pretty(self.term.subs(subs_list).evalf(5))
+        evaluated_predicate = evaluated_predicate[1:].replace("-", "\\n-")
+        return evaluated_predicate.replace("+", "\\n+") + "\\n" + self.relation + " 0"
 
     def print_c(self):
+        # TODO
         return self.print_dot()
 
     def print_vhdl(self):
+        # TODO
         return self.print_dot()
