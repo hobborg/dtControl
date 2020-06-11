@@ -91,11 +91,11 @@
       <div class="row">
         <div class="column">
           <!-- <div id="chartContainer0" style="width:100%; height:280px"></div>   -->
-          <canvas id="chartContainer0"></canvas>
+            <canvas id="chartContainer0"></canvas>
         </div>
         <div class="column">
           <!-- <div id="chartContainer1" style="width:100%; height:280px"></div>   -->
-          <canvas id="chartContainer1"></canvas>
+            <canvas id="chartContainer1"></canvas>
         </div>
       </div>
 
@@ -126,6 +126,8 @@
     var currentSim;
     var x0_current = [];
     var x1_current = [];
+    var x0_bounds = [];
+    var x1_bounds = [];
     var u_current = [];
     var lastPath = [];
 
@@ -482,20 +484,16 @@ function refreshPage(d){
   xhr.send();
 } 
 
-function renderChart(id,data, labels) {
+var chart0;
+var chart1;
+var chartConfig0;
+var chartConfig1;
+
+function renderChart0(id,data,labels,ub,lb) {
 
   const canvas = document.getElementById(id);
     var ctx = document.getElementById(id).getContext('2d');
-    // // Store the current transformation matrix
-    // ctx.save();
-
-    // // Use the identity matrix while clearing the canvas
-    // ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Restore the transform
-    // ctx.restore();
-    var myChart = new Chart(ctx, {
+    chartConfig0 = {
         type: 'line',
         data: {
             labels: labels,
@@ -504,6 +502,24 @@ function renderChart(id,data, labels) {
                 data: data,
                 borderColor: "#3e95cd",
                 fill: false
+            },
+            {
+              label: 'UB of  x'+id[id.length-1],
+              data: ub,
+              backgroundColor: "rgb(75, 192, 255, 0.5)",
+              borderColor: "transparent",
+              pointRadius: 0,
+              fill: 0,
+              tension: 0
+            },
+            {
+              label: 'LB of  x'+id[id.length-1],
+              data: lb,
+              backgroundColor: "rgb(75, 192, 255, 0.5)",
+              borderColor: "transparent",
+              pointRadius: 0,
+              fill: 0,
+              tension: 0
             }]
         },
         options: {   
@@ -545,11 +561,86 @@ function renderChart(id,data, labels) {
             },
             responsiveAnimationDuration: 0, // animation duration after a resize
         },
-    });
+    };
+    chart0 = new Chart(ctx, chartConfig0);
 }
 
-var chart0;
-var chart1;
+function renderChart1(id,data,labels,ub,lb) {
+
+const canvas = document.getElementById(id);
+  var ctx = document.getElementById(id).getContext('2d');
+  chartConfig1 = {
+      type: 'line',
+      data: {
+          labels: labels,
+          datasets: [{
+              label: 'Value of x'+id[id.length-1],
+              data: data,
+              borderColor: "#3e95cd",
+              fill: false
+          },
+          {
+            label: 'UB of  x'+id[id.length-1],
+            data: ub,
+            backgroundColor: "rgb(75, 192, 255, 0.5)",
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: 0,
+            tension: 0
+          },
+          {
+            label: 'LB of  x'+id[id.length-1],
+            data: lb,
+            backgroundColor: "rgb(75, 192, 255, 0.5)",
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: 0,
+            tension: 0
+          }]
+      },
+      options: {   
+        responsive: true,
+        title: {
+          display: true,
+          text: 'Values of x'+id[id.length-1]
+        },
+        tooltips: {
+          mode: 'index',
+          intersect: false,
+        },
+        hover: {
+          mode: 'nearest',
+          intersect: true,
+          animationDuration: 0
+        },
+        scales: {
+          xAxes: [{
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'Simulation'
+            }
+          }],
+          yAxes: [{
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'x'+id[id.length-1]
+            },
+            ticks: {
+                      beginAtZero: true
+                  }
+          }]
+        },
+          animation: {
+              duration: 0, // general animation time
+          },
+          responsiveAnimationDuration: 0, // animation duration after a resize
+      },
+  };
+  chart1 = new Chart(ctx, chartConfig1);
+}
+
 async function oneStep(){
   recolourPath();
   if(currentSim==totalSims){
@@ -605,15 +696,14 @@ async function oneStep(){
           currentSim=totalSims;
           console.log("update complete");
 
-          // chart0.options.data[0].dataPoints.push({ y: x0_current[currentSim]});
-          // chart0.render();
-
-          // chart1.options.data[0].dataPoints.push({ y: x1_current[currentSim]});
-          // chart1.render();
-          // if(totalSims==30){
-            renderChart("chartContainer0",x0_current,[...Array(currentSim-1).keys()]);
-            renderChart("chartContainer1",x1_current,[...Array(currentSim-1).keys()]);
-          // }
+          chart0.data.labels.push(totalSims);
+          chart1.data.labels.push(totalSims);
+          chart0.data.datasets[1].data.push(x0_bounds[1]);
+          chart0.data.datasets[2].data.push(x0_bounds[0]);
+          chart1.data.datasets[1].data.push(x1_bounds[1]);
+          chart1.data.datasets[2].data.push(x1_bounds[0]);
+          chart0.update();
+          chart1.update();
 
     });
     }else{
@@ -725,68 +815,13 @@ $('#formSecond').on('submit', function(event) {
         x1_current.push($('#x1').val());
         u_current.push(data.decision);
         lastPath.push(data.path);
+        x0_bounds=data.x0_bound;
+        x1_bounds=data.x1_bound;
         totalSims=0;
         currentSim=0;
 
-      //   chart0 = new CanvasJS.Chart("chartContainer0", { 
-      //   animationEnabled: true,
-      //   title: {
-      //     text: "x[0] values"
-      //   },
-      //   axisX:{
-      //     title: "Simulation",
-      //     crosshair: {
-      //       enabled: true,
-      //       snapToDataPoint: true
-      //     }
-      //   },
-      //   axisY: {
-      //     title: "Value of x[0]",
-      //     crosshair: {
-      //       enabled: true
-      //     }
-      //   },
-      //   data: [
-      //   {
-      //     type: "line",
-      //     dataPoints: [
-      //       { y: x0_current[currentSim] }
-      //     ]
-      //   }
-      //   ]
-      // });
-      // chart0.render();	
-      // renderChart("chartContainer0",x0_current,[...Array(currentSim+1).keys()]);
-
-      // chart1 = new CanvasJS.Chart("chartContainer1", { 
-      //   animationEnabled: true,
-      //   title: {
-      //     text: "x[1] values"
-      //   },
-      //   axisX:{
-      //     title: "Simulation",
-      //     crosshair: {
-      //       enabled: true,
-      //       snapToDataPoint: true
-      //     }
-      //   },
-      //   axisY: {
-      //     title: "Value of x[1]",
-      //     crosshair: {
-      //       enabled: true
-      //     }
-      //   },
-      //   data: [
-      //   {
-      //     type: "line",
-      //     dataPoints: [
-      //       { y: x1_current[currentSim] }
-      //     ]
-      //   }
-      //   ]
-      // });
-      // chart1.render();
-      // renderChart("chartContainer1",x1_current,[...Array(currentSim-1).keys()]);
+      renderChart0("chartContainer0",x0_current,[...Array(currentSim+1).keys()],[x0_bounds[1]],[x0_bounds[0]]);
+      renderChart1("chartContainer1",x1_current,[...Array(currentSim+1).keys()],[x1_bounds[1]],[x1_bounds[0]]);
 
     });
 
@@ -842,12 +877,7 @@ $('#formSecond').on('submit', function(event) {
   });
 
 });
-
-
-
 // $("#config").trigger("change");
-
-
 
     </script>
 

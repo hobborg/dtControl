@@ -59,7 +59,8 @@ def initroute():
     x0 = request.form.get('x0') #if key doesn't exist, returns None
     x1 = request.form.get('x1')
     initDecision = cartClassify.classify(x0,x1)
-    returnDict = {"decision":str(initDecision[0]),"path":initDecision[1]}
+    x0_bound, x1_bound = cartClassify.getBounds()
+    returnDict = {"decision":str(initDecision[0]),"path":initDecision[1],"x0_bound":x0_bound,"x1_bound":x1_bound}
     return jsonify(returnDict)
 
 @app.route("/stepRoute", methods=['POST'])
