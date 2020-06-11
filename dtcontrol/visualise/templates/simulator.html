@@ -90,10 +90,12 @@
 
       <div class="row">
         <div class="column">
-          <div id="chartContainer0" style="width:100%; height:280px"></div>  
+          <!-- <div id="chartContainer0" style="width:100%; height:280px"></div>   -->
+          <canvas id="chartContainer0"></canvas>
         </div>
         <div class="column">
-          <div id="chartContainer1" style="width:100%; height:280px"></div>  
+          <!-- <div id="chartContainer1" style="width:100%; height:280px"></div>   -->
+          <canvas id="chartContainer1"></canvas>
         </div>
       </div>
 
@@ -112,8 +114,10 @@
         </div>
       </div>
 
-      <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
-      <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script> 
+      <!-- <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+      <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>  -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+      <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
 
@@ -478,6 +482,72 @@ function refreshPage(d){
   xhr.send();
 } 
 
+function renderChart(id,data, labels) {
+
+  const canvas = document.getElementById(id);
+    var ctx = document.getElementById(id).getContext('2d');
+    // // Store the current transformation matrix
+    // ctx.save();
+
+    // // Use the identity matrix while clearing the canvas
+    // ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Restore the transform
+    // ctx.restore();
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Value of x'+id[id.length-1],
+                data: data,
+                borderColor: "#3e95cd",
+                fill: false
+            }]
+        },
+        options: {   
+          responsive: true,
+          title: {
+            display: true,
+            text: 'Values of x'+id[id.length-1]
+          },
+          tooltips: {
+            mode: 'index',
+            intersect: false,
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true,
+            animationDuration: 0
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Simulation'
+              }
+            }],
+            yAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'x'+id[id.length-1]
+              },
+              ticks: {
+                        beginAtZero: true
+                    }
+            }]
+          },
+            animation: {
+                duration: 0, // general animation time
+            },
+            responsiveAnimationDuration: 0, // animation duration after a resize
+        },
+    });
+}
+
 var chart0;
 var chart1;
 async function oneStep(){
@@ -535,11 +605,16 @@ async function oneStep(){
           currentSim=totalSims;
           console.log("update complete");
 
-          chart0.options.data[0].dataPoints.push({ y: x0_current[currentSim]});
-          chart0.render();
+          // chart0.options.data[0].dataPoints.push({ y: x0_current[currentSim]});
+          // chart0.render();
 
-          chart1.options.data[0].dataPoints.push({ y: x1_current[currentSim]});
-          chart1.render();
+          // chart1.options.data[0].dataPoints.push({ y: x1_current[currentSim]});
+          // chart1.render();
+          // if(totalSims==30){
+            renderChart("chartContainer0",x0_current,[...Array(currentSim-1).keys()]);
+            renderChart("chartContainer1",x1_current,[...Array(currentSim-1).keys()]);
+          // }
+
     });
     }else{
           currentSim++;
@@ -653,63 +728,65 @@ $('#formSecond').on('submit', function(event) {
         totalSims=0;
         currentSim=0;
 
-        chart0 = new CanvasJS.Chart("chartContainer0", { 
-        animationEnabled: true,
-        title: {
-          text: "x[0] values"
-        },
-        axisX:{
-          title: "Simulation",
-          crosshair: {
-            enabled: true,
-            snapToDataPoint: true
-          }
-        },
-        axisY: {
-          title: "Value of x[0]",
-          crosshair: {
-            enabled: true
-          }
-        },
-        data: [
-        {
-          type: "line",
-          dataPoints: [
-            { y: x0_current[currentSim] }
-          ]
-        }
-        ]
-      });
-      chart0.render();	
+      //   chart0 = new CanvasJS.Chart("chartContainer0", { 
+      //   animationEnabled: true,
+      //   title: {
+      //     text: "x[0] values"
+      //   },
+      //   axisX:{
+      //     title: "Simulation",
+      //     crosshair: {
+      //       enabled: true,
+      //       snapToDataPoint: true
+      //     }
+      //   },
+      //   axisY: {
+      //     title: "Value of x[0]",
+      //     crosshair: {
+      //       enabled: true
+      //     }
+      //   },
+      //   data: [
+      //   {
+      //     type: "line",
+      //     dataPoints: [
+      //       { y: x0_current[currentSim] }
+      //     ]
+      //   }
+      //   ]
+      // });
+      // chart0.render();	
+      // renderChart("chartContainer0",x0_current,[...Array(currentSim+1).keys()]);
 
-      chart1 = new CanvasJS.Chart("chartContainer1", { 
-        animationEnabled: true,
-        title: {
-          text: "x[1] values"
-        },
-        axisX:{
-          title: "Simulation",
-          crosshair: {
-            enabled: true,
-            snapToDataPoint: true
-          }
-        },
-        axisY: {
-          title: "Value of x[1]",
-          crosshair: {
-            enabled: true
-          }
-        },
-        data: [
-        {
-          type: "line",
-          dataPoints: [
-            { y: x1_current[currentSim] }
-          ]
-        }
-        ]
-      });
-      chart1.render();
+      // chart1 = new CanvasJS.Chart("chartContainer1", { 
+      //   animationEnabled: true,
+      //   title: {
+      //     text: "x[1] values"
+      //   },
+      //   axisX:{
+      //     title: "Simulation",
+      //     crosshair: {
+      //       enabled: true,
+      //       snapToDataPoint: true
+      //     }
+      //   },
+      //   axisY: {
+      //     title: "Value of x[1]",
+      //     crosshair: {
+      //       enabled: true
+      //     }
+      //   },
+      //   data: [
+      //   {
+      //     type: "line",
+      //     dataPoints: [
+      //       { y: x1_current[currentSim] }
+      //     ]
+      //   }
+      //   ]
+      // });
+      // chart1.render();
+      // renderChart("chartContainer1",x1_current,[...Array(currentSim-1).keys()]);
 
     });
 
