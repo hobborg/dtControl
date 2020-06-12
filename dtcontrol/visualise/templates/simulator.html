@@ -4,6 +4,7 @@
 <head>
     <style>
         .column   {float: left; width: 50%;height:80%;}
+        .row   {float: left; width: 100%;height:33%;}
     </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,6 +31,10 @@
 	  stroke: #ccc;
 	  stroke-width: 2px;
 	}
+
+  #cartCanvas {
+    border: 1px solid black;
+  }
 	
     </style>
 </head>
@@ -39,52 +44,55 @@
 
     <div class="row">
         <div class="column">
+          <div class = "column">
             <form id="formFirst">
+              <div>
+                  <label for="controller">Choose a controller:</label>
+                  <select id="controller" name="controller">
+                  
+                  </select>
+              </div>
+              <div>
+                  <label for="config">Choose a config:</label>
+                  <select id="config" name="config">
+                  
+                  </select>
+              </div>
+          
+              <input type="submit" value="Send">
+            </form>
+            <input type="radio" id="play" name="player" value='0' />
+            <label for="play">Play</label>
+            <input type="radio" id="pause" name="player" value='1'/>
+            <label for="pause">Pause</label>
+            <input type="radio" id="next" name="player" value='2'/>
+            <label for="next">Next</label>
+            <input type="radio" id="back" name="player" value='3'/>
+            <label for="back">Back</label>
+
+            <form id="formSecond">
                 <div>
-                    <label for="controller">Choose a controller:</label>
-                    <select id="controller" name="controller">
-                    
-                    </select>
+                    <label for="x0">Choose an x0:</label>
+                    <input type="text" id="x0" name="x0">
                 </div>
                 <div>
-                    <label for="config">Choose a config:</label>
-                    <select id="config" name="config">
-                    
-                    </select>
+                    <label for="x1">Choose an x1:</label>
+                    <input type="text" id="x1" name="x1">
                 </div>
             
                 <input type="submit" value="Send">
-              </form>
-              <!-- <button id = "next" onclick="recolourPath()">Next</button>
-              <button id = "play" onclick="collapseAll(null)">Play</button> -->
-              <input type="radio" id="play" name="player" value='0' />
-              <label for="play">Play</label>
-              <input type="radio" id="pause" name="player" value='1'/>
-              <label for="pause">Pause</label>
-              <input type="radio" id="next" name="player" value='2'/>
-              <label for="next">Next</label>
-              <input type="radio" id="back" name="player" value='3'/>
-              <label for="back">Back</label>
-
-              <div class="row">
-                <form id="formSecond">
-                    <div>
-                        <label for="x0">Choose an x0:</label>
-                        <input type="text" id="x0" name="x0">
-                    </div>
-                    <div>
-                        <label for="x1">Choose an x1:</label>
-                        <input type="text" id="x1" name="x1">
-                    </div>
-                
-                    <input type="submit" value="Send">
-                  </form>
-              </div>
-        </div>
-        <div class="column">
+            </form>
+          </div>
+          <div class="column">
             <div id="prop-list">
 
             </div>
+            
+          </div>
+            
+        </div>
+        <div class="column">
+          <canvas id="cartCanvas" width="450" height="250"></canvas>
         </div>
       </div>
 
@@ -489,6 +497,28 @@ var chart1;
 var chartConfig0;
 var chartConfig1;
 
+function drawCanvas(){
+  var lineLength = 100;
+  var canvas = document.getElementById("cartCanvas");
+  var c = canvas.getContext("2d");
+
+  c.clearRect(0,0,450,250);
+
+  c.fillStyle = "#000000";
+  // to fill 450x250
+  c.fillRect(150, 160, 150, 60);
+
+  c.beginPath();
+  c.moveTo(225,160);
+  c.lineWidth = 7;
+  c.strokeStyle = "#802b00";
+  var currentAngle = parseFloat(x0_current[currentSim]);
+  console.log("trying to draw at angle ",currentAngle);
+  c.lineTo(225+lineLength*Math.cos(currentAngle-(Math.PI/2)),160-lineLength*Math.sin(currentAngle-(Math.PI/2)));
+  c.stroke();
+
+}
+
 function renderChart0(id,data,labels,ub,lb) {
 
   const canvas = document.getElementById(id);
@@ -710,6 +740,8 @@ async function oneStep(){
           currentSim++;
           $("input[name=indexers][value=" + currentSim + "]").trigger('click');
     }
+
+    drawCanvas();
 }
 
 $(document).ready(function() {
@@ -823,6 +855,8 @@ $('#formSecond').on('submit', function(event) {
       renderChart0("chartContainer0",x0_current,[...Array(currentSim+1).keys()],[x0_bounds[1]],[x0_bounds[0]]);
       renderChart1("chartContainer1",x1_current,[...Array(currentSim+1).keys()],[x1_bounds[1]],[x1_bounds[0]]);
 
+      drawCanvas();
+
     });
 
     event.preventDefault();
@@ -855,6 +889,7 @@ $('#formSecond').on('submit', function(event) {
     recolourPath();
     currentSim = ind;
     colourPath(lastPath[ind]);
+    drawCanvas();
       
   });
 
