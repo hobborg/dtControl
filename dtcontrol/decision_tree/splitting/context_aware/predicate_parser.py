@@ -63,8 +63,8 @@ class PredicateParser:
             cls._logger().warning("Aborting: input file with user predicates is empty.")
             return
 
-        # Currently supported types of relations
-        supported_relation = ["<=", ">=", "!=", "<", ">", "="]
+        # Currently supported types of relations (Relations: "!=" and "=" could also be used if wanted, but fit() has to be adjusted for that)
+        supported_relation = ["<=", ">=", "<", ">"]
 
         # output list containing all predicates parsed in tuple form
         output = []

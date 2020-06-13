@@ -35,7 +35,7 @@ class WeinhuberApproachSplit(Split):
 
         self.coef_assignment = None
 
-        self.logger = logging.getLogger("WeinhuberApproachSplittingSplit_logger")
+        self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
         self.logger.setLevel(logging.ERROR)
 
     def __repr__(self):
@@ -50,9 +50,13 @@ class WeinhuberApproachSplit(Split):
         :param x: feature columns of a dataset
         :param y: labels of a dataset
         """
-        # TODO: Edge Case Handling
 
         if not self.coef_interval:
+            return
+
+        # Checking type & shape of arguments
+        if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0]:
+            self.logger.warning("Aborting: invalid structure of the arguments x, y.")
             return
 
         coefs_to_determine = list(set(self.coef_interval).difference(set([c_i for (c_i, _) in fixed_coefs])))
@@ -107,6 +111,7 @@ class WeinhuberApproachSplit(Split):
             for coef_index in range(len(calculated_coefs)):
                 coef_assignment[coefs_to_determine[coef_index]] = calculated_coefs[coef_index]
             self.coef_assignment = coef_assignment
+        # TODO: Maybe Logger Event? Failed to fit?
 
     def check_valid_column_reference(self, dataset):
         """
