@@ -42,7 +42,7 @@ def loadText():
     # return render_template("tree_progress.html")
     # return classi
     # return '''<h1>The controller is: {} and {}</h1>'''.format(cont,config)
-    return jsonify([classi])
+    return jsonify([classi[0]])
 
 @app.route("/simRoute", methods=['POST'])
 def simroute():
@@ -52,40 +52,44 @@ def simroute():
 
     # is a dict
     classi = frontFns.main_parse(ToParserDict)
-    return jsonify([classi])
+    numVars = len(classi[1]["min"])
+    numResults = len(classi[2]["variables"])
+    returnDict = {"classi":([classi[0]]),"numVars":numVars,"numResults":numResults}
+    return jsonify(returnDict)
 
 @app.route("/initRoute", methods=['POST'])
 def initroute():
-    x0 = request.form.get('x0') #if key doesn't exist, returns None
-    x1 = request.form.get('x1')
-    initDecision = cartClassify.classify(x0,x1)
+    data = request.get_json()
+    x = data['pass']
+    initDecision = cartClassify.classify(x[0],x[1])
     x0_bound, x1_bound = cartClassify.getBounds()
-    returnDict = {"decision":str(initDecision[0]),"path":initDecision[1],"x0_bound":x0_bound,"x1_bound":x1_bound}
+    returnDict = {"decision":initDecision[0],"path":initDecision[1],"bound":[x0_bound,x1_bound]}
     return jsonify(returnDict)
 
 @app.route("/stepRoute", methods=['POST'])
 def stepRoute():
-    x0 = request.form.get('x0') #if key doesn't exist, returns None
-    x1 = request.form.get('x1')
-    u = request.form.get('u')
-
-    x_new  = cartClassify.step([x0,x1],u)
+    data = request.get_json()
+    x = data['x_pass']
+    u = data['u_pass']
+    x_new  = cartClassify.step(x,u)
 
     returnDict = {"x_new":x_new}
     return jsonify(returnDict)
 
 @app.route("/inStepRoute", methods=['POST'])
 def inStepRoute():
-    steps = request.form.get('steps')
-    x0 = request.form.get('x0')
-    x1 = request.form.get('x1')
-    u = request.form.get('u')
+    data = request.get_json()
+    steps = data['steps']
+    x = data['x_pass']
+    u = data['u_pass']
 
     x_new = []
-    dummy = [[x0,x1],u,"",False]
+    dummy = [x,u,"",False]
     for i in range(int(steps)):
         dummy = cartClassify.step(dummy[0],dummy[1])
         x_new.append(dummy)
+        if(dummy[3]):
+            break
 
     returnDict = {"x_new":x_new}
     return jsonify(returnDict)

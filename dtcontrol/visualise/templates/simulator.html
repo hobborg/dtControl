@@ -78,16 +78,7 @@
           </form>
 
             <form id="formSecond">
-                <div>
-                    <label for="x0">Choose an x0:</label>
-                    <input type="text" id="x0" name="x0">
-                </div>
-                <div>
-                    <label for="x1">Choose an x1:</label>
-                    <input type="text" id="x1" name="x1">
-                </div>
-            
-                <input type="submit" value="Send">
+
             </form>
             <div class="slidecontainer">
               <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
@@ -108,11 +99,9 @@
 
       <div class="row">
         <div class="column">
-          <!-- <div id="chartContainer0" style="width:100%; height:280px"></div>   -->
             <canvas id="chartContainer0"></canvas>
         </div>
         <div class="column">
-          <!-- <div id="chartContainer1" style="width:100%; height:280px"></div>   -->
             <canvas id="chartContainer1"></canvas>
         </div>
       </div>
@@ -132,8 +121,6 @@
         </div>
       </div>
 
-      <!-- <script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
-      <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>  -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
       <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
@@ -142,14 +129,16 @@
   <script type = "text/javascript">
     var totalSims;
     var currentSim;
-    var x0_current = [];
-    var x1_current = [];
-    var x0_bounds = [];
-    var x1_bounds = [];
+    var x_current=[];
+    var x_bounds=[];
     var u_current = [];
     var lastPath = [];
     var plpause;
     var timeOfSlider =50;
+    var numVars;
+    var numResults;
+    var chart=[];
+    var chartConfig=[];
 
     const simTableDiv = document.getElementById('tableHere');
 
@@ -213,9 +202,6 @@
     modl.open('GET', './examples', true);
     modl.onload = function () {
         data1 = JSON.parse(this.response);
-        // console.log("Raw data here");
-        // console.log(data1);
-        // console.log(data1.length);
         for(var i=0;i<data1.length;i++){
             const option = document.createElement('option');
             option.textContent = data1[i];
@@ -504,10 +490,7 @@ function refreshPage(d){
   xhr.send();
 } 
 
-var chart0;
-var chart1;
-var chartConfig0;
-var chartConfig1;
+
 
 function drawCanvas(){
   var lineLength = 100;
@@ -524,39 +507,38 @@ function drawCanvas(){
   c.moveTo(225,160);
   c.lineWidth = 7;
   c.strokeStyle = "#802b00";
-  var currentAngle = parseFloat(x0_current[currentSim]);
+  var currentAngle = parseFloat(x_current[0][currentSim]);
   c.lineTo(225+lineLength*Math.cos(currentAngle-(Math.PI/2)),160-lineLength*Math.sin(currentAngle-(Math.PI/2)));
   c.stroke();
 
 }
 
 function checkBounds(){
-  if(x0_current[currentSim]<x0_bounds[0]||
-    x0_current[currentSim]>x0_bounds[1]||
-    x1_current[currentSim]<x1_bounds[0]||
-    x1_current[currentSim]>x1_bounds[1]){
+  for(var i=0;i<numVars;i++){
+    if(x_current[i][currentSim]<x_bounds[i][0]|| x_current[i][currentSim]>x_bounds[i][1]){
       return false;
-    }else{
-      return true;
     }
+  }
+  return true;
 }
 
-function renderChart0(id,data,labels,ub,lb) {
+function renderChart(id,data,labels,ub,lb) {
+  var chartIndex = parseInt(id);
 
-  const canvas = document.getElementById(id);
-    var ctx = document.getElementById(id).getContext('2d');
-    chartConfig0 = {
+  const canvas = document.getElementById('chartContainer'+chartIndex);
+    var ctx = document.getElementById('chartContainer'+id).getContext('2d');
+    chartConfig[chartIndex] = {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Value of x'+id[id.length-1],
+                label: 'Value of x'+chartIndex,
                 data: data,
                 borderColor: "#3e95cd",
                 fill: false
             },
             {
-              label: 'UB of x'+id[id.length-1],
+              label: 'UB of x'+chartIndex,
               data: ub,
               backgroundColor: "rgb(75, 192, 255, 0.5)",
               borderColor: "transparent",
@@ -565,7 +547,7 @@ function renderChart0(id,data,labels,ub,lb) {
               tension: 0
             },
             {
-              label: 'LB of x'+id[id.length-1],
+              label: 'LB of x'+chartIndex,
               data: lb,
               backgroundColor: "rgb(75, 192, 255, 0.5)",
               borderColor: "transparent",
@@ -574,7 +556,7 @@ function renderChart0(id,data,labels,ub,lb) {
               tension: 0
             },
             {
-              label: 'UBD of x'+id[id.length-1],
+              label: 'UBD of x'+chartIndex,
               data: [ub[0]+0.2*(Math.abs(ub[0]))],
               backgroundColor: "rgb(75, 192, 255, 0.5)",
               borderColor: "transparent",
@@ -583,7 +565,7 @@ function renderChart0(id,data,labels,ub,lb) {
               tension: 0
             },
             {
-              label: 'LBD of x'+id[id.length-1],
+              label: 'LBD of x'+chartIndex,
               data: [lb[0]-0.2*(Math.abs(lb[0]))],
               backgroundColor: "rgb(75, 192, 255, 0.5)",
               borderColor: "transparent",
@@ -596,7 +578,7 @@ function renderChart0(id,data,labels,ub,lb) {
           responsive: true,
           title: {
             display: true,
-            text: 'Values of x'+id[id.length-1]
+            text: 'Values of x'+chartIndex
           },
           tooltips: {
             mode: 'index',
@@ -619,7 +601,7 @@ function renderChart0(id,data,labels,ub,lb) {
               display: true,
               scaleLabel: {
                 display: true,
-                labelString: 'x'+id[id.length-1]
+                labelString: 'x'+chartIndex
               },
               ticks: {
                         beginAtZero: true
@@ -632,113 +614,30 @@ function renderChart0(id,data,labels,ub,lb) {
             responsiveAnimationDuration: 0, // animation duration after a resize
         },
     };
-    chart0 = new Chart(ctx, chartConfig0);
-}
-
-function renderChart1(id,data,labels,ub,lb) {
-
-const canvas = document.getElementById(id);
-  var ctx = document.getElementById(id).getContext('2d');
-  chartConfig1 = {
-      type: 'line',
-      data: {
-          labels: labels,
-          datasets: [{
-              label: 'Value of x'+id[id.length-1],
-              data: data,
-              borderColor: "#3e95cd",
-              fill: false
-          },
-          {
-            label: 'UB of x'+id[id.length-1],
-            data: ub,
-            backgroundColor: "rgb(75, 192, 255, 0.5)",
-            borderColor: "transparent",
-            pointRadius: 0,
-            fill: 0,
-            tension: 0
-          },
-          {
-            label: 'LB of x'+id[id.length-1],
-            data: lb,
-            backgroundColor: "rgb(75, 192, 255, 0.5)",
-            borderColor: "transparent",
-            pointRadius: 0,
-            fill: 0,
-            tension: 0
-          },
-          {
-            label: 'UBD of x'+id[id.length-1],
-            data: [ub[0]+0.2*(Math.abs(ub[0]))],
-            backgroundColor: "rgb(75, 192, 255, 0.5)",
-            borderColor: "transparent",
-            pointRadius: 0,
-            fill: false,
-            tension: 0
-          },
-          {
-            label: 'LBD of x'+id[id.length-1],
-            data: [lb[0]-0.2*(Math.abs(lb[0]))],
-            backgroundColor: "rgb(75, 192, 255, 0.5)",
-            borderColor: "transparent",
-            pointRadius: 0,
-            fill: false,
-            tension: 0
-          }]
-      },
-      options: {   
-        responsive: true,
-        title: {
-          display: true,
-          text: 'Values of x'+id[id.length-1]
-        },
-        tooltips: {
-          mode: 'index',
-          intersect: false,
-        },
-        hover: {
-          mode: 'nearest',
-          intersect: true,
-          animationDuration: 0
-        },
-        scales: {
-          xAxes: [{
-            display: true,
-            scaleLabel: {
-              display: true,
-              labelString: 'Simulation'
-            }
-          }],
-          yAxes: [{
-            display: true,
-            scaleLabel: {
-              display: true,
-              labelString: 'x'+id[id.length-1]
-            },
-            ticks: {
-                      beginAtZero: true
-                  }
-          }]
-        },
-          animation: {
-              duration: 0, // general animation time
-          },
-          responsiveAnimationDuration: 0, // animation duration after a resize
-      },
-  };
-  chart1 = new Chart(ctx, chartConfig1);
+    chart[chartIndex] = new Chart(ctx, chartConfig[chartIndex]);
 }
 
 async function oneStep(){
   recolourPath();
+
   if(currentSim==totalSims){
+
+    var x_toPass = [];
+    for(var i=0;i<numVars;i++){
+      x_toPass.push(x_current[i][currentSim]);
+    }
+    var u_toPass = [];
+    for(var i=0;i<numResults;i++){
+      u_toPass.push(u_current[i][currentSim]);
+    }
+
     $.ajax({
-        data : {
-            x0: x0_current[currentSim],
-            x1: x1_current[currentSim],
-            u: u_current[currentSim]
-        },
+        data : JSON.stringify({
+            x_pass: x_toPass,
+            u_pass: u_toPass
+        }),
         type : 'POST',
+        contentType: "application/json; charset=utf-8",
         url : '/stepRoute'
     })
     .done(function(data) {
@@ -758,40 +657,40 @@ async function oneStep(){
           // drc0_inp.textContent=(totalSims+1).toString()+".";
           
           drc0.appendChild(drc0_inp);
-
-          const drc1 = document.createElement('td');
-          drc1.textContent=data.x_new[0][0];
-          
-          const drc2 = document.createElement('td');
-          drc2.textContent=data.x_new[0][1];
-          
-          const drc3 = document.createElement('td');
-          drc3.textContent=data.x_new[1];
-
           dumrow.appendChild(drc0);
-          dumrow.appendChild(drc1);
-          dumrow.appendChild(drc2);
-          dumrow.appendChild(drc3);
 
+          for(var i=0;i<numVars;i++){
+            const drc1 = document.createElement('td');
+            drc1.textContent=data.x_new[0][i];
+            dumrow.appendChild(drc1);
+          }
+          for(var i=0;i<numResults;i++){
+            const drc2 = document.createElement('td');
+            drc2.textContent=data.x_new[1][i];
+            dumrow.appendChild(drc2);
+          }
+          
           tab.appendChild(dumrow);
           colourPath(data.x_new[2]);
 
-          x0_current.push(data.x_new[0][0]);
-          x1_current.push(data.x_new[0][1]);
-          u_current.push(data.x_new[1]);
+          for(var i=0;i<numVars;i++){
+            x_current[i].push(data.x_new[0][i]);
+          }
+          for(var i=0;i<numResults;i++){
+            u_current[i].push(data.x_new[1][i]);
+          }
+
           lastPath.push(data.x_new[2]);
           totalSims++;
           currentSim=totalSims;
           console.log("update complete");
 
-          chart0.data.labels.push(totalSims);
-          chart1.data.labels.push(totalSims);
-          chart0.data.datasets[1].data.push(x0_bounds[1]);
-          chart0.data.datasets[2].data.push(x0_bounds[0]);
-          chart1.data.datasets[1].data.push(x1_bounds[1]);
-          chart1.data.datasets[2].data.push(x1_bounds[0]);
-          chart0.update();
-          chart1.update();
+          for(var i=0;i<numVars;i++){
+            chart[i].data.labels.push(totalSims);
+            chart[i].data.datasets[1].data.push(x_bounds[i][1]);
+            chart[i].data.datasets[2].data.push(x_bounds[i][0]);
+            chart[i].update();
+          }
 
     });
     }else{
@@ -818,8 +717,8 @@ $('#formFirst').on('submit', function(event) {
 
     $.ajax({
         data : {
-            // controller : $('#controller').val(),
-            controller: "controller.scs",
+            controller : $('#controller').val(),
+            // controller: "controller.scs",
             // config : $('#config').val()
             config: "maxfreq"
         },
@@ -828,7 +727,18 @@ $('#formFirst').on('submit', function(event) {
     })
     .done(function(data) {
 
-        treeData = data;
+        treeData = data.classi;
+        numVars = data.numVars;
+        numResults = data.numResults;
+
+        for(var i=0;i<numVars;i++){
+          x_current.push([]);
+          chart.push([]);
+          chartConfig.push([]);
+        }
+        for(var i=0;i<numResults;i++){
+          u_current.push([]);
+        }
         
         if(numChanges==0)
             myFunc();
@@ -839,26 +749,58 @@ $('#formFirst').on('submit', function(event) {
         root.y0 = 0;
 
         update(root);
-
         
         const tab = document.createElement('table');
         tab.setAttribute('id',"simTable");
         const dumrow = document.createElement('tr');
         const drc0 = document.createElement('th');
         drc0.textContent="Index";
-        const drc1 = document.createElement('th');
-        drc1.textContent="x0";
-        const drc2 = document.createElement('th');
-        drc2.textContent="x1";
-        const drc3 = document.createElement('th');
-        drc3.textContent="u";
         dumrow.appendChild(drc0);
-        dumrow.appendChild(drc1);
-        dumrow.appendChild(drc2);
-        dumrow.appendChild(drc3);
+
+        for(var i=0;i<numVars;i++){
+          const drc1 = document.createElement('th');
+          drc1.textContent="x"+i;
+          dumrow.appendChild(drc1);
+        }
+        
+        if(numResults==1){
+          const drc2 = document.createElement('th');
+          drc2.textContent="u";
+          dumrow.appendChild(drc2);
+        }else{
+          for(var i=0;i<numResults;i++){
+            const drc2 = document.createElement('th');
+            drc2.textContent="u"+i;
+            dumrow.appendChild(drc2);
+          }
+        }
+        
         tab.appendChild(dumrow);
         simTableDiv.appendChild(tab);
 
+        const opt = document.getElementById("formSecond");
+        for(var i=0;i<numVars;i++){
+          const dumDiv = document.createElement('div');
+
+          const dumLabel = document.createElement('label');
+          dumLabel.setAttribute('for','x'+i);
+          dumLabel.textContent="Choose an x"+i+":";
+
+          const dumInput = document.createElement('input');
+          dumInput.setAttribute('type','text');
+          dumInput.setAttribute('id','x'+i);
+          dumInput.setAttribute('name','x'+i);
+
+          dumDiv.appendChild(dumLabel);
+          dumDiv.appendChild(dumInput);
+
+          opt.appendChild(dumDiv);
+        }
+
+        const dumSubmit = document.createElement('input');
+        dumSubmit.setAttribute('type','submit');
+        dumSubmit.setAttribute('value','Send');
+        opt.appendChild(dumSubmit);
 
     });
 
@@ -867,15 +809,18 @@ $('#formFirst').on('submit', function(event) {
 });
 
 $('#formSecond').on('submit', function(event) {
+    var x_toPass = [];
+    for(var i=0;i<numVars;i++){
+      x_toPass.push(parseFloat($('#x'+i).val()));
+    }
     $.ajax({
-        data : {
-            x0: $('#x0').val(),
-            x1: $('#x1').val()
-        },
+        data : JSON.stringify({pass: x_toPass}),
+        contentType: "application/json; charset=utf-8",
         type : 'POST',
         url : '/initRoute'
     })
     .done(function(data) {
+      //data .decision changed to array
         const tab = document.getElementById('simTable');
         const dumrow = document.createElement('tr');
 
@@ -887,34 +832,33 @@ $('#formSecond').on('submit', function(event) {
         drc0_inp.setAttribute('id','0');
         drc0_inp.setAttribute('value','0');
         drc0_inp.setAttribute('checked','checked');
-        
-        // drc0_inp.textContent="0.";
 
         drc0.appendChild(drc0_inp);
-
-        const drc1 = document.createElement('td');
-        drc1.textContent=$('#x0').val();
-        
-        const drc2 = document.createElement('td');
-        drc2.textContent=$('#x1').val();
-        
-        const drc3 = document.createElement('td');
-        drc3.textContent=data.decision;
-        
         dumrow.appendChild(drc0);
-        dumrow.appendChild(drc1);
-        dumrow.appendChild(drc2);
-        dumrow.appendChild(drc3);
+
+        for(var i=0;i<numVars;i++){
+          const drc1 = document.createElement('td');
+          drc1.textContent=$('#x'+i).val();
+          dumrow.appendChild(drc1)
+        }
+        for(var i=0;i<numResults;i++){
+          const drc2 = document.createElement('td');
+          drc2.textContent=data.decision[i];
+          dumrow.appendChild(drc2);
+        }
 
         tab.appendChild(dumrow);
         colourPath(data.path);
 
-        x0_current.push(parseFloat($('#x0').val()));
-        x1_current.push(parseFloat($('#x1').val()));
-        u_current.push(data.decision);
+        for(var i=0;i<numVars;i++){
+          x_current[i].push(parseFloat($('#x'+i).val()));
+          x_bounds[i]=data.bound[i];
+        }
+        for(var i=0;i<numResults;i++){
+          u_current[i].push(data.decision[i]);
+        }
+
         lastPath.push(data.path);
-        x0_bounds=data.x0_bound;
-        x1_bounds=data.x1_bound;
         totalSims=0;
         currentSim=0;
 
@@ -925,10 +869,11 @@ $('#formSecond').on('submit', function(event) {
             document.getElementById("next").disabled=true;
             document.getElementById("back").disabled=true;
           }
-
-      renderChart0("chartContainer0",x0_current,[...Array(currentSim+1).keys()],[x0_bounds[1]],[x0_bounds[0]]);
-      renderChart1("chartContainer1",x1_current,[...Array(currentSim+1).keys()],[x1_bounds[1]],[x1_bounds[0]]);
-
+      
+      for(var i=0;i<numVars;i++){
+        renderChart(i,x_current[i],[...Array(currentSim+1).keys()],[x_bounds[i][1]],[x_bounds[i][0]]);
+      }
+      
       drawCanvas();
 
     });
@@ -938,21 +883,32 @@ $('#formSecond').on('submit', function(event) {
 
 $('#instep').on('submit', function(event) {
   recolourPath();
+  var x_toPass = [];
+  for(var i=0;i<numVars;i++){
+    x_toPass.push(x_current[i][currentSim]);
+  }
+  var u_toPass = [];
+  for(var i=0;i<numResults;i++){
+    u_toPass.push(u_current[i][currentSim]);
+  }
     $.ajax({
-        data : {
+        data : JSON.stringify({
             steps: $('#steps').val(),
-            x0: x0_current[totalSims],
-            x1: x1_current[totalSims],
-            u: u_current[totalSims]
+            x_pass: (x_toPass),
+            u_pass: (u_toPass)
 
-        },
+        }),
         type : 'POST',
+        contentType: "application/json; charset=utf-8",
         url : '/inStepRoute'
     })
     .done(function(data) {
       const tab = document.getElementById('simTable');
+      var numSteps = parseInt($('#steps').val());
+      console.log('numsteps are');
+      console.log(numSteps);
 
-      for(var i=0;i<parseInt($('#steps').val());i++){
+      for(var i=0;i<numSteps;i++){
         const dumrow = document.createElement('tr');
         const drc0 = document.createElement('td');
         const drc0_inp = document.createElement('input');
@@ -962,35 +918,41 @@ $('#instep').on('submit', function(event) {
         drc0_inp.setAttribute('value',(totalSims+1));
         drc0_inp.setAttribute('checked','checked');
         drc0.appendChild(drc0_inp);
-        const drc1 = document.createElement('td');
-        drc1.textContent=data.x_new[i][0][0];
-        const drc2 = document.createElement('td');
-        drc2.textContent=data.x_new[i][0][1];
-        const drc3 = document.createElement('td');
-        drc3.textContent=data.x_new[i][1];
-
         dumrow.appendChild(drc0);
-        dumrow.appendChild(drc1);
-        dumrow.appendChild(drc2);
-        dumrow.appendChild(drc3);
+
+        for(var j=0;j<numVars;j++){
+          const drc1 = document.createElement('td');
+          drc1.textContent=data.x_new[i][0][j];
+          dumrow.appendChild(drc1);
+        }
+        for(var j=0;j<numResults;j++){
+          const drc2 = document.createElement('td');
+          drc2.textContent=data.x_new[i][1][j];
+          dumrow.appendChild(drc2);
+        }
 
         tab.appendChild(dumrow);  
 
-        x0_current.push(data.x_new[i][0][0]);
-        x1_current.push(data.x_new[i][0][1]);
-        u_current.push(data.x_new[i][1]);
+        for(var j=0;j<numVars;j++){
+          x_current[j].push(data.x_new[i][0][j]);
+        }
+        for(var j=0;j<numResults;j++){
+          u_current[j].push(data.x_new[i][1][j]);
+        }
+
         lastPath.push(data.x_new[i][2]);
         totalSims++;
         currentSim=totalSims;
         
-        console.log("update complete");
+        console.log("update complete for instep");
 
-        chart0.data.labels.push(totalSims);
-        chart1.data.labels.push(totalSims);
-        chart0.data.datasets[1].data.push(x0_bounds[1]);
-        chart0.data.datasets[2].data.push(x0_bounds[0]);
-        chart1.data.datasets[1].data.push(x1_bounds[1]);
-        chart1.data.datasets[2].data.push(x1_bounds[0]);
+        for(var j=0;j<numVars;j++){
+          console.log('working on chart');
+          console.log(j);
+          chart[j].data.labels.push(totalSims);
+          chart[j].data.datasets[1].data.push(x_bounds[j][1]);
+          chart[j].data.datasets[2].data.push(x_bounds[j][0]);
+        }
 
         if(!checkBounds()){
           console.log("disabling now");
@@ -1003,8 +965,9 @@ $('#instep').on('submit', function(event) {
         }
       }
       
-      chart0.update();
-      chart1.update();
+      for(var i=0;i<numVars;i++){
+        chart[i].update();
+      }
       colourPath(lastPath[totalSims]);
 
       drawCanvas();
