@@ -37,7 +37,7 @@ class TestPredicateParser(unittest.TestCase):
         # Useful / correct predicates
         test_input_file1 = open("../input_data/test_file1.txt", "w+")
         test_input_file1.write(
-            "c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 <= c_4\nc_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 = c_4; c_0 in {0.96223}; c_1 in {-0.564809}; c_2 in {1.32869}; c_3 in {3.315577}; c_4 in {-1.088248}\nc_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 > c_4; c_0 in {0.96223}; c_1 in {-0.564809}; c_3 in {3.315577}; x_3 in [-1.088248,2)\nsqrt(x_0)*c_0 + log(x_1) -(c_0 / x_2) * c_1 + c_2 != c_3; c_3 in {0,1,2,3,4}\nsqrt(x_0) + c_2 != c_3; c_3 in {0,1,2,3,4}; x_0 in (12, 13); c_2 in {14,15,16}")
+            "c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 <= c_4\nc_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 > c_4; c_0 in {0.96223}; c_1 in {-0.564809}; c_2 in {1.32869}; c_3 in {3.315577}; c_4 in {-1.088248}\nc_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 > c_4; c_0 in {0.96223}; c_1 in {-0.564809}; c_3 in {3.315577}; x_3 in [-1.088248,2)\nsqrt(x_0)*c_0 + log(x_1) -(c_0 / x_2) * c_1 + c_2 < c_3; c_3 in {0,1,2,3,4}\nsqrt(x_0) + c_2 < c_3; c_3 in {0,1,2,3,4}; x_0 in (12, 13); c_2 in {14,15,16}")
         test_input_file1.close()
 
         # No / wrong usage of variables
@@ -111,7 +111,7 @@ class TestPredicateParser(unittest.TestCase):
 
         pred2_term = sp.sympify("c_0*x_0 + c_1*x_1 + c_2*x_2 + c_3*x_3 - c_4")
         self.assertEqual(current_predicate.term, pred2_term)
-        self.assertEqual(current_predicate.relation, "=")
+        self.assertEqual(current_predicate.relation, ">")
 
         # Checking predicate 3: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 > c_4; c_0 in {0.96223}; c_1 in {-0.564809}; c_3 in {3.315577}; x_3 in [-1.088248,2)
         current_predicate = parsed_predicate[2]
@@ -143,7 +143,7 @@ class TestPredicateParser(unittest.TestCase):
         self.assertEqual(current_predicate.coef_interval, pred4_coef_interval)
         pred4_term = sp.sympify("-c_0*c_1/x_2 + c_0*sqrt(x_0) + c_2 - c_3 + log(x_1)")
         self.assertEqual(current_predicate.term, pred4_term)
-        self.assertEqual(current_predicate.relation, "!=")
+        self.assertEqual(current_predicate.relation, "<")
 
         # Checking predicate 5: sqrt(x_0) + c_2 != c_3; c_3 in {0,1,2,3,4}; x_0 in (12, 13); c_2 in {14,15,16}
 
@@ -155,7 +155,7 @@ class TestPredicateParser(unittest.TestCase):
         self.assertEqual(current_predicate.coef_interval, pred5_coef_interval)
         pred5_term = sp.sympify("c_2 - c_3 + sqrt(x_0)")
         self.assertEqual(current_predicate.term, pred5_term)
-        self.assertEqual(current_predicate.relation, "!=")
+        self.assertEqual(current_predicate.relation, "<")
 
     def test_predicates_without_column_ref(self):
         # USAGE OF FILE 2

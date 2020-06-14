@@ -63,7 +63,7 @@ class PredicateParser:
             cls._logger().warning("Aborting: input file with user predicates is empty.")
             return
 
-        # Currently supported types of relations (Relations: "!=" and "=" could also be used if wanted, but fit() has to be adjusted for that)
+        # Currently supported types of relations
         supported_relation = ["<=", ">=", "<", ">"]
 
         # output list containing all predicates parsed in tuple form
@@ -131,7 +131,8 @@ class PredicateParser:
                         # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term
                         if all_interval_defs:
                             cls._logger().warning("Aborting: invalid symbol in interval definition without symbol usage in the term."
-                                                  "Invalid symbol(s): ", str(all_interval_defs), "Invalid predicate: ", str(single_predicate))
+                                                  "Invalid symbol(s): ", str(all_interval_defs), "Invalid predicate: ",
+                                                  str(single_predicate))
                             return
                     except Exception:
                         cls._logger().warning("Aborting: one predicate does not have a valid structure."

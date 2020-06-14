@@ -54,12 +54,25 @@ class WeinhuberApproachSplit(Split):
         if not self.coef_interval:
             return
 
+        # TODO: Think about whether this edge case should be covered or not
+        # if self.coef_assignment is not None:
+        #     self.logger.warning("Aborting: Split coef_assignment has already been determined.")
+        #     return
+
         # Checking type & shape of arguments
         if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0]:
             self.logger.warning("Aborting: invalid structure of the arguments x, y.")
             return
 
-        coefs_to_determine = list(set(self.coef_interval).difference(set([c_i for (c_i, _) in fixed_coefs])))
+        coefs_to_determine = list(set(self.coef_interval))
+        for (c_i, _) in fixed_coefs:
+            if c_i not in self.coef_interval:
+                # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
+                self.logger.warning("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
+                return
+            else:
+                # Calculate coefs to determine with curve_fit
+                coefs_to_determine.remove(c_i)
 
         if not coefs_to_determine:
             return
@@ -85,8 +98,23 @@ class WeinhuberApproachSplit(Split):
                 result = float(self.term.subs(new_subs_list).evalf())
                 out.append(result)
             for index in range(len(out)):
-                if not ((out[index] <= 0 and y[index] <= 0) or (out[index] > 0 and y[index] > 0)):
-                    return np.array(out)
+                # Checking the offset
+                if self.relation == "<=":
+                    if not ((out[index] <= 0 and y[index] <= 0) or (out[index] > 0 and y[index] > 0)):
+                        return np.array(out)
+                elif self.relation == ">=":
+                    if not ((out[index] >= 0 and y[index] >= 0) or (out[index] < 0 and y[index] < 0)):
+                        return np.array(out)
+                elif self.relation == ">":
+                    if not ((out[index] > 0 and y[index] > 0) or (out[index] <= 0 and y[index] <= 0)):
+                        return np.array(out)
+                elif self.relation == "<":
+                    if not ((out[index] < 0 and y[index] < 0) or (out[index] >= 0 and y[index] >= 0)):
+                        return np.array(out)
+                else:
+                    self.logger.warning("Aborting: invalid relation found.")
+                    return
+
             self.y = out
             return np.array(out)
 
@@ -182,14 +210,13 @@ class WeinhuberApproachSplit(Split):
             check = evaluated_predicate <= 0
         elif self.relation == ">=":
             check = evaluated_predicate >= 0
-        elif self.relation == "!=":
-            check = evaluated_predicate != 0
         elif self.relation == ">":
             check = evaluated_predicate > 0
         elif self.relation == "<":
             check = evaluated_predicate < 0
         else:
-            check = evaluated_predicate == 0
+            self.logger.warning("Aborting: invalid relation found.")
+            return
 
         return 0 if check else 1
 
