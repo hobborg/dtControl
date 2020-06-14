@@ -74,6 +74,22 @@ def stepRoute():
     returnDict = {"x_new":x_new}
     return jsonify(returnDict)
 
+@app.route("/inStepRoute", methods=['POST'])
+def inStepRoute():
+    steps = request.form.get('steps')
+    x0 = request.form.get('x0')
+    x1 = request.form.get('x1')
+    u = request.form.get('u')
+
+    x_new = []
+    dummy = [[x0,x1],u,"",False]
+    for i in range(int(steps)):
+        dummy = cartClassify.step(dummy[0],dummy[1])
+        x_new.append(dummy)
+
+    returnDict = {"x_new":x_new}
+    return jsonify(returnDict)
+
 @app.route("/tee")
 def showjson():
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
