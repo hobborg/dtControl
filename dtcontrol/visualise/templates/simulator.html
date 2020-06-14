@@ -69,6 +69,13 @@
             <label for="next">Next</label>
             <input type="radio" id="back" name="player" value='3'/>
             <label for="back">Back</label>
+            <form id="instep">
+              <div>
+                  <label for="steps">Number of steps to take</label>
+                  <input type="number" id="steps" name="steps" min="1">
+              </div>
+              <input type="submit" value="Send">
+          </form>
 
             <form id="formSecond">
                 <div>
@@ -82,6 +89,9 @@
             
                 <input type="submit" value="Send">
             </form>
+            <div class="slidecontainer">
+              <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
+            </div>
           </div>
           <div class="column">
             <div id="prop-list">
@@ -138,6 +148,8 @@
     var x1_bounds = [];
     var u_current = [];
     var lastPath = [];
+    var plpause;
+    var timeOfSlider =50;
 
     const simTableDiv = document.getElementById('tableHere');
 
@@ -513,10 +525,20 @@ function drawCanvas(){
   c.lineWidth = 7;
   c.strokeStyle = "#802b00";
   var currentAngle = parseFloat(x0_current[currentSim]);
-  console.log("trying to draw at angle ",currentAngle);
   c.lineTo(225+lineLength*Math.cos(currentAngle-(Math.PI/2)),160-lineLength*Math.sin(currentAngle-(Math.PI/2)));
   c.stroke();
 
+}
+
+function checkBounds(){
+  if(x0_current[currentSim]<x0_bounds[0]||
+    x0_current[currentSim]>x0_bounds[1]||
+    x1_current[currentSim]<x1_bounds[0]||
+    x1_current[currentSim]>x1_bounds[1]){
+      return false;
+    }else{
+      return true;
+    }
 }
 
 function renderChart0(id,data,labels,ub,lb) {
@@ -534,7 +556,7 @@ function renderChart0(id,data,labels,ub,lb) {
                 fill: false
             },
             {
-              label: 'UB of  x'+id[id.length-1],
+              label: 'UB of x'+id[id.length-1],
               data: ub,
               backgroundColor: "rgb(75, 192, 255, 0.5)",
               borderColor: "transparent",
@@ -543,12 +565,30 @@ function renderChart0(id,data,labels,ub,lb) {
               tension: 0
             },
             {
-              label: 'LB of  x'+id[id.length-1],
+              label: 'LB of x'+id[id.length-1],
               data: lb,
               backgroundColor: "rgb(75, 192, 255, 0.5)",
               borderColor: "transparent",
               pointRadius: 0,
               fill: 0,
+              tension: 0
+            },
+            {
+              label: 'UBD of x'+id[id.length-1],
+              data: [ub[0]+0.2*(Math.abs(ub[0]))],
+              backgroundColor: "rgb(75, 192, 255, 0.5)",
+              borderColor: "transparent",
+              pointRadius: 0,
+              fill: false,
+              tension: 0
+            },
+            {
+              label: 'LBD of x'+id[id.length-1],
+              data: [lb[0]-0.2*(Math.abs(lb[0]))],
+              backgroundColor: "rgb(75, 192, 255, 0.5)",
+              borderColor: "transparent",
+              pointRadius: 0,
+              fill: false,
               tension: 0
             }]
         },
@@ -610,7 +650,7 @@ const canvas = document.getElementById(id);
               fill: false
           },
           {
-            label: 'UB of  x'+id[id.length-1],
+            label: 'UB of x'+id[id.length-1],
             data: ub,
             backgroundColor: "rgb(75, 192, 255, 0.5)",
             borderColor: "transparent",
@@ -619,12 +659,30 @@ const canvas = document.getElementById(id);
             tension: 0
           },
           {
-            label: 'LB of  x'+id[id.length-1],
+            label: 'LB of x'+id[id.length-1],
             data: lb,
             backgroundColor: "rgb(75, 192, 255, 0.5)",
             borderColor: "transparent",
             pointRadius: 0,
             fill: 0,
+            tension: 0
+          },
+          {
+            label: 'UBD of x'+id[id.length-1],
+            data: [ub[0]+0.2*(Math.abs(ub[0]))],
+            backgroundColor: "rgb(75, 192, 255, 0.5)",
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: false,
+            tension: 0
+          },
+          {
+            label: 'LBD of x'+id[id.length-1],
+            data: [lb[0]-0.2*(Math.abs(lb[0]))],
+            backgroundColor: "rgb(75, 192, 255, 0.5)",
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: false,
             tension: 0
           }]
       },
@@ -742,6 +800,14 @@ async function oneStep(){
     }
 
     drawCanvas();
+    if(!checkBounds()){
+      console.log("disabling now");
+      document.getElementById("play").disabled=true;
+      document.getElementById("pause").disabled=true;
+      document.getElementById("next").disabled=true;
+      document.getElementById("back").disabled=true;
+      clearInterval(plpause);
+    }
 }
 
 $(document).ready(function() {
@@ -843,14 +909,22 @@ $('#formSecond').on('submit', function(event) {
         tab.appendChild(dumrow);
         colourPath(data.path);
 
-        x0_current.push($('#x0').val());
-        x1_current.push($('#x1').val());
+        x0_current.push(parseFloat($('#x0').val()));
+        x1_current.push(parseFloat($('#x1').val()));
         u_current.push(data.decision);
         lastPath.push(data.path);
         x0_bounds=data.x0_bound;
         x1_bounds=data.x1_bound;
         totalSims=0;
         currentSim=0;
+
+        if(!checkBounds()){
+            console.log("disabling now");
+            document.getElementById("play").disabled=true;
+            document.getElementById("pause").disabled=true;
+            document.getElementById("next").disabled=true;
+            document.getElementById("back").disabled=true;
+          }
 
       renderChart0("chartContainer0",x0_current,[...Array(currentSim+1).keys()],[x0_bounds[1]],[x0_bounds[0]]);
       renderChart1("chartContainer1",x1_current,[...Array(currentSim+1).keys()],[x1_bounds[1]],[x1_bounds[0]]);
@@ -862,12 +936,90 @@ $('#formSecond').on('submit', function(event) {
     event.preventDefault();
 });
 
-  var plpause;
+$('#instep').on('submit', function(event) {
+  recolourPath();
+    $.ajax({
+        data : {
+            steps: $('#steps').val(),
+            x0: x0_current[totalSims],
+            x1: x1_current[totalSims],
+            u: u_current[totalSims]
+
+        },
+        type : 'POST',
+        url : '/inStepRoute'
+    })
+    .done(function(data) {
+      const tab = document.getElementById('simTable');
+
+      for(var i=0;i<parseInt($('#steps').val());i++){
+        const dumrow = document.createElement('tr');
+        const drc0 = document.createElement('td');
+        const drc0_inp = document.createElement('input');
+        drc0_inp.setAttribute('type','radio');
+        drc0_inp.setAttribute('name','indexers');
+        drc0_inp.setAttribute('id',totalSims+1);
+        drc0_inp.setAttribute('value',(totalSims+1));
+        drc0_inp.setAttribute('checked','checked');
+        drc0.appendChild(drc0_inp);
+        const drc1 = document.createElement('td');
+        drc1.textContent=data.x_new[i][0][0];
+        const drc2 = document.createElement('td');
+        drc2.textContent=data.x_new[i][0][1];
+        const drc3 = document.createElement('td');
+        drc3.textContent=data.x_new[i][1];
+
+        dumrow.appendChild(drc0);
+        dumrow.appendChild(drc1);
+        dumrow.appendChild(drc2);
+        dumrow.appendChild(drc3);
+
+        tab.appendChild(dumrow);  
+
+        x0_current.push(data.x_new[i][0][0]);
+        x1_current.push(data.x_new[i][0][1]);
+        u_current.push(data.x_new[i][1]);
+        lastPath.push(data.x_new[i][2]);
+        totalSims++;
+        currentSim=totalSims;
+        
+        console.log("update complete");
+
+        chart0.data.labels.push(totalSims);
+        chart1.data.labels.push(totalSims);
+        chart0.data.datasets[1].data.push(x0_bounds[1]);
+        chart0.data.datasets[2].data.push(x0_bounds[0]);
+        chart1.data.datasets[1].data.push(x1_bounds[1]);
+        chart1.data.datasets[2].data.push(x1_bounds[0]);
+
+        if(!checkBounds()){
+          console.log("disabling now");
+          document.getElementById("play").disabled=true;
+          document.getElementById("pause").disabled=true;
+          document.getElementById("next").disabled=true;
+          document.getElementById("back").disabled=true;
+          clearInterval(plpause);
+          break;
+        }
+      }
+      
+      chart0.update();
+      chart1.update();
+      colourPath(lastPath[totalSims]);
+
+      drawCanvas();
+      
+    });
+
+    event.preventDefault();
+});
+
+
   $(document).on("click", "input[name=player]", function() {
     var option = parseInt($("input[name=player]:checked").val());
     //play pause next back
     if(option==0){
-      plpause = setInterval(oneStep, 50);
+      plpause = setInterval(oneStep, timeOfSlider);
 
     }else if(option==1){
       clearInterval(plpause);
@@ -911,8 +1063,16 @@ $('#formSecond').on('submit', function(event) {
     
   });
 
+
 });
 // $("#config").trigger("change");
+
+var slider = document.getElementById("timeRange");
+slider.oninput = function() {
+  timeOfSlider = this.value;
+  clearInterval(plpause);
+  plpause = setInterval(oneStep,timeOfSlider);
+}
 
     </script>
 
