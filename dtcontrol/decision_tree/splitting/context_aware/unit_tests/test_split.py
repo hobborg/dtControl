@@ -298,7 +298,8 @@ class TestSplitCurveFit(unittest.TestCase):
         self.assertEqual(split.predict(np.array([[2., 93., 1., 2.]])), 0)
         self.assertEqual(split.predict(np.array([[2., 59., 3., 2.]])), 0)
 
-        split.coef_assignment = {c_3: -2.1969093211282598e-12, c_2: -2.1822543772032077e-12, c_1: -0.03636363636362639, c_0: -2.1651569426239803e-12, c_4: 1.1454545454692278}
+        split.coef_assignment = {c_3: -2.1969093211282598e-12, c_2: -2.1822543772032077e-12, c_1: -0.03636363636362639,
+                                 c_0: -2.1651569426239803e-12, c_4: 1.1454545454692278}
         self.assertEqual(split.predict(np.array([[1., 4.6, 1., 3.]])), 1)
         self.assertEqual(split.predict(np.array([[1., 4.6, 2., 3.]])), 1)
         self.assertEqual(split.predict(np.array([[2., 4., 3., 1.]])), 1)

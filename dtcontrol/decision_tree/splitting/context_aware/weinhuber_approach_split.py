@@ -6,7 +6,6 @@ import sympy as sp
 import logging
 from copy import deepcopy
 from scipy.optimize import curve_fit
-import re
 
 
 class WeinhuberApproachSplit(Split):
@@ -34,6 +33,7 @@ class WeinhuberApproachSplit(Split):
         self.relation = relation
 
         self.coef_assignment = None
+        self.y = None
 
         self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
         self.logger.setLevel(logging.ERROR)
@@ -187,11 +187,6 @@ class WeinhuberApproachSplit(Split):
         :param features: the features of the instance
         :returns: the child index (0/1 for a binary split)
         """
-        #
-        # # fit() must be called before calling predict.
-        # if self.coef_assignment is None:
-        #     self.logger.warning("Aborting: coefficient assignment has to be determined first.")
-        #     return
 
         subs_list = list(self.coef_assignment.items()) if self.coef_assignment else []
 

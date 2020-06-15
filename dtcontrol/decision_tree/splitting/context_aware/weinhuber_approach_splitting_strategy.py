@@ -13,36 +13,38 @@ from itertools import product
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    def __init__(self, predicate_structure_difference=5, predicate_dt_range=5, user_given_splits=None,
-                 determinizer=LabelPowersetDeterminizer()):
+    def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer()):
 
         """
-        :param fallback_strategy: splitting strategy to continue with, once weinhuber strategy doesn't work anymore
         :param user_given_splits: predicates/splits obtained by user to work with
-        :param predicate_structure_difference: allowed difference in structure of predicate
-        :param predicate_dt_range: range of distance to search in dt (being build)
+        :param determinizer: determinizer
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.get_predicate() if user_given_splits is None else user_given_splits
-        self.predicate_structure_difference = predicate_structure_difference
-        self.predicate_dt_range = predicate_dt_range
+        self.user_given_splits = PredicateParser.get_predicate() if user_given_splits is None else None
         self.determinizer = determinizer
+
+        # Will be set inside decision_tree.py and later used inside self.get_parent_splits()
+        self.root = None
+        self.current_node = None
 
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
         self.logger.setLevel(logging.ERROR)
 
-    def get_parent_splits(self, current_node, parent_nbr, path=[]):
+    def get_path_root_current(self, ancestor_range=5, current_node=None, path=[]):
 
         """
         Standard depth first search.
-        Always starting from self.root.
-        Always searching for current_node.
+        (Default: starts from self.root)
+        !!!!!!!! This function is always searching for self.current_node !!!!!!!!!
 
-        :param current_node: current node to search
-        :param parent_nbr: number of parent nodes to return later
-        :param path: list containing the path to the current node
-        :returns: list of path from root to node, containing only the last parent_nbr parents
+        :param ancestor_range: number of closest ancestor nodes to return
+        :param current_node: current node being checked
+        :param path: list containing ancestor path (from self.root to self.current_node)
+        :returns: list of ancestor nodes from self.root to self.current_node (containing only the last ancestor_range ancestors)
         """
+
+        if current_node is None:
+            current_node = self.root
 
         path_copy = path.copy()
         path_copy.append(current_node)
@@ -50,56 +52,60 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             for node in path:
                 if node.split is None:
                     path_copy.remove(node)
-            return path_copy[-parent_nbr:]
+            return path_copy[-ancestor_range:]
         elif not current_node.children:
             return None
         else:
             for node in current_node.children:
-                result = self.get_parent_splits(node, parent_nbr, path_copy)
+                result = self.get_path_root_current(ancestor_range=ancestor_range, current_node=node, path=path_copy)
                 if result:
                     return result
             return None
 
-    def tree_distance_format(self, tree):
+    def tree_edit_distance(self, predicate1, predicate2):
 
         """
-        Function to transform tree format from sympy format to APTED format
-        e.g.
-        Sympy format: Add(Mul(Integer(11), Symbol('x_1')), Mul(Integer(2), Symbol('x_2')), Integer(-11))
-        APTED format: {Add{Mul{{Variable}{Symbol1}}Mul{{Variable}{Symbol2}}{Variable}}}
-
-        :param tree: syntax tree of sympy expression
-        :returns: formatted string of tree in APTED format
+        Function to compute the tree edit distance between 2 predicates.
+        :param predicate1: term attribute of a WeinhuberApproachSplit Object
+        :param predicate2: term attribute of a WeinhuberApproachSplit Object
+        :returns: Integer (tree edit distance between these 2 predicates)
         """
 
-        formated_tree = re.sub("Integer\(.+?\)|Float\(.+?\)|Rational\(.+?\)", "{Variable}", tree)
-        formated_tree = formated_tree.replace("(", "{").replace(")", "}").replace("{'x_", "").replace("'}", "").replace(
-            ", ", "")
-        formated_tree = "{" + re.sub("(Symbol\d+)", "{\\1}", formated_tree) + "}"
+        def helper_formatting(tree):
+            """
+            Helper/Adapter function to transform tree format from sympy format to APTED format
+            :param tree: term attribute of a WeinhuberApproachSplit Object
+            :returns: String (formatted version of term in APTED format)
 
-        return formated_tree
+            e.g.
+            Sympy format: Add(Mul(Integer(11), Symbol('x_1')), Mul(Integer(2), Symbol('x_2')), Integer(-11))
+            APTED format: {Add{Mul{{Variable}{Symbol1}}Mul{{Variable}{Symbol2}}{Variable}}}
+            """
+            tree = sp.srepr(tree)
 
-    def get_tree_distance(self, predicate1, predicate2):
-        tree1 = Tree.from_text(self.tree_distance_format(sp.srepr(predicate1)))
-        tree2 = Tree.from_text(self.tree_distance_format(sp.srepr(predicate2)))
-        # tree2 = Tree.from_text("{Add{Mul{{Variable}{Symbol2}}{Variable}}}")
+            # TODO: Cleanup this Regex battle
+            formated_tree = re.sub("Integer\(.+?\)|Float\(.+?\)|Rational\(.+?\)", "{Variable}", tree)
+            formated_tree = formated_tree.replace("(", "{").replace(")", "}").replace("{'x_", "").replace("'}", "").replace(
+                ", ", "")
+            formated_tree = "{" + re.sub("(Symbol\d+)", "{\\1}", formated_tree) + "}"
+            return formated_tree
+
+        tree1 = Tree.from_text(helper_formatting(predicate1))
+        tree2 = Tree.from_text(helper_formatting(predicate2))
 
         # TERMINAL COMMAND: python -m apted -t tree1 tree2 -mv
 
         apted = APTED(tree1, tree2)
         ted = apted.compute_edit_distance()
-        mapping = apted.compute_edit_mapping()
-        # print("Comparing: \nTree1: ",self.tree_distance_format(sp.srepr(predicate1)))
-        # print("Tree2: {Add{Mul{{Variable}{Symbol2}}{Variable}}}")
-        # print("Distance: ", ted)
+        # mapping = apted.compute_edit_mapping()
         return ted
 
-    def print_parent_nodes(self, split_list):
+    def print_path_root_current(self, split_list):
 
         """
-        Super simple printing function for the return of get_parent_splits().
-        :param split_list: list of path from self.root to self.current_node
-        :returns: nothing. Just visual output for terminal
+        Super simple debugging function to quickly visualize the ancestor path returned from self.get_path_root_current()
+        :param split_list: ancestor path returned by get_path_root_current
+        :returns: None (Just super simple visual representation for terminal)
         """
 
         print("\n----------------------------")
@@ -119,6 +125,16 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: a split object
         """
+
+        # TODO: Think about incorporating tree edit distance into splitting strategy
+        # (Safed for later)TREE EDIT USAGE CODE:
+        # tmp = self.get_path_root_current()
+        # self.print_path_root_current(tmp)
+        #
+        # predicate_1 = sp.sympify("-0.10073*x_0+0.00080492*x_1+0.5956*x_2-0.22309*x_3-0.96975")
+        # predicate_2 = sp.sympify("-0.10073*x_0+0.00080492*x_1+0.5956*x_2-0.22309")
+        # tmp = self.tree_edit_distance(predicate_1, predicate_2)
+
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return None

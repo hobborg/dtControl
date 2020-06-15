@@ -3,7 +3,6 @@ import logging
 import re
 import sympy as sp
 from sympy.core.function import AppliedUndef
-import numpy as np
 
 
 class PredicateParser:
