@@ -129,6 +129,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             return
 
         # TODO: LET THIS PART ONLY EXECUTE ONCE AT STARTUP
+        # TODO: is_applicable should also only execute once at startup
         for single_split in self.user_given_splits:
             if not single_split.check_valid_column_reference(x_numeric):
                 self.logger.warning("Aborting: one predicate uses an invalid column reference."
@@ -145,7 +146,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         splits = {}
         for single_split in self.user_given_splits:
             # Checking if every column reference is in its Interval
-            if single_split.is_applicable(x_numeric):
+            if single_split.check_data_in_column_interval(x_numeric):
                 for label in np.unique(y):
                     # Creating the label mask (see linear classifier)
                     new_y = np.copy(y)

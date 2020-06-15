@@ -39,7 +39,7 @@ class TestSplitCurveFit(unittest.TestCase):
          [2., 93., 1., 2.]])
     data_y_3 = np.array([1, 1, -1, -1, -1])
 
-    x_0, x_1, x_2, x_3, x_4, x_5, c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('x_0 x_1 x_2 x_3 x_4 x_5 c_0 c_1 c_2 c_3 c_4 c_5')
+    x_0, x_1, x_2, x_3, x_4, x_5, x_6, c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('x_0 x_1 x_2 x_3 x_4 x_5 x_6 c_0 c_1 c_2 c_3 c_4 c_5')
 
     # Split 1
     column_interval1 = {x_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity), x_1: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity),
@@ -51,12 +51,57 @@ class TestSplitCurveFit(unittest.TestCase):
     relation1 = "<="
     split1 = WeinhuberApproachSplit(column_interval1, coef_interval1, term1, relation1)
 
+
+    # Split 2
+    column_interval2 = {x_4: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    coef_interval2 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    term2 = c_0 * x_4
+    relation2 = "<="
+    split2 = WeinhuberApproachSplit(column_interval2, coef_interval2, term2, relation2)
+
+    # Split 3
+    column_interval3 = {x_4: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity), x_5: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    coef_interval3 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    term3 = c_0 * x_4 * x_5
+    relation3 = "<="
+    split3 = WeinhuberApproachSplit(column_interval3, coef_interval3, term3, relation3)
+
+    # Split 4
+    column_interval4 = {x_6: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    coef_interval4 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    term4 = c_0 + x_6
+    relation4 = "<="
+    split4 = WeinhuberApproachSplit(column_interval4, coef_interval4, term4, relation4)
+
+    # Split 5
+    column_interval5 = {x_0: sp.FiniteSet(1.0, 2.0)}
+    coef_interval5 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    term5 = c_0 - x_0
+    relation5 = "<="
+    split5 = WeinhuberApproachSplit(column_interval5, coef_interval5, term5, relation5)
+
+    # Split 6
+    column_interval6 = {x_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity), x_1: sp.FiniteSet(6.0, 12.0)}
+    coef_interval6 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    term6 = c_0 * x_0 * x_1
+    relation6 = "<="
+    split6 = WeinhuberApproachSplit(column_interval6, coef_interval6, term6, relation6)
+
+    # Split 7
+    column_interval7 = {x_0: sp.FiniteSet(3.0)}
+    coef_interval7 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
+    term7 = c_0 - x_0
+    relation7 = "<="
+    split7 = WeinhuberApproachSplit(column_interval7, coef_interval7, term7, relation7)
+
+
+
     def helper_fit(self, split, x, y):
         copy_split = deepcopy(split)
         copy_split.fit([], x, y)
         return copy_split.coef_assignment
 
-    def test_linear_fit(self):
+    def test_fit_linear(self):
         c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('c_0 c_1 c_2 c_3 c_4 c_5')
 
         coef_assignment_1 = {c_4: -1.5064260304162935, c_1: 0.0033307416540457155, c_0: 0.1720000986661053, c_2: 0.7146818999152404,
@@ -71,7 +116,7 @@ class TestSplitCurveFit(unittest.TestCase):
                              c_2: -2.1596058275008545e-12}
         self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_3, self.data_y_3), coef_assignment_3)
 
-    def test_fit_edge_cases(self):
+    def test_fit_invalid_edge_cases(self):
         split = deepcopy(self.split1)
         # Invalid argument types
         self.assertIsNone(split.fit([], [], []))
@@ -178,6 +223,54 @@ class TestSplitCurveFit(unittest.TestCase):
              [1., 228., 1., 5.],
              [2., 93., 1., 2.],
              [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
+
+    def test_check_valid_column_reference(self):
+        self.assertTrue(deepcopy(self.split1).check_valid_column_reference(self.data_x_1))
+        self.assertTrue(deepcopy(self.split1).check_valid_column_reference(self.data_x_2))
+        self.assertTrue(deepcopy(self.split1).check_valid_column_reference(self.data_x_3))
+
+        self.assertFalse(deepcopy(self.split2).check_valid_column_reference(self.data_x_1))
+        self.assertFalse(deepcopy(self.split2).check_valid_column_reference(self.data_x_2))
+        self.assertFalse(deepcopy(self.split2).check_valid_column_reference(self.data_x_3))
+
+        self.assertFalse(deepcopy(self.split3).check_valid_column_reference(self.data_x_1))
+        self.assertFalse(deepcopy(self.split3).check_valid_column_reference(self.data_x_2))
+        self.assertFalse(deepcopy(self.split3).check_valid_column_reference(self.data_x_3))
+
+        self.assertFalse(deepcopy(self.split4).check_valid_column_reference(self.data_x_1))
+        self.assertFalse(deepcopy(self.split4).check_valid_column_reference(self.data_x_2))
+        self.assertFalse(deepcopy(self.split4).check_valid_column_reference(self.data_x_3))
+
+        self.assertTrue(deepcopy(self.split5).check_valid_column_reference(self.data_x_1))
+        self.assertTrue(deepcopy(self.split5).check_valid_column_reference(self.data_x_2))
+        self.assertTrue(deepcopy(self.split5).check_valid_column_reference(self.data_x_3))
+
+        self.assertTrue(deepcopy(self.split6).check_valid_column_reference(self.data_x_1))
+        self.assertTrue(deepcopy(self.split6).check_valid_column_reference(self.data_x_2))
+        self.assertTrue(deepcopy(self.split6).check_valid_column_reference(self.data_x_3))
+
+        self.assertTrue(deepcopy(self.split7).check_valid_column_reference(self.data_x_1))
+        self.assertTrue(deepcopy(self.split7).check_valid_column_reference(self.data_x_2))
+        self.assertTrue(deepcopy(self.split7).check_valid_column_reference(self.data_x_3))
+
+    def test_check_data_in_column_interval(self):
+        self.assertTrue(deepcopy(self.split1).check_data_in_column_interval(self.data_x_1))
+        self.assertTrue(deepcopy(self.split1).check_data_in_column_interval(self.data_x_2))
+        self.assertTrue(deepcopy(self.split1).check_data_in_column_interval(self.data_x_3))
+
+        self.assertTrue(deepcopy(self.split5).check_data_in_column_interval(self.data_x_1))
+        self.assertTrue(deepcopy(self.split5).check_data_in_column_interval(self.data_x_2))
+        self.assertTrue(deepcopy(self.split5).check_data_in_column_interval(self.data_x_3))
+
+        self.assertFalse(deepcopy(self.split6).check_data_in_column_interval(self.data_x_1))
+        self.assertFalse(deepcopy(self.split6).check_data_in_column_interval(self.data_x_2))
+        self.assertFalse(deepcopy(self.split6).check_data_in_column_interval(self.data_x_3))
+
+        self.assertFalse(deepcopy(self.split7).check_data_in_column_interval(self.data_x_1))
+        self.assertFalse(deepcopy(self.split7).check_data_in_column_interval(self.data_x_2))
+        self.assertFalse(deepcopy(self.split7).check_data_in_column_interval(self.data_x_3))
+
+
 
 
 if __name__ == '__main__':

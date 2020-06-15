@@ -150,15 +150,17 @@ class WeinhuberApproachSplit(Split):
             e.g.
             column_interval = {x_5:{1,2,3}}
             If the dataset got k columns with k > 5 --> True
-            If the dataset only got k columns with k <= 5 --> False
+            If the dataset got k columns with k <= 5 --> False
         """
 
         allowed_var_index = x.shape[1] - 1
         for var in self.column_interval:
             x_index = int(str(var).split("x_")[1])
-            return not x_index > allowed_var_index
+            if x_index > allowed_var_index:
+                return False
+        return True
 
-    def is_applicable(self, x):
+    def check_data_in_column_interval(self, x):
         """
         :param x: the dataset to be split
         :return: boolean
