@@ -51,7 +51,6 @@ class TestSplitCurveFit(unittest.TestCase):
     relation1 = "<="
     split1 = WeinhuberApproachSplit(column_interval1, coef_interval1, term1, relation1)
 
-
     # Split 2
     column_interval2 = {x_4: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     coef_interval2 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
@@ -93,8 +92,6 @@ class TestSplitCurveFit(unittest.TestCase):
     term7 = c_0 - x_0
     relation7 = "<="
     split7 = WeinhuberApproachSplit(column_interval7, coef_interval7, term7, relation7)
-
-
 
     def helper_fit(self, split, x, y):
         copy_split = deepcopy(split)
@@ -270,7 +267,48 @@ class TestSplitCurveFit(unittest.TestCase):
         self.assertFalse(deepcopy(self.split7).check_data_in_column_interval(self.data_x_2))
         self.assertFalse(deepcopy(self.split7).check_data_in_column_interval(self.data_x_3))
 
+    def test_predict(self):
+        x_0, x_1, x_2, x_3, x_4, x_5, x_6, c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('x_0 x_1 x_2 x_3 x_4 x_5 x_6 c_0 c_1 c_2 c_3 c_4 c_5')
 
+        split = deepcopy(self.split1)
+        split.coef_assignment = {c_4: -0.9697534633828704, c_1: 0.000804917253418358, c_3: -0.22308508918656655, c_2: 0.595598997740995,
+                                 c_0: -0.10072576315711212}
+        self.assertEqual(split.predict(np.array([[1., 4.6, 1., 3.]])), 0)
+        self.assertEqual(split.predict(np.array([[1., 4.6, 2., 3.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 4., 3., 1.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 3., 2.]])), 1)
+        self.assertEqual(split.predict(np.array([[1., 4., 4., 1.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 4., 2.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 53., 2., 3.]])), 0)
+        self.assertEqual(split.predict(np.array([[1., 228., 1., 5.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 93., 1., 2.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 59., 3., 2.]])), 1)
+
+        split.coef_assignment = {c_3: -0.26367831245735257, c_1: -0.006591957811487801, c_4: 3.5023071852310514,
+                                 c_2: -2.1596058275008545e-12, c_0: -1.6809492419229106}
+
+        self.assertEqual(split.predict(np.array([[1., 4.6, 1., 3.]])), 1)
+        self.assertEqual(split.predict(np.array([[1., 4.6, 2., 3.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 3., 1.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 4., 3., 2.]])), 0)
+        self.assertEqual(split.predict(np.array([[1., 4., 4., 1.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 4., 2.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 53., 2., 3.]])), 0)
+        self.assertEqual(split.predict(np.array([[1., 228., 1., 5.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 93., 1., 2.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 59., 3., 2.]])), 0)
+
+        split.coef_assignment = {c_3: -2.1969093211282598e-12, c_2: -2.1822543772032077e-12, c_1: -0.03636363636362639, c_0: -2.1651569426239803e-12, c_4: 1.1454545454692278}
+        self.assertEqual(split.predict(np.array([[1., 4.6, 1., 3.]])), 1)
+        self.assertEqual(split.predict(np.array([[1., 4.6, 2., 3.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 3., 1.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 3., 2.]])), 1)
+        self.assertEqual(split.predict(np.array([[1., 4., 4., 1.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 4., 4., 2.]])), 1)
+        self.assertEqual(split.predict(np.array([[2., 53., 2., 3.]])), 0)
+        self.assertEqual(split.predict(np.array([[1., 228., 1., 5.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 93., 1., 2.]])), 0)
+        self.assertEqual(split.predict(np.array([[2., 59., 3., 2.]])), 0)
 
 
 if __name__ == '__main__':
