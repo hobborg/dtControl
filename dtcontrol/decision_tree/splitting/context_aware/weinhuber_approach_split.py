@@ -141,9 +141,9 @@ class WeinhuberApproachSplit(Split):
             self.coef_assignment = coef_assignment
         # TODO: Maybe Logger Event? Failed to fit?
 
-    def check_valid_column_reference(self, dataset):
+    def check_valid_column_reference(self, x):
         """
-        :param dataset: the dataset to be split
+        :param x: the dataset to be split
         :return: boolean
 
         Checks every column referenciation index whether allowed or not.
@@ -153,17 +153,14 @@ class WeinhuberApproachSplit(Split):
             If the dataset only got k columns with k <= 5 --> False
         """
 
-        allowed_var_index = dataset.get_numeric_x().shape[1] - 1
+        allowed_var_index = x.shape[1] - 1
         for var in self.column_interval:
             x_index = int(str(var).split("x_")[1])
-            if x_index > allowed_var_index:
-                return False
-            else:
-                return True
+            return not x_index > allowed_var_index
 
-    def is_applicable(self, dataset):
+    def is_applicable(self, x):
         """
-        :param dataset: the dataset to be split
+        :param x: the dataset to be split
         :return: boolean
 
         Checks if the column intervals, contain all of the values inside a column.
@@ -173,11 +170,10 @@ class WeinhuberApproachSplit(Split):
             :return: boolean
         """
 
-        x_numeric = dataset.get_numeric_x()
         for column_reference in self.column_interval:
             index = int(str(column_reference).split("x_")[1])
             interval = self.column_interval.get(column_reference)
-            column = x_numeric[:, index]
+            column = x[:, index]
             for val in column:
                 if not interval.contains(val):
                     return False

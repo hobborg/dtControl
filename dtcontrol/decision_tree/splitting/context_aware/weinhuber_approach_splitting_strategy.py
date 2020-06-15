@@ -119,13 +119,18 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: a split object
         """
+        x_numeric = dataset.get_numeric_x()
+        if x_numeric.shape[1] == 0:
+            return None
 
+        y = self.determinizer.determinize(dataset)
         # Checking whether used variables in user_given_splits are actually represented in dataset
         if not self.user_given_splits:
             return
 
+        # TODO: LET THIS PART ONLY EXECUTE ONCE AT STARTUP
         for single_split in self.user_given_splits:
-            if not single_split.check_valid_column_reference(dataset):
+            if not single_split.check_valid_column_reference(x_numeric):
                 self.logger.warning("Aborting: one predicate uses an invalid column reference."
                                     "Invalid predicate: ", str(single_split))
                 return
@@ -137,15 +142,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         Key: split object   Value:Impurity of the split
         """
         # See Linear Classifier
-        x_numeric = dataset.get_numeric_x()
-        if x_numeric.shape[1] == 0:
-            return None
-
-        y = self.determinizer.determinize(dataset)
         splits = {}
         for single_split in self.user_given_splits:
             # Checking if every column reference is in its Interval
-            if single_split.is_applicable(dataset):
+            if single_split.is_applicable(x_numeric):
                 for label in np.unique(y):
                     # Creating the label mask (see linear classifier)
                     new_y = np.copy(y)
