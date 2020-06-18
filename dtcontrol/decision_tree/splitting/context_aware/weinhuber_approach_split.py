@@ -19,10 +19,9 @@ class WeinhuberApproachSplit(Split):
         term                =       c_1 * x_3 - c_2 + x_4 - c_3                       --> sympy expression
         relation            =       '<='                                              --> String
 
-        coef_assignment      =       {c_1:-8.23, c_2:2, c_3:40}                       --> Key: Sympy Symbol Value: Integer/Float
-        coef_assignment will be determined later on after calling the fit function.
+        coef_assignment     =       [(c_1,-8.23), (c_2,2), (c_3,40)]                  --> List containing substitution Tuples (Sympy Symbol, Value)
+        It will be determined inside fit() and later used inside predict() (and get_masks())
         It describes a specific assignment of all variables to a value inside their interval in order to achieve the lowest impurity.
-
     """
 
     def __init__(self, column_interval, coef_interval, term, relation, priority=1):
@@ -33,7 +32,10 @@ class WeinhuberApproachSplit(Split):
         self.relation = relation
 
         self.coef_assignment = None
+
+        # Helper variables only used inside fit()
         self.y = None
+        self.coef_fit = None
 
         self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
         self.logger.setLevel(logging.ERROR)
@@ -82,6 +84,7 @@ class WeinhuberApproachSplit(Split):
         # Values that will be calculated later on
         calculated_coefs = None
         self.y = None
+        self.coef_fit = None
 
         # adapter function representing the term (for curve_fit usage)
         def adapter_function(x, *args):
@@ -90,13 +93,14 @@ class WeinhuberApproachSplit(Split):
 
             for i in range(len(coefs_to_determine)):
                 subs_list.append((coefs_to_determine[i], args[i]))
-
+            # TODO: Timer
             for row_index in range(x.shape[0]):
                 new_subs_list = deepcopy(subs_list)
                 for column_index in range(len(x[row_index, :])):
                     new_subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
                 result = float(self.term.subs(new_subs_list).evalf())
                 out.append(result)
+            ############
             for index in range(len(out)):
                 # Checking the offset
                 if self.relation == "<=":
@@ -116,28 +120,25 @@ class WeinhuberApproachSplit(Split):
                     return
 
             self.y = out
+            self.coef_fit = subs_list
             return np.array(out)
 
-        # Run 1: Determining more suitable y
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             try:
                 calculated_coefs, cov = curve_fit(adapter_function, x, y, inital_guess)
-                # Run 2: Determining coefs
-                if self.y is not None:
-                    if calculated_coefs is not None:
-                        calculated_coefs, cov = curve_fit(adapter_function, x, self.y, calculated_coefs)
-                    else:
-                        calculated_coefs, cov = curve_fit(adapter_function, x, self.y, inital_guess)
             except Exception:
+                # Even if the curve_fit fails, it may have still passed some usefull information to self.y or self.coef_fit.
                 pass
 
-        # Checking if curve fit was able to compute some coefs. (If not, coef_assignment will stay None)
-        if calculated_coefs is not None:
+        if self.y is not None and self.coef_fit is not None:
+            self.coef_assignment = self.coef_fit
+        elif calculated_coefs is not None:
+            # Checking if curve fit was able to compute some coefs. (If not, coef_assignment will stay None)
             # Assigning these coefs to coef_assignment
-            coef_assignment = {}
+            coef_assignment = []
             for coef_index in range(len(calculated_coefs)):
-                coef_assignment[coefs_to_determine[coef_index]] = calculated_coefs[coef_index]
+                coef_assignment.append((coefs_to_determine[coef_index], calculated_coefs[coef_index]))
             self.coef_assignment = coef_assignment
         # TODO: Maybe Logger Event? Failed to fit?
 
@@ -188,7 +189,7 @@ class WeinhuberApproachSplit(Split):
         :returns: the child index (0/1 for a binary split)
         """
 
-        subs_list = list(self.coef_assignment.items()) if self.coef_assignment else []
+        subs_list = deepcopy(self.coef_assignment) if self.coef_assignment else []
 
         # Iterating over every possible value and creating a substitution list
         for i in range(len(features[0, :])):
@@ -196,7 +197,7 @@ class WeinhuberApproachSplit(Split):
 
         evaluated_predicate = self.term.subs(subs_list).evalf()
         if evaluated_predicate.free_symbols:
-            return None
+            return
 
         # Checking the offset
         if self.relation == "<=":
@@ -233,7 +234,7 @@ class WeinhuberApproachSplit(Split):
         return [mask, ~mask]
 
     def print_dot(self, variables=None, category_names=None):
-        subs_list = list(self.coef_assignment.items()) if self.coef_assignment else []
+        subs_list = self.coef_assignment if self.coef_assignment else []
         evaluated_predicate = sp.pretty(self.term.subs(subs_list).evalf(5))
         evaluated_predicate = evaluated_predicate.replace(" - ", "\\n-")
         return evaluated_predicate.replace(" + ", "\\n+") + " " + self.relation + " 0"

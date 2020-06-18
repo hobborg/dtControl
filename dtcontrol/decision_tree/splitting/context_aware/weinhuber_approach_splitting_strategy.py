@@ -136,8 +136,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # tmp = self.tree_edit_distance(predicate_1, predicate_2)
 
         x_numeric = dataset.get_numeric_x()
+        # print(dataset.x_metadata)
         if x_numeric.shape[1] == 0:
-            return None
+            return
 
         y = self.determinizer.determinize(dataset)
         # Checking whether used variables in user_given_splits are actually represented in dataset
