@@ -51,6 +51,7 @@ from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
 import json, ast
+import numpy as np
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
                     name=None):
@@ -288,14 +289,6 @@ def main_parse(args):
             "No valid preset selected. Please try again with the correct preset name. Use 'dtcontrol preset --list' to see valid presets.")
         sys.exit("Exiting...")
 
-    # logging.info("The following configurations would now be run:\n")
-    # logging.info(tabulate(run_config_table,
-    #                         ['name', 'numeric-predicates', 'categorical-predicates', 'determinize', 'impurity',
-    #                         'tolerance', 'safe-pruning'],
-    #                         tablefmt="presto"))
-    # logging.info("\n")
-
-    # print("#######################Benchmarking########################")
     # suite.benchmark(classifiers)
     suite.datasets[0].load_if_necessary()
     #benchmark does a lot of other stuff as well, we just need load if necessary from it
@@ -304,11 +297,12 @@ def main_parse(args):
 
     # json_str = []
     retDict = intoJSON(classifiers[0].root,"null")
+    # classifiers[0].root.predict_one_step(np.array([[3.5, 0]]))
+    # print((classifiers[0].get_stats()))
+
+    # print(suite.datasets[0].x_metadata)
+    # print(suite.datasets[0].y_metadata)
+    
     # print("Retdict type ",type(retDict))
     # json_str=json.dumps(retDict)
-    return retDict
-
-
-# if __name__ == "__main__":
-#     ToParserDict = {"controller": "cartpole.scs", "config" : "maxfreq" }
-#     classi = main_parse(ToParserDict)
+    return retDict,suite.datasets[0].x_metadata,suite.datasets[0].y_metadata, classifiers[0].root

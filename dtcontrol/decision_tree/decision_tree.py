@@ -140,6 +140,19 @@ class Node:
             node = node.children[node.split.predict(features)]
         return node.actual_label if actual_values else node.index_label
 
+    def predict_one_step(self, features, actual_value=True):
+        node = self
+        decision_path = ""
+        while not node.is_leaf():
+            next_child = node.split.predict(features)
+            node = node.children[next_child]
+            decision_path += str(next_child)
+        tuple_or_value = node.get_determinized_label()
+        if(type(tuple_or_value)== tuple):
+            return [float(np_float) for np_float in tuple_or_value],decision_path
+        else:
+            return [tuple_or_value.item()], decision_path
+
     def fit(self, dataset):
         if self.check_done(dataset):
             return
