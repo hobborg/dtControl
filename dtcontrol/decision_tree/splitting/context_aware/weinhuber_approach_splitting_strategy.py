@@ -193,11 +193,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     for coef in single_split.coef_interval:
                         if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
                             fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
-
-                    # unzipping
-                    coef, val = zip(*fixed_coefs.items())
-                    # calculation all combinations and zipping back together
-                    combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+                    if fixed_coefs:
+                        # unzipping
+                        coef, val = zip(*fixed_coefs.items())
+                        # calculation all combinations and zipping back together
+                        combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+                    else:
+                        combinations = [[]]
                     for comb in combinations:
                         split_copy = deepcopy(single_split)
                         split_copy.fit(comb, x_numeric, new_y)
