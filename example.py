@@ -14,10 +14,10 @@ suite = BenchmarkSuite(timeout=999,
                        benchmark_file='benchmark',
                        rerun=True)
 
-suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['fruits_dataset'])
+suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['tworooms-noneuler-latest'])
 
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-logreg.priority = 0.6
+logreg.priority = 0.5
 
 weinhuber = WeinhuberApproachSplittingStrategy()
 weinhuber.priority = 1

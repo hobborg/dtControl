@@ -137,6 +137,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         x_numeric = dataset.get_numeric_x()
         # print(dataset.x_metadata)
+        # print(dataset.y_metadata)
+        # print(np.unique(self.determinizer.determinize(dataset)))
         if x_numeric.shape[1] == 0:
             return
 
@@ -159,12 +161,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         All adjusted predicate/split objects will be stored inside a dict: 
         Key: split object   Value:Impurity of the split
         """
+        tmp_foo = np.unique(y)
         # See Linear Classifier
         splits = {}
         for single_split in self.user_given_splits:
             # Checking if every column reference is in its Interval
-            if single_split.check_data_in_column_interval(x_numeric):
-                for label in np.unique(y):
+            if single_split.coef_interval and single_split.check_data_in_column_interval(x_numeric):
+                for label in tmp_foo:
                     # Creating the label mask (see linear classifier)
                     new_y = np.copy(y)
                     label_mask = (new_y == label)
@@ -191,22 +194,22 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                         if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
                             fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
 
-                    if fixed_coefs:
-                        # unzipping
-                        coef, val = zip(*fixed_coefs.items())
-                        # calculation all combinations and zipping back together
-                        combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
-                        for comb in combinations:
-                            split_copy = deepcopy(single_split)
-                            split_copy.fit(comb, x_numeric, new_y)
-                            split_copy.priority = self.priority
-                            splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-
-                    else:
+                    # unzipping
+                    coef, val = zip(*fixed_coefs.items())
+                    # calculation all combinations and zipping back together
+                    combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+                    for comb in combinations:
                         split_copy = deepcopy(single_split)
-                        split_copy.fit([], x_numeric, new_y)
+                        split_copy.fit(comb, x_numeric, new_y)
                         split_copy.priority = self.priority
                         splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
+            elif single_split.check_data_in_column_interval(x_numeric):
+                split_copy = deepcopy(single_split)
+                split_copy.priority = self.priority
+                splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                print(split_copy)
+
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
+        print(weinhuber_split)
         return weinhuber_split

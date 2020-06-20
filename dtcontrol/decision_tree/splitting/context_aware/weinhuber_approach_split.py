@@ -172,14 +172,14 @@ class WeinhuberApproachSplit(Split):
             :param dataset: the dataset to be split
             :return: boolean
         """
-
         for column_reference in self.column_interval:
-            index = int(str(column_reference).split("x_")[1])
             interval = self.column_interval.get(column_reference)
-            column = x[:, index]
-            for val in column:
-                if not interval.contains(val):
-                    return False
+            if interval != sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity):
+                index = int(str(column_reference).split("x_")[1])
+                column = x[:, index]
+                for val in column:
+                    if not interval.contains(val):
+                        return False
         return True
 
     def predict(self, features):
