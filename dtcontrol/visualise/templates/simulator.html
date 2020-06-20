@@ -134,13 +134,16 @@
         </div>
       </div>
 
-      <div class="row">
-        <div class="column">
+      <div class="row" id="chartsHere">
+        <!-- <div class="column">
             <canvas id="chartContainer0"></canvas>
         </div>
         <div class="column">
             <canvas id="chartContainer1"></canvas>
         </div>
+        <div class="column">
+            <canvas id="chartContainer3"></canvas>
+      </div> -->
       </div>
 
       <div class="row">
@@ -577,23 +580,26 @@ function collapseAll(nd){
 }
 
 function drawCanvas(){
-  var lineLength = 100;
-  var canvas = document.getElementById("cartCanvas");
-  var c = canvas.getContext("2d");
+  if($('#controller').val()=="controller.scs"){
+    var lineLength = 100;
+    var canvas = document.getElementById("cartCanvas");
+    var c = canvas.getContext("2d");
 
-  c.clearRect(0,0,450,250);
+    c.clearRect(0,0,450,250);
 
-  c.fillStyle = "#000000";
-  // to fill 450x250
-  c.fillRect(150, 160, 150, 60);
+    c.fillStyle = "#000000";
+    // to fill 450x250
+    c.fillRect(150, 160, 150, 60);
 
-  c.beginPath();
-  c.moveTo(225,160);
-  c.lineWidth = 7;
-  c.strokeStyle = "#802b00";
-  var currentAngle = parseFloat(x_current[0][currentSim]);
-  c.lineTo(225+lineLength*Math.cos(currentAngle-(Math.PI/2)),160-lineLength*Math.sin(currentAngle-(Math.PI/2)));
-  c.stroke();
+    c.beginPath();
+    c.moveTo(225,160);
+    c.lineWidth = 7;
+    c.strokeStyle = "#802b00";
+    var currentAngle = parseFloat(x_current[0][currentSim]);
+    c.lineTo(225+lineLength*Math.cos(currentAngle-(Math.PI/2)),160-lineLength*Math.sin(currentAngle-(Math.PI/2)));
+    c.stroke();
+  }
+  
 
 }
 
@@ -858,10 +864,23 @@ $('#formFirst').on('submit', function(event) {
         drc0.textContent="Index";
         dumrow.appendChild(drc0);
 
+        const chartsDiv = document.getElementById('chartsHere');
+        // var chartShare = (100/(numVars%3));
+        var chartShare = 33;
+
         for(var i=0;i<numVars;i++){
           const drc1 = document.createElement('th');
           drc1.textContent="x"+i;
           dumrow.appendChild(drc1);
+
+          const someChartDiv = document.createElement('div');
+          someChartDiv.style.width = chartShare.toString()+"%";
+          someChartDiv.style.float = 'left';
+          someChartDiv.style.height = "80%";
+          const someChart = document.createElement('canvas');
+          someChart.setAttribute('id','chartContainer'+i.toString());
+          someChartDiv.appendChild(someChart);
+          chartsDiv.appendChild(someChartDiv);
         }
         
         if(numResults==1){
