@@ -13,6 +13,9 @@ from itertools import product
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
+    look_up_table_splits = {}
+    splits_checked = False
+
     def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer()):
 
         """
@@ -136,24 +139,36 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # tmp = self.tree_edit_distance(predicate_1, predicate_2)
 
         x_numeric = dataset.get_numeric_x()
-        # print(dataset.x_metadata)
-        # print(dataset.y_metadata)
-        # print(np.unique(self.determinizer.determinize(dataset)))
         if x_numeric.shape[1] == 0:
             return
 
         y = self.determinizer.determinize(dataset)
-        # Checking whether used variables in user_given_splits are actually represented in dataset
-        if not self.user_given_splits:
+        if not self.user_given_splits and not self.look_up_table_splits:
             return
 
         # TODO: LET THIS PART ONLY EXECUTE ONCE AT STARTUP
         # TODO: is_applicable should also only execute once at startup
-        for single_split in self.user_given_splits:
-            if not single_split.check_valid_column_reference(x_numeric):
-                self.logger.warning("Aborting: one predicate uses an invalid column reference."
-                                    "Invalid predicate: ", str(single_split))
-                return
+
+        # Checking whether user_given_splits were already processed
+        if not self.splits_checked:
+            # Checking whether used variables in user_given_splits are actually represented in dataset
+            splits_with_coefs = []
+            for single_split in self.user_given_splits:
+                if not single_split.check_valid_column_reference(x_numeric):
+                    self.logger.warning("Aborting: one predicate uses an invalid column reference."
+                                        "Invalid predicate: ", str(single_split))
+                    return
+                # Storing all splits without coefs to fit in a lookup table
+                # since their impurity measure does only need to be computed once.
+                if not single_split.coef_interval:
+                    split_copy = deepcopy(single_split)
+                    split_copy.priority = self.priority
+                    self.look_up_table_splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                else:
+                    splits_with_coefs.append(single_split)
+
+            self.user_given_splits = splits_with_coefs
+            self.splits_checked = True
 
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
@@ -161,17 +176,17 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         All adjusted predicate/split objects will be stored inside a dict: 
         Key: split object   Value:Impurity of the split
         """
-        tmp_foo = np.unique(y)
-        # See Linear Classifier
+
+        # Same approach as in linear_classifier.py
         splits = {}
         for single_split in self.user_given_splits:
             # Checking if every column reference is in its Interval
-            if single_split.coef_interval and single_split.check_data_in_column_interval(x_numeric):
-                for label in tmp_foo:
+            if single_split.check_data_in_column_interval(x_numeric):
+                for label in np.unique(y):
                     # Creating the label mask (see linear classifier)
                     new_y = np.copy(y)
                     label_mask = (new_y == label)
-                    new_y[label_mask] = 1
+                    new_y[label_mask] = 0 if single_split.relation == "=" else 1
                     new_y[~label_mask] = -1
 
                     """
@@ -206,12 +221,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                         split_copy.priority = self.priority
                         splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
-            elif single_split.check_data_in_column_interval(x_numeric):
-                split_copy = deepcopy(single_split)
-                split_copy.priority = self.priority
-                splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-                print(split_copy)
-
+        look_up_copy = {split: impurity for split, impurity in self.look_up_table_splits.items() if
+                        split.check_data_in_column_interval(x_numeric)}
+        splits.update(look_up_copy)
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
-        print(weinhuber_split)
         return weinhuber_split
