@@ -39,11 +39,10 @@ class WeinhuberApproachSplit(Split):
 
         self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
         self.logger.setLevel(logging.ERROR)
+        self.get_mask_lookup = None
 
     def __repr__(self):
-        return "WeinhuberApproachSplitObject:\ncolumn_interval: " + str(self.column_interval) + "\ncoef_interval: " + str(
-            self.coef_interval) + "\nterm: " + str(self.term) + "\nrelation: " + str(self.relation) + "\ncoef_assignment: " + str(
-            self.coef_assignment)
+        return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
 
     def fit(self, fixed_coefs, x, y):
         """
@@ -101,6 +100,8 @@ class WeinhuberApproachSplit(Split):
                 result = float(self.term.subs(new_subs_list).evalf())
                 out.append(result)
             ############
+            self.y = out
+            self.coef_fit = subs_list
             for index in range(len(out)):
                 # Checking the offset
                 if self.relation == "<=":
@@ -115,13 +116,14 @@ class WeinhuberApproachSplit(Split):
                 elif self.relation == "<":
                     if not ((out[index] < 0 and y[index] < 0) or (out[index] >= 0 and y[index] >= 0)):
                         return np.array(out)
+                elif self.relation == "=":
+                    if not ((out[index] == 0 and y[index] == 0) or (out[index] != 0 and y[index] != 0)):
+                        return np.array(out)
                 else:
                     self.logger.warning("Aborting: invalid relation found.")
                     return
 
-            self.y = out
-            self.coef_fit = subs_list
-            return np.array(out)
+            raise Exception('ALREADY FINISHED!')
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
@@ -147,8 +149,9 @@ class WeinhuberApproachSplit(Split):
         :param x: the dataset to be split
         :return: boolean
 
-        Checks every column referenciation index whether allowed or not.
+        Checks whether used column reference index is existing or not.
             e.g.
+            x_5 - c_0 >= 12; x_5 in {1,2,3}
             column_interval = {x_5:{1,2,3}}
             If the dataset got k columns with k > 5 --> True
             If the dataset got k columns with k <= 5 --> False
@@ -182,6 +185,23 @@ class WeinhuberApproachSplit(Split):
                         return False
         return True
 
+    def check_offset(self, offset):
+        # Checking the offset
+        if self.relation == "<=":
+            check = offset <= 0
+        elif self.relation == ">=":
+            check = offset >= 0
+        elif self.relation == ">":
+            check = offset > 0
+        elif self.relation == "<":
+            check = offset < 0
+        elif self.relation == "=":
+            check = offset == 0
+        else:
+            self.logger.warning("Aborting: invalid relation found.")
+            return
+        return check
+
     def predict(self, features):
         """
         Determines the child index of the split for one particular instance.
@@ -199,19 +219,7 @@ class WeinhuberApproachSplit(Split):
         if evaluated_predicate.free_symbols:
             return
 
-        # Checking the offset
-        if self.relation == "<=":
-            check = evaluated_predicate <= 0
-        elif self.relation == ">=":
-            check = evaluated_predicate >= 0
-        elif self.relation == ">":
-            check = evaluated_predicate > 0
-        elif self.relation == "<":
-            check = evaluated_predicate < 0
-        else:
-            self.logger.warning("Aborting: invalid relation found.")
-            return
-
+        check = self.check_offset(evaluated_predicate)
         return 0 if check else 1
 
     def get_masks(self, dataset):
@@ -220,17 +228,32 @@ class WeinhuberApproachSplit(Split):
         :param dataset: the dataset to be split
         :return: a list of the masks corresponding to each subset after the split
         """
-        data = dataset.get_numeric_x()
-        mask = []
 
-        # Using the predict function and iterating over row
-        for i in range(np.shape(dataset.get_numeric_x())[0]):
-            tmp1 = self.predict(np.array([data[i, :]]))
-            if tmp1 == 0:
-                mask.append(True)
-            else:
-                mask.append(False)
+        mask = []
+        if self.get_mask_lookup is not None:
+            return self.get_mask_lookup
+        elif self.y is not None:
+            for result in self.y:
+                mask.append(self.check_offset(result))
+        else:
+            counter = 0
+            term = deepcopy(self.term)
+            if self.coef_assignment is not None:
+                term = term.subs(self.coef_assignment)
+
+            args = sorted(term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
+            func = sp.lambdify(args, term)
+            # Prepare dataset for required args
+            data = deepcopy(dataset.get_numeric_x())
+            used_args_index = [int(str(i).split("_")[1]) for i in args]
+            data = data[:, used_args_index]
+
+            for row in data:
+                result = func(*row)
+                mask.append(self.check_offset(result))
+
         mask = np.array(mask)
+        self.get_mask_lookup = [mask, ~mask]
         return [mask, ~mask]
 
     def print_dot(self, variables=None, category_names=None):

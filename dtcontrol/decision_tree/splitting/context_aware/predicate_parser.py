@@ -63,7 +63,7 @@ class PredicateParser:
             return
 
         # Currently supported types of relations
-        supported_relation = ["<=", ">=", "<", ">"]
+        supported_relation = ["<=", ">=", "<", ">", "="]
 
         # output list containing all predicates parsed in tuple form
         output = []

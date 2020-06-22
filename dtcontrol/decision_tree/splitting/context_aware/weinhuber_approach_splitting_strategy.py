@@ -13,8 +13,7 @@ from itertools import product
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    look_up_table_splits = {}
-    splits_checked = False
+    first_run = True
 
     def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer()):
 
@@ -33,7 +32,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
         self.logger.setLevel(logging.ERROR)
 
-    def get_path_root_current(self, ancestor_range=5, current_node=None, path=[]):
+    def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
 
         """
         Standard depth first search.
@@ -143,14 +142,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             return
 
         y = self.determinizer.determinize(dataset)
-        if not self.user_given_splits and not self.look_up_table_splits:
+        if not self.user_given_splits:
             return
 
-        # TODO: LET THIS PART ONLY EXECUTE ONCE AT STARTUP
-        # TODO: is_applicable should also only execute once at startup
-
-        # Checking whether user_given_splits were already processed
-        if not self.splits_checked:
+        if self.first_run:
             # Checking whether used variables in user_given_splits are actually represented in dataset
             splits_with_coefs = []
             for single_split in self.user_given_splits:
@@ -158,17 +153,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     self.logger.warning("Aborting: one predicate uses an invalid column reference."
                                         "Invalid predicate: ", str(single_split))
                     return
-                # Storing all splits without coefs to fit in a lookup table
-                # since their impurity measure does only need to be computed once.
-                if not single_split.coef_interval:
-                    split_copy = deepcopy(single_split)
-                    split_copy.priority = self.priority
-                    self.look_up_table_splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-                else:
-                    splits_with_coefs.append(single_split)
-
-            self.user_given_splits = splits_with_coefs
-            self.splits_checked = True
+            self.first_run = False
 
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
@@ -182,47 +167,52 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         for single_split in self.user_given_splits:
             # Checking if every column reference is in its Interval
             if single_split.check_data_in_column_interval(x_numeric):
-                for label in np.unique(y):
-                    # Creating the label mask (see linear classifier)
-                    new_y = np.copy(y)
-                    label_mask = (new_y == label)
-                    new_y[label_mask] = 0 if single_split.relation == "=" else 1
-                    new_y[~label_mask] = -1
+                if not single_split.coef_interval:
+                    split_copy = deepcopy(single_split)
+                    split_copy.priority = self.priority
+                    splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                else:
+                    for label in np.unique(y):
+                        # Creating the label mask (see linear classifier)
+                        new_y = np.copy(y)
+                        label_mask = (new_y == label)
+                        new_y[label_mask] = 0 if single_split.relation == "=" else 1
+                        new_y[~label_mask] = -1
 
-                    """
-                    Applying fit function for every possible combination of already fixed coefs
+                        """
+                        Applying fit function for every possible combination of already fixed coefs
+    
+                        e.g.
+                        Split: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3+c_4 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
+    
+                        -->         combinations = [[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)],
+                                                    [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)],
+                                                    [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]
+    
+                        --> The other coefs (c_0, c_3, c_4) still have to be determined by fit (curve_fit)
+    
+                        """
 
-                    e.g.
-                    Split: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3+c_4 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
+                        fixed_coefs = {}
+                        # Checking if coef_interval is containing finite sets with fixed coefs
+                        for coef in single_split.coef_interval:
+                            if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
+                                fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
 
-                    -->         combinations = [[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)],
-                                                [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)],
-                                                [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]
+                        if fixed_coefs:
+                            # unzipping
+                            coef, val = zip(*fixed_coefs.items())
+                            # calculation all combinations and zipping back together
+                            combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+                        else:
+                            combinations = [[]]
 
-                    --> The other coefs (c_0, c_3, c_4) still have to be determined by fit (curve_fit)
+                        for comb in combinations:
+                            split_copy = deepcopy(single_split)
+                            split_copy.fit(comb, x_numeric, new_y)
+                            split_copy.priority = self.priority
+                            if split_copy.coef_assignment is not None:
+                                splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
-                    """
-
-                    fixed_coefs = {}
-                    # Checking if coef_interval is containing finite sets with fixed coefs
-                    for coef in single_split.coef_interval:
-                        if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
-                            fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
-                    if fixed_coefs:
-                        # unzipping
-                        coef, val = zip(*fixed_coefs.items())
-                        # calculation all combinations and zipping back together
-                        combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
-                    else:
-                        combinations = [[]]
-                    for comb in combinations:
-                        split_copy = deepcopy(single_split)
-                        split_copy.fit(comb, x_numeric, new_y)
-                        split_copy.priority = self.priority
-                        splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-
-        look_up_copy = {split: impurity for split, impurity in self.look_up_table_splits.items() if
-                        split.check_data_in_column_interval(x_numeric)}
-        splits.update(look_up_copy)
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
         return weinhuber_split
