@@ -30,15 +30,17 @@ class WeinhuberApproachSplit(Split):
         self.coef_interval = coef_interval
         self.term = term
         self.relation = relation
-
         self.coef_assignment = None
 
-        # Helper variables only used inside fit()
+        # Helper variables only used to speedup calculations inside fit()
         self.y = None
         self.coef_fit = None
+        self.coefs_to_determine = None
 
+        # Logger
         self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
         self.logger.setLevel(logging.ERROR)
+
         self.get_mask_lookup = None
 
     def __repr__(self):
@@ -52,20 +54,18 @@ class WeinhuberApproachSplit(Split):
         :param y: labels of a dataset
         """
 
+        # Edge Case no coefs used in the term
         if not self.coef_interval:
             return
 
-        # TODO: Think about whether this edge case should be covered or not
-        # if self.coef_assignment is not None:
-        #     self.logger.warning("Aborting: Split coef_assignment has already been determined.")
-        #     return
-
         # Checking type & shape of arguments
-        if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0]:
+        if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0] or not isinstance(
+                fixed_coefs, list):
             self.logger.warning("Aborting: invalid structure of the arguments x, y.")
             return
 
-        coefs_to_determine = sorted(set(self.coef_interval), key=lambda x: int(str(x).split("_")[1]))
+        # Checking structure of fixed_coefs
+        self.coefs_to_determine = sorted(set(self.coef_interval), key=lambda x: int(str(x).split("_")[1]))
         for (c_i, _) in fixed_coefs:
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
@@ -73,18 +73,18 @@ class WeinhuberApproachSplit(Split):
                 return
             else:
                 # Calculate coefs to determine with curve_fit
-                coefs_to_determine.remove(c_i)
-
-        if not coefs_to_determine:
+                self.coefs_to_determine.remove(c_i)
+        if not self.coefs_to_determine:
             return
 
-        inital_guess = [1 for coef in coefs_to_determine]
+        inital_guess = [1. for coef in self.coefs_to_determine]
 
         # Values that will be calculated later on
         calculated_coefs = None
         self.y = None
         self.coef_fit = None
 
+        # Substitution of already fixed coefs in Term
         if fixed_coefs:
             self.term = self.term.subs(fixed_coefs)
 
@@ -93,8 +93,8 @@ class WeinhuberApproachSplit(Split):
             out = []
             subs_list = []
 
-            for i in range(len(coefs_to_determine)):
-                subs_list.append((coefs_to_determine[i], args[i]))
+            for i in range(len(args)):
+                subs_list.append((self.coefs_to_determine[i], args[i]))
             new_term = self.term.subs(subs_list)
 
             args = sorted(new_term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
@@ -146,7 +146,7 @@ class WeinhuberApproachSplit(Split):
             # Assigning these coefs to coef_assignment
             coef_assignment = []
             for coef_index in range(len(calculated_coefs)):
-                coef_assignment.append((coefs_to_determine[coef_index], calculated_coefs[coef_index]))
+                coef_assignment.append((self.coefs_to_determine[coef_index], calculated_coefs[coef_index]))
             self.coef_assignment = coef_assignment
         # TODO: Maybe Logger Event? Failed to fit?
 
