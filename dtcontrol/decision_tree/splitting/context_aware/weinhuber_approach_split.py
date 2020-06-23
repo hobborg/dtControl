@@ -259,9 +259,25 @@ class WeinhuberApproachSplit(Split):
 
     def print_dot(self, variables=None, category_names=None):
         subs_list = self.coef_assignment if self.coef_assignment else []
-        evaluated_predicate = sp.pretty(self.term.subs(subs_list).evalf(5))
-        evaluated_predicate = evaluated_predicate.replace(" - ", "\\n-")
-        return evaluated_predicate.replace(" + ", "\\n+") + " " + self.relation + " 0"
+        evaluated_predicate = str(self.term.subs(subs_list).evalf(5))
+
+        sliced_term = []
+        for i in range(0, len(evaluated_predicate), 20):
+            sliced_term.append(evaluated_predicate[i:i + 20])
+
+        for single_slice in sliced_term[1:-1]:
+            if single_slice.__contains__(" + "):
+                formated_slice = single_slice.replace(" + ", " + \\n", 1)
+                sliced_term[sliced_term.index(single_slice)] = formated_slice
+            elif single_slice.__contains__(" - "):
+                formated_slice = single_slice.replace(" - ", " - \\n", 1)
+                sliced_term[sliced_term.index(single_slice)] = formated_slice
+            elif single_slice.__contains__(" * "):
+                formated_slice = single_slice.replace(" * ", " * \\n", 1)
+                sliced_term[sliced_term.index(single_slice)] = formated_slice
+
+        out = "".join(single_slice for single_slice in sliced_term)
+        return out + "\n" + self.relation + " 0"
 
     def print_c(self):
         # TODO
