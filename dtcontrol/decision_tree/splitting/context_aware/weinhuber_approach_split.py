@@ -65,7 +65,7 @@ class WeinhuberApproachSplit(Split):
             self.logger.warning("Aborting: invalid structure of the arguments x, y.")
             return
 
-        coefs_to_determine = list(set(self.coef_interval))
+        coefs_to_determine = sorted(set(self.coef_interval), key=lambda x: int(str(x).split("_")[1]))
         for (c_i, _) in fixed_coefs:
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
@@ -85,21 +85,27 @@ class WeinhuberApproachSplit(Split):
         self.y = None
         self.coef_fit = None
 
+        if fixed_coefs:
+            self.term = self.term.subs(fixed_coefs)
+
         # adapter function representing the term (for curve_fit usage)
         def adapter_function(x, *args):
             out = []
-            subs_list = deepcopy(fixed_coefs)
+            subs_list = []
 
             for i in range(len(coefs_to_determine)):
                 subs_list.append((coefs_to_determine[i], args[i]))
-            # TODO: Timer
-            for row_index in range(x.shape[0]):
-                new_subs_list = deepcopy(subs_list)
-                for column_index in range(len(x[row_index, :])):
-                    new_subs_list.append(("x_" + str(column_index), x[row_index, column_index]))
-                result = float(self.term.subs(new_subs_list).evalf())
+            new_term = self.term.subs(subs_list)
+
+            args = sorted(new_term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
+            func = func = sp.lambdify(args, new_term)
+            used_args_index = [int(str(i).split("_")[1]) for i in args]
+            data = x[:, used_args_index]
+
+            for row in data:
+                result = func(*row)
                 out.append(result)
-            ############
+
             self.y = out
             self.coef_fit = subs_list
             for index in range(len(out)):
@@ -236,7 +242,6 @@ class WeinhuberApproachSplit(Split):
             for result in self.y:
                 mask.append(self.check_offset(result))
         else:
-            counter = 0
             term = deepcopy(self.term)
             if self.coef_assignment is not None:
                 term = term.subs(self.coef_assignment)
