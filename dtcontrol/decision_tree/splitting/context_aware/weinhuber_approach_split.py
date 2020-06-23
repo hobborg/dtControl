@@ -77,6 +77,7 @@ class WeinhuberApproachSplit(Split):
         if not self.coefs_to_determine:
             return
 
+        # initial guess is very important since otherwise, curve_fit doesn't know how many coefs to fit
         inital_guess = [1. for coef in self.coefs_to_determine]
 
         # Values that will be calculated later on
@@ -129,8 +130,10 @@ class WeinhuberApproachSplit(Split):
                     self.logger.warning("Aborting: invalid relation found.")
                     return
 
+            # For optimization reasons, once the first solution was found (with right accuracy), the loop should end.
             raise Exception('ALREADY FINISHED!')
 
+        # Ignoring warnings, since for our purpose a failed fit can still be useful
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             try:
@@ -139,16 +142,9 @@ class WeinhuberApproachSplit(Split):
                 # Even if the curve_fit fails, it may have still passed some usefull information to self.y or self.coef_fit.
                 pass
 
+        # Calculations done --> Assigning calculated coefs
         if self.y is not None and self.coef_fit is not None:
             self.coef_assignment = self.coef_fit
-        elif calculated_coefs is not None:
-            # Checking if curve fit was able to compute some coefs. (If not, coef_assignment will stay None)
-            # Assigning these coefs to coef_assignment
-            coef_assignment = []
-            for coef_index in range(len(calculated_coefs)):
-                coef_assignment.append((self.coefs_to_determine[coef_index], calculated_coefs[coef_index]))
-            self.coef_assignment = coef_assignment
-        # TODO: Maybe Logger Event? Failed to fit?
 
     def check_valid_column_reference(self, x):
         """
