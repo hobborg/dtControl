@@ -99,7 +99,7 @@ class WeinhuberApproachSplit(Split):
             new_term = self.term.subs(subs_list)
 
             args = sorted(new_term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
-            func = func = sp.lambdify(args, new_term)
+            func = sp.lambdify(args, new_term)
             used_args_index = [int(str(i).split("_")[1]) for i in args]
             data = x[:, used_args_index]
 
