@@ -187,7 +187,6 @@ class Node:
             self.split = min(fallback_dict.keys(), key=fallback_dict.get)
         else:
             self.logger.warning("Aborting branch: no split possible.")
-            # TODO change error message
             if pre_determinize:
                 self.impurity_measure.determinizer.pre_determinized_labels = None
             return
