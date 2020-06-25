@@ -245,11 +245,11 @@ class WeinhuberApproachSplit(Split):
             args = sorted(term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
             func = sp.lambdify(args, term)
             # Prepare dataset for required args
-            data = deepcopy(dataset.get_numeric_x())
+            data = dataset.get_numeric_x()
             used_args_index = [int(str(i).split("_")[1]) for i in args]
-            data = data[:, used_args_index]
+            data_filltered = data[:, used_args_index]
 
-            for row in data:
+            for row in data_filltered:
                 result = func(*row)
                 mask.append(self.check_offset(result))
 
