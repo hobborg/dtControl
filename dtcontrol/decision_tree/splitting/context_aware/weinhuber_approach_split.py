@@ -160,11 +160,9 @@ class WeinhuberApproachSplit(Split):
         """
 
         allowed_var_index = x.shape[1] - 1
-        for var in self.column_interval:
-            x_index = int(str(var).split("x_")[1])
-            if x_index > allowed_var_index:
-                return False
-        return True
+        sorted_column_refs = sorted(set(self.column_interval), key=lambda x: int(str(x).split("_")[1]))
+        highest_index = int(str(sorted_column_refs[-1]).split("x_")[1])
+        return not highest_index > allowed_var_index
 
     def check_data_in_column_interval(self, x):
         """
@@ -211,18 +209,18 @@ class WeinhuberApproachSplit(Split):
         :returns: the child index (0/1 for a binary split)
         """
 
-        subs_list = deepcopy(self.coef_assignment) if self.coef_assignment else []
+        term = deepcopy(self.term)
+        if self.coef_assignment is not None:
+            term = term.subs(self.coef_assignment)
+        args = sorted(term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
+        func = sp.lambdify(args, term)
+        used_args_index = [int(str(i).split("_")[1]) for i in args]
 
-        # Iterating over every possible value and creating a substitution list
-        for i in range(len(features[0, :])):
-            subs_list.append(("x_" + str(i), features[0, i]))
+        data_filtered = [features[0, i] for i in range(len(features[0, :])) if used_args_index.__contains__(i)]
 
-        evaluated_predicate = self.term.subs(subs_list).evalf()
-        if evaluated_predicate.free_symbols:
-            return
+        result = func(*data_filtered)
+        return 0 if self.check_offset(result) else 1
 
-        check = self.check_offset(evaluated_predicate)
-        return 0 if check else 1
 
     def get_masks(self, dataset):
         """
@@ -247,9 +245,9 @@ class WeinhuberApproachSplit(Split):
             # Prepare dataset for required args
             data = dataset.get_numeric_x()
             used_args_index = [int(str(i).split("_")[1]) for i in args]
-            data_filltered = data[:, used_args_index]
+            data_filtered = data[:, used_args_index]
 
-            for row in data_filltered:
+            for row in data_filtered:
                 result = func(*row)
                 mask.append(self.check_offset(result))
 
