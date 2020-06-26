@@ -209,18 +209,15 @@ class WeinhuberApproachSplit(Split):
         :returns: the child index (0/1 for a binary split)
         """
 
-        term = deepcopy(self.term)
-        if self.coef_assignment is not None:
-            term = term.subs(self.coef_assignment)
-        args = sorted(term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
-        func = sp.lambdify(args, term)
-        used_args_index = [int(str(i).split("_")[1]) for i in args]
+        term = self.term.subs(self.coef_assignment) if self.coef_assignment is not None else self.term
 
-        data_filtered = [features[0, i] for i in range(len(features[0, :])) if used_args_index.__contains__(i)]
+        subs_list = []
+        # Iterating over every possible value and creating a substitution list
+        for i in range(len(features[0, :])):
+            subs_list.append(("x_" + str(i), features[0, i]))
 
-        result = func(*data_filtered)
+        result = term.subs(subs_list).evalf()
         return 0 if self.check_offset(result) else 1
-
 
     def get_masks(self, dataset):
         """
@@ -236,9 +233,7 @@ class WeinhuberApproachSplit(Split):
             for result in self.y:
                 mask.append(self.check_offset(result))
         else:
-            term = deepcopy(self.term)
-            if self.coef_assignment is not None:
-                term = term.subs(self.coef_assignment)
+            term = self.term.subs(self.coef_assignment) if self.coef_assignment is not None else self.term
 
             args = sorted(term.free_symbols, key=lambda x: int(str(x).split("_")[1]))
             func = sp.lambdify(args, term)

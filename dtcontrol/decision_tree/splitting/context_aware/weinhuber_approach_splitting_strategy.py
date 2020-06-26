@@ -147,7 +147,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         if self.first_run:
             # Checking whether used variables in user_given_splits are actually represented in dataset
-            splits_with_coefs = []
             for single_split in self.user_given_splits:
                 if not single_split.check_valid_column_reference(x_numeric):
                     self.logger.warning("Aborting: one predicate uses an invalid column reference."
