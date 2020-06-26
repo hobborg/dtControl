@@ -96,25 +96,31 @@ class TestSplitCurveFit(unittest.TestCase):
     def helper_fit(self, split, x, y):
         copy_split = deepcopy(split)
         copy_split.fit([], x, y)
-        return set(copy_split.coef_assignment)
+        return copy_split.coef_assignment
 
     def test_fit_linear(self):
         c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('c_0 c_1 c_2 c_3 c_4 c_5')
 
-        coef_assignment_1 = [(c_4, -1.5064260304162933), (c_1, 0.0033307416540457146), (c_0, 0.17200009866610524),
-                             (c_2, 0.7146818999152404),
-                             (c_3, -0.26526052933093897)]
-        self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_1, self.data_y_1), set(coef_assignment_1))
+        coef_assignment_1 = [(c_0, 0.1720005117441602),
+                             (c_1, 0.003330672196933837),
+                             (c_2, 0.7146818484482542),
+                             (c_3, -0.2652606736991465),
+                             (c_4, -1.5064267251464263)]
+        self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_1, self.data_y_1), coef_assignment_1)
 
-        coef_assignment_2 = [(c_4, 1.1454545454692278), (c_0, -2.1651569426239803e-12), (c_1, -0.03636363636362639),
-                             (c_2, -2.1822543772032077e-12),
-                             (c_3, -2.1969093211282598e-12)]
-        self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_2, self.data_y_2), set(coef_assignment_2))
+        coef_assignment_2 = [(c_0, -1.1921147180515845e-07),
+                             (c_1, -0.03636369539912798),
+                             (c_2, -2.1791457527342573e-12),
+                             (c_3, -2.1946888750790094e-12),
+                             (c_4, 1.1454543134203623)]
+        self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_2, self.data_y_2), coef_assignment_2)
 
-        coef_assignment_3 = [(c_4, 3.5023071852310514), (c_1, -0.006591957811487801), (c_0, -1.6809492419229106),
-                             (c_3, -0.26367831245735257),
-                             (c_2, -2.1596058275008545e-12)]
-        self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_3, self.data_y_3), set(coef_assignment_3))
+        coef_assignment_3 = [(c_0, -1.6809487527583804),
+                             (c_1, -0.006592031186399394),
+                             (c_2, -2.225997164373439e-12),
+                             (c_3, -0.2636783674879648),
+                             (c_4, 3.502306420885194)]
+        self.assertEqual(self.helper_fit(deepcopy(self.split1), self.data_x_3, self.data_y_3), coef_assignment_3)
 
     def test_fit_invalid_edge_cases(self):
         split = deepcopy(self.split1)
