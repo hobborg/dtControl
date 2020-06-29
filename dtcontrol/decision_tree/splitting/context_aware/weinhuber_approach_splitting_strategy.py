@@ -11,9 +11,10 @@ from apted.helpers import Tree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from itertools import product
 
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
+
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
-    first_run = True
 
     def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer()):
 
@@ -31,6 +32,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
         self.logger.setLevel(logging.ERROR)
+        self.first_run = True
 
     def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
 
@@ -120,6 +122,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             print("No parent splits yet")
         print("----------------------------")
 
+    def helper_equal(self, obj1, obj2):
+        return isinstance(obj2,
+                          WeinhuberApproachSplit) and obj1.column_interval == obj2.column_interval and obj1.coef_interval == obj2.coef_interval and obj1.term == obj2.term and obj1.relation == obj2.relation
+
     def find_split(self, dataset, impurity_measure):
 
         """
@@ -130,9 +136,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # TODO: Think about incorporating tree edit distance into splitting strategy
         # (Safed for later)TREE EDIT USAGE CODE:
-        # tmp = self.get_path_root_current()
-        # self.print_path_root_current(tmp)
-        #
         # predicate_1 = sp.sympify("-0.10073*x_0+0.00080492*x_1+0.5956*x_2-0.22309*x_3-0.96975")
         # predicate_2 = sp.sympify("-0.10073*x_0+0.00080492*x_1+0.5956*x_2-0.22309")
         # tmp = self.tree_edit_distance(predicate_1, predicate_2)
@@ -142,8 +145,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             return
 
         y = self.determinizer.determinize(dataset)
-        if not self.user_given_splits:
-            return
 
         if self.first_run:
             # Checking whether used variables in user_given_splits are actually represented in dataset
@@ -154,6 +155,14 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     return
             self.first_run = False
 
+        root_path = self.get_path_root_current()
+        ancestor_splits = [node.split for node in root_path] if root_path is not None else []
+        predicate_list = []
+        for i in self.user_given_splits:
+            mask = [self.helper_equal(i, predicate) for predicate in ancestor_splits]
+            if True not in mask or i.coef_interval:
+                predicate_list.append(i)
+        # TODO: Edge cases when list is empty etc
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
         to achieve the lowest impurity possible with the user given predicate/split.
@@ -163,7 +172,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # Same approach as in linear_classifier.py
         splits = {}
-        for single_split in self.user_given_splits:
+        for single_split in predicate_list:
             # Checking if every column reference is in its Interval
             if single_split.check_data_in_column_interval(x_numeric):
                 if not single_split.coef_interval:

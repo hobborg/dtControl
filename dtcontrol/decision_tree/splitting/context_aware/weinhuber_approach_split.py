@@ -4,7 +4,6 @@ from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
 import logging
-from copy import deepcopy
 from scipy.optimize import curve_fit
 
 
@@ -75,6 +74,7 @@ class WeinhuberApproachSplit(Split):
                 # Calculate coefs to determine with curve_fit
                 self.coefs_to_determine.remove(c_i)
         if not self.coefs_to_determine:
+            self.coef_assignment = fixed_coefs
             return
 
         # initial guess is very important since otherwise, curve_fit doesn't know how many coefs to fit
