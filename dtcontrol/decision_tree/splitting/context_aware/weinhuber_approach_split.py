@@ -45,6 +45,11 @@ class WeinhuberApproachSplit(Split):
     def __repr__(self):
         return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
 
+    def helper_equal(self, obj1):
+        return isinstance(obj1, WeinhuberApproachSplit) and obj1.column_interval == self.column_interval \
+               and obj1.coef_interval == self.coef_interval \
+               and obj1.term == self.term and obj1.relation == self.relation
+
     def fit(self, fixed_coefs, x, y):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)

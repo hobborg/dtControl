@@ -11,8 +11,6 @@ from apted.helpers import Tree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from itertools import product
 
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
-
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
@@ -33,6 +31,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
         self.logger.setLevel(logging.ERROR)
         self.first_run = True
+        self.optimized_tree_check_version = False
 
     def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
 
@@ -122,10 +121,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             print("No parent splits yet")
         print("----------------------------")
 
-    def helper_equal(self, obj1, obj2):
-        return isinstance(obj2,
-                          WeinhuberApproachSplit) and obj1.column_interval == obj2.column_interval and obj1.coef_interval == obj2.coef_interval and obj1.term == obj2.term and obj1.relation == obj2.relation
-
     def find_split(self, dataset, impurity_measure):
 
         """
@@ -155,14 +150,17 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     return
             self.first_run = False
 
-        root_path = self.get_path_root_current()
-        ancestor_splits = [node.split for node in root_path] if root_path is not None else []
         predicate_list = []
-        for i in self.user_given_splits:
-            mask = [self.helper_equal(i, predicate) for predicate in ancestor_splits]
-            if True not in mask or i.coef_interval:
-                predicate_list.append(i)
-        # TODO: Edge cases when list is empty etc
+        if self.optimized_tree_check_version:
+            root_path = self.get_path_root_current()
+            ancestor_splits = [node.split for node in root_path] if root_path is not None else []
+
+            for i in self.user_given_splits:
+                mask = [i.helper_equal(predicate) for predicate in ancestor_splits]
+                if True not in mask or i.coef_interval:
+                    predicate_list.append(i)
+        else:
+            predicate_list = self.user_given_splits
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
         to achieve the lowest impurity possible with the user given predicate/split.
