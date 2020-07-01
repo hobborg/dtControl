@@ -31,7 +31,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
         self.logger.setLevel(logging.ERROR)
         self.first_run = True
-        self.optimized_tree_check_version = False
+        self.optimized_tree_check_version = True
 
     def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
 
@@ -156,9 +156,12 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             ancestor_splits = [node.split for node in root_path] if root_path is not None else []
 
             for i in self.user_given_splits:
-                mask = [i.helper_equal(predicate) for predicate in ancestor_splits]
-                if True not in mask or i.coef_interval:
+                if i.coef_interval:
                     predicate_list.append(i)
+                else:
+                    mask = [i.helper_equal(predicate) for predicate in ancestor_splits]
+                    if True not in mask:
+                        predicate_list.append(i)
         else:
             predicate_list = self.user_given_splits
         """
