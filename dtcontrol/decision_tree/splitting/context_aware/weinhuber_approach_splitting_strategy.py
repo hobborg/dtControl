@@ -10,6 +10,7 @@ from apted import APTED
 from apted.helpers import Tree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from itertools import product
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
@@ -147,7 +148,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 if not single_split.check_valid_column_reference(x_numeric):
                     self.logger.warning("Aborting: one predicate uses an invalid column reference."
                                         "Invalid predicate: ", str(single_split))
-                    return
+                    raise WeinhuberStrategyException(
+                        "Aborting: one predicate uses an invalid column reference.\nCheck logger or comments for more information.")
             self.first_run = False
 
         predicate_list = []

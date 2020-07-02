@@ -5,6 +5,7 @@ import numpy as np
 import sympy as sp
 import logging
 from scipy.optimize import curve_fit
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberSplitException
 
 
 class WeinhuberApproachSplit(Split):
@@ -66,7 +67,7 @@ class WeinhuberApproachSplit(Split):
         if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0] or not isinstance(
                 fixed_coefs, list):
             self.logger.warning("Aborting: invalid structure of the arguments x, y.")
-            return
+            raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y.\nCheck logger or comments for more information.")
 
         # Checking structure of fixed_coefs
         self.coefs_to_determine = sorted(set(self.coef_interval), key=lambda x: int(str(x).split("_")[1]))
@@ -74,7 +75,7 @@ class WeinhuberApproachSplit(Split):
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
                 self.logger.warning("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
-                return
+                raise WeinhuberSplitException("Aborting: invalid fixed_coefs member found.\nCheck logger or comments for more information.")
             else:
                 # Calculate coefs to determine with curve_fit
                 self.coefs_to_determine.remove(c_i)
@@ -133,7 +134,8 @@ class WeinhuberApproachSplit(Split):
                         return np.array(out)
                 else:
                     self.logger.warning("Aborting: invalid relation found.")
-                    return
+                    raise WeinhuberSplitException(
+                        "Aborting: Split with invalid relation can not be fitted.\nCheck logger or comments for more information.")
 
             # For optimization reasons, once the first solution was found (with right accuracy), the loop should end.
             raise Exception('ALREADY FINISHED!')
@@ -204,7 +206,7 @@ class WeinhuberApproachSplit(Split):
             check = offset == 0
         else:
             self.logger.warning("Aborting: invalid relation found.")
-            return
+            raise WeinhuberSplitException("Aborting: Invalid relation found.\nCheck logger or comments for more information.")
         return check
 
     def predict(self, features):
