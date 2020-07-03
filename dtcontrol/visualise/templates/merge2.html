@@ -26,6 +26,31 @@
 </head>
 
 <body id="bootstrap-override">
+
+    <div class="modal fade" id="formSecondModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Select initial values</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formSecond">
+                    <div class="modal-body" id="formSecondBody">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="randomizeInputs()" class="btn btn-primary">Randomise</button>
+                        <button type="submit" value="Send" class="btn btn-primary"> Send </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <form id="formFirst">
@@ -121,9 +146,7 @@
             <input type="submit" value="Send">
 
         </form>
-        <form id="formSecond">
 
-        </form>
     </div>
 
     <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
@@ -160,7 +183,7 @@
         </nav>
 
         <div class="row">
-            <div class="col-lg-6">
+            <div class="col-lg-6" id="expandThisDiv">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <button onclick="expandAll(null)">Expand all</button>
@@ -175,7 +198,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6">
+            <div class="col-lg-6" id="hideThisDiv">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div style="text-align:center;">
@@ -214,13 +237,7 @@
 
     </div>
 
-
-
-    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> -->
-    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script> -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
-    <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
     <script src="{{url_for( 'static', filename='js/heavylifting-new.js' )}}"></script>
     <script>
