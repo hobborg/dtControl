@@ -3,7 +3,7 @@ import logging
 import re
 import sympy as sp
 from sympy.core.function import AppliedUndef
-
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
 
 class PredicateParser:
 
@@ -55,12 +55,12 @@ class PredicateParser:
                 input_line = [predicate.rstrip() for predicate in file]
         except FileNotFoundError:
             cls._logger().warning("Aborting: input file with user predicates not found.")
-            return
+            raise WeinhuberPredicateParserException("Aborting: File not found.\nCheck logger or comments for more information.")
 
         # Edge Case user input == ""
         if not input_line:
             cls._logger().warning("Aborting: input file with user predicates is empty.")
-            return
+            raise WeinhuberPredicateParserException("Aborting: File is empty.\nCheck logger or comments for more information.")
 
         # Currently supported types of relations
         supported_relation = ["<=", ">=", "<", ">", "="]
@@ -89,7 +89,8 @@ class PredicateParser:
                             if interval == sp.EmptySet:
                                 cls._logger().warning("Aborting: one coefficient is an empty set."
                                                       "Invalid interval: ", str(interval))
-                                return
+                                raise WeinhuberPredicateParserException(
+                                    "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                             else:
                                 all_interval_defs[sp.sympify(split_coef_definition[0])] = interval
 
@@ -121,22 +122,26 @@ class PredicateParser:
                                         cls._logger().warning("Aborting: invalid interval for a coefficient."
                                                               "Invalid coefficient: ", str(var), "Invalid interval: ", str(check_interval),
                                                               "Invalid predicate: ", str(single_predicate))
-                                        return
+                                        raise WeinhuberPredicateParserException(
+                                            "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                             else:
                                 cls._logger().warning("Aborting: one symbol inside one predicate does not have a valid structure."
                                                       "Invalid symbol: ", str(var), "Invalid predicate: ", str(single_predicate))
-                                return
+                                raise WeinhuberPredicateParserException(
+                                    "Aborting: Invalid symbol.\nCheck logger or comments for more information.")
                         # Checking if every (symbol in interval)-Definition, occurs in in the term.
                         # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term
                         if all_interval_defs:
                             cls._logger().warning("Aborting: invalid symbol in interval definition without symbol usage in the term."
                                                   "Invalid symbol(s): ", str(all_interval_defs), "Invalid predicate: ",
                                                   str(single_predicate))
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid symbol definition.\nCheck logger or comments for more information.")
                     except Exception:
                         cls._logger().warning("Aborting: one predicate does not have a valid structure."
                                               "Invalid predicate: ", str(single_predicate))
-                        return
+                        raise WeinhuberPredicateParserException(
+                            "Aborting: Invalid state reached.\nCheck logger or comments for more information.")
                     else:
                         # Checking valid structure of predicate
                         if term.atoms(AppliedUndef):
@@ -144,28 +149,28 @@ class PredicateParser:
                             cls._logger().warning("Aborting: one predicate contains an undefined function."
                                                   "Undefined function: ", term.atoms(AppliedUndef), "Invalid predicate: ",
                                                   str(single_predicate))
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid predicate.\nCheck logger or comments for more information.")
                         elif not column_interval:
                             cls._logger().warning("Aborting: one predicate does not contain variables to reference columns."
                                                   "Invalid predicate: ", str(single_predicate))
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid predicate.\nCheck logger or comments for more information.")
                         elif term == 0 or term.evalf() == 0:
                             cls._logger().warning("Aborting: one predicate does evaluate to zero."
                                                   "Invalid predicate: ", str(single_predicate))
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid predicate.\nCheck logger or comments for more information.")
                         elif not split_pred or not term or not column_interval:
                             cls._logger().warning("Aborting: one predicate does not have a valid structure."
                                                   "Invalid predicate: ", str(single_predicate))
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid predicate.\nCheck logger or comments for more information.")
                         else:
                             output.append(WeinhuberApproachSplit(column_interval, coef_interval, term, relation))
                     break
 
-        if not output:
-            cls._logger().warning("Aborting: all predicates have an invalid structure")
-            return
-        else:
-            return output
+        return output
 
     @classmethod
     def parse_user_interval(cls, user_input):
@@ -217,16 +222,19 @@ class PredicateParser:
         # super basic beginning and end char check of whole input
         if not user_input.strip():
             cls._logger().warning("Warning: no interval found.")
-            return
+            raise WeinhuberPredicateParserException(
+                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
         elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[":
             cls._logger().warning("Warning: interval starts with an invalid char."
                                   "Invalid interval: ", user_input)
-            return
+            raise WeinhuberPredicateParserException(
+                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
         elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[
             -1] is not "]":
             cls._logger().warning("Warning: interval ends with an invalid char."
                                   "Invalid interval: ", user_input)
-            return
+            raise WeinhuberPredicateParserException(
+                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
 
         user_input = user_input.lower()
         # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
@@ -266,21 +274,25 @@ class PredicateParser:
                         except Exception:
                             cls._logger().warning("Warning: invalid member found."
                                                   "Invalid interval: ", user_input)
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                         if tmp == sp.nan:
                             cls._logger().warning("Warning: invalid NaN member found."
                                                   "Invalid interval: ", user_input)
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                         elif tmp == sp.S.Infinity or tmp == sp.S.NegativeInfinity:
                             cls._logger().warning("Warning: infinity is an invalid member."
                                                   "Invalid interval: ", user_input)
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                         elif isinstance(tmp, sp.Number):
                             checked_members.append(tmp)
                         else:
                             cls._logger().warning("Warning: Invalid member found in finite interval."
                                                   "Invalid member: ", str(tmp), " Invalid interval: ", interval)
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                     # Edge case: if no member is valid --> empty set will be returned.
                     out = sp.FiniteSet(*checked_members)
                     if out == sp.EmptySet:
@@ -293,7 +305,8 @@ class PredicateParser:
                     # Interval starts with { but does not end with }
                     cls._logger().warning("Warning: Invalid char at end of interval found."
                                           "Invalid interval: ", interval)
-                    return
+                    raise WeinhuberPredicateParserException(
+                        "Aborting: Invalid interval.\nCheck logger or comments for more information.")
             elif interval[0] == "(" or interval[0] == "[":
                 # normal intervals of structure (1,2] etc
 
@@ -305,24 +318,28 @@ class PredicateParser:
                 else:
                     cls._logger().warning("Warning: interval starts with an invalid char."
                                           "Invalid interval: ", user_input)
-                    return
+                    raise WeinhuberPredicateParserException(
+                        "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                 # Checking boundaries of interval
                 tmp = interval[1:-1].split(",")
                 if len(tmp) > 2:
                     cls._logger().warning("Warning: too many numbers inside an interval."
                                           "Invalid interval: ", user_input)
-                    return
+                    raise WeinhuberPredicateParserException(
+                        "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                 try:
                     a = sp.sympify(tmp[0]).evalf()
                     b = sp.sympify(tmp[1]).evalf()
                     if a == sp.nan or b == sp.nan:
                         cls._logger().warning("Warning: invalid NaN interval boundary found."
                                               "Invalid interval: ", user_input)
-                        return
+                        raise WeinhuberPredicateParserException(
+                            "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                 except Exception:
                     cls._logger().warning("Warning: Invalid member found inside interval."
                                           "Invalid interval: ", interval)
-                    return
+                    raise WeinhuberPredicateParserException(
+                        "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                 else:
                     if isinstance(a, sp.Number) and isinstance(b, sp.Number):
                         # Checking of last char
@@ -334,22 +351,26 @@ class PredicateParser:
                         else:
                             cls._logger().warning("Warning: interval ends with an invalid char."
                                                   "Invalid interval: ", user_input)
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                         out = sp.Interval(a, b, right_open=right_open, left_open=left_open)
                         if out == sp.EmptySet:
                             cls._logger().warning("Warning: Invalid empty interval found."
                                                   "Invalid interval: ", interval)
-                            return
+                            raise WeinhuberPredicateParserException(
+                                "Aborting: Invalid interval.\nCheck logger or comments for more information.")
                         else:
                             interval_list.append(out)
                     else:
                         cls._logger().warning("Warning: Invalid member found inside interval."
                                               "Invalid interval: ", interval)
-                        return
+                        raise WeinhuberPredicateParserException(
+                            "Aborting: Invalid interval.\nCheck logger or comments for more information.")
             else:
                 cls._logger().warning("Warning: Invalid char found inside interval."
                                       "Invalid interval: ", str(interval))
-                return
+                raise WeinhuberPredicateParserException(
+                    "Aborting: Invalid interval.\nCheck logger or comments for more information.")
 
         # Union
         final_interval = interval_list[0]
