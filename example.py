@@ -13,7 +13,8 @@ suite = BenchmarkSuite(timeout=999,
                        benchmark_file='benchmark',
                        rerun=True)
 
-suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['cruise-latest'])
+
+suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['cruise_safa'])
 
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 logreg.priority = 0
@@ -27,5 +28,6 @@ aa.priority = 0
 classifiers = [
     DecisionTree([weinhuber, aa], Entropy(), 'Weinhuber Strategy')
 ]
+
 suite.benchmark(classifiers)
 suite.display_html()
