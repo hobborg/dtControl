@@ -150,7 +150,7 @@ var i = 0,
 var margin = { top: 20, right: 120, bottom: 20, left: 120 },
     width = 1560 - margin.right - margin.left,
     height = 500 - margin.top - margin.bottom;
-
+var width, height;
 // var margin = { top: 20, right: 120, bottom: 20, left: 120 },
 // width = 4560 - margin.right - margin.left,
 // height = 1500 - margin.top - margin.bottom;
@@ -170,6 +170,9 @@ function myFunc() {
         .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom)
         .attr("style", "overflow-x: auto; overflow-y: auto;")
+        .call(d3.zoom().on("zoom", function() {
+            svg.attr("transform", d3.event.transform)
+        }))
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -340,6 +343,34 @@ function recolourPath() {
         }
     }
     update(root);
+}
+
+function getDepth(depthNode) {
+    if (depthNode.children) {
+        var ans = 0;
+        for (var i = 0; i < depthNode.children.length; i++) {
+            ans = Math.max(ans, getDepth(depthNode.children[i]));
+        }
+        return ans + 1;
+    } else {
+        return 0;
+    }
+
+}
+
+function getLeaves(depthNode) {
+    if (depthNode.children) {
+        if (depthNode.children.length == 0) {
+            return 1;
+        }
+        var ans = 0;
+        for (var i = 0; i < depthNode.children.length; i++) {
+            ans += getLeaves(depthNode.children[i]);
+        }
+        return ans;
+    } else {
+        return 1;
+    }
 }
 
 function expandAll(nd) {
@@ -643,6 +674,13 @@ $(document).ready(function() {
                 numVars = data.numVars;
                 numResults = data.numResults;
 
+                console.log(treeData);
+
+                // height = 50 * getLeaves(treeData[0]);
+                height = 25 * getLeaves(treeData[0]);
+                // height = 650;
+                width = 200 * getDepth(treeData[0]);
+
                 for (var i = 0; i < numVars; i++) {
                     x_current.push([]);
                     chart.push([]);
@@ -741,12 +779,6 @@ $(document).ready(function() {
 
                     x_bounds.push([data.bound[0][i], data.bound[1][i]]);
                 }
-
-                // const dumSubmit = document.createElement('input');
-                // dumSubmit.setAttribute('type', 'submit');
-                // dumSubmit.setAttribute('value', 'Send');
-                // dumSubmit.style.visibility = "hidden";
-                // opt.appendChild(dumSubmit);
 
                 $('#formSecondModal').modal('toggle');
 

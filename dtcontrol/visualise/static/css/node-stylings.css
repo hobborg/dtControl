@@ -36,9 +36,19 @@
 
 .table-fixed {
     height: 300px;
-    overflow-y: auto;
+    overflow-y: scroll;
     width: 100%;
     display: block;
+}
+
+#expandThisDiv {
+    height: 450px;
+}
+
+.card-body {
+    max-height: 425px;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 
