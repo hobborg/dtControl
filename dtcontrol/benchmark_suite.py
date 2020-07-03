@@ -27,6 +27,7 @@ multi_output_c_template = env.get_template('multi_output.c')
 
 util.ignore_convergence_warnings()
 
+
 class BenchmarkSuite:
     """
     The benchmark suite runs the given classifiers on the given datasets and saves the results.
@@ -48,6 +49,9 @@ class BenchmarkSuite:
 
         logging.info(f"INFO: Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
         logging.info(f"INFO: Constructed trees will be written to {self.output_folder}.\n")
+
+        self.logger = logging.getLogger("BenchmarkSuite_logger")
+        self.logger.setLevel(logging.ERROR)
 
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
@@ -146,6 +150,8 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
+            # TODO: INITIAL LOGGER PLACE
+            self.logger.warning("Decision Tree was built in " + str(run_time))
             if isinstance(classifier, BDD):
                 acc = 1.0  # TODO: make BDD checking code work with multi-output datasets
             else:
@@ -163,6 +169,9 @@ class BenchmarkSuite:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
                     classifier.save(self.get_filename(self.save_folder, dataset, classifier, '.saved', unique=True))
+            # TODO: Logger continued
+            accuracy_time = time.time() - run_time
+            self.logger.warning("dtControl finished in " + str(accuracy_time))
         else:
             cell = 'timeout'
         return cell
