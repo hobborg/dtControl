@@ -263,11 +263,18 @@ def main_parse(args):
                         ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
                         'SafePruning'])
 
-    presets = args["config"]
+    if "config" in args.keys():
+        presets = args["config"]
+        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets, user_config, default_config)
+    else:
+        presets = "default"
+        numeric_split = args["numeric-predicates"]
+        categorical_split = args["categorical-predicates"]
+        determinize = args["determinize"]
+        impurity = args["impurity"]
+        tolerance = float(args["tolerance"])
+        safe_pruning = (args["safe-pruning"]=="true")
 
-    numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
-                                                                                                    user_config,
-                                                                                                    default_config)
     try:
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
                                     tolerance=tolerance,
