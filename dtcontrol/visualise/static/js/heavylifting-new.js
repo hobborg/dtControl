@@ -11,7 +11,6 @@ var numResults;
 var chart = [];
 var chartConfig = [];
 var nextDisabled = false;
-var isUser = false;
 
 const simTableDiv = document.getElementById('tableHere');
 
@@ -61,7 +60,6 @@ function postload() {
     }
 
     var det = document.getElementById("numeric-predicates");
-    console.log(allConfig['numeric-predicates'].length);
     for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['numeric-predicates'][i];
@@ -87,35 +85,6 @@ function postload() {
         opt.setAttribute('id', allConfig['impurity'][i]);
         det.appendChild(opt);
     }
-
-    // var myDiv0 = document.getElementById("numeric-predicates");
-    // for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-    //     var checkbox = document.createElement('input');
-    //     checkbox.type = "checkbox";
-    //     checkbox.name = 'numeric-predicates[]';
-    //     checkbox.value = allConfig['numeric-predicates'][i];
-    //     checkbox.id = allConfig['numeric-predicates'][i];
-    //     var label = document.createElement('label');
-    //     label.htmlFor = allConfig['numeric-predicates'][i];
-    //     label.appendChild(document.createTextNode(allConfig['numeric-predicates'][i]));
-    //     myDiv0.appendChild(checkbox);
-    //     myDiv0.appendChild(label);
-    // }
-
-    // var myDiv1 = document.getElementById("categorical-predicates");
-    // for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-    //     var checkbox = document.createElement('input');
-    //     checkbox.type = "checkbox";
-    //     checkbox.name = 'categorical-predicates[]';
-    //     checkbox.value = allConfig['categorical-predicates'][i];
-    //     checkbox.id = allConfig['categorical-predicates'][i];
-    //     var label = document.createElement('label');
-    //     label.htmlFor = allConfig['categorical-predicates'][i];
-    //     label.appendChild(document.createTextNode(allConfig['categorical-predicates'][i]));
-    //     myDiv1.appendChild(checkbox);
-    //     myDiv1.appendChild(label);
-    // }
-
     $("#config").trigger("change");
 
 }
@@ -189,7 +158,6 @@ var margin = { top: 20, right: 120, bottom: 20, left: 120 },
 
 
 function myFunc() {
-    // console.log("myFunc called");
     // ************** Generate the tree diagram	 *****************
 
     tree = d3.layout.tree()
@@ -578,13 +546,10 @@ async function oneStep() {
             .done(function(data) {
 
                 const tab = document.getElementById('simTable');
-                const enclosingDiv = document.createElement('div');
-                enclosingDiv.setAttribute('class', 'row');
                 const dumrow = document.createElement('tr');
 
 
                 const drc0 = document.createElement('td');
-                drc0.setAttribute('class', "col");
                 const drc0_inp = document.createElement('input');
 
                 drc0_inp.setAttribute('type', 'radio');
@@ -598,19 +563,16 @@ async function oneStep() {
 
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('td');
-                    drc1.setAttribute('class', "col");
                     drc1.textContent = data.x_new[0][i];
                     dumrow.appendChild(drc1);
                 }
 
                 for (var i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('td');
-                    drc2.setAttribute('class', "col");
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
                 }
-                enclosingDiv.appendChild(dumrow);
-                tab.appendChild(enclosingDiv);
+                tab.appendChild(dumrow);
                 colourPath(data.x_new[2]);
 
                 for (var i = 0; i < numVars; i++) {
@@ -649,33 +611,11 @@ async function oneStep() {
 
 }
 
-// function clearCheckBoxes() {
-//     for (var i = 0; i < allConfig["numeric-predicates"].length; i++) {
-//         if ($('#' + allConfig["numeric-predicates"][i]).prop("checked")) {
-//             $('#' + allConfig["numeric-predicates"][i]).trigger('click');
-//         }
-//     }
-//     for (var i = 0; i < allConfig["categorical-predicates"].length; i++) {
-//         if ($('#' + allConfig["categorical-predicates"][i]).prop("checked")) {
-//             $('#' + allConfig["categorical-predicates"][i]).trigger('click');
-//         }
-//     }
-// }
-
 $(document).ready(function() {
 
     var numChanges = 0;
 
     $('#formFirst').on('submit', function(event) {
-        // var num_preds_toPass = [];
-        // $('input[name="numeric-predicates[]"]:checked').each(function() {
-        //     num_preds_toPass.push(this.value);
-        // });
-        // var cat_preds_toPass = [];
-        // $('input[name="categorical-predicates[]"]:checked').each(function() {
-        //     cat_preds_toPass.push(this.value);
-        // });
-
         $.ajax({
                 data: JSON.stringify({
                     controller: $('#controller').val(),
@@ -692,6 +632,12 @@ $(document).ready(function() {
                 url: '/simRoute'
             })
             .done(function(data) {
+
+                // resizing to get largest space for tree
+                if ($('#controller').val() != "controller.scs") {
+                    document.getElementById("expandThisDiv").className = "col-lg-12";
+                    document.getElementById("hideThisDiv").remove();
+                }
 
                 treeData = data.classi;
                 numVars = data.numVars;
@@ -719,27 +665,18 @@ $(document).ready(function() {
                 const tab = document.createElement('table');
                 tab.setAttribute('id', "simTable");
                 tab.setAttribute('class', "table table-fixed");
-                const enclosingDiv = document.createElement('div');
-                enclosingDiv.setAttribute('class', 'row');
                 const dumrow = document.createElement('tr');
 
                 const drc0 = document.createElement('th');
                 drc0.textContent = "Index";
-                drc0.setAttribute('scope', "col");
-                drc0.setAttribute('class', "col");
                 dumrow.appendChild(drc0);
 
                 const chartsDiv0 = document.getElementById('chartsHere0');
                 const chartsDiv1 = document.getElementById('chartsHere1');
 
-                // var chartShare = (100/(numVars%3));
-                // var chartShare = 33;
-
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('th');
                     drc1.textContent = "x" + i;
-                    drc1.setAttribute('scope', "col");
-                    drc1.setAttribute('class', "col");
                     dumrow.appendChild(drc1);
 
                     const someChartDiv = document.createElement('div');
@@ -748,7 +685,6 @@ $(document).ready(function() {
                     someChartDiv.style.height = someChartDiv.style.width;
                     const someChart = document.createElement('canvas');
                     someChart.setAttribute('id', 'chartContainer' + i.toString());
-                    // someChart.setAttribute('style', 'width:100%;height:100%;');
                     someChartDiv.appendChild(someChart);
 
                     const heir0 = document.createElement('div');
@@ -756,7 +692,6 @@ $(document).ready(function() {
 
                     const heir1 = document.createElement('div');
                     heir1.setAttribute('class', "card-body");
-                    // heir1.setAttribute('style', "height:300px;overflow-y: auto;display: block;");
 
                     const heir2 = document.createElement('div');
                     heir2.setAttribute('style', "text-align:center;");
@@ -775,23 +710,18 @@ $(document).ready(function() {
                 if (numResults == 1) {
                     const drc2 = document.createElement('th');
                     drc2.textContent = "u";
-                    drc2.setAttribute('scope', "col");
-                    drc2.setAttribute('class', "col");
                     dumrow.appendChild(drc2);
                 } else {
                     for (var i = 0; i < numResults; i++) {
                         const drc2 = document.createElement('th');
                         drc2.textContent = "u" + i;
-                        drc2.setAttribute('scope', "col");
-                        drc2.setAttribute('class', "col");
                         dumrow.appendChild(drc2);
                     }
                 }
-                enclosingDiv.appendChild(dumrow);
-                tab.appendChild(enclosingDiv);
+                tab.appendChild(dumrow);
                 simTableDiv.appendChild(tab);
 
-                const opt = document.getElementById("formSecond");
+                const opt = document.getElementById("formSecondBody");
                 for (var i = 0; i < numVars; i++) {
                     const dumDiv = document.createElement('div');
 
@@ -812,11 +742,13 @@ $(document).ready(function() {
                     x_bounds.push([data.bound[0][i], data.bound[1][i]]);
                 }
 
-                const dumSubmit = document.createElement('input');
-                dumSubmit.setAttribute('type', 'submit');
-                dumSubmit.setAttribute('value', 'Send');
-                dumSubmit.style.visibility = "hidden";
-                opt.appendChild(dumSubmit);
+                // const dumSubmit = document.createElement('input');
+                // dumSubmit.setAttribute('type', 'submit');
+                // dumSubmit.setAttribute('value', 'Send');
+                // dumSubmit.style.visibility = "hidden";
+                // opt.appendChild(dumSubmit);
+
+                $('#formSecondModal').modal('toggle');
 
             });
 
@@ -825,6 +757,7 @@ $(document).ready(function() {
     });
 
     $('#formSecond').on('submit', function(event) {
+        console.log('form is submitted');
         var x_toPass = [];
         for (var i = 0; i < numVars; i++) {
             x_toPass.push(parseFloat($('#x' + i).val()));
@@ -838,12 +771,9 @@ $(document).ready(function() {
             .done(function(data) {
                 //data .decision changed to array
                 const tab = document.getElementById('simTable');
-                const enclosingDiv = document.createElement('div');
-                enclosingDiv.setAttribute('class', 'row');
                 const dumrow = document.createElement('tr');
 
                 const drc0 = document.createElement('td');
-                drc0.setAttribute('class', "col");
                 const drc0_inp = document.createElement('input');
 
                 drc0_inp.setAttribute('type', 'radio');
@@ -857,18 +787,15 @@ $(document).ready(function() {
 
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('td');
-                    drc1.setAttribute('class', "col");
                     drc1.textContent = $('#x' + i).val();
                     dumrow.appendChild(drc1)
                 }
                 for (var i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('td');
-                    drc2.setAttribute('class', "col");
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
                 }
-                enclosingDiv.appendChild(dumrow);
-                tab.appendChild(enclosingDiv);
+                tab.appendChild(dumrow);
                 colourPath(data.path);
 
                 for (var i = 0; i < numVars; i++) {
@@ -892,6 +819,7 @@ $(document).ready(function() {
                 }
 
                 drawCanvas();
+                $('#formSecondModal').modal('hide');
 
             });
 
@@ -926,12 +854,8 @@ $(document).ready(function() {
                     var numSteps = parseInt($('#steps').val());
 
                     for (var i = 0; i < numSteps; i++) {
-                        const enclosingDiv = document.createElement('div');
-                        enclosingDiv.setAttribute('class', 'row');
                         const dumrow = document.createElement('tr');
-
                         const drc0 = document.createElement('td');
-                        drc0.setAttribute('class', "col");
                         const drc0_inp = document.createElement('input');
                         drc0_inp.setAttribute('type', 'radio');
                         drc0_inp.setAttribute('name', 'indexers');
@@ -943,18 +867,15 @@ $(document).ready(function() {
 
                         for (var j = 0; j < numVars; j++) {
                             const drc1 = document.createElement('td');
-                            drc1.setAttribute('class', "col");
                             drc1.textContent = data.x_new[i][0][j];
                             dumrow.appendChild(drc1);
                         }
                         for (var j = 0; j < numResults; j++) {
                             const drc2 = document.createElement('td');
-                            drc2.setAttribute('class', "col");
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
                         }
-                        enclosingDiv.appendChild(dumrow);
-                        tab.appendChild(enclosingDiv);
+                        tab.appendChild(dumrow);
 
                         for (var j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
@@ -1027,7 +948,6 @@ $(document).ready(function() {
     $("#config").change(function() {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
-            isUser = false;
             for (x in data2.presets) {
                 //x is  preset names
                 if ($(this).val() == x) {
@@ -1044,8 +964,6 @@ $(document).ready(function() {
                                     $('#safe-pruning').val("false");
                                 }
                             } else {
-                                console.log(y);
-                                console.log(data2.presets[x][y]);
                                 $("#" + y).val(data2.presets[x][y]);
                             }
                         } else {
@@ -1058,8 +976,6 @@ $(document).ready(function() {
                                     $('#safe-pruning').val("false");
                                 }
                             } else {
-                                console.log(y);
-                                console.log(data2.presets["default"][y]);
                                 $("#" + y).val(data2.presets["default"][y]);
                             }
                         }
@@ -1069,35 +985,18 @@ $(document).ready(function() {
 
                 }
             }
-            isUser = true;
         }
 
 
     });
 
     $(".propList").change(function() {
-        console.log("change done by user");
         document.getElementById("config").value = "custom";
     });
     $("#tolerance").on("input", function() {
-        console.log("change done by user to text");
         document.getElementById("config").value = "custom";
     });
     // Simple .change() does not work here because it is dynamically added
-    $(document).on("click", 'input[name="numeric-predicates[]"]', function(e) {
-        if (isUser) {
-            console.log("change done by user to numpre");
-            document.getElementById("config").value = "custom";
-        }
-    });
-    $(document).on("click", 'input[name="categorical-predicates[]"]', function(e) {
-        if (isUser) {
-            console.log("change done by user to catpre");
-            document.getElementById("config").value = "custom";
-        }
-    });
-
-
 });
 
 
@@ -1106,4 +1005,11 @@ slider.oninput = function() {
     timeOfSlider = this.value;
     clearInterval(plpause);
     plpause = setInterval(oneStep, timeOfSlider);
+}
+
+function randomizeInputs() {
+    for (var i = 0; i < numVars; i++) {
+        var range = x_bounds[i][1] - x_bounds[i][0];
+        document.getElementById('x' + i).value = x_bounds[i][0] + (Math.random() * range);
+    }
 }
