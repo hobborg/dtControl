@@ -18,11 +18,51 @@
     stroke-width: 2px;
 }
 
+
+/* 
 #cartCanvas {
     border: 1px solid black;
-}
+} */
 
 #treeHere {
-    width: 400px;
+    /* width: 400px; */
     overflow: scroll;
 }
+
+#tableHere {
+    /* width: 400px; */
+    overflow: scroll;
+}
+
+.table-fixed {
+    height: 300px;
+    overflow-y: auto;
+    width: 100%;
+    display: block;
+}
+
+
+/* .col-lg-6 {
+    height: 1340px;
+} */
+
+
+/*
+.table-fixed,
+.table-fixed tr,
+.table-fixed td,
+.table-fixed th {
+    display: block;
+}
+
+.table-fixed td,
+.table-fixed th,
+.table-fixed tr>th {
+    float: left;
+    position: relative;
+    &::after {
+        content: '';
+        clear: both;
+        display: block;
+    }
+} */

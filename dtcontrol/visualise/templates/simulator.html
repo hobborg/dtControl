@@ -2,137 +2,130 @@
 <html lang="en">
 
 <head>
-    <!-- <style>
-        .col {
-            float: left;
-            width: 50%;
-            height: 80%;
-        }
-        
-        .row {
-            float: left;
-            width: 100%;
-            height: 33%;
-        }
-    </style> -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>Controller Select</title>
-    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}"> -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/node-stylings.css') }}">
+    <!-- Custom fonts for this template-->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
+    <!-- Custom styles for this template-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.css') }}">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/node-stylings.css') }}">
 </head>
 
 <body id="page-top">
-
-
-    <div class="container-fluid">
-        <h1>dtControl Frontend</h1>
-        <div class="row">
-            <div class="col">
+    <div id="wrapper">
+        <div class="container-fluid">
+            <h1>dtControl Frontend</h1>
+            <div class="row">
                 <div class="col">
-                    <form id="formFirst">
-                        <div>
-                            <label for="controller">Choose a controller:</label>
-                            <select id="controller" name="controller">
-                  
-                  </select>
-                        </div>
-                        <div>
-                            <label for="config">Choose a config:</label>
-                            <select id="config" name="config">
-                  
-                  </select>
-                        </div>
-                        <div>
-                            <label for="determinize">Determinize:</label>
-                            <select class="propList" id="determinize" name="determinize">
-
-                  </select>
-                        </div>
-                        <div>
-                            <div id="numeric-predicates">
-                                <h4>Numeric-predicates:</h4>
+                    <div class="col">
+                        <form id="formFirst">
+                            <div>
+                                <label for="controller">Choose a controller:</label>
+                                <select id="controller" name="controller">
+                      
+                      </select>
                             </div>
-                        </div>
-                        <div>
+                            <div>
+                                <label for="config">Choose a config:</label>
+                                <select id="config" name="config">
+                      
+                      </select>
+                            </div>
+                            <div>
+                                <label for="determinize">Determinize:</label>
+                                <select class="propList" id="determinize" name="determinize">
+    
+                      </select>
+                            </div>
+                            <div>
+                                <div id="numeric-predicates">
+                                    <h4>Numeric-predicates:</h4>
+                                </div>
+                            </div>
+                            <div>
 
-                            <div id="categorical-predicates">
-                                <h4>Categorical-predicates:</h4>
+                                <div id="categorical-predicates">
+                                    <h4>Categorical-predicates:</h4>
+
+                                </div>
 
                             </div>
+                            <div>
+                                <label for="impurity">Impurity:</label>
+                                <select class="propList" id="impurity" name="impurity">
+                      
+                    </select>
+                            </div>
+                            <div>
+                                <label for="tolerance">Tolerance:</label>
+                                <input type="text" id="tolerance" name="tolerance"><br><br>
+                            </div>
+                            <div>
+                                <label for="safe-pruning">Safe-pruning:</label>
+                                <select class="propList" name="safe-pruning" id="safe-pruning">
+                      <option value="true">True</opotion>
+                      <option value="false">False</opotion>
+                    </select>
+                            </div>
 
-                        </div>
-                        <div>
-                            <label for="impurity">Impurity:</label>
-                            <select class="propList" id="impurity" name="impurity">
-                  
-                </select>
-                        </div>
-                        <div>
-                            <label for="tolerance">Tolerance:</label>
-                            <input type="text" id="tolerance" name="tolerance"><br><br>
-                        </div>
-                        <div>
-                            <label for="safe-pruning">Safe-pruning:</label>
-                            <select class="propList" name="safe-pruning" id="safe-pruning">
-                  <option value="true">True</opotion>
-                  <option value="false">False</opotion>
-                </select>
-                        </div>
+                            <input type="submit" value="Send">
+                        </form>
+                        <input type="radio" id="play" name="player" value='0' />
+                        <label for="play">Play</label>
+                        <input type="radio" id="pause" name="player" value='1' />
+                        <label for="pause">Pause</label>
+                        <input type="radio" id="next" name="player" value='2' />
+                        <label for="next">Next</label>
+                        <input type="radio" id="back" name="player" value='3' />
+                        <label for="back">Back</label>
+                        <form id="instep">
+                            <div>
+                                <label for="steps">Number of steps to take</label>
+                                <input type="number" id="steps" name="steps" min="1">
+                            </div>
+                            <input type="submit" value="Send">
+                        </form>
 
-                        <input type="submit" value="Send">
-                    </form>
-                    <input type="radio" id="play" name="player" value='0' />
-                    <label for="play">Play</label>
-                    <input type="radio" id="pause" name="player" value='1' />
-                    <label for="pause">Pause</label>
-                    <input type="radio" id="next" name="player" value='2' />
-                    <label for="next">Next</label>
-                    <input type="radio" id="back" name="player" value='3' />
-                    <label for="back">Back</label>
-                    <form id="instep">
-                        <div>
-                            <label for="steps">Number of steps to take</label>
-                            <input type="number" id="steps" name="steps" min="1">
+                        <form id="formSecond">
+
+                        </form>
+                        <div class="slidecontainer">
+                            <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
                         </div>
-                        <input type="submit" value="Send">
-                    </form>
-
-                    <form id="formSecond">
-
-                    </form>
-                    <div class="slidecontainer">
-                        <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
                     </div>
+
+
                 </div>
+                <div class="col">
+                    <canvas id="cartCanvas" width="450" height="250"></canvas>
+                </div>
+            </div>
 
+            <div class="row" id="chartsHere">
 
             </div>
-            <div class="col">
-                <canvas id="cartCanvas" width="450" height="250"></canvas>
+
+            <div class="row">
+                <div class="col" id="treeHere">
+                    <button onclick="expandAll(null)">Expand all</button>
+                    <button onclick="collapseAll(null)">Collapse all</button>
+
+                </div>
+                <div class="col" id="tableHere">
+
+                </div>
             </div>
+
+
         </div>
-
-        <div class="row" id="chartsHere">
-
-        </div>
-
-        <div class="row">
-            <div class="col" id="treeHere">
-                <button onclick="expandAll(null)">Expand all</button>
-                <button onclick="collapseAll(null)">Collapse all</button>
-
-            </div>
-            <div class="col" id="tableHere">
-
-            </div>
-        </div>
-
-
     </div>
+
+
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>

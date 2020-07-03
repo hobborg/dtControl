@@ -60,32 +60,23 @@ function postload() {
         det.appendChild(opt);
     }
 
-    var myDiv0 = document.getElementById("numeric-predicates");
+    var det = document.getElementById("numeric-predicates");
+    console.log(allConfig['numeric-predicates'].length);
     for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-        var checkbox = document.createElement('input');
-        checkbox.type = "checkbox";
-        checkbox.name = 'numeric-predicates[]';
-        checkbox.value = allConfig['numeric-predicates'][i];
-        checkbox.id = allConfig['numeric-predicates'][i];
-        var label = document.createElement('label');
-        label.htmlFor = allConfig['numeric-predicates'][i];
-        label.appendChild(document.createTextNode(allConfig['numeric-predicates'][i]));
-        myDiv0.appendChild(checkbox);
-        myDiv0.appendChild(label);
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['numeric-predicates'][i];
+        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
+        opt.setAttribute('id', allConfig['numeric-predicates'][i]);
+        det.appendChild(opt);
     }
 
-    var myDiv1 = document.getElementById("categorical-predicates");
+    var det = document.getElementById("categorical-predicates");
     for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-        var checkbox = document.createElement('input');
-        checkbox.type = "checkbox";
-        checkbox.name = 'categorical-predicates[]';
-        checkbox.value = allConfig['categorical-predicates'][i];
-        checkbox.id = allConfig['categorical-predicates'][i];
-        var label = document.createElement('label');
-        label.htmlFor = allConfig['categorical-predicates'][i];
-        label.appendChild(document.createTextNode(allConfig['categorical-predicates'][i]));
-        myDiv1.appendChild(checkbox);
-        myDiv1.appendChild(label);
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['categorical-predicates'][i];
+        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
+        opt.setAttribute('id', allConfig['categorical-predicates'][i]);
+        det.appendChild(opt);
     }
 
     var det = document.getElementById("impurity");
@@ -96,6 +87,34 @@ function postload() {
         opt.setAttribute('id', allConfig['impurity'][i]);
         det.appendChild(opt);
     }
+
+    // var myDiv0 = document.getElementById("numeric-predicates");
+    // for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
+    //     var checkbox = document.createElement('input');
+    //     checkbox.type = "checkbox";
+    //     checkbox.name = 'numeric-predicates[]';
+    //     checkbox.value = allConfig['numeric-predicates'][i];
+    //     checkbox.id = allConfig['numeric-predicates'][i];
+    //     var label = document.createElement('label');
+    //     label.htmlFor = allConfig['numeric-predicates'][i];
+    //     label.appendChild(document.createTextNode(allConfig['numeric-predicates'][i]));
+    //     myDiv0.appendChild(checkbox);
+    //     myDiv0.appendChild(label);
+    // }
+
+    // var myDiv1 = document.getElementById("categorical-predicates");
+    // for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
+    //     var checkbox = document.createElement('input');
+    //     checkbox.type = "checkbox";
+    //     checkbox.name = 'categorical-predicates[]';
+    //     checkbox.value = allConfig['categorical-predicates'][i];
+    //     checkbox.id = allConfig['categorical-predicates'][i];
+    //     var label = document.createElement('label');
+    //     label.htmlFor = allConfig['categorical-predicates'][i];
+    //     label.appendChild(document.createTextNode(allConfig['categorical-predicates'][i]));
+    //     myDiv1.appendChild(checkbox);
+    //     myDiv1.appendChild(label);
+    // }
 
     $("#config").trigger("change");
 
@@ -160,8 +179,12 @@ var i = 0,
     root;
 
 var margin = { top: 20, right: 120, bottom: 20, left: 120 },
-    width = 4560 - margin.right - margin.left,
-    height = 1500 - margin.top - margin.bottom;
+    width = 1560 - margin.right - margin.left,
+    height = 500 - margin.top - margin.bottom;
+
+// var margin = { top: 20, right: 120, bottom: 20, left: 120 },
+// width = 4560 - margin.right - margin.left,
+// height = 1500 - margin.top - margin.bottom;
 
 
 
@@ -555,9 +578,13 @@ async function oneStep() {
             .done(function(data) {
 
                 const tab = document.getElementById('simTable');
+                const enclosingDiv = document.createElement('div');
+                enclosingDiv.setAttribute('class', 'row');
                 const dumrow = document.createElement('tr');
 
+
                 const drc0 = document.createElement('td');
+                drc0.setAttribute('class', "col");
                 const drc0_inp = document.createElement('input');
 
                 drc0_inp.setAttribute('type', 'radio');
@@ -571,17 +598,19 @@ async function oneStep() {
 
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('td');
+                    drc1.setAttribute('class', "col");
                     drc1.textContent = data.x_new[0][i];
                     dumrow.appendChild(drc1);
                 }
 
                 for (var i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('td');
+                    drc2.setAttribute('class', "col");
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
                 }
-
-                tab.appendChild(dumrow);
+                enclosingDiv.appendChild(dumrow);
+                tab.appendChild(enclosingDiv);
                 colourPath(data.x_new[2]);
 
                 for (var i = 0; i < numVars; i++) {
@@ -620,40 +649,40 @@ async function oneStep() {
 
 }
 
-function clearCheckBoxes() {
-    for (var i = 0; i < allConfig["numeric-predicates"].length; i++) {
-        if ($('#' + allConfig["numeric-predicates"][i]).prop("checked")) {
-            $('#' + allConfig["numeric-predicates"][i]).trigger('click');
-        }
-    }
-    for (var i = 0; i < allConfig["categorical-predicates"].length; i++) {
-        if ($('#' + allConfig["categorical-predicates"][i]).prop("checked")) {
-            $('#' + allConfig["categorical-predicates"][i]).trigger('click');
-        }
-    }
-}
+// function clearCheckBoxes() {
+//     for (var i = 0; i < allConfig["numeric-predicates"].length; i++) {
+//         if ($('#' + allConfig["numeric-predicates"][i]).prop("checked")) {
+//             $('#' + allConfig["numeric-predicates"][i]).trigger('click');
+//         }
+//     }
+//     for (var i = 0; i < allConfig["categorical-predicates"].length; i++) {
+//         if ($('#' + allConfig["categorical-predicates"][i]).prop("checked")) {
+//             $('#' + allConfig["categorical-predicates"][i]).trigger('click');
+//         }
+//     }
+// }
 
 $(document).ready(function() {
 
     var numChanges = 0;
 
     $('#formFirst').on('submit', function(event) {
-        var num_preds_toPass = [];
-        $('input[name="numeric-predicates[]"]:checked').each(function() {
-            num_preds_toPass.push(this.value);
-        });
-        var cat_preds_toPass = [];
-        $('input[name="categorical-predicates[]"]:checked').each(function() {
-            cat_preds_toPass.push(this.value);
-        });
+        // var num_preds_toPass = [];
+        // $('input[name="numeric-predicates[]"]:checked').each(function() {
+        //     num_preds_toPass.push(this.value);
+        // });
+        // var cat_preds_toPass = [];
+        // $('input[name="categorical-predicates[]"]:checked').each(function() {
+        //     cat_preds_toPass.push(this.value);
+        // });
 
         $.ajax({
                 data: JSON.stringify({
                     controller: $('#controller').val(),
                     config: $('#config').val(),
                     determinize: $('#determinize').val(),
-                    numeric_predicates: (num_preds_toPass),
-                    categorical_predicates: (cat_preds_toPass),
+                    numeric_predicates: $('#numeric-predicates').val(),
+                    categorical_predicates: $('#categorical-predicates').val(),
                     impurity: $('#impurity').val(),
                     tolerance: $('#tolerance').val(),
                     safe_pruning: $('#safe-pruning').val()
@@ -689,43 +718,77 @@ $(document).ready(function() {
 
                 const tab = document.createElement('table');
                 tab.setAttribute('id', "simTable");
+                tab.setAttribute('class', "table table-fixed");
+                const enclosingDiv = document.createElement('div');
+                enclosingDiv.setAttribute('class', 'row');
                 const dumrow = document.createElement('tr');
+
                 const drc0 = document.createElement('th');
                 drc0.textContent = "Index";
+                drc0.setAttribute('scope', "col");
+                drc0.setAttribute('class', "col");
                 dumrow.appendChild(drc0);
 
-                const chartsDiv = document.getElementById('chartsHere');
+                const chartsDiv0 = document.getElementById('chartsHere0');
+                const chartsDiv1 = document.getElementById('chartsHere1');
+
                 // var chartShare = (100/(numVars%3));
-                var chartShare = 33;
+                // var chartShare = 33;
 
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('th');
                     drc1.textContent = "x" + i;
+                    drc1.setAttribute('scope', "col");
+                    drc1.setAttribute('class', "col");
                     dumrow.appendChild(drc1);
 
                     const someChartDiv = document.createElement('div');
-                    someChartDiv.style.width = chartShare.toString() + "%";
+                    someChartDiv.style.width = "100%";
                     someChartDiv.style.float = 'left';
-                    someChartDiv.style.height = "80%";
+                    someChartDiv.style.height = someChartDiv.style.width;
                     const someChart = document.createElement('canvas');
                     someChart.setAttribute('id', 'chartContainer' + i.toString());
+                    // someChart.setAttribute('style', 'width:100%;height:100%;');
                     someChartDiv.appendChild(someChart);
-                    chartsDiv.appendChild(someChartDiv);
+
+                    const heir0 = document.createElement('div');
+                    heir0.setAttribute('class', "card shadow mb-4");
+
+                    const heir1 = document.createElement('div');
+                    heir1.setAttribute('class', "card-body");
+                    // heir1.setAttribute('style', "height:300px;overflow-y: auto;display: block;");
+
+                    const heir2 = document.createElement('div');
+                    heir2.setAttribute('style', "text-align:center;");
+
+                    heir2.appendChild(someChartDiv);
+                    heir1.appendChild(heir2);
+                    heir0.appendChild(heir1);
+                    if (i % 2 == 0) {
+                        chartsDiv0.appendChild(heir0);
+                    } else {
+                        chartsDiv1.appendChild(heir0);
+                    }
+
                 }
 
                 if (numResults == 1) {
                     const drc2 = document.createElement('th');
                     drc2.textContent = "u";
+                    drc2.setAttribute('scope', "col");
+                    drc2.setAttribute('class', "col");
                     dumrow.appendChild(drc2);
                 } else {
                     for (var i = 0; i < numResults; i++) {
                         const drc2 = document.createElement('th');
                         drc2.textContent = "u" + i;
+                        drc2.setAttribute('scope', "col");
+                        drc2.setAttribute('class', "col");
                         dumrow.appendChild(drc2);
                     }
                 }
-
-                tab.appendChild(dumrow);
+                enclosingDiv.appendChild(dumrow);
+                tab.appendChild(enclosingDiv);
                 simTableDiv.appendChild(tab);
 
                 const opt = document.getElementById("formSecond");
@@ -752,6 +815,7 @@ $(document).ready(function() {
                 const dumSubmit = document.createElement('input');
                 dumSubmit.setAttribute('type', 'submit');
                 dumSubmit.setAttribute('value', 'Send');
+                dumSubmit.style.visibility = "hidden";
                 opt.appendChild(dumSubmit);
 
             });
@@ -774,9 +838,12 @@ $(document).ready(function() {
             .done(function(data) {
                 //data .decision changed to array
                 const tab = document.getElementById('simTable');
+                const enclosingDiv = document.createElement('div');
+                enclosingDiv.setAttribute('class', 'row');
                 const dumrow = document.createElement('tr');
 
                 const drc0 = document.createElement('td');
+                drc0.setAttribute('class', "col");
                 const drc0_inp = document.createElement('input');
 
                 drc0_inp.setAttribute('type', 'radio');
@@ -790,16 +857,18 @@ $(document).ready(function() {
 
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('td');
+                    drc1.setAttribute('class', "col");
                     drc1.textContent = $('#x' + i).val();
                     dumrow.appendChild(drc1)
                 }
                 for (var i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('td');
+                    drc2.setAttribute('class', "col");
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
                 }
-
-                tab.appendChild(dumrow);
+                enclosingDiv.appendChild(dumrow);
+                tab.appendChild(enclosingDiv);
                 colourPath(data.path);
 
                 for (var i = 0; i < numVars; i++) {
@@ -857,8 +926,12 @@ $(document).ready(function() {
                     var numSteps = parseInt($('#steps').val());
 
                     for (var i = 0; i < numSteps; i++) {
+                        const enclosingDiv = document.createElement('div');
+                        enclosingDiv.setAttribute('class', 'row');
                         const dumrow = document.createElement('tr');
+
                         const drc0 = document.createElement('td');
+                        drc0.setAttribute('class', "col");
                         const drc0_inp = document.createElement('input');
                         drc0_inp.setAttribute('type', 'radio');
                         drc0_inp.setAttribute('name', 'indexers');
@@ -870,16 +943,18 @@ $(document).ready(function() {
 
                         for (var j = 0; j < numVars; j++) {
                             const drc1 = document.createElement('td');
+                            drc1.setAttribute('class', "col");
                             drc1.textContent = data.x_new[i][0][j];
                             dumrow.appendChild(drc1);
                         }
                         for (var j = 0; j < numResults; j++) {
                             const drc2 = document.createElement('td');
+                            drc2.setAttribute('class', "col");
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
                         }
-
-                        tab.appendChild(dumrow);
+                        enclosingDiv.appendChild(dumrow);
+                        tab.appendChild(enclosingDiv);
 
                         for (var j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
@@ -951,7 +1026,7 @@ $(document).ready(function() {
 
     $("#config").change(function() {
         if ($(this).val() != "custom") {
-            clearCheckBoxes();
+            // clearCheckBoxes();
             isUser = false;
             for (x in data2.presets) {
                 //x is  preset names
@@ -968,15 +1043,9 @@ $(document).ready(function() {
                                 } else {
                                     $('#safe-pruning').val("false");
                                 }
-                            } else if (y == "numeric-predicates") {
-                                for (var z = 0; z < data2.presets[x][y].length; z++) {
-                                    $("#" + data2.presets[x][y][z]).trigger('click');
-                                }
-                            } else if (y == "categorical-predicates") {
-                                for (var z = 0; z < data2.presets[x][y].length; z++) {
-                                    $("#" + data2.presets[x][y][z]).trigger('click');
-                                }
                             } else {
+                                console.log(y);
+                                console.log(data2.presets[x][y]);
                                 $("#" + y).val(data2.presets[x][y]);
                             }
                         } else {
@@ -988,15 +1057,9 @@ $(document).ready(function() {
                                 } else {
                                     $('#safe-pruning').val("false");
                                 }
-                            } else if (y == "numeric-predicates") {
-                                for (var z = 0; z < data2.presets["default"][y].length; z++) {
-                                    $("#" + data2.presets["default"][y][z]).trigger('click');
-                                }
-                            } else if (y == "categorical-predicates") {
-                                for (var z = 0; z < data2.presets["default"][y].length; z++) {
-                                    $("#" + data2.presets["default"][y][z]).trigger('click');
-                                }
                             } else {
+                                console.log(y);
+                                console.log(data2.presets["default"][y]);
                                 $("#" + y).val(data2.presets["default"][y]);
                             }
                         }

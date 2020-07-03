@@ -13,7 +13,7 @@ maxBounds  = []
 
 @app.route("/")
 def home():
-    return render_template("basic_form.html")
+    return render_template("merge2.html")
 
 @app.route("/simulator")
 def simulator():
@@ -21,9 +21,15 @@ def simulator():
 
 @app.route("/simRoute", methods=['POST'])
 def simroute():
-    cont = request.form.get('controller') #if key doesn't exist, returns None
-    config = request.form.get('config')
-    ToParserDict = {"controller": cont, "config" : config }
+    #if key doesn't exist, returns None
+    data = request.get_json()
+    cont = data['controller']
+    config = data['config']
+    ToParserDict = {}
+    if(config=="custom"):
+        ToParserDict = {"controller": cont, "determinize": data['determinize'] ,"numeric-predicates": data['numeric_predicates'],"categorical-predicates": data['categorical_predicates'],"impurity": data['impurity'],"tolerance": data['tolerance'],"safe-pruning": data['safe_pruning'] }
+    else:
+        ToParserDict = {"controller": cont, "config" : config }
 
     # is a dict
     classi = frontFns.main_parse(ToParserDict)
@@ -102,7 +108,7 @@ def yamlread():
 def runFlask():
     print('##########Opening browser##########')
     chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
-    webbrowser.get(chrome_path).open('http://127.0.0.1:5000/simulator')
+    webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
     app.run(debug=False)
 
 if __name__ == "__main__":
