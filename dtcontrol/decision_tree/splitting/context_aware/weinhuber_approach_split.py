@@ -51,12 +51,13 @@ class WeinhuberApproachSplit(Split):
                and obj1.coef_interval == self.coef_interval \
                and obj1.term == self.term and obj1.relation == self.relation
 
-    def fit(self, fixed_coefs, x, y):
+    def fit(self, fixed_coefs, x, y, method="lm"):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
         :param fixed_coefs: Substitution list of tuples containing already determined coef values [(c_1, 2.5), ... ]
         :param x: feature columns of a dataset
         :param y: labels of a dataset
+        :param method: method used inside curve_fit()
         """
 
         # Edge Case no coefs used in the term
@@ -144,7 +145,7 @@ class WeinhuberApproachSplit(Split):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             try:
-                calculated_coefs, cov = curve_fit(adapter_function, x, y, inital_guess)
+                calculated_coefs, cov = curve_fit(adapter_function, x, y, inital_guess, method=method)
             except Exception:
                 # Even if the curve_fit fails, it may have still passed some usefull information to self.y or self.coef_fit.
                 pass

@@ -34,6 +34,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.first_run = True
         self.optimized_tree_check_version = True
 
+        # {‘lm’, ‘trf’, ‘dogbox’}
+        self.curve_fitting_method = "lm"
+
     def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
 
         """
@@ -220,7 +223,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
                         for comb in combinations:
                             split_copy = deepcopy(single_split)
-                            split_copy.fit(comb, x_numeric, new_y)
+                            split_copy.fit(comb, x_numeric, new_y, method=self.curve_fitting_method)
                             split_copy.priority = self.priority
                             if split_copy.coef_assignment is not None:
                                 splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
