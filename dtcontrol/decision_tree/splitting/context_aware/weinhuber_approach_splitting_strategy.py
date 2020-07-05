@@ -4,10 +4,7 @@ from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import Pre
 import logging
 import sympy as sp
 import numpy as np
-import re
 from copy import deepcopy
-from apted import APTED
-from apted.helpers import Tree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from itertools import product
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
@@ -18,20 +15,24 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
     def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer()):
 
         """
-        :param user_given_splits: predicates/splits obtained by user to work with
+        :param user_given_splits: predicates/splits obtained by user to work with. Parsed by predicate_parser.py
         :param determinizer: determinizer
         """
         super().__init__()
         self.user_given_splits = PredicateParser.get_predicate() if user_given_splits is None else None
         self.determinizer = determinizer
+        self.first_run = True
 
-        # Will be set inside decision_tree.py and later used inside self.get_parent_splits()
+        # logger
+        self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
+        self.logger.setLevel(logging.ERROR)
+
+        # helper attributes used to store the dt while it is being built
+        # Will be set inside decision_tree.py and later used inside self.get_path_root_current()
         self.root = None
         self.current_node = None
 
-        self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
-        self.logger.setLevel(logging.ERROR)
-        self.first_run = True
+        # Checks whether predicate without coefs was already used in current dt path. Can lead in small(!) dt to huge performance boost.
         self.optimized_tree_check_version = True
 
         # {‘lm’, ‘trf’, ‘dogbox’}
@@ -69,44 +70,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     return result
             return None
 
-    def tree_edit_distance(self, predicate1, predicate2):
-
-        """
-        Function to compute the tree edit distance between 2 predicates.
-        :param predicate1: term attribute of a WeinhuberApproachSplit Object
-        :param predicate2: term attribute of a WeinhuberApproachSplit Object
-        :returns: Integer (tree edit distance between these 2 predicates)
-        """
-
-        def helper_formatting(tree):
-            """
-            Helper/Adapter function to transform tree format from sympy format to APTED format
-            :param tree: term attribute of a WeinhuberApproachSplit Object
-            :returns: String (formatted version of term in APTED format)
-
-            e.g.
-            Sympy format: Add(Mul(Integer(11), Symbol('x_1')), Mul(Integer(2), Symbol('x_2')), Integer(-11))
-            APTED format: {Add{Mul{{Variable}{Symbol1}}Mul{{Variable}{Symbol2}}{Variable}}}
-            """
-            tree = sp.srepr(tree)
-
-            # TODO: Cleanup this Regex battle
-            formated_tree = re.sub("Integer\(.+?\)|Float\(.+?\)|Rational\(.+?\)", "{Variable}", tree)
-            formated_tree = formated_tree.replace("(", "{").replace(")", "}").replace("{'x_", "").replace("'}", "").replace(
-                ", ", "")
-            formated_tree = "{" + re.sub("(Symbol\d+)", "{\\1}", formated_tree) + "}"
-            return formated_tree
-
-        tree1 = Tree.from_text(helper_formatting(predicate1))
-        tree2 = Tree.from_text(helper_formatting(predicate2))
-
-        # TERMINAL COMMAND: python -m apted -t tree1 tree2 -mv
-
-        apted = APTED(tree1, tree2)
-        ted = apted.compute_edit_distance()
-        # mapping = apted.compute_edit_mapping()
-        return ted
-
     def print_path_root_current(self, split_list):
 
         """
@@ -133,20 +96,15 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :returns: a split object
         """
 
-        # TODO: Think about incorporating tree edit distance into splitting strategy
-        # (Safed for later)TREE EDIT USAGE CODE:
-        # predicate_1 = sp.sympify("-0.10073*x_0+0.00080492*x_1+0.5956*x_2-0.22309*x_3-0.96975")
-        # predicate_2 = sp.sympify("-0.10073*x_0+0.00080492*x_1+0.5956*x_2-0.22309")
-        # tmp = self.tree_edit_distance(predicate_1, predicate_2)
-
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return
 
         y = self.determinizer.determinize(dataset)
 
+        # Will be only executed once at startup.
         if self.first_run:
-            # Checking whether used variables in user_given_splits are actually represented in dataset
+            # Checking whether used variables in user_given_splits are actually represented in the given dataset.
             for single_split in self.user_given_splits:
                 if not single_split.check_valid_column_reference(x_numeric):
                     self.logger.warning("Aborting: one predicate uses an invalid column reference."
@@ -172,20 +130,28 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
         to achieve the lowest impurity possible with the user given predicate/split.
-        All adjusted predicate/split objects will be stored inside a dict: 
+        All adjusted predicate/split objects will be stored inside the dict 'splits' 
         Key: split object   Value:Impurity of the split
         """
 
-        # Same approach as in linear_classifier.py
+        # Similar approach as in linear_classifier.py
         splits = {}
         for single_split in predicate_list:
-            # Checking if every column reference is in its Interval
+            """
+            Checking if every column reference only contains values of its Interval.
+            e.g. 
+            column_interval = {x_1:(-Inf,Inf), x_2:{1,2,3}}
+            --> For column x_1 there are no restrictions
+            --> Inside column x_2 the only allowed values are {1,2,3} 
+            """
             if single_split.check_data_in_column_interval(x_numeric):
+                # Checking whether predicate has to be fitted to data or not.
                 if not single_split.coef_interval:
                     split_copy = deepcopy(single_split)
                     split_copy.priority = self.priority
                     splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
                 else:
+                    # Creating different copies of the predicate and fitting every copy to one single unique label.
                     for label in np.unique(y):
                         # Creating the label mask (see linear classifier)
                         new_y = np.copy(y)
@@ -194,6 +160,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                         new_y[~label_mask] = -1
 
                         """
+                        If there are already fixed coefs:
                         Applying fit function for every possible combination of already fixed coefs
     
                         e.g.
@@ -213,6 +180,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                             if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
                                 fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
 
+                        # Creating all combinations
                         if fixed_coefs:
                             # unzipping
                             coef, val = zip(*fixed_coefs.items())
@@ -221,12 +189,15 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                         else:
                             combinations = [[]]
 
+                        # Creating and fitting predicate for every combination
                         for comb in combinations:
                             split_copy = deepcopy(single_split)
                             split_copy.fit(comb, x_numeric, new_y, method=self.curve_fitting_method)
                             split_copy.priority = self.priority
+                            # Checking whether fitting was successful
                             if split_copy.coef_assignment is not None:
                                 splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
 
+        # Returning split with lowest impurity
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
         return weinhuber_split
