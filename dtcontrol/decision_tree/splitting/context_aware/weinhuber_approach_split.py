@@ -35,16 +35,26 @@ class WeinhuberApproachSplit(Split):
         self.relation = relation
         self.coef_assignment = None
 
-        # Helper variables only used to speedup calculations inside fit()
+        # Helper attributes used to speedup calculations inside fit()
         self.y = None
         self.coef_fit = None
         self.coefs_to_determine = None
 
+        # Helper attributes used to speedup get_mask()
+        self.get_mask_lookup = None
+
         # Logger
         self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
-        self.logger.setLevel(logging.ERROR)
+        self.logger.setLevel(logging.CRITICAL)
 
-        self.get_mask_lookup = None
+        # Uncomment following lines to create a logger file containing all messages with timestamps.
+        # (Remember to change self.logger.setLevel(logging.DEBUG)
+
+        # formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+        # file_handler = logging.FileHandler('WeinhuberApproachSplit_logger.log')
+        # file_handler.setFormatter(formatter)
+        # file_handler.setLevel(logging.DEBUG)
+        # self.logger.addHandler(file_handler)
 
     def __repr__(self):
         return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
@@ -106,7 +116,7 @@ class WeinhuberApproachSplit(Split):
         :param y: labels of a dataset
         :param method: method used inside curve_fit()
         """
-
+        self.logger.info("Started fitting coef predicate: {}".format(str(self)))
         # Edge Case no coefs used in the term
         if not self.coef_interval:
             return
@@ -114,7 +124,7 @@ class WeinhuberApproachSplit(Split):
         # Checking type & shape of arguments
         if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0] or not isinstance(
                 fixed_coefs, list):
-            self.logger.warning("Aborting: invalid structure of the arguments x, y.")
+            self.logger.critical("Aborting: invalid structure of the arguments x, y.")
             raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y.\nCheck logger or comments for more information.")
 
         # Checking structure of fixed_coefs
@@ -122,7 +132,7 @@ class WeinhuberApproachSplit(Split):
         for (c_i, _) in fixed_coefs:
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
-                self.logger.warning("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
+                self.logger.critical("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
                 raise WeinhuberSplitException("Aborting: invalid fixed_coefs member found.\nCheck logger or comments for more information.")
             else:
                 # Calculate coefs to determine with curve_fit
@@ -181,12 +191,12 @@ class WeinhuberApproachSplit(Split):
                     if not ((out[index] == 0 and y[index] == 0) or (out[index] != 0 and y[index] != 0)):
                         return np.array(out)
                 else:
-                    self.logger.warning("Aborting: invalid relation found.")
+                    self.logger.critical("Aborting: invalid relation found.")
                     raise WeinhuberSplitException(
                         "Aborting: Split with invalid relation can not be fitted.\nCheck logger or comments for more information.")
 
             # For optimization reasons, once the first solution was found (with right accuracy), the loop should end.
-            raise Exception('ALREADY FINISHED!')
+            raise Exception('ALREADY FOUND A FIT!')
 
         # Ignoring warnings, since for our purpose a failed fit can still be useful
         with warnings.catch_warnings():
@@ -194,12 +204,14 @@ class WeinhuberApproachSplit(Split):
             try:
                 calculated_coefs, cov = curve_fit(adapter_function, x, y, inital_guess, method=method)
             except Exception:
-                # Even if the curve_fit fails, it may have still passed some usefull information to self.y or self.coef_fit.
+                # Even if the curve_fit fails, it may have still passed some useful information to self.y or self.coef_fit before stopping.
                 pass
 
         # Calculations done --> Assigning calculated coefs
         if self.y is not None and self.coef_fit is not None:
             self.coef_assignment = self.coef_fit
+
+        self.logger.info("Fitting done. Result: {}".format(str(self.coef_assignment)))
 
     def check_valid_column_reference(self, x):
         """
@@ -227,8 +239,6 @@ class WeinhuberApproachSplit(Split):
         Checks if the column intervals, contain all of the values inside a column.
             e.g.
             column_interval = {x_2:{1,3}} --> all values from the third column must be inside {1,3}
-            :param dataset: the dataset to be split
-            :return: boolean
         """
         for column_reference in self.column_interval:
             interval = self.column_interval.get(column_reference)
@@ -241,6 +251,18 @@ class WeinhuberApproachSplit(Split):
         return True
 
     def check_offset(self, offset):
+        """
+        Checking result of a term.
+        :param offset: value to be compared with.
+        :return: boolean
+
+            e.g.
+            5       <=          0
+            Offset  Relation    Term
+
+            --> returns False
+        """
+
         # Checking the offset
         if self.relation == "<=":
             check = offset <= 0
@@ -253,7 +275,7 @@ class WeinhuberApproachSplit(Split):
         elif self.relation == "=":
             check = offset == 0
         else:
-            self.logger.warning("Aborting: invalid relation found.")
+            self.logger.critical("Aborting: invalid relation found from inside check_offset.")
             raise WeinhuberSplitException("Aborting: Invalid relation found.\nCheck logger or comments for more information.")
         return check
 
