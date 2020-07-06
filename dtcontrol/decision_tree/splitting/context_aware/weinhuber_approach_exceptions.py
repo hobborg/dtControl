@@ -16,4 +16,5 @@ class WeinhuberPredicateParserException(Exception):
     """
     Raised when an invalid state inside predicate_parser.py is reached.
     """
-    pass
+    def __init__(self):
+        super().__init__('Aborting: Invalid predicate. Check logger or comments for more information.')

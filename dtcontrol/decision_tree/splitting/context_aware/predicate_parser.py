@@ -8,9 +8,10 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptio
 
 def _logger_setup():
     logger = logging.getLogger("PredicateParser_logger")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.CRITICAL)
 
     # Uncomment following lines to create a logger file containing all messages with timestamps.
+    # (Remember to change logger.setLevel(logging.DEBUG)
 
     # formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
     # file_handler = logging.FileHandler('PredicateParser_logger.log')
