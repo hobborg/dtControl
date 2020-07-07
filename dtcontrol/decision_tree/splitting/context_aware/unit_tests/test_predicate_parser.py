@@ -1,6 +1,7 @@
 import unittest
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
 import os
 import sympy as sp
 
@@ -67,7 +68,8 @@ class TestPredicateParser(unittest.TestCase):
     def test_useful_predicates(self):
         # USAGE OF FILE 1
         # Non existing input file
-        self.assertEqual(PredicateParser.get_predicate(input_file_path="None"), None)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.get_predicate(input_file_path="None")
 
         # Check if parsing of file 1 was successful
         parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file1.txt")
@@ -159,15 +161,17 @@ class TestPredicateParser(unittest.TestCase):
 
     def test_predicates_without_column_ref(self):
         # USAGE OF FILE 2
-        parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file2.txt")
-        self.assertEqual(parsed_predicate, None)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file2.txt")
 
     def test_typo_predicates(self):
         # USAGE OF FILE 3
-        parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file3.txt")
-        self.assertEqual(parsed_predicate, None)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file3.txt")
 
     def test_invalid_relation_predicates(self):
         # USAGE OF FILE 4
-        parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file4.txt")
-        self.assertEqual(parsed_predicate, None)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file4.txt")
+
+print("The Logger statements are supposed to appear on the console.")

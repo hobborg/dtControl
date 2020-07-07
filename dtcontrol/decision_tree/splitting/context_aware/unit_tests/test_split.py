@@ -4,6 +4,7 @@ import sympy as sp
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
 from copy import deepcopy
 import numpy as np
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberSplitException
 
 
 class TestSplitCurveFit(unittest.TestCase):
@@ -125,69 +126,71 @@ class TestSplitCurveFit(unittest.TestCase):
     def test_fit_invalid_edge_cases(self):
         split = deepcopy(self.split1)
         # Invalid argument types
-        self.assertIsNone(split.fit([], [], []))
-        self.assertIsNone(split.fit([],
-                                    [[1., 4.6, 1., 3.],
-                                     [1., 4.6, 2., 3.],
-                                     [2., 4., 3., 1.],
-                                     [2., 4., 3., 2.],
-                                     [1., 4., 4., 1.],
-                                     [2., 4., 4., 2.],
-                                     [2., 53., 2., 3.],
-                                     [1., 228., 1., 5.],
-                                     [2., 93., 1., 2.],
-                                     [2., 59., 3., 2.]], np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
-
-        self.assertIsNone(split.fit([], np.array(
-            [[1., 4.6, 1., 3.],
-             [1., 4.6, 2., 3.],
-             [2., 4., 3., 1.],
-             [2., 4., 3., 2.],
-             [1., 4., 4., 1.],
-             [2., 4., 4., 2.],
-             [2., 53., 2., 3.],
-             [1., 228., 1., 5.],
-             [2., 93., 1., 2.],
-             [2., 59., 3., 2.]]), [1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
-
-        # Invalid shapes (x rows > y column)
-        self.assertIsNone(split.fit([], np.array(
-            [[1., 4.6, 1., 3.],
-             [1., 4.6, 2., 3.],
-             [2., 4., 3., 1.],
-             [2., 4., 3., 2.],
-             [1., 4., 4., 1.],
-             [2., 4., 4., 2.],
-             [2., 53., 2., 3.],
-             [1., 228., 1., 5.],
-             [2., 93., 1., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
-
-        # Invalid shapes (x rows < y column)
-        self.assertIsNone(split.fit([], np.array(
-            [[1., 4.6, 1., 3.],
-             [1., 4.6, 2., 3.],
-             [2., 4., 3., 1.],
-             [2., 4., 3., 2.],
-             [1., 4., 4., 1.],
-             [2., 4., 4., 2.],
-             [2., 53., 2., 3.],
-             [1., 228., 1., 5.],
-             [2., 93., 1., 2.],
-             [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1])))
-
-        # Invalid shapes (x rows > y column)
-        self.assertIsNone(split.fit([], np.array(
-            [[1., 4.6, 1., 3.],
-             [1., 4.6, 2., 3.],
-             [1., 4.6, 1., 5.],
-             [2., 4., 3., 1.],
-             [2., 4., 3., 2.],
-             [1., 4., 4., 1.],
-             [2., 4., 4., 2.],
-             [2., 53., 2., 3.],
-             [1., 228., 1., 5.],
-             [2., 93., 1., 2.],
-             [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
+        with self.assertRaises(WeinhuberSplitException):
+            split.fit([], [], [])
+        with self.assertRaises(WeinhuberSplitException):
+            split.fit([],
+                      [[1., 4.6, 1., 3.],
+                       [1., 4.6, 2., 3.],
+                       [2., 4., 3., 1.],
+                       [2., 4., 3., 2.],
+                       [1., 4., 4., 1.],
+                       [2., 4., 4., 2.],
+                       [2., 53., 2., 3.],
+                       [1., 228., 1., 5.],
+                       [2., 93., 1., 2.],
+                       [2., 59., 3., 2.]], np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
+        with self.assertRaises(WeinhuberSplitException):
+            split.fit([], np.array(
+                [[1., 4.6, 1., 3.],
+                 [1., 4.6, 2., 3.],
+                 [2., 4., 3., 1.],
+                 [2., 4., 3., 2.],
+                 [1., 4., 4., 1.],
+                 [2., 4., 4., 2.],
+                 [2., 53., 2., 3.],
+                 [1., 228., 1., 5.],
+                 [2., 93., 1., 2.],
+                 [2., 59., 3., 2.]]), [1, 1, -1, -1, -1, -1, -1, -1, -1, -1])
+        with self.assertRaises(WeinhuberSplitException):
+            # Invalid shapes (x rows > y column)
+            split.fit([], np.array(
+                [[1., 4.6, 1., 3.],
+                 [1., 4.6, 2., 3.],
+                 [2., 4., 3., 1.],
+                 [2., 4., 3., 2.],
+                 [1., 4., 4., 1.],
+                 [2., 4., 4., 2.],
+                 [2., 53., 2., 3.],
+                 [1., 228., 1., 5.],
+                 [2., 93., 1., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
+        with self.assertRaises(WeinhuberSplitException):
+            # Invalid shapes (x rows < y column)
+            split.fit([], np.array(
+                [[1., 4.6, 1., 3.],
+                 [1., 4.6, 2., 3.],
+                 [2., 4., 3., 1.],
+                 [2., 4., 3., 2.],
+                 [1., 4., 4., 1.],
+                 [2., 4., 4., 2.],
+                 [2., 53., 2., 3.],
+                 [1., 228., 1., 5.],
+                 [2., 93., 1., 2.],
+                 [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1]))
+        with self.assertRaises(WeinhuberSplitException):
+            # Invalid shapes (x rows > y column)
+            split.fit([], np.array(
+                [[1., 4.6, 1., 3.],
+                 [1., 4.6, 2., 3.],
+                 [1., 4.6, 1., 5.],
+                 [2., 4., 3., 1.],
+                 [2., 4., 3., 2.],
+                 [1., 4., 4., 1.],
+                 [2., 4., 4., 2.],
+                 [2., 53., 2., 3.],
+                 [1., 228., 1., 5.],
+                 [2., 93., 1., 2.],
+                 [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
 
         # all coefs already fixed
         c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('c_0 c_1 c_2 c_3 c_4 c_5')
@@ -203,18 +206,20 @@ class TestSplitCurveFit(unittest.TestCase):
              [2., 93., 1., 2.],
              [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
 
-        # Too many fixed coefs
-        self.assertIsNone(split.fit([(c_1, 1), (c_2, -3), (c_0, -3), (c_3, -3), (c_4, -3), (c_5, 0)], np.array(
-            [[1., 4.6, 1., 3.],
-             [1., 4.6, 2., 3.],
-             [2., 4., 3., 1.],
-             [2., 4., 3., 2.],
-             [1., 4., 4., 1.],
-             [2., 4., 4., 2.],
-             [2., 53., 2., 3.],
-             [1., 228., 1., 5.],
-             [2., 93., 1., 2.],
-             [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
+        with self.assertRaises(WeinhuberSplitException):
+            # Too many fixed coefs
+            split.fit([(c_1, 1), (c_2, -3), (c_0, -3), (c_3, -3), (c_4, -3), (c_5, 0)], np.array(
+                [[1., 4.6, 1., 3.],
+                 [1., 4.6, 2., 3.],
+                 [2., 4., 3., 1.],
+                 [2., 4., 3., 2.],
+                 [1., 4., 4., 1.],
+                 [2., 4., 4., 2.],
+                 [2., 53., 2., 3.],
+                 [1., 228., 1., 5.],
+                 [2., 93., 1., 2.],
+                 [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
+
 
         # Invalid attribute configuration
         split.coef_interval = None
@@ -329,5 +334,9 @@ class TestSplitCurveFit(unittest.TestCase):
         self.assertEqual(split.predict(np.array([[2., 93., 1., 2.]])), 0)
 
 
+
+
 if __name__ == '__main__':
     unittest.main()
+
+print("The Logger statements are supposed to appear on the console.")

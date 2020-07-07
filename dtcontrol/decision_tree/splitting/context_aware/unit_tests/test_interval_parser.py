@@ -4,7 +4,7 @@ import hypothesis.strategies as st
 from hypothesis.strategies import text
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 import sympy as sp
-
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
 
 class TestIntervalParser(unittest.TestCase):
     """
@@ -12,7 +12,6 @@ class TestIntervalParser(unittest.TestCase):
     Currently:
     if (21,20) = Error:Return None      --> Error Interval = None
     """
-    ErrorInterval = None
 
     """
                     ------------------------            C A U T I O N           ------------------------
@@ -26,14 +25,19 @@ class TestIntervalParser(unittest.TestCase):
     """
 
     def open_intervals(self, x, y):
-        self.assertEqual(PredicateParser.parse_user_interval(f"({x},{x})"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval(f"({y},{y})"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval(f"({x},{x})")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval(f"({y},{y})")
+
         if sp.sympify(str(x)).evalf() != sp.sympify(str(y)).evalf():
             self.assertEqual(PredicateParser.parse_user_interval(f"({str(min(x, y))},{str(max(x, y))})"),
                              sp.Interval.open(sp.sympify(str(min(x, y))).evalf(), sp.sympify(str(max(x, y))).evalf()))
-            self.assertEqual(PredicateParser.parse_user_interval(f"({str(max(x, y))},{str(min(x, y))})"), self.ErrorInterval)
+            with self.assertRaises(WeinhuberPredicateParserException):
+                PredicateParser.parse_user_interval(f"({str(max(x, y))},{str(min(x, y))})")
         else:
-            self.assertEqual(PredicateParser.parse_user_interval(f"({str(x)},{str(y)})"), self.ErrorInterval)
+            with self.assertRaises(WeinhuberPredicateParserException):
+                PredicateParser.parse_user_interval(f"({str(x)},{str(y)})")
 
     @given(x=st.integers(), y=st.integers())
     def test_open_interval_integer_hypothesis(self, x, y):
@@ -83,17 +87,28 @@ class TestIntervalParser(unittest.TestCase):
         self.assertEqual(PredicateParser.parse_user_interval("(90909, Inf)"), sp.Interval.open(90909, sp.S.Infinity))
 
     def test_invalid_open_intervals(self):
-        self.assertEqual(PredicateParser.parse_user_interval("(,20.231313, 123)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("s(0.000013, 0.0015d)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(x_1-Inf, 0.000013!)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-INF, inf#"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("((99090909, Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(99090909, Inf))"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,1)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,x_0)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval(")"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(((1,1)))"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(,20.231313, 123)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("s(0.000013, 0.0015d)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(x_1-Inf, 0.000013!)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-INF, inf#")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("((99090909, Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(99090909, Inf))")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,1)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,x_0)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval(")")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(((1,1)))")
 
     # @given(text())
     # def test_random_input(self,s):
@@ -105,7 +120,8 @@ class TestIntervalParser(unittest.TestCase):
         if sp.sympify(str(x)).evalf() != sp.sympify(str(y)).evalf():
             self.assertEqual(PredicateParser.parse_user_interval(f"[{str(min(x, y))},{str(max(x, y))}]"),
                              sp.Interval(sp.sympify(str(min(x, y))).evalf(), sp.sympify(str(max(x, y))).evalf()))
-            self.assertEqual(PredicateParser.parse_user_interval(f"{str(max(x, y))},{str(min(x, y))}]"), self.ErrorInterval)
+            with self.assertRaises(WeinhuberPredicateParserException):
+                PredicateParser.parse_user_interval(f"{str(max(x, y))},{str(min(x, y))}]")
         else:
             self.assertEqual(PredicateParser.parse_user_interval(f"[{str(x)},{str(y)}]"), sp.FiniteSet(sp.sympify(str(y)).evalf()))
 
@@ -121,7 +137,8 @@ class TestIntervalParser(unittest.TestCase):
            h=st.integers(), i=st.floats(allow_nan=False, allow_infinity=False), j=st.floats(allow_nan=False, allow_infinity=False),
            k=st.floats(allow_nan=False, allow_infinity=False), l=st.floats(allow_nan=False, allow_infinity=False))
     def test_finite_interval(self, a, b, c, d, e, f, g, h, i, j, k, l):
-        self.assertEqual(PredicateParser.parse_user_interval("{}"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{}")
         self.assertEqual(PredicateParser.parse_user_interval(
             "{" + str(a) + "," + str(b) + "," + str(c) + "," + str(d) + "," + str(e) + "," + str(f) + "," + str(g) + "," + str(
                 h) + "," + str(i) + "," + str(j) + "," + str(k) + "," + str(l) + "}"),
@@ -171,129 +188,250 @@ class TestIntervalParser(unittest.TestCase):
         self.assertEqual(PredicateParser.parse_user_interval("[90909, Inf]"), sp.Interval(90909, sp.S.Infinity))
 
     def test_invalid_closed_intervals(self):
-        self.assertEqual(PredicateParser.parse_user_interval("-10, 100]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[,20.231313, 123]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[12as3,s 200]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("s[0.000013, 0.0015d]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[x_1-Inf, 0.000013!]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-INF, inf#"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[[99090909, Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[99090909, Inf]]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[,-1]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[1,x_0]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[1,]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[[[1,1]]]"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("-10, 100]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[,20.231313, 123]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[12as3,s 200]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("s[0.000013, 0.0015d]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[x_1-Inf, 0.000013!]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-INF, inf#")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[[99090909, Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[99090909, Inf]]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[,-1]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[1,x_0]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[1,]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[[[1,1]]]")
 
     def test_invalid_infinity_intervals(self):
-        self.assertEqual(PredicateParser.parse_user_interval("(Inf, Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-Inf, -Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(Inf, -Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[Inf, Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-Inf, -Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[Inf, -Inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(Inf, Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-Inf, -Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(Inf, -Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[Inf, Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-Inf, -Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[Inf, -Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INF, INF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-INF, -INF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INF, -INF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INF, INF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-INF, -INF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INF, -INF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INF, INF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-INF, -INF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INF, -INF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INF, INF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-INF, -INF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INF, -INF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inf, inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-inf, -inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inf, -inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inf, inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-inf, -inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inf, -inf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inf, inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-inf, -inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inf, -inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inf, inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-inf, -inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inf, -inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNf, iNf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-iNf, -iNf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNf, -iNf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNf, iNf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-iNf, -iNf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNf, -iNf)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNf, iNf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-iNf, -iNf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNf, -iNf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNf, iNf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-iNf, -iNf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNf, -iNf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inF, inF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-inF, -inF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inF, -inF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inF, inF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-inF, -inF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inF, -inF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inF, inF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-inF, -inF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inF, -inF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inF, inF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-inF, -inF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inF, -inF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNF, iNF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-iNF, -iNF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNF, -iNF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNF, iNF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-iNF, -iNF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNF, -iNF)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNF, iNF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-iNF, -iNF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(iNF, -iNF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNF, iNF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-iNF, -iNF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[iNF, -iNF]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(oo, oo)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-oo, -oo)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(oo, -oo)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[oo, oo)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-oo, -oo)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[oo, -oo)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(oo, oo]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-oo, -oo]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(oo, -oo]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[oo, oo]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-oo, -oo]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[oo, -oo]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INFINITY, INFINITY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-INFINITY, -INFINITY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INFINITY, -INFINITY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INFINITY, INFINITY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-INFINITY, -INFINITY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INFINITY, -INFINITY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INFINITY, INFINITY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-INFINITY, -INFINITY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(INFINITY, -INFINITY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INFINITY, INFINITY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-INFINITY, -INFINITY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[INFINITY, -INFINITY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inFinItY, inFinItY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-inFinItY, -inFinItY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inFinItY, -inFinItY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inFinItY, inFinItY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-inFinItY, -inFinItY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inFinItY, -inFinItY)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inFinItY, inFinItY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-inFinItY, -inFinItY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(inFinItY, -inFinItY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inFinItY, inFinItY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[-inFinItY, -inFinItY]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[inFinItY, -inFinItY]"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(Inf, Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-Inf, -Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(Inf, -Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[Inf, Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-Inf, -Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[Inf, -Inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(Inf, Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-Inf, -Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(Inf, -Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[Inf, Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-Inf, -Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[Inf, -Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INF, INF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-INF, -INF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INF, -INF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INF, INF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-INF, -INF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INF, -INF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INF, INF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-INF, -INF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INF, -INF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INF, INF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-INF, -INF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INF, -INF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inf, inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-inf, -inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inf, -inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inf, inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-inf, -inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inf, -inf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inf, inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-inf, -inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inf, -inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inf, inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-inf, -inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inf, -inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNf, iNf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-iNf, -iNf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNf, -iNf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNf, iNf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-iNf, -iNf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNf, -iNf)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNf, iNf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-iNf, -iNf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNf, -iNf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNf, iNf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-iNf, -iNf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNf, -iNf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inF, inF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-inF, -inF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inF, -inF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inF, inF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-inF, -inF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inF, -inF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inF, inF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-inF, -inF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inF, -inF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inF, inF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-inF, -inF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inF, -inF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNF, iNF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-iNF, -iNF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNF, -iNF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNF, iNF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-iNF, -iNF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNF, -iNF)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNF, iNF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-iNF, -iNF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(iNF, -iNF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNF, iNF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-iNF, -iNF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[iNF, -iNF]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(oo, oo)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-oo, -oo)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(oo, -oo)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[oo, oo)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-oo, -oo)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[oo, -oo)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(oo, oo]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-oo, -oo]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(oo, -oo]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[oo, oo]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-oo, -oo]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[oo, -oo]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INFINITY, INFINITY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-INFINITY, -INFINITY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INFINITY, -INFINITY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INFINITY, INFINITY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-INFINITY, -INFINITY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INFINITY, -INFINITY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INFINITY, INFINITY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-INFINITY, -INFINITY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(INFINITY, -INFINITY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INFINITY, INFINITY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-INFINITY, -INFINITY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[INFINITY, -INFINITY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inFinItY, inFinItY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-inFinItY, -inFinItY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inFinItY, -inFinItY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inFinItY, inFinItY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-inFinItY, -inFinItY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inFinItY, -inFinItY)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inFinItY, inFinItY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-inFinItY, -inFinItY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(inFinItY, -inFinItY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inFinItY, inFinItY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[-inFinItY, -inFinItY]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[inFinItY, -inFinItY]")
 
     def test_valid_mixed_intervals(self):
         self.assertEqual(PredicateParser.parse_user_interval("(0,1) ∪ [12, 15]"), sp.Union(sp.Interval.open(0, 1), sp.Interval(12, 15)))
@@ -313,21 +451,36 @@ class TestIntervalParser(unittest.TestCase):
         self.assertEqual(PredicateParser.parse_user_interval("(90909, Inf]"), sp.Interval.open(90909, sp.S.Infinity))
 
     def test_invalid_open_and_closed_intervals(self):
-        self.assertEqual(PredicateParser.parse_user_interval("(y-10, 100]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval(",20.231313, 123]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[12as3,s 200)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("s(0.000013, 0.0015d]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(x_1-Inf, 0.000013!]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(-INF, inf&]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[(99090909, Inf]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(99090909, Inf]]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(,-1]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,x_0]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[[(1,1]])"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,1]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,daswad]"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(y-10, 100]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval(",20.231313, 123]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[12as3,s 200)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("s(0.000013, 0.0015d]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(x_1-Inf, 0.000013!]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(-INF, inf&]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[(99090909, Inf]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(99090909, Inf]]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(,-1]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,x_0]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[[(1,1]])")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,1]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,daswad]")
 
     def test_valid_finite_intervals(self):
         self.assertEqual(PredicateParser.parse_user_interval("{1233.123, sqrt(2), 123213}"),
@@ -354,26 +507,45 @@ class TestIntervalParser(unittest.TestCase):
         self.assertEqual(PredicateParser.parse_user_interval("{123,19239,12,3}"), sp.FiniteSet(123, 19239, 12, 3))
 
     def test_invalid_finite_intervals(self):
-        self.assertEqual(PredicateParser.parse_user_interval("{1233.123,, x_0*sqrt(2), 123213}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{log12), sqrt(2),!§ 123213}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,{2},{3},4,5,6,x_0,8,9,1,2,3,4,5,6,7,8}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1x_0}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,{2},{3},BAUM)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,Inf,x_0"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("8{12}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{(,-}1"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1 2 3 }"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{0.1231,23x_1,23, 123,9812,918,636,6346,34,5643,44353,34534,5345,3453,115}"),
-                         self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{0.1231,,,115}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{0.1asd231,we,,115}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("31,,,115}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{0.1"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1^^"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{Inf}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{Inf,1,2}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{-Inf}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{-1223,-Inf,1,2}"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1233.123,, x_0*sqrt(2), 123213}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{log12), sqrt(2),!§ 123213}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,{2},{3},4,5,6,x_0,8,9,1,2,3,4,5,6,7,8}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1x_0}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,{2},{3},BAUM)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,Inf,x_0")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("8{12}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{(,-}1")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1 2 3 }")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{0.1231,23x_1,23, 123,9812,918,636,6346,34,5643,44353,34534,5345,3453,115}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{0.1231,,,115}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{0.1asd231,we,,115}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("31,,,115}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{0.1")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1^^")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{Inf}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{Inf,1,2}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{-Inf}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{-1223,-Inf,1,2}")
+
 
     def test_valid_union_intervals(self):
         self.assertEqual(PredicateParser.parse_user_interval(
@@ -411,21 +583,35 @@ class TestIntervalParser(unittest.TestCase):
                                   sp.Interval.Ropen(sp.sympify(123), sp.sympify(1231313).evalf())))
 
     def test_invalid_union_intervals(self):
-        self.assertEqual(PredicateParser.parse_user_interval("{1233.123,, x_0*sqrt(2), 123213Or } or {123}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[123,1234] or {log12), sqrt(2),!§ 123213}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,2} or {1,{2},{3},4,5,6,x_0,8,9,1,2,3,4,5,6,7,8}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(1,9) or {1x_0}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(8,9] or {1,{2},{3},BAUM)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[1 x_0 5] or -1,2) Or [-10,-11),123.4}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[12,14) u [-1230938391238129, -0.000000000000ad01323]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[123,1231313) or -0.00000000123, 1]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("[0.00032,98989.12313] and (1,1.000000000000001)"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("(212,13113) u [-0.9123919380000123, and , 0.0000000000000000124]"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,(2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8} u {1,2,3,4,5}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,2 3,4,5,6,7,8,9,1,2,3,4,5,6,7,8} u {1,2,3,4,5}"), self.ErrorInterval)
-        self.assertEqual(PredicateParser.parse_user_interval("{1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8 and  {1,2,3,4,5}"), self.ErrorInterval)
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1233.123,, x_0*sqrt(2), 123213Or } or {123}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[123,1234] or {log12), sqrt(2),!§ 123213}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,2} or {1,{2},{3},4,5,6,x_0,8,9,1,2,3,4,5,6,7,8}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(1,9) or {1x_0}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(8,9] or {1,{2},{3},BAUM)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[1 x_0 5] or -1,2) Or [-10,-11),123.4}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[12,14) u [-1230938391238129, -0.000000000000ad01323]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[123,1231313) or -0.00000000123, 1]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("[0.00032,98989.12313] and (1,1.000000000000001)")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("(212,13113) u [-0.9123919380000123, and , 0.0000000000000000124]")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,(2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8} u {1,2,3,4,5}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,2 3,4,5,6,7,8,9,1,2,3,4,5,6,7,8} u {1,2,3,4,5}")
+        with self.assertRaises(WeinhuberPredicateParserException):
+            PredicateParser.parse_user_interval("{1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8 and  {1,2,3,4,5}")
 
 
 
 if __name__ == '__main__':
     unittest.main()
+print("The Logger statements are supposed to appear on the console.")

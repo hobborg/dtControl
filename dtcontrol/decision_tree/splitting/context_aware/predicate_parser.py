@@ -33,13 +33,15 @@ class PredicateParser:
         :returns: List of WeinhuberApproachSplit Objects
 
         e.g.
-        Input_line:  c_1 * x_3 - c_2 + x_4 - c_3 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
+        Input_line:  c_1 * x_1 - c_2 + x_2 - c_3  <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
         Output: WeinhuberApproachSplit Object with:
 
         column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                           --> Key: Sympy Symbol Value: Sympy Interval
         coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c_3:{5,10,32,40}          --> Key: Sympy Symbol Value: Sympy Interval
-        term                =       c_1 * x_3 - c_2 + x_4 - c_3                             --> sympy expression
+        term                =       c_1 * x_1 - c_2 + x_2 - c_3                             --> sympy expression
         relation            =       '<='                                                    --> String
+
+        Every symbol without a specific defined Interval will be assigned to the interval: (-Inf, Inf)
 
         EDGE CASE BEHAVIOR:
         Every column reference or coef without a specific defined Interval will be assigned this interval: (-Inf, Inf)
@@ -64,124 +66,140 @@ class PredicateParser:
 
         """
 
+        # Opening and checking the input file
         try:
             with open(input_file_path, "r") as file:
                 input_line = [predicate.rstrip() for predicate in file]
-                cls._logger.info("Reading input file containing predicate(s) given by user. Found {} predicate(s).".format(len(input_line)))
         except FileNotFoundError:
-            cls._logger.critical("Aborting: input file with user predicate(s) not found. Please check path.")
+            cls._logger.critical("Aborting: input file with user predicate(s) not found. Please check input file/path.")
             raise WeinhuberPredicateParserException()
 
         # Edge Case user input == ""
         if not input_line:
             cls._logger.critical("Aborting: input file with user predicates is empty. Please check file.")
             raise WeinhuberPredicateParserException()
+        else:
+            cls._logger.info("Reading input file containing predicate(s) given by user. Found {} predicate(s).".format(len(input_line)))
 
         # Currently supported types of relations
         supported_relation = ["<=", ">=", "<", ">", "="]
 
-        # output list containing all predicates parsed in tuple form
+        # output list containing all parsed predicates
         output = []
         for single_predicate in input_line:
             cls._logger.info("Processing user predicate {} / {}.".format(input_line.index(single_predicate) + 1, len(input_line)))
             for relation in supported_relation:
                 if relation in single_predicate:
+                    # Deleting additional semi colon at the end
+                    if single_predicate[-1] == ";":
+                        single_predicate = single_predicate[:-1]
                     try:
-                        # Deleting additional semi colon at the end
-                        if single_predicate[-1] == ";":
-                            single_predicate = single_predicate[:-1]
-                        # Cutting the input into separate parts
+                        # Cutting the input into separate strings. The first one should contain the term. The rest should be intervals
                         split_pred = single_predicate.split(";")
                         split_term = split_pred[0].split(relation)
                         term = sp.sympify(split_term[0] + "-(" + split_term[1] + ")")
-                        all_interval_defs = {}
-                        column_interval = {}
-                        coef_interval = {}
-
-                        # Parsing all additional given intervals and storing them inside --> all_interval_defs
-                        for i in range(len(split_pred) - 1):
-                            split_coef_definition = split_pred[i + 1].split("in", 1)
-                            interval = cls.parse_user_interval(split_coef_definition[1])
-                            if interval == sp.EmptySet:
-                                cls._logger.critical(
-                                    "Aborting: an empty interval has been found. Invalid interval: {}".format(str(interval)))
-                                raise WeinhuberPredicateParserException()
-                            else:
-                                all_interval_defs[sp.sympify(split_coef_definition[0])] = interval
-
-                        """
-                        ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
-                        |                  COLUMN REFERENCING ONLY WITH VARIABLES OF STRUCTURE: x_i                |
-                        |                  COEFS ONLY WITH VARIABLES OF STRUCTURE: c_j                             |
-                        --------------------------------------------------------------------------------------------
-                        """
-                        # Iterating over every symbol/variable and deciding whether it is a column reference or a coef
-                        for var in term.free_symbols:
-                            if re.match(r"x_\d+", str(var)):
-                                if not all_interval_defs.__contains__(var):
-                                    column_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
-                                else:
-                                    column_interval[var] = all_interval_defs[var]
-                                    all_interval_defs.__delitem__(var)
-                            elif re.match(r"c_\d+", str(var)):
-                                if not all_interval_defs.__contains__(var):
-                                    coef_interval[var] = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
-                                else:
-                                    # CHECKING: coefs are only allowed to have 2 kinds of intervals: FiniteSet or (-Inf,Inf)
-                                    check_interval = all_interval_defs[var]
-                                    all_interval_defs.__delitem__(var)
-                                    infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
-                                    if isinstance(check_interval, sp.FiniteSet) or check_interval == infinity:
-                                        coef_interval[var] = check_interval
-                                    else:
-                                        cls._logger.critical(
-                                            "Aborting: invalid interval for a coefficient declared. Only finite or (-Inf,Inf) allowed. Coefficient: {} with invalid interval: {} from predicate: {}".format(
-                                                str(var), str(check_interval), str(single_predicate)))
-                                        raise WeinhuberPredicateParserException()
-                            else:
-                                cls._logger.critical(
-                                    "Aborting: one symbol inside one predicate does not have a valid structure. Invalid symbol: {} inside predicate {}".format(
-                                        str(var), str(single_predicate)))
-                                raise WeinhuberPredicateParserException()
-                        # Checking if every (symbol in interval)-Definition, occurs in in the term.
-                        # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term
-                        if all_interval_defs:
-                            cls._logger.critical(
-                                "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
-                                    str(all_interval_defs), str(single_predicate)))
-                            raise WeinhuberPredicateParserException()
                     except Exception:
                         cls._logger.critical(
                             "Aborting: one predicate does not have a valid structure. Invalid predicate: {}. Please check for typos and read the comments inside predicate_parser.py. For more information take a look at the sympy library (https://docs.sympy.org/latest/tutorial/basic_operations.html#converting-strings-to-sympy-expressions).".format(
                                 str(single_predicate)))
                         raise WeinhuberPredicateParserException()
-                    else:
-                        # Checking valid structure of predicate
-                        if term.atoms(AppliedUndef):
-                            # e.g. f(x) * c1 * x_3 >= 1 --> f(x) is an undefined function <--- NOT ALLOWED!
-                            cls._logger.critical(
-                                "Aborting: one predicate contains an undefined function. Undefined function: {}. Invalid predicate: {}".format(
-                                    str(term.atoms(AppliedUndef)), str(single_predicate)))
-                            raise WeinhuberPredicateParserException()
-                        elif not column_interval:
-                            cls._logger.critical(
-                                "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: ".format(
-                                    str(single_predicate)))
-                            raise WeinhuberPredicateParserException()
-                        elif term == 0 or term.evalf() == 0:
-                            cls._logger.critical(
-                                "Aborting: one predicate does evaluate to zero. Invalid predicate: ".format(str(single_predicate)))
-                            raise WeinhuberPredicateParserException()
-                        elif not split_pred or not term or not column_interval:
-                            cls._logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: ".format(
+
+                    all_interval_defs = {}
+                    column_interval = {}
+                    coef_interval = {}
+
+                    # Parsing all additional given intervals and storing them inside --> all_interval_defs
+                    try:
+                        for i in range(1, len(split_pred)):
+                            split_coef_definition = split_pred[i].split("in", 1)
+                            interval = cls.parse_user_interval(split_coef_definition[1])
+                            symbol = sp.sympify(split_coef_definition[0])
+                            all_interval_defs[symbol] = interval
+                    except Exception:
+                        cls._logger.critical(
+                            "Aborting: one predicate does not have a valid structure. Invalid predicate: {}. Please check for typos and read the comments inside predicate_parser.py. For more information take a look at the sympy library (https://docs.sympy.org/latest/tutorial/basic_operations.html#converting-strings-to-sympy-expressions).".format(
                                 str(single_predicate)))
-                            raise WeinhuberPredicateParserException
+                        raise WeinhuberPredicateParserException()
+
+                    """
+                    ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
+                    |                  COLUMN REFERENCING ONLY WITH VARIABLES OF STRUCTURE: x_i                |
+                    |                  COEFS ONLY WITH VARIABLES OF STRUCTURE: c_j                             |
+                    --------------------------------------------------------------------------------------------
+                    """
+                    # Iterating over every symbol/variable and deciding whether it is a column reference or a coef
+                    infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
+                    for var in term.free_symbols:
+                        # Type: x_i -> column reference
+                        if re.match(r"x_\d+", str(var)):
+                            if not all_interval_defs.__contains__(var):
+                                column_interval[var] = infinity
+                            else:
+                                column_interval[var] = all_interval_defs[var]
+                                all_interval_defs.__delitem__(var)
+                        # Type: c_i --> coef
+                        elif re.match(r"c_\d+", str(var)):
+                            if not all_interval_defs.__contains__(var):
+                                coef_interval[var] = infinity
+                            else:
+                                # CHECKING: coefs are only allowed to have 2 kinds of intervals: FiniteSet or (-Inf,Inf)
+                                check_interval = all_interval_defs[var]
+                                all_interval_defs.__delitem__(var)
+                                if isinstance(check_interval, sp.FiniteSet) or check_interval == infinity:
+                                    coef_interval[var] = check_interval
+                                else:
+                                    # coef interval is not FiniteSet or (-Inf,Inf)
+                                    cls._logger.critical(
+                                        "Aborting: invalid interval for a coefficient declared. Only finite or (-Inf,Inf) allowed. Coefficient: {} with invalid interval: {} from predicate: {}".format(
+                                            str(var), str(check_interval), str(single_predicate)))
+                                    raise WeinhuberPredicateParserException()
                         else:
-                            parsed_predicate = WeinhuberApproachSplit(column_interval, coef_interval, term, relation)
-                            cls._logger.info(
-                                "Parsed predicate {} / {} successfully. Result: {}".format(input_line.index(single_predicate) + 1,
-                                                                                           len(input_line), str(parsed_predicate)))
-                            output.append(parsed_predicate)
+                            cls._logger.critical(
+                                "Aborting: one symbol inside one predicate does not have a valid structure. Column refs only with x_i. Coefs only with c_i. Invalid symbol: {} inside predicate {}".format(
+                                    str(var), str(single_predicate)))
+                            raise WeinhuberPredicateParserException()
+
+                    # Checking if every interval-Definition, actually occurs in in the term.
+                    # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term.
+                    if all_interval_defs:
+                        cls._logger.critical(
+                            "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
+                                str(all_interval_defs), str(single_predicate)))
+                        raise WeinhuberPredicateParserException()
+
+                    # Hidden edge cases which may occured:
+
+                    # Hidden edge case1: Undefined functions.
+                    # e.g. f(x) * c1 * x_3 >= 1 <--> f(x) is an undefined function.
+                    if term.atoms(AppliedUndef):
+                        cls._logger.critical(
+                            "Aborting: one predicate contains an undefined function. Undefined function: {}. Invalid predicate: {}".format(
+                                str(term.atoms(AppliedUndef)), str(single_predicate)))
+                        raise WeinhuberPredicateParserException()
+                    # Hidden edge case2: No symbols to reference columns used.
+                    # e.g. c_0 >= 1; c_0 in {5,7}
+                    elif not column_interval:
+                        cls._logger.critical(
+                            "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: ".format(
+                                str(single_predicate)))
+                        raise WeinhuberPredicateParserException()
+                    # Hidden edge case3: Term evaluates to zero.
+                    # e.g. 3-1.5*2 <= 0
+                    elif term == 0 or term.evalf() == 0:
+                        cls._logger.critical(
+                            "Aborting: one predicate does evaluate to zero. Invalid predicate: ".format(str(single_predicate)))
+                        raise WeinhuberPredicateParserException()
+                    # Hidden edge case4: Invalid states for important key variables reached.
+                    elif not split_pred or not term or not column_interval:
+                        cls._logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: ".format(
+                            str(single_predicate)))
+                        raise WeinhuberPredicateParserException
+
+                    parsed_predicate = WeinhuberApproachSplit(column_interval, coef_interval, term, relation)
+                    cls._logger.info(
+                        "Parsed predicate {} / {} successfully. Result: {}".format(input_line.index(single_predicate) + 1,
+                                                                                   len(input_line), str(parsed_predicate)))
+                    output.append(parsed_predicate)
                     break
 
         cls._logger.info("Finished processing of user predicate.")

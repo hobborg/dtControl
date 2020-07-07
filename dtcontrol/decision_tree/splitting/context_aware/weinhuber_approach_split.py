@@ -14,13 +14,14 @@ from apted.helpers import Tree
 class WeinhuberApproachSplit(Split):
     """
     e.g.
-    c1 * x_3 - c2 + x_4 - c3 <= 0; x_2 in {1,2,3}; c1 in (-inf, inf); c2 in {1,2,3}; c3 in {5, 10, 32, 40}
+    c_1 * x_1 - c_2 + x_2 - c_3  <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
 
-        column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                     --> Key: Sympy Symbol Value: Sympy Interval
-        Every column reference without a specific defined Interval will be assigned to (-Inf, Inf)
-        coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c3:{5,10,32,40}}    --> Key: Sympy Symbol Value: Sympy Interval
-        term                =       c_1 * x_3 - c_2 + x_4 - c_3                       --> sympy expression
-        relation            =       '<='                                              --> String
+        column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                           --> Key: Sympy Symbol Value: Sympy Interval
+        coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c_3:{5,10,32,40}          --> Key: Sympy Symbol Value: Sympy Interval
+        term                =       c_1 * x_1 - c_2 + x_2 - c_3                             --> sympy expression
+        relation            =       '<='                                                    --> String
+
+        Every symbol without a specific defined Interval will be assigned to the interval: (-Inf, Inf)
 
         coef_assignment     =       [(c_1,-8.23), (c_2,2), (c_3,40)]                  --> List containing substitution Tuples (Sympy Symbol, Value)
         It will be determined inside fit() and later used inside predict() (and get_masks())
@@ -125,7 +126,7 @@ class WeinhuberApproachSplit(Split):
         if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0] or not isinstance(
                 fixed_coefs, list):
             self.logger.critical("Aborting: invalid structure of the arguments x, y.")
-            raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y.\nCheck logger or comments for more information.")
+            raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y. Check logger or comments for more information.")
 
         # Checking structure of fixed_coefs
         self.coefs_to_determine = sorted(set(self.coef_interval), key=lambda x: int(str(x).split("_")[1]))
@@ -133,13 +134,18 @@ class WeinhuberApproachSplit(Split):
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
                 self.logger.critical("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
-                raise WeinhuberSplitException("Aborting: invalid fixed_coefs member found.\nCheck logger or comments for more information.")
+                raise WeinhuberSplitException("Aborting: invalid fixed_coefs member found. Check logger or comments for more information.")
             else:
                 # Calculate coefs to determine with curve_fit
                 self.coefs_to_determine.remove(c_i)
         if not self.coefs_to_determine:
             self.coef_assignment = fixed_coefs
             return
+
+        # Predicate was already fitted.
+        if self.coef_assignment is not None:
+            self.logger.critical("Aborting: predicate was already fitted")
+            raise WeinhuberSplitException("Aborting: Aborting: predicate was already fitted. Check logger or comments for more information.")
 
         # initial guess is very important since otherwise, curve_fit doesn't know how many coefs to fit
         inital_guess = [1. for coef in self.coefs_to_determine]
@@ -193,7 +199,7 @@ class WeinhuberApproachSplit(Split):
                 else:
                     self.logger.critical("Aborting: invalid relation found.")
                     raise WeinhuberSplitException(
-                        "Aborting: Split with invalid relation can not be fitted.\nCheck logger or comments for more information.")
+                        "Aborting: Split with invalid relation can not be fitted. Check logger or comments for more information.")
 
             # For optimization reasons, once the first solution was found (with right accuracy), the loop should end.
             raise Exception('ALREADY FOUND A FIT!')
@@ -276,7 +282,7 @@ class WeinhuberApproachSplit(Split):
             check = offset == 0
         else:
             self.logger.critical("Aborting: invalid relation found from inside check_offset.")
-            raise WeinhuberSplitException("Aborting: Invalid relation found.\nCheck logger or comments for more information.")
+            raise WeinhuberSplitException("Aborting: Invalid relation found. Check logger or comments for more information.")
         return check
 
     def predict(self, features):
