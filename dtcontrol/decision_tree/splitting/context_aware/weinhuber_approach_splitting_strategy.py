@@ -31,8 +31,20 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # Checks whether predicate without coefs was already used in current dt path. Can lead in small(!) dt to huge performance boost.
         self.optimized_tree_check_version = True
 
-        # {‘lm’, ‘trf’, ‘dogbox’}
-        self.curve_fitting_method = "lm"
+        """
+        {‘lm’, ‘trf’, ‘dogbox’, 'optimized'}
+        "The method ‘lm’ won’t work when the number of observations is less than the number of variables, use ‘trf’ or ‘dogbox’ in this 
+        case." https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html (go to section: method)
+        
+        Default: 'lm' Levenberg-Marquardt
+        'trf' Trust Region Reflective
+        'dogbox' Dogleg algorithm
+        'optimized' Uses 'lm' whenever possible. Else 'trf' 
+        
+        CAUTION RUNTIME:
+        lm < optimized < trf < dogbox
+        """
+        self.curve_fitting_method = "optimized"
 
         # logger
         self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")

@@ -115,7 +115,7 @@ class WeinhuberApproachSplit(Split):
         :param fixed_coefs: Substitution list of tuples containing already determined coef values [(c_1, 2.5), ... ]
         :param x: feature columns of a dataset
         :param y: labels of a dataset
-        :param method: method used inside curve_fit()
+        :param method: {‘lm’, ‘trf’, ‘dogbox’, 'optimized'} -> method used inside curve_fit()
         """
         self.logger.info("Started fitting coef predicate: {}".format(str(self)))
         # Edge Case no coefs used in the term
@@ -145,7 +145,19 @@ class WeinhuberApproachSplit(Split):
         # Predicate was already fitted.
         if self.coef_assignment is not None:
             self.logger.critical("Aborting: predicate was already fitted")
-            raise WeinhuberSplitException("Aborting: Aborting: predicate was already fitted. Check logger or comments for more information.")
+            raise WeinhuberSplitException("Aborting: predicate was already fitted. Check logger or comments for more information.")
+
+        # Method checking
+        if not (method == "optimized" or method == "lm" or method == "trf" or method == "dogbox"):
+            self.logger.critical("Aborting: invalid curve fitting method.")
+            raise WeinhuberSplitException(
+                "Aborting: invalid curve fitting method. Check logger or comments for more information.")
+
+        if method == "optimized":
+            if x.shape[0] < len(self.coefs_to_determine):
+                method = 'trf'
+            else:
+                method = 'lm'
 
         # initial guess is very important since otherwise, curve_fit doesn't know how many coefs to fit
         inital_guess = [1. for coef in self.coefs_to_determine]
