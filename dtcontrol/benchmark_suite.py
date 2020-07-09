@@ -50,9 +50,6 @@ class BenchmarkSuite:
         logging.info(f"INFO: Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
         logging.info(f"INFO: Constructed trees will be written to {self.output_folder}.\n")
 
-        self.logger = logging.getLogger("BenchmarkSuite_logger")
-        self.logger.setLevel(logging.ERROR)
-
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
             exclude = []
@@ -150,8 +147,7 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
-            # TODO: INITIAL LOGGER PLACE
-            self.logger.warning("Decision Tree was built in " + str(run_time))
+            accuracy_start = time.time()
             if isinstance(classifier, BDD):
                 acc = 1.0  # TODO: make BDD checking code work with multi-output datasets
             else:
@@ -169,9 +165,12 @@ class BenchmarkSuite:
                     cell['accuracy'] = acc
                 if self.save_folder is not None:
                     classifier.save(self.get_filename(self.save_folder, dataset, classifier, '.saved', unique=True))
-            # TODO: Logger continued
-            accuracy_time = time.time() - run_time
-            self.logger.warning("dtControl finished in " + str(accuracy_time))
+
+            accuracy_time = time.time() - accuracy_start
+            # complete_time = time.time() - start
+            logging.debug("Decision tree was built in {} seconds.".format(round(run_time, ndigits=3)))
+            logging.debug("Accuracy was computed in {} seconds.".format(round(accuracy_time, ndigits=3)))
+            logging.debug("dtControl finished in {} seconds.".format(round(run_time + accuracy_time, ndigits=3)))
         else:
             cell = 'timeout'
         return cell
