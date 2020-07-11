@@ -1,25 +1,25 @@
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
-import logging
 import sympy as sp
 import numpy as np
 from copy import deepcopy
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from itertools import product
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
 
 
 class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
-    def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer()):
+    def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer(), debug=False):
 
         """
         :param user_given_splits: predicates/splits obtained by user to work with. Parsed by predicate_parser.py
         :param determinizer: determinizer
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.get_predicate() if user_given_splits is None else None
+        self.user_given_splits = PredicateParser.get_predicate(debug) if user_given_splits is None else None
         self.determinizer = determinizer
         self.first_run = True
 
@@ -44,20 +44,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         CAUTION RUNTIME:
         lm < optimized < trf < dogbox
         """
-        self.curve_fitting_method = "optimized"
+        self.curve_fitting_method = "lm"
 
         # logger
-        self.logger = logging.getLogger("WeinhuberApproachSplittingStrategy_logger")
-        self.logger.setLevel(logging.CRITICAL)
-
-        # Uncomment following lines to create a logger file containing all messages with timestamps.
-        # (Remember to change self.logger.setLevel(logging.DEBUG)
-
-        # formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-        # file_handler = logging.FileHandler('WeinhuberApproachSplit_logger.log')
-        # file_handler.setFormatter(formatter)
-        # file_handler.setLevel(logging.DEBUG)
-        # self.logger.addHandler(file_handler)
+        self.logger = WeinhuberApproachLogger("WeinhuberApproachSplittingStrategy_logger", debug)
 
     def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
 
@@ -116,8 +106,8 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: a split object
         """
-        self.logger.info("Startet finding new split.")
 
+        self.logger.root_logger.info("Startet finding new split.")
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return
@@ -129,7 +119,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             # Checking whether used variables in user_given_splits are actually represented in the given dataset.
             for single_split in self.user_given_splits:
                 if not single_split.check_valid_column_reference(x_numeric):
-                    self.logger.critical(
+                    self.logger.root_logger.critical(
                         "Aborting: one predicate uses an invalid column reference. Invalid predicate {}".format(str(single_split)))
                     raise WeinhuberStrategyException(
                         "Aborting: one predicate uses an invalid column reference. Check logger or comments for more information.")
@@ -166,7 +156,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             --> For column x_1 there are no restrictions
             --> Inside column x_2 the only allowed values are {1,2,3} 
             """
-            self.logger.info("Processing predicate {} / {}".format(predicate_list.index(single_split) + 1, len(predicate_list)))
+            self.logger.root_logger.info("Processing predicate {} / {}".format(predicate_list.index(single_split) + 1, len(predicate_list)))
             if single_split.check_data_in_column_interval(x_numeric):
                 # Checking whether predicate has to be fitted to data or not.
                 if not single_split.coef_interval:
@@ -224,5 +214,5 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # Returning split with lowest impurity
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
 
-        self.logger.info("Found split to return. Result: {}".format(str(weinhuber_split)))
+        self.logger.root_logger.info("Found split to return. Result: {}".format(str(weinhuber_split)))
         return weinhuber_split

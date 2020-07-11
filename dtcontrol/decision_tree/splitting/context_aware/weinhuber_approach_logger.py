@@ -30,3 +30,4 @@ class WeinhuberApproachLogger:
             file_handler.setLevel(logging.DEBUG)
             self.root_logger.addHandler(file_handler)
 
+        self.root_logger.propagate = False
