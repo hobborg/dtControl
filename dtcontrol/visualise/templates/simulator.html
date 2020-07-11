@@ -2,142 +2,266 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>dtControl Frontend</title>
+    <meta name="author" content="Tom Doan">
 
-    <title>Controller Select</title>
-    <!-- Custom fonts for this template-->
-    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
 
-    <!-- Custom styles for this template-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.css') }}">
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/new-select.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidenav-my.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/node-stylings.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}">
+
+    <style>
+        select.selectpicker {
+            display: none;
+            /* Prevent FOUC */
+        }
+    </style>
 </head>
 
-<body id="page-top">
-    <div id="wrapper">
-        <div class="container-fluid">
-            <h1>dtControl Frontend</h1>
-            <div class="row">
-                <div class="col">
-                    <div class="col">
-                        <form id="formFirst">
-                            <div>
-                                <label for="controller">Choose a controller:</label>
-                                <select id="controller" name="controller">
-                      
-                      </select>
-                            </div>
-                            <div>
-                                <label for="config">Choose a config:</label>
-                                <select id="config" name="config">
-                      
-                      </select>
-                            </div>
-                            <div>
-                                <label for="determinize">Determinize:</label>
-                                <select class="propList" id="determinize" name="determinize">
-    
-                      </select>
-                            </div>
-                            <div>
-                                <div id="numeric-predicates">
-                                    <h4>Numeric-predicates:</h4>
-                                </div>
-                            </div>
-                            <div>
+<body id="bootstrap-override">
 
-                                <div id="categorical-predicates">
-                                    <h4>Categorical-predicates:</h4>
+    <div class="modal fade" id="formSecondModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Select initial values</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formSecond">
+                    <div class="modal-body" id="formSecondBody">
 
-                                </div>
-
-                            </div>
-                            <div>
-                                <label for="impurity">Impurity:</label>
-                                <select class="propList" id="impurity" name="impurity">
-                      
-                    </select>
-                            </div>
-                            <div>
-                                <label for="tolerance">Tolerance:</label>
-                                <input type="text" id="tolerance" name="tolerance"><br><br>
-                            </div>
-                            <div>
-                                <label for="safe-pruning">Safe-pruning:</label>
-                                <select class="propList" name="safe-pruning" id="safe-pruning">
-                      <option value="true">True</opotion>
-                      <option value="false">False</opotion>
-                    </select>
-                            </div>
-
-                            <input type="submit" value="Send">
-                        </form>
-                        <input type="radio" id="play" name="player" value='0' />
-                        <label for="play">Play</label>
-                        <input type="radio" id="pause" name="player" value='1' />
-                        <label for="pause">Pause</label>
-                        <input type="radio" id="next" name="player" value='2' />
-                        <label for="next">Next</label>
-                        <input type="radio" id="back" name="player" value='3' />
-                        <label for="back">Back</label>
-                        <form id="instep">
-                            <div>
-                                <label for="steps">Number of steps to take</label>
-                                <input type="number" id="steps" name="steps" min="1">
-                            </div>
-                            <input type="submit" value="Send">
-                        </form>
-
-                        <form id="formSecond">
-
-                        </form>
-                        <div class="slidecontainer">
-                            <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
-                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="randomizeInputs()" class="btn btn-primary">Randomise</button>
+                        <button type="submit" value="Send" class="btn btn-primary"> Send </button>
                     </div>
 
-
-                </div>
-                <div class="col">
-                    <canvas id="cartCanvas" width="450" height="250"></canvas>
-                </div>
-            </div>
-
-            <div class="row" id="chartsHere">
+                </form>
 
             </div>
-
-            <div class="row">
-                <div class="col" id="treeHere">
-                    <button onclick="expandAll(null)">Expand all</button>
-                    <button onclick="collapseAll(null)">Collapse all</button>
-
-                </div>
-                <div class="col" id="tableHere">
-
-                </div>
-            </div>
-
-
         </div>
     </div>
 
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <form id="formFirst">
+
+            <div>
+                <label for="controller">Controller:</label>
+                <div class="search_categories">
+                    <div class="select">
+
+                        <select id="controller" name="controller">
+            
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="config">Config:</label>
+                <div class="search_categories">
+                    <div class="select">
+                        <select id="config" name="config">
+      
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="solid">
+
+            <div>
+                <label for="determinize">Determinize:</label>
+                <div class="search_categories">
+                    <div class="select">
+                        <select class="propList" id="determinize" name="determinize">
+    
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="numeric-predicates">Numeric-Predicates:</label>
+                <div class="search_categories">
+                    <div class="select">
+                        <select class="propList" id="numeric-predicates" name="numeric-predicates" multiple>
+    
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="categorical-predicates">Categorical-Predicates:</label>
+                <div class="search_categories">
+                    <div class="select">
+                        <select class="propList" id="categorical-predicates" name="categorical-predicates" multiple>
+    
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="impurity">Impurity:</label>
+                <div class="search_categories">
+                    <div class="select">
+                        <select class="propList" id="impurity" name="impurity">
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+            <div>
+                <label for="tolerance">Tolerance:</label>
+                <div class="search_categories">
+                    <input type="text" id="tolerance" name="tolerance"><br><br>
+                </div>
+            </div>
+            <div>
+                <label for="safe-pruning">Safe-pruning:</label>
+                <div class="search_categories">
+                    <div class="select">
+                        <select class="propList" name="safe-pruning" id="safe-pruning">
+                            <option value="true">True</opotion>
+                            <option value="false">False</opotion>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">Send</button>
 
 
+        </form>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+    <div id="main">
 
-    <script src="{{url_for('static', filename='js/heavylifting.js')}}"></script>
+        <nav class="navbar navbar-expand-xl navbar-light" style="margin: 1.25rem;">
+            <button class="btn" onclick="openNav()"><i class="fa fa-cog"></i></button>
+            <a class="navbar-brand" href="https://gitlab.lrz.de/i7/dtcontrol">dtControl</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
 
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="btn-group btn-group-toggle" data-toggle="buttons" style="z-index:5;">
+                    <label class="btn btn-dark">
+                      <input type="radio" name="player" id="play" autocomplete="off" value='0'> Play
+                    </label>
+                    <label class="btn btn-dark active">
+                      <input type="radio" name="player" id="pause" autocomplete="off" value='1' checked> Pause
+                    </label>
+                    <label class="btn btn-dark">
+                      <input type="radio" name="player" id="next" autocomplete="off" value='2'> Next
+                    </label>
+                    <label class="btn btn-dark">
+                        <input type="radio" name="player" id="back" autocomplete="off" value='3'> Previous
+                    </label>
+                </div>
+                <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
+                <form id="instep" class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" placeholder="Number of steps" aria-label="Number of steps" type="number" id="steps" name="steps" min="1">
+                    <button class="btn btn-dark my-2 my-sm-0" type="submit">Step</button>
+                </form>
 
+                <div class="btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-dark active" style="margin: 7px;">
+                      <input id = "animateTree" type="checkbox" checked autocomplete="off"> Animation
+                    </label>
+                </div>
+            </div>
+        </nav>
+
+        <div class="row">
+            <div class="col-lg-6" id="expandThisDiv">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <button type="button" class="btn btn-dark" onclick="expandAll(null)">Expand all</button>
+                        <button type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
+                        <div class="row no-gutters align-items-center">
+                            <div id="treeHere">
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6" id="hideThisDiv">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div style="text-align:center;">
+                            <canvas id="cartCanvas" width="450" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <div id="tableHere">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6" id="chartsHere0">
+
+            </div>
+
+            <div class="col-lg-6" id="chartsHere1">
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3.v4.js') }}"></script>
+    <script src="{{url_for( 'static', filename='js/heavylifting.js' )}}"></script>
+    <script>
+        function openNav() {
+            document.getElementById("mySidenav").style.width = "285px";
+            document.getElementById("main").style.marginLeft = "285px";
+        }
+
+        /* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+        }
+        openNav();
+    </script>
 </body>
 
 </html>

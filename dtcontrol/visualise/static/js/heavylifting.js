@@ -11,7 +11,7 @@ var numResults;
 var chart = [];
 var chartConfig = [];
 var nextDisabled = false;
-var isUser = false;
+var treeAnimation = true;
 
 const simTableDiv = document.getElementById('tableHere');
 
@@ -60,32 +60,22 @@ function postload() {
         det.appendChild(opt);
     }
 
-    var myDiv0 = document.getElementById("numeric-predicates");
+    var det = document.getElementById("numeric-predicates");
     for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-        var checkbox = document.createElement('input');
-        checkbox.type = "checkbox";
-        checkbox.name = 'numeric-predicates[]';
-        checkbox.value = allConfig['numeric-predicates'][i];
-        checkbox.id = allConfig['numeric-predicates'][i];
-        var label = document.createElement('label');
-        label.htmlFor = allConfig['numeric-predicates'][i];
-        label.appendChild(document.createTextNode(allConfig['numeric-predicates'][i]));
-        myDiv0.appendChild(checkbox);
-        myDiv0.appendChild(label);
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['numeric-predicates'][i];
+        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
+        opt.setAttribute('id', allConfig['numeric-predicates'][i]);
+        det.appendChild(opt);
     }
 
-    var myDiv1 = document.getElementById("categorical-predicates");
+    var det = document.getElementById("categorical-predicates");
     for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-        var checkbox = document.createElement('input');
-        checkbox.type = "checkbox";
-        checkbox.name = 'categorical-predicates[]';
-        checkbox.value = allConfig['categorical-predicates'][i];
-        checkbox.id = allConfig['categorical-predicates'][i];
-        var label = document.createElement('label');
-        label.htmlFor = allConfig['categorical-predicates'][i];
-        label.appendChild(document.createTextNode(allConfig['categorical-predicates'][i]));
-        myDiv1.appendChild(checkbox);
-        myDiv1.appendChild(label);
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['categorical-predicates'][i];
+        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
+        opt.setAttribute('id', allConfig['categorical-predicates'][i]);
+        det.appendChild(opt);
     }
 
     var det = document.getElementById("impurity");
@@ -96,7 +86,6 @@ function postload() {
         opt.setAttribute('id', allConfig['impurity'][i]);
         det.appendChild(opt);
     }
-
     $("#config").trigger("change");
 
 }
@@ -160,13 +149,16 @@ var i = 0,
     root;
 
 var margin = { top: 20, right: 120, bottom: 20, left: 120 },
-    width = 4560 - margin.right - margin.left,
-    height = 1500 - margin.top - margin.bottom;
+    width = 1560 - margin.right - margin.left,
+    height = 500 - margin.top - margin.bottom;
+var width, height;
+// var margin = { top: 20, right: 120, bottom: 20, left: 120 },
+// width = 4560 - margin.right - margin.left,
+// height = 1500 - margin.top - margin.bottom;
 
 
 
 function myFunc() {
-    // console.log("myFunc called");
     // ************** Generate the tree diagram	 *****************
 
     tree = d3.layout.tree()
@@ -179,6 +171,9 @@ function myFunc() {
         .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom)
         .attr("style", "overflow-x: auto; overflow-y: auto;")
+        .call(d3.zoom().on("zoom", function() {
+            svg.attr("transform", d3.event.transform)
+        }))
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -201,7 +196,10 @@ function click(d) {
         d.children = d._children;
         d._children = null;
     }
+    // Inefficient but does not work without it
     update(d);
+    update(root);
+
 }
 
 function update(source) {
@@ -318,37 +316,69 @@ function foldIt(od, nw) {
 }
 
 function colourPath(str) {
-    root.coleur = "red";
-    var dummy = root;
-    for (var i = 0; i < str.length; i++) {
-        if (dummy.children) {
-            //hidden
-            dummy.children[str[i]].coleur = "red";
-            dummy = dummy.children[str[i]];
-        } else {
-            //visible
-            dummy._children[str[i]].coleur = "red";
-            dummy = dummy._children[str[i]];
+    if (treeAnimation) {
+        root.coleur = "red";
+        var dummy = root;
+        for (var i = 0; i < str.length; i++) {
+            if (dummy.children) {
+                //hidden
+                dummy.children[str[i]].coleur = "red";
+                dummy = dummy.children[str[i]];
+            } else {
+                //visible
+                dummy._children[str[i]].coleur = "red";
+                dummy = dummy._children[str[i]];
+            }
         }
+        update(root);
     }
-    update(root);
 }
 
 function recolourPath() {
-    root.coleur = "white";
-    var dummy = root;
-    for (var i = 0; i < lastPath[currentSim].length; i++) {
-        if (dummy.children) {
-            //hidden
-            dummy.children[lastPath[currentSim][i]].coleur = "white";
-            dummy = dummy.children[lastPath[currentSim][i]];
-        } else {
-            //visible
-            dummy._children[lastPath[currentSim][i]].coleur = "white";
-            dummy = dummy._children[lastPath[currentSim][i]];
+    if (treeAnimation) {
+        root.coleur = "white";
+        var dummy = root;
+        for (var i = 0; i < lastPath[currentSim].length; i++) {
+            if (dummy.children) {
+                //hidden
+                dummy.children[lastPath[currentSim][i]].coleur = "white";
+                dummy = dummy.children[lastPath[currentSim][i]];
+            } else {
+                //visible
+                dummy._children[lastPath[currentSim][i]].coleur = "white";
+                dummy = dummy._children[lastPath[currentSim][i]];
+            }
         }
+        update(root);
     }
-    update(root);
+}
+
+function getDepth(depthNode) {
+    if (depthNode.children) {
+        var ans = 0;
+        for (var i = 0; i < depthNode.children.length; i++) {
+            ans = Math.max(ans, getDepth(depthNode.children[i]));
+        }
+        return ans + 1;
+    } else {
+        return 0;
+    }
+
+}
+
+function getLeaves(depthNode) {
+    if (depthNode.children) {
+        if (depthNode.children.length == 0) {
+            return 1;
+        }
+        var ans = 0;
+        for (var i = 0; i < depthNode.children.length; i++) {
+            ans += getLeaves(depthNode.children[i]);
+        }
+        return ans;
+    } else {
+        return 1;
+    }
 }
 
 function expandAll(nd) {
@@ -557,6 +587,7 @@ async function oneStep() {
                 const tab = document.getElementById('simTable');
                 const dumrow = document.createElement('tr');
 
+
                 const drc0 = document.createElement('td');
                 const drc0_inp = document.createElement('input');
 
@@ -580,7 +611,6 @@ async function oneStep() {
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
                 }
-
                 tab.appendChild(dumrow);
                 colourPath(data.x_new[2]);
 
@@ -620,40 +650,18 @@ async function oneStep() {
 
 }
 
-function clearCheckBoxes() {
-    for (var i = 0; i < allConfig["numeric-predicates"].length; i++) {
-        if ($('#' + allConfig["numeric-predicates"][i]).prop("checked")) {
-            $('#' + allConfig["numeric-predicates"][i]).trigger('click');
-        }
-    }
-    for (var i = 0; i < allConfig["categorical-predicates"].length; i++) {
-        if ($('#' + allConfig["categorical-predicates"][i]).prop("checked")) {
-            $('#' + allConfig["categorical-predicates"][i]).trigger('click');
-        }
-    }
-}
-
 $(document).ready(function() {
 
     var numChanges = 0;
 
     $('#formFirst').on('submit', function(event) {
-        var num_preds_toPass = [];
-        $('input[name="numeric-predicates[]"]:checked').each(function() {
-            num_preds_toPass.push(this.value);
-        });
-        var cat_preds_toPass = [];
-        $('input[name="categorical-predicates[]"]:checked').each(function() {
-            cat_preds_toPass.push(this.value);
-        });
-
         $.ajax({
                 data: JSON.stringify({
                     controller: $('#controller').val(),
                     config: $('#config').val(),
                     determinize: $('#determinize').val(),
-                    numeric_predicates: (num_preds_toPass),
-                    categorical_predicates: (cat_preds_toPass),
+                    numeric_predicates: $('#numeric-predicates').val(),
+                    categorical_predicates: $('#categorical-predicates').val(),
                     impurity: $('#impurity').val(),
                     tolerance: $('#tolerance').val(),
                     safe_pruning: $('#safe-pruning').val()
@@ -664,9 +672,22 @@ $(document).ready(function() {
             })
             .done(function(data) {
 
+                // resizing to get largest space for tree
+                if ($('#controller').val() != "controller.scs") {
+                    document.getElementById("expandThisDiv").className = "col-lg-12";
+                    document.getElementById("hideThisDiv").remove();
+                }
+
                 treeData = data.classi;
                 numVars = data.numVars;
                 numResults = data.numResults;
+
+                console.log(treeData);
+
+                // height = 50 * getLeaves(treeData[0]);
+                height = 25 * getLeaves(treeData[0]);
+                // height = 650;
+                width = 200 * getDepth(treeData[0]);
 
                 for (var i = 0; i < numVars; i++) {
                     x_current.push([]);
@@ -689,14 +710,15 @@ $(document).ready(function() {
 
                 const tab = document.createElement('table');
                 tab.setAttribute('id', "simTable");
+                tab.setAttribute('class', "table table-fixed");
                 const dumrow = document.createElement('tr');
+
                 const drc0 = document.createElement('th');
                 drc0.textContent = "Index";
                 dumrow.appendChild(drc0);
 
-                const chartsDiv = document.getElementById('chartsHere');
-                // var chartShare = (100/(numVars%3));
-                var chartShare = 33;
+                const chartsDiv0 = document.getElementById('chartsHere0');
+                const chartsDiv1 = document.getElementById('chartsHere1');
 
                 for (var i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('th');
@@ -704,13 +726,31 @@ $(document).ready(function() {
                     dumrow.appendChild(drc1);
 
                     const someChartDiv = document.createElement('div');
-                    someChartDiv.style.width = chartShare.toString() + "%";
+                    someChartDiv.style.width = "100%";
                     someChartDiv.style.float = 'left';
-                    someChartDiv.style.height = "80%";
+                    someChartDiv.style.height = someChartDiv.style.width;
                     const someChart = document.createElement('canvas');
                     someChart.setAttribute('id', 'chartContainer' + i.toString());
                     someChartDiv.appendChild(someChart);
-                    chartsDiv.appendChild(someChartDiv);
+
+                    const heir0 = document.createElement('div');
+                    heir0.setAttribute('class', "card shadow mb-4");
+
+                    const heir1 = document.createElement('div');
+                    heir1.setAttribute('class', "card-body");
+
+                    const heir2 = document.createElement('div');
+                    heir2.setAttribute('style', "text-align:center;");
+
+                    heir2.appendChild(someChartDiv);
+                    heir1.appendChild(heir2);
+                    heir0.appendChild(heir1);
+                    if (i % 2 == 0) {
+                        chartsDiv0.appendChild(heir0);
+                    } else {
+                        chartsDiv1.appendChild(heir0);
+                    }
+
                 }
 
                 if (numResults == 1) {
@@ -724,11 +764,10 @@ $(document).ready(function() {
                         dumrow.appendChild(drc2);
                     }
                 }
-
                 tab.appendChild(dumrow);
                 simTableDiv.appendChild(tab);
 
-                const opt = document.getElementById("formSecond");
+                const opt = document.getElementById("formSecondBody");
                 for (var i = 0; i < numVars; i++) {
                     const dumDiv = document.createElement('div');
 
@@ -749,10 +788,7 @@ $(document).ready(function() {
                     x_bounds.push([data.bound[0][i], data.bound[1][i]]);
                 }
 
-                const dumSubmit = document.createElement('input');
-                dumSubmit.setAttribute('type', 'submit');
-                dumSubmit.setAttribute('value', 'Send');
-                opt.appendChild(dumSubmit);
+                $('#formSecondModal').modal('toggle');
 
             });
 
@@ -761,6 +797,7 @@ $(document).ready(function() {
     });
 
     $('#formSecond').on('submit', function(event) {
+        console.log('form is submitted');
         var x_toPass = [];
         for (var i = 0; i < numVars; i++) {
             x_toPass.push(parseFloat($('#x' + i).val()));
@@ -798,7 +835,6 @@ $(document).ready(function() {
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
                 }
-
                 tab.appendChild(dumrow);
                 colourPath(data.path);
 
@@ -823,6 +859,7 @@ $(document).ready(function() {
                 }
 
                 drawCanvas();
+                $('#formSecondModal').modal('hide');
 
             });
 
@@ -878,7 +915,6 @@ $(document).ready(function() {
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
                         }
-
                         tab.appendChild(dumrow);
 
                         for (var j = 0; j < numVars; j++) {
@@ -951,8 +987,7 @@ $(document).ready(function() {
 
     $("#config").change(function() {
         if ($(this).val() != "custom") {
-            clearCheckBoxes();
-            isUser = false;
+            // clearCheckBoxes();
             for (x in data2.presets) {
                 //x is  preset names
                 if ($(this).val() == x) {
@@ -968,14 +1003,6 @@ $(document).ready(function() {
                                 } else {
                                     $('#safe-pruning').val("false");
                                 }
-                            } else if (y == "numeric-predicates") {
-                                for (var z = 0; z < data2.presets[x][y].length; z++) {
-                                    $("#" + data2.presets[x][y][z]).trigger('click');
-                                }
-                            } else if (y == "categorical-predicates") {
-                                for (var z = 0; z < data2.presets[x][y].length; z++) {
-                                    $("#" + data2.presets[x][y][z]).trigger('click');
-                                }
                             } else {
                                 $("#" + y).val(data2.presets[x][y]);
                             }
@@ -988,14 +1015,6 @@ $(document).ready(function() {
                                 } else {
                                     $('#safe-pruning').val("false");
                                 }
-                            } else if (y == "numeric-predicates") {
-                                for (var z = 0; z < data2.presets["default"][y].length; z++) {
-                                    $("#" + data2.presets["default"][y][z]).trigger('click');
-                                }
-                            } else if (y == "categorical-predicates") {
-                                for (var z = 0; z < data2.presets["default"][y].length; z++) {
-                                    $("#" + data2.presets["default"][y][z]).trigger('click');
-                                }
                             } else {
                                 $("#" + y).val(data2.presets["default"][y]);
                             }
@@ -1006,41 +1025,53 @@ $(document).ready(function() {
 
                 }
             }
-            isUser = true;
         }
 
 
     });
 
     $(".propList").change(function() {
-        console.log("change done by user");
         document.getElementById("config").value = "custom";
     });
     $("#tolerance").on("input", function() {
-        console.log("change done by user to text");
         document.getElementById("config").value = "custom";
     });
     // Simple .change() does not work here because it is dynamically added
-    $(document).on("click", 'input[name="numeric-predicates[]"]', function(e) {
-        if (isUser) {
-            console.log("change done by user to numpre");
-            document.getElementById("config").value = "custom";
-        }
-    });
-    $(document).on("click", 'input[name="categorical-predicates[]"]', function(e) {
-        if (isUser) {
-            console.log("change done by user to catpre");
-            document.getElementById("config").value = "custom";
-        }
-    });
-
-
 });
 
 
 var slider = document.getElementById("timeRange");
 slider.oninput = function() {
-    timeOfSlider = this.value;
-    clearInterval(plpause);
-    plpause = setInterval(oneStep, timeOfSlider);
+    if (parseInt($("input[name=player]:checked").val()) == 0) {
+        timeOfSlider = this.value;
+        clearInterval(plpause);
+        plpause = setInterval(oneStep, timeOfSlider);
+    }
 }
+
+function randomizeInputs() {
+    for (var i = 0; i < numVars; i++) {
+        var range = x_bounds[i][1] - x_bounds[i][0];
+        document.getElementById('x' + i).value = x_bounds[i][0] + (Math.random() * range);
+    }
+}
+
+// Have to select dynamically created elements like this
+$(document).on("click", "#simTable tr", function() {
+    console.log('table was clicked');
+    $(this).addClass('selected').siblings().removeClass('selected');
+    var value = $(this).find('td:first').html();
+    console.log(value);
+    $(this).find('td input[type=radio]').prop('checked', true);
+    var ind = parseInt($("input[name='indexers']:checked").val());
+    recolourPath();
+    currentSim = ind;
+    colourPath(lastPath[ind]);
+    drawCanvas();
+    // $(this).find('td input[type=radio]').trigger('click');
+});
+
+$(document).on("change", "#animateTree", function() {
+    treeAnimation = !treeAnimation;
+    console.log(treeAnimation);
+});
