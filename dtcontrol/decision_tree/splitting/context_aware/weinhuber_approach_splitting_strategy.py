@@ -107,7 +107,6 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :returns: a split object
         """
 
-        self.logger.root_logger.info("Startet finding new split.")
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return
@@ -116,7 +115,14 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         # Will be only executed once at startup.
         if self.first_run:
-            # Checking whether used variables in user_given_splits are actually represented in the given dataset.
+            # creating some additional logger information
+            self.logger.root_logger.info(
+                "Current dataset specification:\n\t- x_metadate: {}\n\t- y_metadata: {}\n\t- rows: {}\n\t- columns: {}".format(
+                    dataset.x_metadata,
+                    dataset.y_metadata,
+                    x_numeric.shape[0],
+                    x_numeric.shape[1]))
+            # Checking whether used column references in user_given_splits are actually represented in the given dataset.
             for single_split in self.user_given_splits:
                 if not single_split.check_valid_column_reference(x_numeric):
                     self.logger.root_logger.critical(
@@ -124,6 +130,12 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                     raise WeinhuberStrategyException(
                         "Aborting: one predicate uses an invalid column reference. Check logger or comments for more information.")
             self.first_run = False
+        else:
+            # creating some additional logger information
+            self.logger.root_logger.info(
+                "Calling WeinhuberApproachSplittingStrategy with: \n- Current dataset size:\n\t- rows: {}\n\t- columns: {}".format(
+                    x_numeric.shape[0],
+                    x_numeric.shape[1]))
 
         predicate_list = []
         if self.optimized_tree_check_version:
@@ -214,5 +226,5 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # Returning split with lowest impurity
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
 
-        self.logger.root_logger.info("Found split to return. Result: {}".format(str(weinhuber_split)))
+        self.logger.root_logger.info("Returned split: {}".format(str(weinhuber_split)))
         return weinhuber_split
