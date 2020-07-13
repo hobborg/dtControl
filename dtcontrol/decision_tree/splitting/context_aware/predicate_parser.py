@@ -180,7 +180,7 @@ class PredicateParser:
                     elif not split_pred or not term or not column_interval:
                         logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: ".format(
                             str(single_predicate)))
-                        raise WeinhuberPredicateParserException
+                        raise WeinhuberPredicateParserException()
 
                     parsed_predicate = WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
                     logger.root_logger.info(
