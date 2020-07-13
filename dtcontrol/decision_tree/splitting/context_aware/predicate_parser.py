@@ -182,7 +182,7 @@ class PredicateParser:
                             str(single_predicate)))
                         raise WeinhuberPredicateParserException
 
-                    parsed_predicate = WeinhuberApproachSplit(column_interval, coef_interval, term, relation)
+                    parsed_predicate = WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
                     logger.root_logger.info(
                         "Parsed predicate {} / {} successfully. Result: {}".format(input_line.index(single_predicate) + 1,
                                                                                    len(input_line), str(parsed_predicate)))
