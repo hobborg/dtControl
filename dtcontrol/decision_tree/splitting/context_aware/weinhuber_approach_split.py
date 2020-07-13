@@ -3,7 +3,6 @@ import warnings
 from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
-import logging
 from scipy.optimize import curve_fit
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberSplitException
 import re
@@ -29,7 +28,7 @@ class WeinhuberApproachSplit(Split):
         It describes a specific assignment of all variables to a value inside their interval in order to achieve the lowest impurity.
     """
 
-    def __init__(self, column_interval, coef_interval, term, relation, debug, priority=1):
+    def __init__(self, column_interval, coef_interval, term, relation, debug=False, priority=1):
         self.priority = priority
         self.column_interval = column_interval
         self.coef_interval = coef_interval

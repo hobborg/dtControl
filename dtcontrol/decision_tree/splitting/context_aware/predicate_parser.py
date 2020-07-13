@@ -9,7 +9,7 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger i
 class PredicateParser:
 
     @classmethod
-    def get_predicate(cls, debug, input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
+    def get_predicate(cls, debug=False, input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
         """
         Function to parse predicates obtained from user (stored in input_file_path)
         :param input_file_path: path with file containing user predicates (in every line one predicate)
@@ -193,7 +193,7 @@ class PredicateParser:
         return output
 
     @classmethod
-    def parse_user_interval(cls, user_input, debug):
+    def parse_user_interval(cls, user_input, debug = False):
         """
         Predicate Parser for the interval.
         :variable user_input: Interval as a string

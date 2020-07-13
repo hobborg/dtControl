@@ -19,7 +19,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param determinizer: determinizer
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.get_predicate(debug) if user_given_splits is None else None
+        self.user_given_splits = PredicateParser.get_predicate(debug=debug) if user_given_splits is None else None
         self.determinizer = determinizer
         self.first_run = True
 

@@ -174,4 +174,4 @@ class TestPredicateParser(unittest.TestCase):
         with self.assertRaises(WeinhuberPredicateParserException):
             parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file4.txt")
 
-print("The Logger statements are supposed to appear on the console.")
+print("The Critical Logger statements are supposed to appear on the console.")

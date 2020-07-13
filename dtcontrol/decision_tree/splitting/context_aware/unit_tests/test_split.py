@@ -339,4 +339,4 @@ class TestSplitCurveFit(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-print("The Logger statements are supposed to appear on the console.")
+print("The Critical Logger statements are supposed to appear on the console.")

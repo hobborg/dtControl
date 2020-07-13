@@ -1,7 +1,6 @@
 import unittest
-from hypothesis import given
+from hypothesis import given, settings
 import hypothesis.strategies as st
-from hypothesis.strategies import text
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 import sympy as sp
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
@@ -39,10 +38,12 @@ class TestIntervalParser(unittest.TestCase):
             with self.assertRaises(WeinhuberPredicateParserException):
                 PredicateParser.parse_user_interval(f"({str(x)},{str(y)})")
 
+    @settings(deadline=None)
     @given(x=st.integers(), y=st.integers())
     def test_open_interval_integer_hypothesis(self, x, y):
         self.open_intervals(x, y)
 
+    @settings(deadline=None)
     @given(x=st.floats(allow_nan=False, allow_infinity=False), y=st.floats(allow_nan=False, allow_infinity=False))
     def test_open_interval_float_hypothesis(self, x, y):
         self.open_intervals(x, y)
@@ -546,7 +547,6 @@ class TestIntervalParser(unittest.TestCase):
         with self.assertRaises(WeinhuberPredicateParserException):
             PredicateParser.parse_user_interval("{-1223,-Inf,1,2}")
 
-
     def test_valid_union_intervals(self):
         self.assertEqual(PredicateParser.parse_user_interval(
             "{1233.123, sqrt(2), 123213} or (1,2) or (3,4) u [9,10) u (12,9999] OR (-1,0) Or {-1,-2,-3,-4}"),
@@ -611,7 +611,6 @@ class TestIntervalParser(unittest.TestCase):
             PredicateParser.parse_user_interval("{1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8 and  {1,2,3,4,5}")
 
 
-
 if __name__ == '__main__':
     unittest.main()
-print("The Logger statements are supposed to appear on the console.")
+print("The Critical Logger statements are supposed to appear on the console.")
