@@ -53,8 +53,9 @@ from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 import json, ast
 import numpy as np
 
+
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
-                    name=None):
+                   name=None):
     """
     Creates classifier objects for each method
 
@@ -90,7 +91,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     splitting_map = {
         'axisonly': lambda x: AxisAlignedSplittingStrategy(),
         'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x,
-                                                                        solver='lbfgs', penalty='none'),
+                                                                     solver='lbfgs', penalty='none'),
         'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
         'oc1': lambda x: OC1SplittingStrategy(determinizer=x),
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
@@ -153,7 +154,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     impurity_measure = impurity_map[impurity](determinization_map[determinize](None))
 
     classifier = DecisionTree(splitting_strategy, impurity_measure, name,
-                                early_stopping=early_stopping, label_pre_processor=label_pre_processor)
+                              early_stopping=early_stopping, label_pre_processor=label_pre_processor)
 
     if safe_pruning:
         logging.info(f"Enabling safe pruning for preset {name}")
@@ -162,29 +163,32 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     # returns a flattened list
     return classifier
 
-def load_default_config() -> OrderedDict:
-        try:
-            default_config_file = resource_filename(Requirement.parse("dtcontrol"),
-                                                    "dtcontrol/config.yml")  # System-level config file
-        except pkg_resources.DistributionNotFound:
-            sys.exit(
-                f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
 
-        try:
-            yaml = YAML()
-            default_config = yaml.load(open(default_config_file))
-        except FileNotFoundError:
-            sys.exit(f"Error finding the default config file. Please raise an issue with the developers.")
-        except ScannerError:
-            sys.exit(
-                f"Scan error in the default YAML configuration file '{default_config_file}'. Please raise an issue with the developers.")
-        return default_config
+def load_default_config() -> OrderedDict:
+    try:
+        default_config_file = resource_filename(Requirement.parse("dtcontrol"),
+                                                "dtcontrol/config.yml")  # System-level config file
+    except pkg_resources.DistributionNotFound:
+        sys.exit(
+            f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
+
+    try:
+        yaml = YAML()
+        default_config = yaml.load(open(default_config_file))
+    except FileNotFoundError:
+        sys.exit(f"Error finding the default config file. Please raise an issue with the developers.")
+    except ScannerError:
+        sys.exit(
+            f"Scan error in the default YAML configuration file '{default_config_file}'. Please raise an issue with the developers.")
+    return default_config
+
 
 def get_key_or_default(preset_dict: OrderedDict, default_dict: OrderedDict, key: str):
-        if key in preset_dict:
-            return preset_dict[key]
-        else:
-            return default_dict[key]
+    if key in preset_dict:
+        return preset_dict[key]
+    else:
+        return default_dict[key]
+
 
 def get_preset(preset: str, user_config: OrderedDict, default_config: OrderedDict) -> Tuple:
     if user_config and preset in user_config['presets']:
@@ -193,12 +197,12 @@ def get_preset(preset: str, user_config: OrderedDict, default_config: OrderedDic
         value = default_config['presets'][preset]
     else:
         sys.exit(f"Preset '{preset}' not found.\n"
-                    f"Please ensure that the specified config file contains a "
-                    f"configuration called '{preset}'. You may run the command\n"
-                    f"\tdtcontrol preset --sample > user-config.yml\n"
-                    f"to generate a configuration file and use it with the help of the "
-                    f"--config and --use-preset switches (see help).\n"
-                    f"Refer to the User Manual (https://dtcontrol.readthedocs.io/) for details on how to write presets.")
+                 f"Please ensure that the specified config file contains a "
+                 f"configuration called '{preset}'. You may run the command\n"
+                 f"\tdtcontrol preset --sample > user-config.yml\n"
+                 f"to generate a configuration file and use it with the help of the "
+                 f"--config and --use-preset switches (see help).\n"
+                 f"Refer to the User Manual (https://dtcontrol.readthedocs.io/) for details on how to write presets.")
 
     default_value = default_config['presets']['default']
 
@@ -206,7 +210,7 @@ def get_preset(preset: str, user_config: OrderedDict, default_config: OrderedDic
     # In case something is not defined, choose the default from default_value dict
     for key in value.keys():
         if key not in ['numeric-predicates', 'categorical-predicates', 'determinize', 'impurity', 'tolerance',
-                        'safe-pruning']:
+                       'safe-pruning']:
             logging.warning(f"Ignoring unknown key {key} specified under preset {preset}.")
 
     numeric_predicates = get_key_or_default(value, default_value, 'numeric-predicates')
@@ -218,6 +222,7 @@ def get_preset(preset: str, user_config: OrderedDict, default_config: OrderedDic
 
     return numeric_predicates, categorical_predicates, determinize, impurity, tolerance, safe_pruning
 
+
 def is_valid_file_or_folder(arg):
     if not exists(arg):
         logging.error(f"The file/folder {arg} does not exist.")
@@ -225,24 +230,26 @@ def is_valid_file_or_folder(arg):
     else:
         return arg
 
-def intoJSON(rt,parent):
+
+def intoJSON(rt, parent):
     # returns a string
     rt_name = "sth"
-    if(len(rt.children)>0):
+    if (len(rt.children) > 0):
         rt_name = rt.split.print_c()
     else:
         rt_name = rt.print_c_label()
     # print("Working on ",rt_name," with ",len(rt.children)," children\n")
-    strdummy = {"name": rt_name,"parent": parent,"coleur": "white","children": []}
+    strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": []}
     for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i],rt_name))
+        strdummy["children"].append(intoJSON(rt.children[i], rt_name))
     return strdummy
+
 
 def main_parse(args):
     # args will be passed as a dict to this function
     kwargs = dict()
 
-    dataset = path.realpath(path.dirname(__file__))+"/../examples/"+args["controller"]
+    dataset = path.realpath(path.dirname(__file__)) + "/../examples/" + args["controller"]
     # print(dataset)
     is_valid_file_or_folder(dataset)
 
@@ -260,12 +267,14 @@ def main_parse(args):
     classifiers = []
     run_config_table = []
     Row = namedtuple('Row',
-                        ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
-                        'SafePruning'])
+                     ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
+                      'SafePruning'])
 
     if "config" in args.keys():
         presets = args["config"]
-        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets, user_config, default_config)
+        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
+                                                                                                      user_config,
+                                                                                                      default_config)
     else:
         presets = "default"
         numeric_split = args["numeric-predicates"]
@@ -273,7 +282,7 @@ def main_parse(args):
         determinize = args["determinize"]
         impurity = args["impurity"]
         tolerance = float(args["tolerance"])
-        safe_pruning = (args["safe-pruning"]=="true")
+        safe_pruning = (args["safe-pruning"] == "true")
 
     try:
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
@@ -298,18 +307,18 @@ def main_parse(args):
 
     # suite.benchmark(classifiers)
     suite.datasets[0].load_if_necessary()
-    #benchmark does a lot of other stuff as well, we just need load if necessary from it
+    # benchmark does a lot of other stuff as well, we just need load if necessary from it
     classifiers[0].fit(suite.datasets[0])
     # print("Tried fit now printing root")
 
     # json_str = []
-    retDict = intoJSON(classifiers[0].root,"null")
+    retDict = intoJSON(classifiers[0].root, "null")
     # classifiers[0].root.predict_one_step(np.array([[3.5, 0]]))
     # print((classifiers[0].get_stats()))
 
     # print(suite.datasets[0].x_metadata)
     # print(suite.datasets[0].y_metadata)
-    
+
     # print("Retdict type ",type(retDict))
     # json_str=json.dumps(retDict)
-    return retDict,suite.datasets[0].x_metadata,suite.datasets[0].y_metadata, classifiers[0].root
+    return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0].root

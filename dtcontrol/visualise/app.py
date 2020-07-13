@@ -11,14 +11,23 @@ app = Flask(__name__)
 saved_tree = []
 minBounds = []
 maxBounds = []
+stepSize = []
 
 variable_subs = []
 lambda_list = []
+numVars = 0
+numResults = 0
 
+def discretise(x):
+    diff = []
+    for i in range(numVars):
+        diff.append(minBounds[i]+stepSize[i]*(int((x[i]-minBounds[i])/stepSize[i])))
+    return diff
 
 @app.route("/")
 def home():
     return render_template("simulator.html")
+
 
 # First call that receives controller and config and returns constructed tree
 @app.route("/simRoute", methods=['POST'])
@@ -37,23 +46,24 @@ def simroute():
 
     # is a dict
     classi = frontFns.main_parse(to_parse_dict)
-    global saved_tree, minBounds, maxBounds
+    global saved_tree, minBounds, maxBounds, numVars, numResults, stepSize
     saved_tree = classi[3]
     numVars = len(classi[1]["min"])
     numResults = len(classi[2]["variables"])
     minBounds = classi[1]["min"]
     maxBounds = classi[1]["max"]
+    stepSize = classi[1]["step_size"]
     returnDict = {"classi": ([classi[0]]), "numVars": numVars, "numResults": numResults,
                   "bound": [minBounds, maxBounds]}
     return jsonify(returnDict)
 
 
-# Gets user input values to initalise the state variables
+# Gets user input values to initialise the state variables
 @app.route("/initRoute", methods=['POST'])
 def initroute():
     data = request.get_json()
     x = data['pass']
-    initDecision = saved_tree.predict_one_step(np.array([x]))
+    initDecision = saved_tree.predict_one_step(np.array([discretise(x)]))
     returnDict = {"decision": initDecision[0], "path": initDecision[1]}
 
     is_dynamics = False
@@ -82,6 +92,7 @@ def initroute():
 
     return jsonify(returnDict)
 
+
 # Called on each step of the simulation
 @app.route("/stepRoute", methods=['POST'])
 def stepRoute():
@@ -89,11 +100,12 @@ def stepRoute():
     x = data['x_pass']
     u = data['u_pass']
     x_new_non_classify = cartClassify.step(x, u)
-    newu_path = saved_tree.predict_one_step(np.array([list(x_new_non_classify)]))
+    newu_path = saved_tree.predict_one_step(np.array([discretise(list(x_new_non_classify))]))
     returnDict = {"x_new": (x_new_non_classify,) + newu_path}
     return jsonify(returnDict)
 
-#Called when using the instep function
+
+# Called when using the instep function
 @app.route("/inStepRoute", methods=['POST'])
 def inStepRoute():
     data = request.get_json()
@@ -105,12 +117,13 @@ def inStepRoute():
     dummy = [x, u, "", False]
     for i in range(int(steps)):
         x_new_non_classify = cartClassify.step(dummy[0], dummy[1])
-        newu_path = saved_tree.predict_one_step(np.array([list(x_new_non_classify)]))
+        newu_path = saved_tree.predict_one_step(np.array([discretise(list(x_new_non_classify))]))
         dummy = (x_new_non_classify,) + newu_path
         x_new.append(dummy)
 
     returnDict = {"x_new": x_new}
     return jsonify(returnDict)
+
 
 # Used to get the list of unzipped examples
 @app.route("/examples")
@@ -143,3 +156,6 @@ def runFlask():
 
 if __name__ == "__main__":
     runFlask()
+
+
+
