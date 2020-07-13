@@ -9,6 +9,7 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptio
 import re
 from apted import APTED
 from apted.helpers import Tree
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
 
 
 class WeinhuberApproachSplit(Split):
@@ -28,7 +29,7 @@ class WeinhuberApproachSplit(Split):
         It describes a specific assignment of all variables to a value inside their interval in order to achieve the lowest impurity.
     """
 
-    def __init__(self, column_interval, coef_interval, term, relation, priority=1):
+    def __init__(self, column_interval, coef_interval, term, relation, debug, priority=1):
         self.priority = priority
         self.column_interval = column_interval
         self.coef_interval = coef_interval
@@ -44,18 +45,8 @@ class WeinhuberApproachSplit(Split):
         # Helper attributes used to speedup get_mask()
         self.get_mask_lookup = None
 
-        # Logger
-        self.logger = logging.getLogger("WeinhuberApproachSplit_logger")
-        self.logger.setLevel(logging.CRITICAL)
-
-        # Uncomment following lines to create a logger file containing all messages with timestamps.
-        # (Remember to change self.logger.setLevel(logging.DEBUG)
-
-        # formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-        # file_handler = logging.FileHandler('WeinhuberApproachSplit_logger.log')
-        # file_handler.setFormatter(formatter)
-        # file_handler.setLevel(logging.DEBUG)
-        # self.logger.addHandler(file_handler)
+        # logger
+        self.logger = WeinhuberApproachLogger("WeinhuberApproachSplit_logger", debug)
 
     def __repr__(self):
         return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
@@ -117,7 +108,7 @@ class WeinhuberApproachSplit(Split):
         :param y: labels of a dataset
         :param method: {‘lm’, ‘trf’, ‘dogbox’, 'optimized'} -> method used inside curve_fit()
         """
-        self.logger.info("Started fitting coef predicate: {}".format(str(self)))
+        self.logger.root_logger.info("Started fitting coef predicate: {}".format(str(self)))
         # Edge Case no coefs used in the term
         if not self.coef_interval:
             return
@@ -125,7 +116,7 @@ class WeinhuberApproachSplit(Split):
         # Checking type & shape of arguments
         if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0] or not isinstance(
                 fixed_coefs, list):
-            self.logger.critical("Aborting: invalid structure of the arguments x, y.")
+            self.logger.root_logger.critical("Aborting: invalid structure of the arguments x, y.")
             raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y. Check logger or comments for more information.")
 
         # Checking structure of fixed_coefs
@@ -133,7 +124,7 @@ class WeinhuberApproachSplit(Split):
         for (c_i, _) in fixed_coefs:
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
-                self.logger.critical("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
+                self.logger.root_logger.critical("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
                 raise WeinhuberSplitException("Aborting: invalid fixed_coefs member found. Check logger or comments for more information.")
             else:
                 # Calculate coefs to determine with curve_fit
@@ -144,12 +135,12 @@ class WeinhuberApproachSplit(Split):
 
         # Predicate was already fitted.
         if self.coef_assignment is not None:
-            self.logger.critical("Aborting: predicate was already fitted")
+            self.logger.root_logger.critical("Aborting: predicate was already fitted")
             raise WeinhuberSplitException("Aborting: predicate was already fitted. Check logger or comments for more information.")
 
         # Method checking
         if not (method == "optimized" or method == "lm" or method == "trf" or method == "dogbox"):
-            self.logger.critical("Aborting: invalid curve fitting method.")
+            self.logger.root_logger.critical("Aborting: invalid curve fitting method.")
             raise WeinhuberSplitException(
                 "Aborting: invalid curve fitting method. Check logger or comments for more information.")
 
@@ -209,7 +200,7 @@ class WeinhuberApproachSplit(Split):
                     if not ((out[index] == 0 and y[index] == 0) or (out[index] != 0 and y[index] != 0)):
                         return np.array(out)
                 else:
-                    self.logger.critical("Aborting: invalid relation found.")
+                    self.logger.root_logger.critical("Aborting: invalid relation found.")
                     raise WeinhuberSplitException(
                         "Aborting: Split with invalid relation can not be fitted. Check logger or comments for more information.")
 
@@ -229,7 +220,7 @@ class WeinhuberApproachSplit(Split):
         if self.y is not None and self.coef_fit is not None:
             self.coef_assignment = self.coef_fit
 
-        self.logger.info("Fitting done. Result: {}".format(str(self.coef_assignment)))
+        self.logger.root_logger.info("Fitting done. Result: {}".format(str(self.coef_assignment)))
 
     def check_valid_column_reference(self, x):
         """
@@ -293,7 +284,7 @@ class WeinhuberApproachSplit(Split):
         elif self.relation == "=":
             check = offset == 0
         else:
-            self.logger.critical("Aborting: invalid relation found from inside check_offset.")
+            self.logger.root_logger.critical("Aborting: invalid relation found from inside check_offset.")
             raise WeinhuberSplitException("Aborting: Invalid relation found. Check logger or comments for more information.")
         return check
 
