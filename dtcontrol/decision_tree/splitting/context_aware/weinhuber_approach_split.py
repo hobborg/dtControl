@@ -355,7 +355,7 @@ class WeinhuberApproachSplit(Split):
                 sliced_term[sliced_term.index(single_slice)] = formated_slice
 
         out = "".join(single_slice for single_slice in sliced_term)
-        return out + "\n" + self.relation + " 0"
+        return out + " \\n" + self.relation + " 0"
 
     def print_c(self):
         # TODO

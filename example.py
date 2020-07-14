@@ -7,25 +7,29 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splittin
     WeinhuberApproachSplittingStrategy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
-
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_predicate_generator_strategy import WeinhuberApproachPredicateGeneratorStrategy
 suite = BenchmarkSuite(timeout=999,
                        save_folder='saved_classifiers',
                        benchmark_file='benchmark',
                        rerun=True)
 
-suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['fruits_dataset'])
+suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['cruise_safa'])
 
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 logreg.priority = 0
 
-weinhuber = WeinhuberApproachSplittingStrategy(debug=True)
-weinhuber.priority = 1
+# weinhuber = WeinhuberApproachSplittingStrategy(debug=True)
+# weinhuber.curve_fitting_method = "trf"
+# weinhuber.priority = 1
+
+generator = WeinhuberApproachPredicateGeneratorStrategy(debug=False)
+generator.priority = 1
 
 aa = AxisAlignedSplittingStrategy()
 aa.priority = 0
 
 classifiers = [
-    DecisionTree([weinhuber, aa], Entropy(), 'Weinhuber Strategy')
+    DecisionTree([generator], Entropy(), 'Weinhuber Strategy')
 ]
 
 suite.benchmark(classifiers)

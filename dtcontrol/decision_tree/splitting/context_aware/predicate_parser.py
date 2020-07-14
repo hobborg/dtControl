@@ -193,7 +193,7 @@ class PredicateParser:
         return output
 
     @classmethod
-    def parse_user_interval(cls, user_input, debug = False):
+    def parse_user_interval(cls, user_input, debug=False):
         """
         Predicate Parser for the interval.
         :variable user_input: Interval as a string

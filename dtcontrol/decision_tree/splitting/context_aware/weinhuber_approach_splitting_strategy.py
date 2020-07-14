@@ -19,7 +19,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param determinizer: determinizer
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.get_predicate(debug=debug) if user_given_splits is None else None
+        self.user_given_splits = PredicateParser.get_predicate(debug=debug) if user_given_splits is None else user_given_splits
         self.determinizer = determinizer
         self.first_run = True
 
@@ -49,7 +49,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         # logger
         self.logger = WeinhuberApproachLogger("WeinhuberApproachSplittingStrategy_logger", debug)
 
-    def get_path_root_current(self, ancestor_range=0, current_node=None, path=[]):
+    def get_path_root_current(self, ancestor_range=0, observed_node=None, path=[]):
 
         """
         Standard depth first search.
@@ -57,26 +57,27 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         !!!!!!!! This function is always searching for self.current_node !!!!!!!!!
 
         :param ancestor_range: number of closest ancestor nodes to return
-        :param current_node: current node being checked
+        :param observed_node: current node being checked
         :param path: list containing ancestor path (from self.root to self.current_node)
         :returns: list of ancestor nodes from self.root to self.current_node (containing only the last ancestor_range ancestors)
         """
 
-        if current_node is None:
-            current_node = self.root
+        # Default starting node
+        if observed_node is None:
+            observed_node = self.root
 
         path_copy = path.copy()
-        path_copy.append(current_node)
-        if self.current_node in current_node.children:
+        path_copy.append(observed_node)
+        if self.current_node in observed_node.children:
             for node in path:
                 if node.split is None:
                     path_copy.remove(node)
             return path_copy[-ancestor_range:]
-        elif not current_node.children:
+        elif not observed_node.children:
             return None
         else:
-            for node in current_node.children:
-                result = self.get_path_root_current(ancestor_range=ancestor_range, current_node=node, path=path_copy)
+            for node in observed_node.children:
+                result = self.get_path_root_current(ancestor_range=ancestor_range, observed_node=node, path=path_copy)
                 if result:
                     return result
             return None
