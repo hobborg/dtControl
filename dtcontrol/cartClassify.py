@@ -37,7 +37,7 @@ def rungeKutta(x0, y0, z0, x, h, u):
     y = y0
     z = z0
     # Here y is x0 and z is x1 and x is time(tau)
-    print(n, h, tau)
+    # print(n, h, tau)
 
     for i in range(1, n + 1):
         # "Apply Runge Kutta Formulas to find next value of y and z"

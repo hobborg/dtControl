@@ -22,7 +22,7 @@ tau = 0
 
 def runge_kutta(x, u, nint=10):
     # matches cartClassify exactly for nint set to 30
-    global tau
+    global tau, lambda_list
     h = tau / nint
     # tau = 1 for 10 rooms
 
@@ -33,16 +33,20 @@ def runge_kutta(x, u, nint=10):
 
     for iter in range(1, nint + 1):
         for i in range(len(x)):
-            k0[i] = h * computation(i, x, u, lambda_list)
+            k0[i] = h * computation(i, x, u, list(lambda_list))
         for i in range(len(x)):
-            k1[i] = h * computation(i, [(x[j] + 0.5 * k0[j]) for j in range(len(x))], u, lambda_list)
+            k1[i] = h * computation(i, [(x[j] + 0.5 * k0[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
-            k2[i] = h * computation(i, [(x[j] + 0.5 * k1[j]) for j in range(len(x))], u, lambda_list)
+            k2[i] = h * computation(i, [(x[j] + 0.5 * k1[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
-            k3[i] = h * computation(i, [(x[j] + k2[j]) for j in range(len(x))], u, lambda_list)
+            k3[i] = h * computation(i, [(x[j] + k2[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
             x[i] = x[i] + (1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
-
+            # print(x[i])
+    # print(k0)
+    # print(k1)
+    # print(k2)
+    # print(k3)
     return x
 
 
@@ -149,10 +153,11 @@ def stepRoute():
     data = request.get_json()
     x = data['x_pass']
     u = data['u_pass']
-
-    # x_new_non_classify = cartClassify.step(x, u)
-    x_new_non_classify = runge_kutta(list(x), u)
-
+    print(x, u)
+    x_new_non_classify = cartClassify.step(x, u)
+    # x_new_non_classify = runge_kutta(list(x), u)
+    print(x_new_non_classify)
+    print(runge_kutta(list(x), u))
     newu_path = saved_tree.predict_one_step(np.array([discretise(list(x_new_non_classify))]))
     returnDict = {"x_new": (x_new_non_classify,) + newu_path}
     return jsonify(returnDict)
