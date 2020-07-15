@@ -34,11 +34,11 @@
 }
 
 #expandThisDiv {
-    height: 450px;
+    height: 650px;
 }
 
 .card-body {
-    max-height: 425px;
+    height: 625px;
     max-width: 100%;
     overflow: hidden;
 }

@@ -144,10 +144,11 @@
                 </div>
             </div>
 
-            <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">Send</button>
-
+            <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">Construct</button>
+            <button onclick="openSecondForm()" id="openSecondFormButton" class="btn btn-dark btn-lg btn-block" type="button" style="margin-top: 1.25rem;visibility: hidden;">Simulate</button>
 
         </form>
+
 
     </div>
 
@@ -190,8 +191,8 @@
             </div>
         </nav>
 
-        <div class="row">
-            <div class="col-lg-6" id="expandThisDiv">
+        <div id="mainRow1" class="row" style="visibility: hidden;">
+            <div class="col-lg-12" id="expandThisDiv">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <button type="button" class="btn btn-dark" onclick="expandAll(null)">Expand all</button>
@@ -206,7 +207,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6" id="hideThisDiv">
+            <div class="col-lg-6" id="hideThisDiv" style="visibility:hidden">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div style="text-align:center;">
@@ -217,7 +218,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div id="mainRow2" class="row" style="visibility: hidden;">
             <div class="col-lg-12">
                 <div class="card shadow mb-4">
                     <div class="card-body">
@@ -233,7 +234,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div id="mainRow3" class="row" style="visibility: hidden;">
             <div class="col-lg-6" id="chartsHere0">
 
             </div>

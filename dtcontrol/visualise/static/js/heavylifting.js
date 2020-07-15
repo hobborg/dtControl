@@ -555,6 +555,7 @@ function renderChart(id, data, labels, ub, lb) {
 }
 
 async function oneStep() {
+    console.log('oneStep is called');
     recolourPath();
 
     if (currentSim == totalSims) {
@@ -671,12 +672,19 @@ $(document).ready(function() {
                 url: '/simRoute'
             })
             .done(function(data) {
-
-                // resizing to get largest space for tree
-                if ($('#controller').val() != "controller.scs") {
-                    document.getElementById("expandThisDiv").className = "col-lg-12";
-                    document.getElementById("hideThisDiv").remove();
-                }
+                // totalSims = 0;
+                // currentSim = 0;
+                // x_current = [];
+                // x_bounds = [];
+                // u_current = [];
+                // lastPath = [];
+                // numVars = 0;
+                // numResults = 0;
+                // chart = [];
+                // chartConfig = [];
+                // nextDisabled = false;
+                document.getElementById("openSecondFormButton").style.visibility = "visible";
+                document.getElementById("mainRow1").style.visibility = "visible";
 
                 treeData = data.classi;
                 numVars = data.numVars;
@@ -788,7 +796,7 @@ $(document).ready(function() {
                     x_bounds.push([data.bound[0][i], data.bound[1][i]]);
                 }
 
-                $('#formSecondModal').modal('toggle');
+                // $('#formSecondModal').modal('toggle');
 
             });
 
@@ -809,6 +817,40 @@ $(document).ready(function() {
                 url: '/initRoute'
             })
             .done(function(data) {
+                // reset previous values
+                // totalSims = 0;
+                // currentSim = 0;
+                // x_current = [];
+                // u_current = [];
+                // lastPath = [];
+                // chart = [];
+                // chartConfig = [];
+                // nextDisabled = false;
+                // for (var i = 0; i < numVars; i++) {
+                //     x_current.push([]);
+                //     chart.push([]);
+                //     chartConfig.push([]);
+                // }
+                // for (var i = 0; i < numResults; i++) {
+                //     u_current.push([]);
+                // }
+                document.getElementById("mainRow2").style.visibility = "visible";
+                document.getElementById("mainRow3").style.visibility = "visible";
+                document.getElementById("expandThisDiv").style.height = "450px";
+
+                var mini = document.getElementsByClassName("card-body");
+                for (var i = 0; i < mini.length; i++) {
+                    mini[i].style.height = "425px";
+                }
+
+                // resizing to get largest space for tree
+                if ($('#controller').val() == "controller.scs") {
+                    document.getElementById("expandThisDiv").className = "col-lg-6";
+                    document.getElementById("hideThisDiv").style.visibility = "visible";
+                } else {
+                    document.getElementById("hideThisDiv").remove();
+                }
+
                 //data .decision changed to array
                 const tab = document.getElementById('simTable');
                 const dumrow = document.createElement('tr');
@@ -1061,6 +1103,10 @@ function randomizeInputs() {
         var range = x_bounds[i][1] - x_bounds[i][0];
         document.getElementById('x' + i).value = x_bounds[i][0] + (Math.random() * range);
     }
+}
+
+function openSecondForm() {
+    $('#formSecondModal').modal('toggle');
 }
 
 // Have to select dynamically created elements like this
