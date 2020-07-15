@@ -42,11 +42,6 @@ def runge_kutta(x, u, nint=10):
             k3[i] = h * computation(i, [(x[j] + k2[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
             x[i] = x[i] + (1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
-            # print(x[i])
-    # print(k0)
-    # print(k1)
-    # print(k2)
-    # print(k3)
     return x
 
 
@@ -58,7 +53,8 @@ def computation(index, x, u, ll):
             new_vl.append(x[int(spilt_of_var[1])])
         else:
             new_vl.append(u[int(spilt_of_var[1])])
-    return float(ll[index][1](*tuple(new_vl)))
+    return_float = float(ll[index][1](*tuple(new_vl)))
+    return return_float
 
 
 def discretise(x):
@@ -78,6 +74,18 @@ def home():
 # First call that receives controller and config and returns constructed tree
 @app.route("/simRoute", methods=['POST'])
 def simroute():
+    global saved_tree, minBounds, maxBounds, stepSize, variable_subs, lambda_list, numVars, numResults, tau
+    saved_tree = []
+    minBounds = []
+    maxBounds = []
+    stepSize = []
+
+    variable_subs = []
+    lambda_list = []
+    numVars = 0
+    numResults = 0
+    tau = 0
+
     data = request.get_json()
     cont = data['controller']
     config = data['config']
@@ -92,7 +100,7 @@ def simroute():
 
     # is a dict
     classi = frontFns.main_parse(to_parse_dict)
-    global saved_tree, minBounds, maxBounds, numVars, numResults, stepSize
+    # global saved_tree, minBounds, maxBounds, numVars, numResults, stepSize
     saved_tree = classi[3]
     numVars = len(classi[1]["min"])
     numResults = len(classi[2]["variables"])
@@ -153,11 +161,8 @@ def stepRoute():
     data = request.get_json()
     x = data['x_pass']
     u = data['u_pass']
-    print(x, u)
-    x_new_non_classify = cartClassify.step(x, u)
-    # x_new_non_classify = runge_kutta(list(x), u)
-    print(x_new_non_classify)
-    print(runge_kutta(list(x), u))
+    # x_new_non_classify = cartClassify.step(x, u)
+    x_new_non_classify = runge_kutta(list(x), u)
     newu_path = saved_tree.predict_one_step(np.array([discretise(list(x_new_non_classify))]))
     returnDict = {"x_new": (x_new_non_classify,) + newu_path}
     return jsonify(returnDict)
@@ -174,7 +179,6 @@ def inStepRoute():
     x_new = []
     dummy = [x, u, "", False]
     for i in range(int(steps)):
-
         # x_new_non_classify = cartClassify.step(dummy[0], dummy[1])
         x_new_non_classify = runge_kutta(list(dummy[0]), dummy[1])
 
