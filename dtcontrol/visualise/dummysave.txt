@@ -6,6 +6,7 @@ ae=0.0033
 ah=0.0036
 te=12
 th=100
+tau=1
 
 Dynamics:
 dx_0=(-a-ae)*x_0+a*x_1+ae*te
