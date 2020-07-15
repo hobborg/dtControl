@@ -861,6 +861,11 @@ $(document).ready(function() {
                 drawCanvas();
                 $('#formSecondModal').modal('hide');
 
+                if (!data.dynamics) {
+                    alert('The dynamics.txt file seems to be in an incorrect format or is missing from the examples folder. Please try again with a valid dynamics file');
+                    nextDisabled = true;
+                }
+
             });
 
         event.preventDefault();
@@ -1046,6 +1051,8 @@ slider.oninput = function() {
         timeOfSlider = this.value;
         clearInterval(plpause);
         plpause = setInterval(oneStep, timeOfSlider);
+    } else {
+        timeOfSlider = this.value;
     }
 }
 

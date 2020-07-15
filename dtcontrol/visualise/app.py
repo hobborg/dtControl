@@ -17,12 +17,54 @@ variable_subs = []
 lambda_list = []
 numVars = 0
 numResults = 0
+tau = 0
+
+
+def runge_kutta(x, u, nint=10):
+    # matches cartClassify exactly for nint set to 30
+    global tau
+    h = tau / nint
+    # tau = 1 for 10 rooms
+
+    k0 = [None] * len(x)
+    k1 = [None] * len(x)
+    k2 = [None] * len(x)
+    k3 = [None] * len(x)
+
+    for iter in range(1, nint + 1):
+        for i in range(len(x)):
+            k0[i] = h * computation(i, x, u, lambda_list)
+        for i in range(len(x)):
+            k1[i] = h * computation(i, [(x[j] + 0.5 * k0[j]) for j in range(len(x))], u, lambda_list)
+        for i in range(len(x)):
+            k2[i] = h * computation(i, [(x[j] + 0.5 * k1[j]) for j in range(len(x))], u, lambda_list)
+        for i in range(len(x)):
+            k3[i] = h * computation(i, [(x[j] + k2[j]) for j in range(len(x))], u, lambda_list)
+        for i in range(len(x)):
+            x[i] = x[i] + (1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
+
+    return x
+
+
+def computation(index, x, u, ll):
+    new_vl = []
+    for name in ll[index][2]:
+        spilt_of_var = (str(name)).split('_')
+        if spilt_of_var[0] == 'x':
+            new_vl.append(x[int(spilt_of_var[1])])
+        else:
+            new_vl.append(u[int(spilt_of_var[1])])
+    return float(ll[index][1](*tuple(new_vl)))
+
 
 def discretise(x):
+    # Not in use right now
     diff = []
     for i in range(numVars):
-        diff.append(minBounds[i]+stepSize[i]*(int((x[i]-minBounds[i])/stepSize[i])))
-    return diff
+        diff.append(minBounds[i] + stepSize[i] * (int((x[i] - minBounds[i]) / stepSize[i])))
+    # return diff
+    return x
+
 
 @app.route("/")
 def home():
@@ -64,31 +106,39 @@ def initroute():
     data = request.get_json()
     x = data['pass']
     initDecision = saved_tree.predict_one_step(np.array([discretise(x)]))
-    returnDict = {"decision": initDecision[0], "path": initDecision[1]}
+    returnDict = {"decision": initDecision[0], "path": initDecision[1], "dynamics": True}
 
     is_dynamics = False
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
-    dynamics_data_file = os.path.join(SITE_ROOT, 'test.txt')
+    dynamics_data_file = os.path.join(SITE_ROOT, '..', '..', 'examples/dynamics.txt')
 
-    with open(dynamics_data_file) as f:
-        my_list = f.read().splitlines()
-    for i in my_list:
-        global variable_subs, lambda_list
-        i = i.strip()
-        if i == 'Dynamics:':
-            is_dynamics = True
-        elif i == 'Parameters:':
-            is_dynamics = False
-        else:
-            if i != '':
-                if not is_dynamics:
-                    foo = i.split("=")
-                    variable_subs.append((foo[0].strip(), float(foo[1])))
-                else:
-                    foo = i.split("=")
-                    tmp = sp.sympify(foo[1].strip())
-                    tmp = tmp.subs(variable_subs)
-                    lambda_list.append((foo[0].strip(), tmp))
+    try:
+        with open(dynamics_data_file) as f:
+            my_list = f.read().splitlines()
+        for i in my_list:
+            global variable_subs, lambda_list, tau
+            i = i.strip()
+            if i == 'Dynamics:':
+                is_dynamics = True
+            elif i == 'Parameters:':
+                is_dynamics = False
+            else:
+                if i != '':
+                    if not is_dynamics:
+                        foo = i.split("=")
+                        variable_subs.append((foo[0].strip(), float(foo[1])))
+                        if foo[0].strip() == "tau" or foo[0].strip() == "Tau":
+                            tau = float(foo[1])
+                    else:
+                        foo = i.split("=")
+                        tmp = sp.sympify(foo[1].strip())
+                        tmp = tmp.subs(variable_subs)
+                        lam_1 = sp.lambdify(tmp.free_symbols, tmp)
+                        lambda_list.append((foo[0].strip(), lam_1, tmp.free_symbols))
+        lambda_list = sorted(lambda_list, key=lambda x: int(x[0].split("_")[1]))
+
+    except:
+        returnDict["dynamics"] = False
 
     return jsonify(returnDict)
 
@@ -99,7 +149,10 @@ def stepRoute():
     data = request.get_json()
     x = data['x_pass']
     u = data['u_pass']
-    x_new_non_classify = cartClassify.step(x, u)
+
+    # x_new_non_classify = cartClassify.step(x, u)
+    x_new_non_classify = runge_kutta(list(x), u)
+
     newu_path = saved_tree.predict_one_step(np.array([discretise(list(x_new_non_classify))]))
     returnDict = {"x_new": (x_new_non_classify,) + newu_path}
     return jsonify(returnDict)
@@ -116,7 +169,10 @@ def inStepRoute():
     x_new = []
     dummy = [x, u, "", False]
     for i in range(int(steps)):
-        x_new_non_classify = cartClassify.step(dummy[0], dummy[1])
+
+        # x_new_non_classify = cartClassify.step(dummy[0], dummy[1])
+        x_new_non_classify = runge_kutta(list(dummy[0]), dummy[1])
+
         newu_path = saved_tree.predict_one_step(np.array([discretise(list(x_new_non_classify))]))
         dummy = (x_new_non_classify,) + newu_path
         x_new.append(dummy)
@@ -133,7 +189,6 @@ def showscs():
     valid_egs_list = []
     for file in os.scandir(egs_path):
         if file.name.endswith(".scs") and (not file.name.startswith(".")):
-            # print(file.name)
             valid_egs_list.append(file.name)
     return json.dumps(valid_egs_list)
 
@@ -156,6 +211,3 @@ def runFlask():
 
 if __name__ == "__main__":
     runFlask()
-
-
-

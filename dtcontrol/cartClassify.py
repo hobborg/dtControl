@@ -29,6 +29,7 @@ def g(t, x0, x1, u):
 
 
 def rungeKutta(x0, y0, z0, x, h, u):
+    # (0, x0, x1, tau, 0.01, u)
     # Count number of iterations using step size or 
     # step height h 
     n = (int)((x - x0) / h)
@@ -36,6 +37,7 @@ def rungeKutta(x0, y0, z0, x, h, u):
     y = y0
     z = z0
     # Here y is x0 and z is x1 and x is time(tau)
+    print(n, h, tau)
 
     for i in range(1, n + 1):
         # "Apply Runge Kutta Formulas to find next value of y and z"
@@ -54,6 +56,8 @@ def rungeKutta(x0, y0, z0, x, h, u):
         # Update next value of y and z
         y = y + (1.0 / 6.0) * (k0 + 2 * k1 + 2 * k2 + k3)
         z = z + (1.0 / 6.0) * (l0 + 2 * l1 + 2 * l2 + l3)
+        # print(y)
+        # print(z)
 
         # Update next value of x 
         x0 = x0 + h
