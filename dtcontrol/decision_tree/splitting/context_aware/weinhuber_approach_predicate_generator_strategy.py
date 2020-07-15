@@ -28,6 +28,9 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.current_node = None
         self.first_run = True
 
+        # logger
+        self.logger = WeinhuberApproachLogger("WeinhuberApproachPredicateGenerator_logger", debug)
+
     def find_split(self, dataset, impurity_measure):
 
         if self.first_run:
@@ -79,17 +82,25 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         logreg_distances = [i.tree_edit_distance(logreg_split) for i in self.domain_knowledge]
         weinhub_distances = [i.tree_edit_distance(weinhub_split) for i in self.domain_knowledge]
 
-        print("\n\nSTARTING INTERACTIVE SHELL ...\n")
-        print("------------ DOMAIN_KNOWLEDGE ------------ ")
-        for i in self.domain_knowledge:
-            print(i)
-        print("\n------------ COMPUTED PREDICATES ------------ ")
-        print("TREE DISTANCE\t\t\t|\t\t\tPREDICATE")
+        self.print_domain_knowledge()
+
+        # TODO: avg, min, max values for every column
+        # TODO: Number to every predicate
+        # TODO: try every predicate within a tree edit distance of 5
+        # TODO: also parse in units with # unit unit
+        # TODO: linear classifier with respect of units
+
+        print("\n------------------------ COMPUTED PREDICATES ------------------------ \nTREE DISTANCE\t\t\t|\t\t\tPREDICATE")
         print("{}\t\t\t\t\t\t|\t\t\t{}".format(min(axis_distances), axis_split.print_dot().replace("\\n", "")))
         print("{}\t\t\t\t\t\t|\t\t\t{}".format(min(logreg_distances), logreg_split.print_dot().replace("\\n", "")))
         print("{}\t\t\t\t\t\t|\t\t\t{}".format(min(weinhub_distances), weinhub_split.print_dot().replace("\\n", "")))
+        print("---------------------------------------------------------------------")
 
-        print("---------------------------------------------")
+    def print_domain_knowledge(self):
+        print("\n\nSTARTING INTERACTIVE SHELL ...\n\n------------------------ DOMAIN KNOWLEDGE ------------------------ ")
+        for i in self.domain_knowledge:
+            print(i.print_dot().replace("\\n", ""))
+        print("---------------------------------------------------------------------")
 
     def predicate_converted(self, predicate):
         # takes an axis_aligned or logreg split and converts it to an weinhuber approach split
