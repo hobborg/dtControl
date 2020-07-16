@@ -100,12 +100,12 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             print("No parent splits yet")
         print("----------------------------")
 
-    def find_split(self, dataset, impurity_measure):
+    def get_all_splits(self, dataset, impurity_measure):
 
         """
         :param dataset: the subset of data at the current split
         :param impurity_measure: the impurity measure to determine the quality of a potential split
-        :returns: a split object
+        :returns: dict with all user given splits + impurity
         """
 
         x_numeric = dataset.get_numeric_x()
@@ -188,16 +188,16 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                         """
                         If there are already fixed coefs:
                         Applying fit function for every possible combination of already fixed coefs
-    
+
                         e.g.
                         Split: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3+c_4 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
-    
+
                         -->         combinations = [[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)],
                                                     [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)],
                                                     [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]
-    
+
                         --> The other coefs (c_0, c_3, c_4) still have to be determined by fit (curve_fit)
-    
+
                         """
 
                         fixed_coefs = {}
@@ -223,6 +223,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                             # Checking whether fitting was successful
                             if split_copy.coef_assignment is not None:
                                 splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+
+        # Returning dict containing all possible splits with their impurity
+        return splits
+
+    def find_split(self, dataset, impurity_measure):
+
+        splits = self.get_all_splits(dataset, impurity_measure)
 
         # Returning split with lowest impurity
         weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
