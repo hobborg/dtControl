@@ -159,8 +159,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             "------------------------------------------------------------------------------------------------------------------------------------------\n"
             "(° Smallest tree editing distance compared with every expression from domain knowledge.)")
 
-        # TODO: avg, min, max values for every column
-        # TODO: Number to every predicate
+
         # TODO: try every predicate within a tree edit distance of 5
         # TODO: also parse in units with # unit unit
         # TODO: linear classifier with respect of units
