@@ -16,6 +16,7 @@ import sympy as sp
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 import sys
 import numpy as np
+import re
 
 
 class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy):
@@ -33,14 +34,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         # logger
         self.logger = WeinhuberApproachLogger("WeinhuberApproachPredicateGenerator_logger", debug)
 
-    def find_split(self, dataset, impurity_measure):
-
-        """
-        process domain knowledge and create all combinations
-        domain knowledge is stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt
-        """
-        x_numeric = dataset.get_numeric_x()
-        print("\nSTARTING INTERACTIVE SHELL ...\n\n\n")
+    def process_domain_knowledge(self):
         if self.first_run:
             new_domain_knowledge = []
             term_collection = []
@@ -72,6 +66,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                     new_domain_knowledge.append(formula)
             self.domain_knowledge = new_domain_knowledge
 
+    def print_dataset_specs(self, dataset):
+        x_numeric = dataset.get_numeric_x()
         # PRINTING DATASET INFORMATION
         x_meta = dataset.x_metadata
         y_meta = dataset.y_metadata
@@ -101,9 +97,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             print("{}\t\t\t\t{}\t\t\t\t{}\t\t\t\t{}".format(y_meta.get('variables')[i], y_meta.get('min')[i], y_meta.get('max')[i],
                                                             y_meta.get('step_size')[i]))
 
-        domain_knowledge_imp = [(expr, impurity_measure.calculate_impurity(dataset, expr)) for expr in self.domain_knowledge]
-        domain_knowledge_imp.sort(key=lambda x: x[1])
-
+    def print_domain_knowledge(self, domain_knowledge):
         # PRINTING DOMAIN KNOWLEDGE
         print(
             "------------------------------------------------------------------------------------------------------------------------------------------\n"
@@ -111,9 +105,24 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             "------------------------------------------------------------------------------------------------------------------------------------------\n"
             "INDEX\t|\tIMPURITY\t|\tEXPRESSION\n"
             "------------------------------------------------------------------------------------------------------------------------------------------")
-        for i in range(len(domain_knowledge_imp)):
-            predicate = domain_knowledge_imp[i][0].print_dot().replace("\\n", "")
-            print("{}\t\t|\t{}\t\t|\t{}".format(i, round(domain_knowledge_imp[i][1], ndigits=3), predicate))
+        for i in range(len(domain_knowledge)):
+            predicate = domain_knowledge[i][0].print_dot().replace("\\n", "")
+            print("{}\t\t|\t{}\t\t|\t{}".format(i, round(domain_knowledge[i][1], ndigits=3), predicate))
+
+    def find_split(self, dataset, impurity_measure):
+
+        """
+        process domain knowledge and create all combinations
+        domain knowledge is stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt
+        """
+
+        self.print_dataset_specs(dataset)
+        self.process_domain_knowledge()
+
+        domain_knowledge_imp = [(expr, impurity_measure.calculate_impurity(dataset, expr)) for expr in self.domain_knowledge]
+        domain_knowledge_imp.sort(key=lambda x: x[1])
+
+        self.print_domain_knowledge(domain_knowledge_imp)
 
         computed_splits_imp = []
 
@@ -130,7 +139,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         computed_splits_imp.append((logreg_split, impurity_measure.calculate_impurity(dataset, logreg_split)))
 
         """
-        Get all user given splits for current dataset.
+        Process all other given user predicates.
         User given splits are stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt
         """
 
@@ -159,12 +168,29 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             "------------------------------------------------------------------------------------------------------------------------------------------\n"
             "(° Smallest tree editing distance compared with every expression from domain knowledge.)")
 
-
         # TODO: try every predicate within a tree edit distance of 5
         # TODO: also parse in units with # unit unit
         # TODO: linear classifier with respect of units
+        # TODO: add additional expressions to domain knowledge
+        # TODO: PUT EVERYTHING INTO FUNCTIONS AND CLEAN UP THE CODE
+        # (TODO: Function in split obj which creates list of all possible combinations of a split.)
 
-        sys.exit(187)
+        # handle_user_input
+        print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
+        for input_line in sys.stdin:
+            if input_line.strip() == "/help":
+                # Help messages
+                pass
+            elif input_line.strip() == "/exit" or input_line.strip() == ":q" or input_line.strip() == ":q!" or input_line.strip() == ":quit":
+                sys.exit(187)
+            elif re.match("/use \d+", input_line.strip()):
+                # Use predicate on index x
+                pass
+            elif re.match("/info \d+", input_line.strip()):
+                # Get information about an string object
+                pass
+            else:
+                print("Unknown command. Type '/help' for help.")
 
     @staticmethod
     def predicate_converted(predicate):
