@@ -12,9 +12,17 @@ class WeinhuberSplitException(Exception):
     pass
 
 
+class WeinhuberGeneratorException(Exception):
+    """
+    Raised when an invalid state inside weinhuber_approach_predicate_generator_strategy.py is reached.
+    """
+    pass
+
+
 class WeinhuberPredicateParserException(Exception):
     """
     Raised when an invalid state inside predicate_parser.py is reached.
     """
+
     def __init__(self):
         super().__init__('Aborting: Invalid predicate. Check logger or comments for more information.')
