@@ -106,6 +106,17 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         :param dataset: the subset of data at the current split
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: dict with all user given splits + impurity
+
+        Procedure:
+            0. predicates given by user (stored in: dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt)
+                get parsed by dtcontrol/decision_tree/splitting/context_aware/predicate_parser.py
+            1. If first_run, some basic predicate checking will be done (valid variables and dataset combinations etc...)
+            2. Iterating over every given predicate and check whether predicate contains coefs
+                2.1 If predicate does not contain coefs:
+                    - Compute impurity and store in dict
+                2.2 If predicate does contain coefs:
+                    - Iterate over all unique labels and fit those coefs to that specific label mask
+            3. Return dict with key:split object and value:Impurity of the split
         """
 
         x_numeric = dataset.get_numeric_x()
@@ -152,9 +163,10 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                         predicate_list.append(i)
         else:
             predicate_list = self.user_given_splits
+
         """
         Iterating over every user given predicate/split and adjusting it to the current dataset,
-        to achieve the lowest impurity possible with the user given predicate/split.
+        to achieve the lowest impurity possible.
         All adjusted predicate/split objects will be stored inside the dict 'splits' 
         Key: split object   Value:Impurity of the split
         """
@@ -228,6 +240,17 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         return splits
 
     def find_split(self, dataset, impurity_measure):
+
+        """
+        :param dataset: the subset of data at the current split
+        :param impurity_measure: the impurity measure to determine the quality of a potential split
+        :returns: split object with lowest impurity
+
+        Procedure:
+            1. self.get_all_splits() computes all possible split given by user in
+                dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt
+            2. Split with lowest impurity gets returned.
+        """
 
         splits = self.get_all_splits(dataset, impurity_measure)
 
