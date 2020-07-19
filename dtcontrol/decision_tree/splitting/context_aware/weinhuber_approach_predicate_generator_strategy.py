@@ -4,7 +4,6 @@ from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import Pre
 from copy import deepcopy
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from itertools import product
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplit
@@ -17,7 +16,7 @@ from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 import sys
 import numpy as np
 import re
-
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberGeneratorException
 
 class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy):
 
@@ -34,16 +33,47 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         # logger
         self.logger = WeinhuberApproachLogger("WeinhuberApproachPredicateGenerator_logger", debug)
 
+        # Tree edit distances predicates will be stored here:
+        self.recently_added_predicates = []
+        """
+        Attributes used for the console output. 
+        List containing Tuple: [(expr, impurity)]
+        """
+        self.domain_knowledge_imp = []
+        self.computed_predicates_imp = []
+
+
     def process_domain_knowledge(self):
+        """
+        Function to pre-process the domain knowledge, given by the user inside the file:
+        dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt
+
+
+        Since the domain knowledge should already be determined and given at the startup time by the user, this function only needs to be
+        applied once at the first run of the program.
+
+        Procedure:
+            0. Domain knowledge gets parsed by dtcontrol/decision_tree/splitting/context_aware/predicate_parser.py
+            1. Iterate over every domain knowledge expression
+                1.1 If there are coefs used: Create every possible combination and add them to the domain knowledge
+            2. Update self.domain_knowledge
+
+        """
+
         if self.first_run:
             new_domain_knowledge = []
             term_collection = []
-            for formula in self.domain_knowledge:
+            for expression in self.domain_knowledge:
                 fixed_coefs = {}
                 # Checking if domain knowledge is containing finite sets with fixed coefs
-                for coef in formula.coef_interval:
-                    if isinstance(formula.coef_interval[coef], sp.FiniteSet):
-                        fixed_coefs[coef] = list(formula.coef_interval[coef].args)
+                for coef in expression.coef_interval:
+                    if isinstance(expression.coef_interval[coef], sp.FiniteSet):
+                        fixed_coefs[coef] = list(expression.coef_interval[coef].args)
+                    else:
+                        self.logger.root_logger.critical(
+                            "Invalid interval inside domain knowledge expression found! Currently only Finite Sets are supported.")
+                        raise WeinhuberGeneratorException(
+                            "While processing the domain knowledge an invalid state was reached. Check logger or comments for more information.")
 
                 # Creating all combinations
                 if fixed_coefs:
@@ -53,22 +83,28 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                     combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
 
                     for comb in combinations:
-                        formula_copy = deepcopy(formula)
-                        formula_copy.coef_interval = {}
-                        formula_copy.term = formula.term.subs(comb)
+                        # Create new Weinhuber Split obj
+                        new_split = WeinhuberApproachSplit(expression.column_interval, {}, expression.term.subs(comb), expression.relation)
+                        # Checking whether this expression is already represented
                         for t in term_collection:
-                            if formula_copy.term.equals(t):
+                            if new_split.term.equals(t):
                                 break
                         else:
-                            new_domain_knowledge.append(formula_copy)
-                            term_collection.append(formula_copy.term)
+                            new_domain_knowledge.append(new_split)
+                            term_collection.append(new_split.term)
                 else:
-                    new_domain_knowledge.append(formula)
+                    new_domain_knowledge.append(expression)
             self.domain_knowledge = new_domain_knowledge
 
     def print_dataset_specs(self, dataset):
+        """
+        Function to print interesting specifications about the current dataset.
+        :param dataset: the subset of data at the current split
+        :returns: None.
+        """
         x_numeric = dataset.get_numeric_x()
-        # PRINTING DATASET INFORMATION
+
+        # Access metadata
         x_meta = dataset.x_metadata
         y_meta = dataset.y_metadata
 
@@ -97,8 +133,13 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             print("{}\t\t\t\t{}\t\t\t\t{}\t\t\t\t{}".format(y_meta.get('variables')[i], y_meta.get('min')[i], y_meta.get('max')[i],
                                                             y_meta.get('step_size')[i]))
 
-    def print_domain_knowledge(self, domain_knowledge):
-        # PRINTING DOMAIN KNOWLEDGE
+    def print_domain_knowledge(self):
+        """
+        Function to print domain knowledge expressions.
+        Uses only self.domain_knowledge_imp
+        :returns: None
+        """
+        domain_knowledge = self.domain_knowledge_imp
         print(
             "------------------------------------------------------------------------------------------------------------------------------------------\n"
             "\t\t\t\t\t\t DOMAIN KNOWLEDGE\n"
@@ -109,38 +150,141 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             predicate = domain_knowledge[i][0].print_dot().replace("\\n", "")
             print("{}\t\t|\t{}\t\t|\t{}".format(i, round(domain_knowledge[i][1], ndigits=3), predicate))
 
+    def print_alternative_predicates(self):
+        """
+        Function to print alternative splits.
+        Uses only self.computed_predicates_imp
+        :returns: None
+
+        CAUTION:
+            self.computed_predicates_imp, contains predicates obtained by user as well as one alternative axis aligned predicate
+            and one logreg!
+        """
+
+        computed_predicates = self.computed_predicates_imp
+        print(
+            "------------------------------------------------------------------------------------------------------------------------------------------\n"
+            "\t\t\t\t\t\t COMPUTED PREDICATES°\n"
+            "------------------------------------------------------------------------------------------------------------------------------------------\n"
+            "INDEX\t|\tIMPURITY\t|\tDISTANCE°°\t|\tEXPRESSION\n"
+            "------------------------------------------------------------------------------------------------------------------------------------------")
+        for i in range(len(computed_predicates)):
+            index = len(self.domain_knowledge) + i
+            impurity = round(computed_predicates[i][1], ndigits=3)
+            expr = computed_predicates[i][0].print_dot().replace("\\n", "")
+            tree_distances = [computed_predicates[i][0].tree_edit_distance(j) for j in self.domain_knowledge]
+            print("{}\t\t|\t{}\t\t|\t\t{}\t\t|\t{}".format(index, impurity, min(tree_distances), expr))
+        print(
+            "------------------------------------------------------------------------------------------------------------------------------------------\n"
+            "(°) Predicates obtained by user, as well as one alternative Axis Aligned predicate and one Linear predicate.\n"
+            "(°°) Smallest tree editing distance compared with every expression from domain knowledge.")
+
+    def user_input_handler(self):
+        """
+        Function to handle the user input via console.
+        :returns: Integer. (index of predicate which should be returned.)
+        """
+
+        print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
+
+        for input_line in sys.stdin:
+            input_line = input_line.strip()
+            if input_line == "/help":
+                print(
+                    "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                    "\t\t\t\t\t\t HELP WINDOW\n"
+                    "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                    "/help\t\t\t\t\t\t\t\t\t|\t display help window\n"
+                    "/use <Index>\t\t\t\t\t\t\t|\t determine predicate at index to be returned\n"
+                    "/add <Expression>\t\t\t\t\t\t|\t adds an expression\n"
+                    "/distance <TreeEditDistance> <Index>\t|\t will compute and add all expressions within given <TreeEditDistance> of predicate at <Index>\n"
+                    "/refresh\t\t\t\t\t\t\t\t|\t will refresh the console output\n"
+                    "/exit\t\t\t\t\t\t\t\t\t|\t to exit\n"
+                    "------------------------------------------------------------------------------------------------------------------------------------------")
+            elif input_line == "/exit" or input_line == ":q" or input_line == ":q!" or input_line == ":quit":
+                sys.exit(187)
+            elif re.match("/use \d+", input_line):
+                # Use predicate on index x
+                return int(input_line.split("/use ")[1])
+                pass
+            elif input_line.startswith("/add "):
+                user_input = input_line.split("/add ")[1]
+                pass
+            elif re.match("/distance -\d+ \d+", input_line):
+                # create new splits out of given split within tree edit distance of given number
+                pass
+            elif input_line == "/refresh":
+                # prints everything again
+                self.print_domain_knowledge()
+                self.print_alternative_predicates()
+                print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
+            else:
+                print("Unknown command. Type '/help' for help.")
+
+
+
     def find_split(self, dataset, impurity_measure):
+        # TODO: try every predicate within a tree edit distance of 5
+        # TODO: also parse in units with # unit unit
+        # TODO: linear classifier with respect of units
+        # (TODO: Function in split obj which creates list of all possible combinations of a split.)
+        # TODO: Domain knowledge expressions should only be allowed to have finite set coefs or should it ?
+        # TODO: Check the other exceptions
 
         """
-        process domain knowledge and create all combinations
+        additional predicates given before startup are stored in dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt
         domain knowledge is stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt
-        """
 
+        Procedure:
+            (1.) Print dataset specs
+            2. Process domain knowledge
+            (2.1) Print domain knowledge
+            3. Create alternative splits/predicates
+                3.1 create axis aligned split
+                3.2 create logreg split
+                3.3 create user given splits if there are any given
+            4. Start user_input_handler()
+            5. Returned split chosen by user via user_input_handler()
+        """
+        self.recently_added_predicates = []
         self.print_dataset_specs(dataset)
         self.process_domain_knowledge()
 
-        domain_knowledge_imp = [(expr, impurity_measure.calculate_impurity(dataset, expr)) for expr in self.domain_knowledge]
+        """
+        self.domain_knowledge_imp
+        Sorted list containing domain knowledge given by user.
+        Format:
+            - List containing Tuple: [(domain_expression, impurity)]
+        """
+        domain_knowledge_imp = [(expr, impurity_measure.calculate_impurity(dataset, expr)) for expr in deepcopy(self.domain_knowledge)]
         domain_knowledge_imp.sort(key=lambda x: x[1])
+        self.domain_knowledge_imp = domain_knowledge_imp
 
-        self.print_domain_knowledge(domain_knowledge_imp)
+        self.print_domain_knowledge()
 
-        computed_splits_imp = []
+        """
+        self.computed_predicates_imp
+        Sorted list containing all alternative splits.
+        Format:
+            - List containing Tuple: [(alternative_split, impurity)]
+        """
+        computed_predicates_imp = []
 
         # Get the axis aligned split for current dataset
         axis_split = AxisAlignedSplittingStrategy()
         axis_split.priority = 1
         axis_split = self.predicate_converted(axis_split.find_split(dataset, impurity_measure))
-        computed_splits_imp.append((axis_split, impurity_measure.calculate_impurity(dataset, axis_split)))
+        computed_predicates_imp.append((axis_split, impurity_measure.calculate_impurity(dataset, axis_split)))
 
         # Get the linear classifier split for current dataset
         logreg_split = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
         logreg_split.priority = 1
         logreg_split = self.predicate_converted(logreg_split.find_split(dataset, impurity_measure))
-        computed_splits_imp.append((logreg_split, impurity_measure.calculate_impurity(dataset, logreg_split)))
+        computed_predicates_imp.append((logreg_split, impurity_measure.calculate_impurity(dataset, logreg_split)))
 
         """
         Process all other given user predicates.
-        User given splits are stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt
+        (User given splits are stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt)
         """
 
         weinhub = WeinhuberApproachSplittingStrategy()
@@ -149,52 +293,34 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         weinhub.current_node = self.current_node
         user_given_splits = weinhub.get_all_splits(dataset, impurity_measure)
 
-        computed_splits_imp.extend(user_given_splits.items())
-        computed_splits_imp.sort(key=lambda x: x[1])
+        computed_predicates_imp.extend(user_given_splits.items())
+        computed_predicates_imp.sort(key=lambda x: x[1])
+        self.computed_predicates_imp = computed_predicates_imp
 
-        print(
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "\t\t\t\t\t\t COMPUTED PREDICATES\n"
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "INDEX\t|\tIMPURITY\t|\tDISTANCE°\t|\tEXPRESSION\n"
-            "------------------------------------------------------------------------------------------------------------------------------------------")
-        for i in range(len(computed_splits_imp)):
-            index = len(domain_knowledge_imp) + i
-            impurity = round(computed_splits_imp[i][1], ndigits=3)
-            expr = computed_splits_imp[i][0].print_dot().replace("\\n", "")
-            tree_distances = [computed_splits_imp[i][0].tree_edit_distance(j) for j in self.domain_knowledge]
-            print("{}\t\t|\t{}\t\t|\t\t{}\t\t|\t{}".format(index, impurity, min(tree_distances), expr))
-        print(
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "(° Smallest tree editing distance compared with every expression from domain knowledge.)")
-
-        # TODO: try every predicate within a tree edit distance of 5
-        # TODO: also parse in units with # unit unit
-        # TODO: linear classifier with respect of units
-        # TODO: add additional expressions to domain knowledge
-        # TODO: PUT EVERYTHING INTO FUNCTIONS AND CLEAN UP THE CODE
-        # (TODO: Function in split obj which creates list of all possible combinations of a split.)
+        self.print_alternative_predicates()
 
         # handle_user_input
-        print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
-        for input_line in sys.stdin:
-            if input_line.strip() == "/help":
-                # Help messages
-                pass
-            elif input_line.strip() == "/exit" or input_line.strip() == ":q" or input_line.strip() == ":q!" or input_line.strip() == ":quit":
-                sys.exit(187)
-            elif re.match("/use \d+", input_line.strip()):
-                # Use predicate on index x
-                pass
-            elif re.match("/info \d+", input_line.strip()):
-                # Get information about an string object
-                pass
-            else:
-                print("Unknown command. Type '/help' for help.")
+        return_index = self.user_input_handler()
 
-    @staticmethod
-    def predicate_converted(predicate):
-        # takes an axis_aligned or logreg split and converts it to an weinhuber approach split
+        # mapping of return index to split obj
+        if return_index < len(self.domain_knowledge_imp):
+            return_split = self.domain_knowledge_imp[return_index][0]
+        else:
+            return_split = self.computed_predicates_imp[return_index - len(self.domain_knowledge_imp)][0]
+
+        self.logger.root_logger.info("Returned split: {}".format(str(return_split)))
+        return return_split
+
+    def predicate_converted(self, predicate):
+        """
+        Function to convert an axis_aligned or logreg split into an weinhuber approach split
+        :param predicate: Axis Aligned or Logreg Split
+        :returns: WeinhuberApproachSplit Object representing the initial predicate.
+
+        CAUTION:
+        Only supported conversion types are Axis Aligned Splits and Linear Splits to WeinhuberApproachSplit !
+        """
+
         infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
         relation = "<="
 
@@ -214,4 +340,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             return WeinhuberApproachSplit(colum_interval, {}, sp.sympify(term), relation)
         else:
             # Only supported conversion types are Axis Aligned Splits and Linear Splits
-            raise WeinhuberStrategyException()
+            self.logger.root_logger.critical(
+                "Invalid state while converting the predicates reached. Only supported conversion types are Axis Aligned Splits and Linear Splits.")
+            raise WeinhuberGeneratorException(
+                "Only supported conversion types are Axis Aligned Splits and Linear Splits. Check logger or comments for more information.")
