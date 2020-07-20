@@ -17,31 +17,34 @@ import sys
 import numpy as np
 import re
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberGeneratorException
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
+
 
 class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy):
 
     def __init__(self, domain_knowledge=None, determinizer=LabelPowersetDeterminizer(), debug=False):
         super().__init__()
-        self.domain_knowledge = PredicateParser.get_predicate(
-            input_file_path="dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt",
-            debug=debug) if domain_knowledge is None else domain_knowledge
+        self.domain_knowledge = PredicateParser.get_domain_knowledge(debug=debug) if domain_knowledge is None else domain_knowledge
         self.determinizer = determinizer
         self.root = None
         self.current_node = None
         self.first_run = True
 
+        # Storing the units of the current dataset (create inside domain knowledge file: #UNITS ...)
+        self.dataset_units = None
+
         # logger
         self.logger = WeinhuberApproachLogger("WeinhuberApproachPredicateGenerator_logger", debug)
+        self.debug = debug
 
         # Tree edit distances predicates will be stored here:
-        self.recently_added_predicates = []
+        self.recently_added_predicates_imp = []
         """
         Attributes used for the console output. 
         List containing Tuple: [(expr, impurity)]
         """
         self.domain_knowledge_imp = []
         self.computed_predicates_imp = []
-
 
     def process_domain_knowledge(self):
         """
@@ -61,6 +64,11 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         """
 
         if self.first_run:
+            # Checking whether additional units were also given
+            if isinstance(self.domain_knowledge[0], list):
+                self.dataset_units = self.domain_knowledge[0]
+                self.domain_knowledge = self.domain_knowledge[1:]
+
             new_domain_knowledge = []
             term_collection = []
             for expression in self.domain_knowledge:
@@ -139,16 +147,44 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         Uses only self.domain_knowledge_imp
         :returns: None
         """
+
         domain_knowledge = self.domain_knowledge_imp
-        print(
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "\t\t\t\t\t\t DOMAIN KNOWLEDGE\n"
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "INDEX\t|\tIMPURITY\t|\tEXPRESSION\n"
-            "------------------------------------------------------------------------------------------------------------------------------------------")
-        for i in range(len(domain_knowledge)):
-            predicate = domain_knowledge[i][0].print_dot().replace("\\n", "")
-            print("{}\t\t|\t{}\t\t|\t{}".format(i, round(domain_knowledge[i][1], ndigits=3), predicate))
+        if len(domain_knowledge) > 0:
+            print(
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "\t\t\t\t\t\t DOMAIN KNOWLEDGE\n"
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "INDEX\t|\tIMPURITY\t|\tEXPRESSION\n"
+                "------------------------------------------------------------------------------------------------------------------------------------------")
+            for i in range(len(domain_knowledge)):
+                predicate = domain_knowledge[i][0].print_dot().replace("\\n", "")
+                print("{}\t\t|\t{}\t\t|\t{}".format(i, round(domain_knowledge[i][1], ndigits=3), predicate))
+
+    def print_recently_added_predicates(self):
+        """
+        Function to print recently added predicates.
+        Uses only self.recently_added_predicates_imp
+        :returns: None
+        """
+
+        recently_added_predicates = self.recently_added_predicates_imp
+        if len(recently_added_predicates) > 0:
+            print(
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "\t\t\t\t\t\t RECENTLY ADDED PREDICATES°\n"
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "INDEX\t|\tIMPURITY\t|\tDISTANCE°°\t|\tEXPRESSION\n"
+                "------------------------------------------------------------------------------------------------------------------------------------------")
+            for i in range(len(recently_added_predicates)):
+                index = len(self.domain_knowledge) + len(self.computed_predicates_imp) + i
+                impurity = round(recently_added_predicates[i][1], ndigits=3)
+                expr = recently_added_predicates[i][0].print_dot().replace("\\n", "")
+                tree_distances = [recently_added_predicates[i][0].tree_edit_distance(j) for j in self.domain_knowledge]
+                print("{}\t\t|\t{}\t\t|\t\t{}\t\t|\t{}".format(index, impurity, min(tree_distances), expr))
+            print(
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "(°) Predicates obtained by user, as well as one alternative Axis Aligned predicate and one Linear predicate.\n"
+                "(°°) Smallest tree editing distance compared with every expression from domain knowledge.")
 
     def print_alternative_predicates(self):
         """
@@ -162,24 +198,25 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         """
 
         computed_predicates = self.computed_predicates_imp
-        print(
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "\t\t\t\t\t\t COMPUTED PREDICATES°\n"
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "INDEX\t|\tIMPURITY\t|\tDISTANCE°°\t|\tEXPRESSION\n"
-            "------------------------------------------------------------------------------------------------------------------------------------------")
-        for i in range(len(computed_predicates)):
-            index = len(self.domain_knowledge) + i
-            impurity = round(computed_predicates[i][1], ndigits=3)
-            expr = computed_predicates[i][0].print_dot().replace("\\n", "")
-            tree_distances = [computed_predicates[i][0].tree_edit_distance(j) for j in self.domain_knowledge]
-            print("{}\t\t|\t{}\t\t|\t\t{}\t\t|\t{}".format(index, impurity, min(tree_distances), expr))
-        print(
-            "------------------------------------------------------------------------------------------------------------------------------------------\n"
-            "(°) Predicates obtained by user, as well as one alternative Axis Aligned predicate and one Linear predicate.\n"
-            "(°°) Smallest tree editing distance compared with every expression from domain knowledge.")
+        if len(computed_predicates) > 0:
+            print(
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "\t\t\t\t\t\t COMPUTED PREDICATES°\n"
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "INDEX\t|\tIMPURITY\t|\tDISTANCE°°\t|\tEXPRESSION\n"
+                "------------------------------------------------------------------------------------------------------------------------------------------")
+            for i in range(len(computed_predicates)):
+                index = len(self.domain_knowledge) + i
+                impurity = round(computed_predicates[i][1], ndigits=3)
+                expr = computed_predicates[i][0].print_dot().replace("\\n", "")
+                tree_distances = [computed_predicates[i][0].tree_edit_distance(j) for j in self.domain_knowledge]
+                print("{}\t\t|\t{}\t\t|\t\t{}\t\t|\t{}".format(index, impurity, min(tree_distances), expr))
+            print(
+                "------------------------------------------------------------------------------------------------------------------------------------------\n"
+                "(°) Predicates obtained by user, as well as one alternative Axis Aligned predicate and one Linear predicate.\n"
+                "(°°) Smallest tree editing distance compared with every expression from domain knowledge.")
 
-    def user_input_handler(self):
+    def user_input_handler(self, dataset, impurity_measure):
         """
         Function to handle the user input via console.
         :returns: Integer. (index of predicate which should be returned.)
@@ -194,34 +231,43 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                     "------------------------------------------------------------------------------------------------------------------------------------------\n"
                     "\t\t\t\t\t\t HELP WINDOW\n"
                     "------------------------------------------------------------------------------------------------------------------------------------------\n"
-                    "/help\t\t\t\t\t\t\t\t\t|\t display help window\n"
-                    "/use <Index>\t\t\t\t\t\t\t|\t determine predicate at index to be returned\n"
-                    "/add <Expression>\t\t\t\t\t\t|\t adds an expression\n"
-                    "/distance <TreeEditDistance> <Index>\t|\t will compute and add all expressions within given <TreeEditDistance> of predicate at <Index>\n"
-                    "/refresh\t\t\t\t\t\t\t\t|\t will refresh the console output\n"
-                    "/exit\t\t\t\t\t\t\t\t\t|\t to exit\n"
+                    "/help\t\t\t\t\t\t\t\t\t\t\t\t|\t display help window\n"
+                    "/use <Index>\t\t\t\t\t\t\t\t\t\t|\t select predicate at index to be returned\n"
+                    "/add <Expression>\t\t\t\t\t\t\t\t\t|\t add an expression\n"
+                    "/distance <TreeEditDistance> <Index>\t\t\t\t|\t compute and add all expressions within given <TreeEditDistance> of predicate at <Index>. Will show the 5 best results.\n"
+                    "/distance <TreeEditDistance> <NbrResults> <Index>\t|\t compute and add all expressions within given <TreeEditDistance> of predicate at <Index>. Will show the <NbrResult> best results.\n"
+                    "/refresh\t\t\t\t\t\t\t\t\t\t\t|\t will refresh the console output\n"
+                    "/exit\t\t\t\t\t\t\t\t\t\t\t\t|\t to exit\n"
                     "------------------------------------------------------------------------------------------------------------------------------------------")
             elif input_line == "/exit" or input_line == ":q" or input_line == ":q!" or input_line == ":quit":
-                sys.exit(187)
+                sys.exit(999999)
             elif re.match("/use \d+", input_line):
                 # Use predicate on index x
                 return int(input_line.split("/use ")[1])
                 pass
             elif input_line.startswith("/add "):
                 user_input = input_line.split("/add ")[1]
-                pass
-            elif re.match("/distance -\d+ \d+", input_line):
+                pred = PredicateParser.parse_single_predicate(user_input, "GeneratorPredicate", self.debug)
+                self.recently_added_predicates_imp.append((pred, impurity_measure.calculate_impurity(dataset, pred)))
+
+                self.print_domain_knowledge()
+                self.print_alternative_predicates()
+                self.print_recently_added_predicates()
+            elif re.match("/distance \d+ \d+ \d+", input_line):
                 # create new splits out of given split within tree edit distance of given number
                 pass
+            elif re.match("/distance \d+ \d+", input_line):
+                # create new splits out of given split within tree edit distance of given number
+                pass
+
             elif input_line == "/refresh":
                 # prints everything again
                 self.print_domain_knowledge()
                 self.print_alternative_predicates()
+                self.print_recently_added_predicates()
                 print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
             else:
                 print("Unknown command. Type '/help' for help.")
-
-
 
     def find_split(self, dataset, impurity_measure):
         # TODO: try every predicate within a tree edit distance of 5
@@ -246,7 +292,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             4. Start user_input_handler()
             5. Returned split chosen by user via user_input_handler()
         """
-        self.recently_added_predicates = []
+        self.recently_added_predicates_imp = []
         self.print_dataset_specs(dataset)
         self.process_domain_knowledge()
 
@@ -285,28 +331,37 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         """
         Process all other given user predicates.
         (User given splits are stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt)
+        Important: If there are no user given splits --> Predicate Parser will raise an Exception
         """
+        try:
+            weinhub = WeinhuberApproachSplittingStrategy()
+            weinhub.priority = 1
+            weinhub.root = self.root
+            weinhub.current_node = self.current_node
+            user_given_splits = weinhub.get_all_splits(dataset, impurity_measure)
+            computed_predicates_imp.extend(user_given_splits.items())
+        except WeinhuberPredicateParserException:
+            pass
 
-        weinhub = WeinhuberApproachSplittingStrategy()
-        weinhub.priority = 1
-        weinhub.root = self.root
-        weinhub.current_node = self.current_node
-        user_given_splits = weinhub.get_all_splits(dataset, impurity_measure)
-
-        computed_predicates_imp.extend(user_given_splits.items())
         computed_predicates_imp.sort(key=lambda x: x[1])
         self.computed_predicates_imp = computed_predicates_imp
 
         self.print_alternative_predicates()
+        self.print_recently_added_predicates()
 
+        # TODO: Delete this statement
+        print(self.dataset_units)
         # handle_user_input
-        return_index = self.user_input_handler()
+        return_index = self.user_input_handler(dataset, impurity_measure)
 
         # mapping of return index to split obj
         if return_index < len(self.domain_knowledge_imp):
             return_split = self.domain_knowledge_imp[return_index][0]
-        else:
+        elif return_index < len(self.domain_knowledge_imp) + len(self.computed_predicates_imp):
             return_split = self.computed_predicates_imp[return_index - len(self.domain_knowledge_imp)][0]
+        else:
+            return_split = \
+                self.recently_added_predicates_imp[return_index - len(self.domain_knowledge_imp) - len(self.computed_predicates_imp)][0]
 
         self.logger.root_logger.info("Returned split: {}".format(str(return_split)))
         return return_split

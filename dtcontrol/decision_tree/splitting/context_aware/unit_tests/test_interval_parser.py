@@ -126,14 +126,17 @@ class TestIntervalParser(unittest.TestCase):
         else:
             self.assertEqual(PredicateParser.parse_user_interval(f"[{str(x)},{str(y)}]"), sp.FiniteSet(sp.sympify(str(y)).evalf()))
 
+    @settings(deadline=None)
     @given(x=st.integers(), y=st.integers())
     def test_closed_interval_integer_hypothesis(self, x, y):
         self.closed_intervals(x, y)
 
+    @settings(deadline=None)
     @given(x=st.floats(allow_nan=False, allow_infinity=False), y=st.floats(allow_nan=False, allow_infinity=False))
     def test_closed_interval_float_hypothesis(self, x, y):
         self.closed_intervals(x, y)
 
+    @settings(deadline=None)
     @given(a=st.integers(), b=st.integers(), c=st.integers(), d=st.integers(), e=st.integers(), f=st.integers(), g=st.integers(),
            h=st.integers(), i=st.floats(allow_nan=False, allow_infinity=False), j=st.floats(allow_nan=False, allow_infinity=False),
            k=st.floats(allow_nan=False, allow_infinity=False), l=st.floats(allow_nan=False, allow_infinity=False))

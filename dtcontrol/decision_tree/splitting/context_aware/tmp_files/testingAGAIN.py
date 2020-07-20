@@ -21,7 +21,11 @@ subs_helper_coef = [c_0, c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11
                     c_61, c_62, c_63, c_64, c_65, c_66, c_67, c_68, c_69, c_70, c_71, c_72, c_73, c_74, c_75, c_76, c_77, c_78, c_79, c_80,
                     c_81, c_82, c_83, c_84, c_85, c_86, c_87, c_88, c_89, c_90, c_91, c_92, c_93, c_94, c_95, c_96, c_97, c_98, c_99, c_100]
 
-try:
-    foo = sp.sympify("adqwe*!23ß")
-except Exception:
-    print("catched")
+tmp = "#UNITS Meter Meter Baum Haus"
+
+# checking whether first line contains units
+if tmp.startswith("#UNITS"):
+    units = tmp.split(" ")[1:]
+    converted_units = [str.lower(u) for u in units]
+
+print(type(converted_units))
