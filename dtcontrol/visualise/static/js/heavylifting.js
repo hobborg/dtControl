@@ -12,6 +12,8 @@ var chart = [];
 var chartConfig = [];
 var nextDisabled = false;
 var treeAnimation = true;
+var treeEdit = false;
+var selectedNode = [];
 
 const simTableDiv = document.getElementById('tableHere');
 
@@ -187,19 +189,28 @@ function myFunc() {
 
 }
 
+function openThirdForm(address) {
+    $('#formThirdModal').modal('toggle');
+    console.log(address);
+    selectedNode = address;
+}
+
 // Toggle children on click.
 function click(d) {
-    if (d.children) {
-        d._children = d.children;
-        d.children = null;
+    if (treeEdit) {
+        openThirdForm(d.address);
     } else {
-        d.children = d._children;
-        d._children = null;
+        if (d.children) {
+            d._children = d.children;
+            d.children = null;
+        } else {
+            d.children = d._children;
+            d._children = null;
+        }
+        // Inefficient but does not work without it
+        update(d);
+        update(root);
     }
-    // Inefficient but does not work without it
-    update(d);
-    update(root);
-
 }
 
 function update(source) {
@@ -672,19 +683,9 @@ $(document).ready(function() {
                 url: '/simRoute'
             })
             .done(function(data) {
-                // totalSims = 0;
-                // currentSim = 0;
-                // x_current = [];
-                // x_bounds = [];
-                // u_current = [];
-                // lastPath = [];
-                // numVars = 0;
-                // numResults = 0;
-                // chart = [];
-                // chartConfig = [];
-                // nextDisabled = false;
                 document.getElementById("openSecondFormButton").style.visibility = "visible";
                 document.getElementById("mainRow1").style.visibility = "visible";
+                document.getElementById("editTreeDiv").style.visibility = "visible";
 
                 treeData = data.classi;
                 numVars = data.numVars;
@@ -796,7 +797,6 @@ $(document).ready(function() {
                     x_bounds.push([data.bound[0][i], data.bound[1][i]]);
                 }
 
-                // $('#formSecondModal').modal('toggle');
 
             });
 
@@ -817,26 +817,13 @@ $(document).ready(function() {
                 url: '/initRoute'
             })
             .done(function(data) {
-                // reset previous values
-                // totalSims = 0;
-                // currentSim = 0;
-                // x_current = [];
-                // u_current = [];
-                // lastPath = [];
-                // chart = [];
-                // chartConfig = [];
-                // nextDisabled = false;
-                // for (var i = 0; i < numVars; i++) {
-                //     x_current.push([]);
-                //     chart.push([]);
-                //     chartConfig.push([]);
-                // }
-                // for (var i = 0; i < numResults; i++) {
-                //     u_current.push([]);
-                // }
                 document.getElementById("mainRow2").style.visibility = "visible";
                 document.getElementById("mainRow3").style.visibility = "visible";
                 document.getElementById("expandThisDiv").style.height = "450px";
+                document.getElementById("playerDiv").style.visibility = "visible";
+                document.getElementById("timeRange").style.visibility = "visible";
+                document.getElementById("instep").style.visibility = "visible";
+                document.getElementById("animationDiv").style.visibility = "visible";
 
                 var mini = document.getElementsByClassName("card-body");
                 for (var i = 0; i < mini.length; i++) {
@@ -1127,4 +1114,8 @@ $(document).on("click", "#simTable tr", function() {
 $(document).on("change", "#animateTree", function() {
     treeAnimation = !treeAnimation;
     console.log(treeAnimation);
+});
+$(document).on("change", "#editTree", function() {
+    treeEdit = !treeEdit;
+    console.log(treeEdit);
 });

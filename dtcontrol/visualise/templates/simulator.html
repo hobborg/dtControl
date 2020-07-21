@@ -52,6 +52,29 @@
         </div>
     </div>
 
+    <div class="modal fade" id="formThirdModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select user predicate/preset</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formThird">
+                    <div class="modal-body" id="formThirdBody">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" value="Send" class="btn btn-primary"> Send </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <form id="formFirst">
@@ -163,7 +186,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <div class="btn-group btn-group-toggle" data-toggle="buttons" style="z-index:5;">
+                <div class="btn-group btn-group-toggle" data-toggle="buttons" id="playerDiv" style="z-index:5;visibility: hidden;">
                     <label class="btn btn-dark">
                       <input type="radio" name="player" id="play" autocomplete="off" value='0'> Play
                     </label>
@@ -177,15 +200,20 @@
                         <input type="radio" name="player" id="back" autocomplete="off" value='3'> Previous
                     </label>
                 </div>
-                <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange">
-                <form id="instep" class="form-inline my-2 my-lg-0">
+                <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange" style="visibility: hidden;">
+                <form id="instep" class="form-inline my-2 my-lg-0" style="visibility: hidden;">
                     <input class="form-control mr-sm-2" placeholder="Number of steps" aria-label="Number of steps" type="number" id="steps" name="steps" min="1">
                     <button class="btn btn-dark my-2 my-sm-0" type="submit">Step</button>
                 </form>
 
-                <div class="btn-group-toggle" data-toggle="buttons">
-                    <label class="btn btn-outline-dark active" style="margin: 7px;">
+                <div id="animationDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
+                    <label class="btn btn-outline-dark active" style="margin-left: 7px;">
                       <input id = "animateTree" type="checkbox" checked autocomplete="off"> Animation
+                    </label>
+                </div>
+                <div id="editTreeDiv" class="btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-dark" style="margin: 7px;">
+                      <input id = "editTree" type="checkbox" autocomplete="off"> Edit Tree
                     </label>
                 </div>
             </div>
