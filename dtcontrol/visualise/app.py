@@ -189,6 +189,15 @@ def inStepRoute():
     returnDict = {"x_new": x_new}
     return jsonify(returnDict)
 
+# Used to recontstruct from presets
+@app.route("/reconstructRoute1")
+def rc1():
+    return []
+
+# Used reconstruct from user text predicates
+@app.route("/reconstructRoute2")
+def rc2():
+    return []
 
 # Used to get the list of unzipped examples
 @app.route("/examples")

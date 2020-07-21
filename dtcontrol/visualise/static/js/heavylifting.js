@@ -18,6 +18,7 @@ var selectedNode = [];
 const simTableDiv = document.getElementById('tableHere');
 
 const app = document.getElementById('config');
+const app_3 = document.getElementById('config_3');
 var defConf;
 var allConfig = {};
 const app1 = document.getElementById('controller');
@@ -61,8 +62,24 @@ function postload() {
         opt.setAttribute('id', allConfig['determinize'][i]);
         det.appendChild(opt);
     }
+    var det = document.getElementById("determinize_3");
+    for (var i = 0; i < allConfig['determinize'].length; i++) {
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['determinize'][i];
+        opt.setAttribute('value', allConfig['determinize'][i]);
+        opt.setAttribute('id', allConfig['determinize'][i] + "_3");
+        det.appendChild(opt);
+    }
 
     var det = document.getElementById("numeric-predicates");
+    for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['numeric-predicates'][i];
+        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
+        opt.setAttribute('id', allConfig['numeric-predicates'][i] + "_3");
+        det.appendChild(opt);
+    }
+    var det = document.getElementById("numeric-predicates_3");
     for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['numeric-predicates'][i];
@@ -72,6 +89,14 @@ function postload() {
     }
 
     var det = document.getElementById("categorical-predicates");
+    for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['categorical-predicates'][i];
+        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
+        opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
+        det.appendChild(opt);
+    }
+    var det = document.getElementById("categorical-predicates_3");
     for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['categorical-predicates'][i];
@@ -88,6 +113,15 @@ function postload() {
         opt.setAttribute('id', allConfig['impurity'][i]);
         det.appendChild(opt);
     }
+    var det = document.getElementById("impurity_3");
+    for (var i = 0; i < allConfig['impurity'].length; i++) {
+        var opt = document.createElement('option');
+        opt.textContent = allConfig['impurity'][i];
+        opt.setAttribute('value', allConfig['impurity'][i]);
+        opt.setAttribute('id', allConfig['impurity'][i] + "_3");
+        det.appendChild(opt);
+    }
+
     $("#config").trigger("change");
 
 }
@@ -107,9 +141,22 @@ xhr.onload = function() {
         option.textContent = "custom";
         option.setAttribute('value', "custom");
         app.appendChild(option);
+
+        for (x in data2.presets) {
+            const option_3 = document.createElement('option');
+            option_3.textContent = x;
+            option_3.setAttribute('value', x);
+            app_3.appendChild(option_3);
+        }
+        const option_3 = document.createElement('option');
+        option_3.textContent = "custom";
+        option_3.setAttribute('value', "custom");
+        app_3.appendChild(option_3);
+
         postload();
 
     } else {
+        console.log("YML not working");
         const errorMessage = document.createElement('marquee');
         errorMessage.textContent = `Gah, it's not working!`;
         app.appendChild(errorMessage);
@@ -900,6 +947,42 @@ $(document).ready(function() {
         event.preventDefault();
     });
 
+    $('#formThird').on('submit', function(event) {
+        $.ajax({
+                data: JSON.stringify({
+                    controller: $('#controller_3').val(),
+                    config: $('#config_3').val(),
+                    determinize: $('#determinize_3').val(),
+                    numeric_predicates: $('#numeric-predicates_3').val(),
+                    categorical_predicates: $('#categorical-predicates_3').val(),
+                    impurity: $('#impurity_3').val(),
+                    tolerance: $('#tolerance_3').val(),
+                    safe_pruning: $('#safe-pruning_3').val()
+                }),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/reconstructRoute1'
+            })
+            .done(function(data) {
+                // Add tree appending functions here
+            })
+        event.preventDefault();
+    })
+    $('#formFourth').on('submit', function(event) {
+        $.ajax({
+                data: JSON.stringify({
+                    predicate: $('#user_pred').val()
+                }),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/reconstructRoute2'
+            })
+            .done(function(data) {
+                // Add tree appending functions here
+            })
+        event.preventDefault();
+    })
+
     $('#instep').on('submit', function(event) {
 
         if (!nextDisabled) {
@@ -1064,11 +1147,62 @@ $(document).ready(function() {
 
     });
 
+    $("#config_3").change(function() {
+        if ($(this).val() != "custom") {
+            // clearCheckBoxes();
+            for (x in data2.presets) {
+                //x is  preset names
+                if ($(this).val() == x) {
+                    //x is now selected preset
+                    for (y in defConf) {
+                        //y is  property names
+                        if (y in data2.presets[x]) {
+                            if (y == "tolerance") {
+                                document.getElementById("tolerance_3").value = data2.presets[x][y];
+                            } else if (y == "safe-pruning") {
+                                if (data2.presets[x]["safe-pruning"]) {
+                                    $('#safe-pruning_3').val("true");
+                                } else {
+                                    $('#safe-pruning_3').val("false");
+                                }
+                            } else {
+                                $("#" + y + "_3").val(data2.presets[x][y]);
+                            }
+                        } else {
+                            if (y == "tolerance") {
+                                document.getElementById("tolerance_3").value = defConf[y];
+                            } else if (y == "safe-pruning") {
+                                if (data2.presets["default"]["safe-pruning"]) {
+                                    $('#safe-pruning_3').val("true");
+                                } else {
+                                    $('#safe-pruning_3').val("false");
+                                }
+                            } else {
+                                $("#" + y + "_3").val(data2.presets["default"][y]);
+                            }
+                        }
+                    }
+
+                    break;
+
+                }
+            }
+        }
+
+
+    });
+
     $(".propList").change(function() {
         document.getElementById("config").value = "custom";
     });
+    $(".propList_3").change(function() {
+        document.getElementById("config_3").value = "custom";
+    });
     $("#tolerance").on("input", function() {
         document.getElementById("config").value = "custom";
+    });
+    $("#tolerance_3").on("input", function() {
+        document.getElementById("config_3").value = "custom";
     });
     // Simple .change() does not work here because it is dynamically added
 });
@@ -1108,7 +1242,6 @@ $(document).on("click", "#simTable tr", function() {
     currentSim = ind;
     colourPath(lastPath[ind]);
     drawCanvas();
-    // $(this).find('td input[type=radio]').trigger('click');
 });
 
 $(document).on("change", "#animateTree", function() {

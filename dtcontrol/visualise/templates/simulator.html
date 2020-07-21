@@ -61,13 +61,102 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form id="formThird">
-                    <div class="modal-body" id="formThirdBody">
 
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" value="Send" class="btn btn-primary"> Send </button>
-                    </div>
+                <div class="modal-body" id="formThirdBody">
+                    <form id="formThird">
+                        <div>
+                            <label for="config_3">Config:</label>
+                            <div class="search_categories">
+                                <div class="select">
+                                    <select id="config_3" name="config_3">
+                      
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <hr class="solid">
+
+                        <div>
+                            <label for="determinize_3">Determinize:</label>
+                            <div class="search_categories">
+                                <div class="select">
+                                    <select class="propList_3" id="determinize_3" name="determinize_3">
+                    
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="numeric-predicates_3">Numeric-Predicates:</label>
+                            <div class="search_categories">
+                                <div class="select">
+                                    <select class="propList_3" id="numeric-predicates_3" name="numeric-predicates_3" multiple>
+                    
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="categorical-predicates_3">Categorical-Predicates:</label>
+                            <div class="search_categories">
+                                <div class="select">
+                                    <select class="propList_3" id="categorical-predicates_3" name="categorical-predicates_3" multiple>
+                    
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="impurity_3">Impurity:</label>
+                            <div class="search_categories">
+                                <div class="select">
+                                    <select class="propList_3" id="impurity_3" name="impurity_3">
+                                        </select>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div>
+                            <label for="tolerance_3">Tolerance:</label>
+                            <div class="search_categories">
+                                <input type="text" id="tolerance_3" name="tolerance_3"><br><br>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="safe-pruning_3">Safe-pruning:</label>
+                            <div class="search_categories">
+                                <div class="select">
+                                    <select class="propList_3" name="safe-pruning_3" id="safe-pruning_3">
+                                            <option value="true">True</opotion>
+                                            <option value="false">False</opotion>
+                                        </select>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">Re-construct with presets</button>
+                    </form>
+
+                    <!-- Divider -->
+                    <hr class="solid">
+
+                    <form id="formFourth">
+                        <div>
+                            <label for="user_pred">Input predicate:</label>
+                            <div class="search_categories">
+                                <input type="text" id="user_pred" name="user_pred"><br><br>
+                            </div>
+                        </div>
+                        <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">Re-construct with user-predicates</button>
+                    </form>
+
+                </div>
 
                 </form>
 
@@ -211,7 +300,7 @@
                       <input id = "animateTree" type="checkbox" checked autocomplete="off"> Animation
                     </label>
                 </div>
-                <div id="editTreeDiv" class="btn-group-toggle" data-toggle="buttons">
+                <div id="editTreeDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
                     <label class="btn btn-outline-dark" style="margin: 7px;">
                       <input id = "editTree" type="checkbox" autocomplete="off"> Edit Tree
                     </label>
