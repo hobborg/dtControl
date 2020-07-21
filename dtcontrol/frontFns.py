@@ -231,17 +231,17 @@ def is_valid_file_or_folder(arg):
         return arg
 
 
-def intoJSON(rt, parent):
+def intoJSON(rt, parent, address):
     # returns a string
     rt_name = "sth"
-    if (len(rt.children) > 0):
+    if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:
         rt_name = rt.print_c_label()
     # print("Working on ",rt_name," with ",len(rt.children)," children\n")
-    strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": []}
+    strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i], rt_name))
+        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address+[i]))
     return strdummy
 
 
@@ -312,7 +312,7 @@ def main_parse(args):
     # print("Tried fit now printing root")
 
     # json_str = []
-    retDict = intoJSON(classifiers[0].root, "null")
+    retDict = intoJSON(classifiers[0].root, "null", [])
     # classifiers[0].root.predict_one_step(np.array([[3.5, 0]]))
     # print((classifiers[0].get_stats()))
 

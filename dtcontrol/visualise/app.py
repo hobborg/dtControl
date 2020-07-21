@@ -61,9 +61,9 @@ def discretise(x):
     # Not in use right now
     diff = []
     for i in range(numVars):
-        diff.append(minBounds[i] + stepSize[i] * (int((x[i] - minBounds[i]) / stepSize[i])))
-    # return diff
-    return x
+        diff.append(minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])))
+    return diff
+    # return x
 
 
 @app.route("/")
