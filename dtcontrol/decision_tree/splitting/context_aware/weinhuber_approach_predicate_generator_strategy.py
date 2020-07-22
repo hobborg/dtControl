@@ -17,7 +17,10 @@ import sys
 import numpy as np
 import re
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberGeneratorException
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_linear_units_classifier import \
+    WeinhuberApproachLinearUnitsClassifier
 
 
 class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy):
@@ -37,14 +40,51 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.logger = WeinhuberApproachLogger("WeinhuberApproachPredicateGenerator_logger", debug)
         self.debug = debug
 
-        # Tree edit distances predicates will be stored here:
-        self.recently_added_predicates_imp = []
         """
-        Attributes used for the console output. 
-        List containing Tuple: [(expr, impurity)]
+        domain_knowledge_imp, computed_predicates_imp, recently_added_predicates_imp have all the same structure:
+        -> List containing Tuple: [(expr, impurity)]
+        
+        domain_knowledge_imp:
+            -used to store domain_knowledge expressions
+            
+        computed_predicates_imp:
+            -used to store: 
+                - Alternative splits:
+                    - One Axis Aligned
+                    - One Linear Classifier
+                    - One Linear Unit Classifier
+                - User splits:
+                    - All splits given by user at startup
+        
+        recently_added_predicates_imp:
+            - used to sore: predicates added by user via user_input_handler() --> '/add <Predicate>' or Tree edit distance
+            --> Caution: will be set to [] at every call of  
+        
         """
         self.domain_knowledge_imp = []
         self.computed_predicates_imp = []
+        self.recently_added_predicates_imp = []
+
+        # Setup domain knowledge
+        self.process_domain_knowledge()
+
+        # List containing alternative splitting strategies [axis, logreg, logreg_unit]
+        self.alternative_strategies = self.set_up_strats()
+
+    def set_up_strats(self):
+        # Axis Aligned
+        axis = AxisAlignedSplittingStrategy()
+        axis.priority = 1
+
+        # Linear
+        logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+        logreg.priority = 1
+
+        # Linear Units (Only if there are units given)
+        logreg_unit = WeinhuberApproachLinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
+        logreg_unit.priority = 1
+
+        return [axis, logreg, logreg_unit] if self.dataset_units is not None else [axis, logreg]
 
     def process_domain_knowledge(self):
         """
@@ -63,46 +103,45 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
 
         """
 
-        if self.first_run:
-            # Checking whether additional units were also given
-            if isinstance(self.domain_knowledge[0], list):
-                self.dataset_units = self.domain_knowledge[0]
-                self.domain_knowledge = self.domain_knowledge[1:]
+        # Checking whether additional units were also given
+        if isinstance(self.domain_knowledge[0], list):
+            self.dataset_units = self.domain_knowledge[0]
+            self.domain_knowledge = self.domain_knowledge[1:]
 
-            new_domain_knowledge = []
-            term_collection = []
-            for expression in self.domain_knowledge:
-                fixed_coefs = {}
-                # Checking if domain knowledge is containing finite sets with fixed coefs
-                for coef in expression.coef_interval:
-                    if isinstance(expression.coef_interval[coef], sp.FiniteSet):
-                        fixed_coefs[coef] = list(expression.coef_interval[coef].args)
-                    else:
-                        self.logger.root_logger.critical(
-                            "Invalid interval inside domain knowledge expression found! Currently only Finite Sets are supported.")
-                        raise WeinhuberGeneratorException(
-                            "While processing the domain knowledge an invalid state was reached. Check logger or comments for more information.")
-
-                # Creating all combinations
-                if fixed_coefs:
-                    # unzipping
-                    coef, val = zip(*fixed_coefs.items())
-                    # calculation all combinations and zipping back together
-                    combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
-
-                    for comb in combinations:
-                        # Create new Weinhuber Split obj
-                        new_split = WeinhuberApproachSplit(expression.column_interval, {}, expression.term.subs(comb), expression.relation)
-                        # Checking whether this expression is already represented
-                        for t in term_collection:
-                            if new_split.term.equals(t):
-                                break
-                        else:
-                            new_domain_knowledge.append(new_split)
-                            term_collection.append(new_split.term)
+        new_domain_knowledge = []
+        term_collection = []
+        for expression in self.domain_knowledge:
+            fixed_coefs = {}
+            # Checking if domain knowledge is containing finite sets with fixed coefs
+            for coef in expression.coef_interval:
+                if isinstance(expression.coef_interval[coef], sp.FiniteSet):
+                    fixed_coefs[coef] = list(expression.coef_interval[coef].args)
                 else:
-                    new_domain_knowledge.append(expression)
-            self.domain_knowledge = new_domain_knowledge
+                    self.logger.root_logger.critical(
+                        "Invalid interval inside domain knowledge expression found! Currently only Finite Sets are supported.")
+                    raise WeinhuberGeneratorException(
+                        "While processing the domain knowledge an invalid state was reached. Check logger or comments for more information.")
+
+            # Creating all combinations
+            if fixed_coefs:
+                # unzipping
+                coef, val = zip(*fixed_coefs.items())
+                # calculation all combinations and zipping back together
+                combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+
+                for comb in combinations:
+                    # Create new Weinhuber Split obj
+                    new_split = WeinhuberApproachSplit(expression.column_interval, {}, expression.term.subs(comb), expression.relation)
+                    # Checking whether this expression is already represented
+                    for t in term_collection:
+                        if new_split.term.equals(t):
+                            break
+                    else:
+                        new_domain_knowledge.append(new_split)
+                        term_collection.append(new_split.term)
+            else:
+                new_domain_knowledge.append(expression)
+        self.domain_knowledge = new_domain_knowledge
 
     def print_dataset_specs(self, dataset):
         """
@@ -183,7 +222,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 print("{}\t\t|\t{}\t\t|\t\t{}\t\t|\t{}".format(index, impurity, min(tree_distances), expr))
             print(
                 "------------------------------------------------------------------------------------------------------------------------------------------\n"
-                "(°) Predicates obtained by user, as well as one alternative Axis Aligned predicate and one Linear predicate.\n"
+                "(°) Predicates obtained by user, as well as one alternative Axis Aligned predicate and two Linear predicate.\n"
                 "(°°) Smallest tree editing distance compared with every expression from domain knowledge.")
 
     def print_alternative_predicates(self):
@@ -247,7 +286,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 pass
             elif input_line.startswith("/add "):
                 user_input = input_line.split("/add ")[1]
-                pred = PredicateParser.parse_single_predicate(user_input, "GeneratorPredicate", self.debug)
+                pred = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
                 self.recently_added_predicates_imp.append((pred, impurity_measure.calculate_impurity(dataset, pred)))
 
                 self.print_domain_knowledge()
@@ -259,7 +298,12 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             elif re.match("/distance \d+ \d+", input_line):
                 # create new splits out of given split within tree edit distance of given number
                 pass
-
+            elif input_line == "/load_input":
+                # loading the new predicates from dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt
+                self.recently_added_predicates_imp.extend(self.load_user_predicates_from_file(dataset, impurity_measure))
+                self.print_domain_knowledge()
+                self.print_alternative_predicates()
+                self.print_recently_added_predicates()
             elif input_line == "/refresh":
                 # prints everything again
                 self.print_domain_knowledge()
@@ -271,11 +315,10 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
 
     def find_split(self, dataset, impurity_measure):
         # TODO: try every predicate within a tree edit distance of 5
-        # TODO: also parse in units with # unit unit
-        # TODO: linear classifier with respect of units
-        # (TODO: Function in split obj which creates list of all possible combinations of a split.)
+        # TODO: Check if Logger still works/makes sense
+        # TODO: What should happen if there is no domain knowledge or no pre defined user predicates ?
+        # TODO: User input predicates with coefs
         # TODO: Domain knowledge expressions should only be allowed to have finite set coefs or should it ?
-        # TODO: Check the other exceptions
 
         """
         additional predicates given before startup are stored in dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt
@@ -289,12 +332,13 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 3.1 create axis aligned split
                 3.2 create logreg split
                 3.3 create user given splits if there are any given
-            4. Start user_input_handler()
-            5. Returned split chosen by user via user_input_handler()
+            (4.) print alternative splits
+            5. Start user_input_handler() (possibility for user to add new predicates)
+            6. Returned split chosen by user via user_input_handler()
         """
+
         self.recently_added_predicates_imp = []
         self.print_dataset_specs(dataset)
-        self.process_domain_knowledge()
 
         """
         self.domain_knowledge_imp
@@ -316,32 +360,13 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         """
         computed_predicates_imp = []
 
-        # Get the axis aligned split for current dataset
-        axis_split = AxisAlignedSplittingStrategy()
-        axis_split.priority = 1
-        axis_split = self.predicate_converted(axis_split.find_split(dataset, impurity_measure))
-        computed_predicates_imp.append((axis_split, impurity_measure.calculate_impurity(dataset, axis_split)))
+        # Axis, Lin, LinUnits
+        for strat in self.alternative_strategies:
+            split = self.predicate_converted(strat.find_split(dataset, impurity_measure))
+            computed_predicates_imp.append((split, impurity_measure.calculate_impurity(dataset, split)))
 
-        # Get the linear classifier split for current dataset
-        logreg_split = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-        logreg_split.priority = 1
-        logreg_split = self.predicate_converted(logreg_split.find_split(dataset, impurity_measure))
-        computed_predicates_imp.append((logreg_split, impurity_measure.calculate_impurity(dataset, logreg_split)))
-
-        """
-        Process all other given user predicates.
-        (User given splits are stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt)
-        Important: If there are no user given splits --> Predicate Parser will raise an Exception
-        """
-        try:
-            weinhub = WeinhuberApproachSplittingStrategy()
-            weinhub.priority = 1
-            weinhub.root = self.root
-            weinhub.current_node = self.current_node
-            user_given_splits = weinhub.get_all_splits(dataset, impurity_measure)
-            computed_predicates_imp.extend(user_given_splits.items())
-        except WeinhuberPredicateParserException:
-            pass
+        # User predicates from input file
+        computed_predicates_imp.extend(self.load_user_predicates_from_file(dataset, impurity_measure))
 
         computed_predicates_imp.sort(key=lambda x: x[1])
         self.computed_predicates_imp = computed_predicates_imp
@@ -349,8 +374,6 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.print_alternative_predicates()
         self.print_recently_added_predicates()
 
-        # TODO: Delete this statement
-        print(self.dataset_units)
         # handle_user_input
         return_index = self.user_input_handler(dataset, impurity_measure)
 
@@ -399,3 +422,23 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 "Invalid state while converting the predicates reached. Only supported conversion types are Axis Aligned Splits and Linear Splits.")
             raise WeinhuberGeneratorException(
                 "Only supported conversion types are Axis Aligned Splits and Linear Splits. Check logger or comments for more information.")
+
+    def load_user_predicates_from_file(self, dataset, impurity_measure):
+        """
+        Process all other given user predicates.
+        (User given splits are stored inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt)
+        Important: If there are no user given splits --> Predicate Parser will raise an Exception
+        It is important to create a new WeinhuberApproachSplitting instance every find_split call.
+            -> User gets the ability to
+        """
+        try:
+            weinhub = WeinhuberApproachSplittingStrategy()
+            weinhub.priority = 1
+            weinhub.root = self.root
+            weinhub.current_node = self.current_node
+            user_given_splits = weinhub.get_all_splits(dataset, impurity_measure)
+            return user_given_splits.items()
+        except WeinhuberPredicateParserException:
+            self.logger.root_logger.info(
+                "WeinhuberPredicateParserException raised during Strategy call. Please check logger or comments inside WeinhuberApproachSplittingStrategy for more information.")
+            pass
