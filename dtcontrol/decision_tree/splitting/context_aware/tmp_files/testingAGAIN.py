@@ -28,4 +28,29 @@ if tmp.startswith("#UNITS"):
     units = tmp.split(" ")[1:]
     converted_units = [str.lower(u) for u in units]
 
-print(type(converted_units))
+print(converted_units)
+print(set(converted_units))
+print(converted_units)
+
+x = np.array(
+    [[1., 4.6, 1., 3.],
+     [1., 4.6, 2., 3.],
+     [2., 4., 3., 1.],
+     [2., 4., 3., 2.],
+     [1., 4., 4., 1.],
+     [2., 4., 4., 2.],
+     [2., 53., 2., 3.],
+     [1., 228., 1., 5.],
+     [2., 93., 1., 2.],
+     [2., 59., 3., 2.]])
+
+
+for unit in set(converted_units):
+    print(unit)
+    converted_x = np.copy(x)
+    for index in range(len(converted_units)):
+        if converted_units[index] != unit:
+            converted_x[:, index] = 0
+    print(converted_x)
+
+print(x.shape[1])

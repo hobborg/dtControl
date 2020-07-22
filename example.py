@@ -7,7 +7,11 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splittin
     WeinhuberApproachSplittingStrategy
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_predicate_generator_strategy import WeinhuberApproachPredicateGeneratorStrategy
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_predicate_generator_strategy import \
+    WeinhuberApproachPredicateGeneratorStrategy
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_linear_units_classifier import \
+    WeinhuberApproachLinearUnitsClassifier
+
 suite = BenchmarkSuite(timeout=999,
                        save_folder='saved_classifiers',
                        benchmark_file='benchmark',
@@ -22,8 +26,11 @@ logreg.priority = 0
 # weinhuber.curve_fitting_method = "trf"
 # weinhuber.priority = 1
 
-generator = WeinhuberApproachPredicateGeneratorStrategy(debug=False)
+generator = WeinhuberApproachPredicateGeneratorStrategy(debug=True)
 generator.priority = 1
+
+# linear_unit = WeinhuberApproachLinearUnitsClassifier(LogisticRegression, ["meter", "meter", "baum", "haus"], solver='lbfgs', penalty='none')
+# linear_unit.priority = 1
 
 aa = AxisAlignedSplittingStrategy()
 aa.priority = 0
