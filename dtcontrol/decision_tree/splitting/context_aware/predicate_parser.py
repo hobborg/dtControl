@@ -9,7 +9,7 @@ from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger i
 class PredicateParser:
 
     @classmethod
-    def parse_single_predicate(cls, single_predicate, logger_name, debug=False):
+    def parse_single_predicate(cls, single_predicate, logger, debug=False):
         """
         Function to parse a single predicate and return a WeinhuberApproachSplitObject
         :param single_predicate: String containing the predicate
@@ -49,8 +49,6 @@ class PredicateParser:
         --------------------------------------------------------------------------------------------
 
         """
-        # Logger Init
-        logger = WeinhuberApproachLogger(logger_name, debug)
         logger.root_logger.info("Predicate to parse: " + str(single_predicate))
 
         # Currently supported types of relations
@@ -80,7 +78,7 @@ class PredicateParser:
                 try:
                     for i in range(1, len(split_pred)):
                         split_coef_definition = split_pred[i].split("in", 1)
-                        interval = cls.parse_user_interval(split_coef_definition[1], debug)
+                        interval = cls.parse_user_interval(split_coef_definition[1], logger)
                         symbol = sp.sympify(split_coef_definition[0])
                         all_interval_defs[symbol] = interval
                 except Exception:
@@ -166,7 +164,8 @@ class PredicateParser:
                 return WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
 
     @classmethod
-    def get_domain_knowledge(cls, debug=False, input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt"):
+    def get_domain_knowledge(cls, debug=False,
+                             input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt"):
 
         """
         Function to parse domain knowledge obtained from user (stored in input_file_path)
@@ -190,7 +189,7 @@ class PredicateParser:
         (<DomainKnowledgeExpression> contains a predicate, parsed by the function:  parse_single_predicate())
         """
         # Logger Init
-        logger = WeinhuberApproachLogger("DomainKnowledgeParser_logger", debug)
+        logger = WeinhuberApproachLogger("GetDomainKnowledge_Logger", debug)
         logger.root_logger.info("Starting Domain Knowledge Parser.")
 
         # Opening and checking the input file
@@ -220,11 +219,11 @@ class PredicateParser:
             input_line = input_line[1:]
 
         for single_predicate in input_line:
-            logger.root_logger.info("Processing user domain knowledge {} / {}.".format(input_line.index(single_predicate) + 1, len(input_line)))
+            logger.root_logger.info(
+                "Processing user domain knowledge {} / {}.".format(input_line.index(single_predicate) + 1, len(input_line)))
 
             # Parse single predicate
-            parsed_predicate = cls.parse_single_predicate(single_predicate, "SinglePredicate_{}".format(input_line.index(single_predicate)),
-                                                          debug=debug)
+            parsed_predicate = cls.parse_single_predicate(single_predicate, logger, debug=debug)
 
             logger.root_logger.info(
                 "Parsed predicate {} / {} successfully. Result: {}".format(input_line.index(single_predicate) + 1,
@@ -249,7 +248,7 @@ class PredicateParser:
             2. Returning List of all WeinhuberApproachSplit Objects
         """
         # Logger Init
-        logger = WeinhuberApproachLogger("PredicateParser_logger", debug)
+        logger = WeinhuberApproachLogger("GetPredicate_Logger", debug)
         logger.root_logger.info("Starting Predciate Parser.")
 
         # Opening and checking the input file
@@ -274,8 +273,7 @@ class PredicateParser:
             logger.root_logger.info("Processing user predicate {} / {}.".format(input_line.index(single_predicate) + 1, len(input_line)))
 
             # Parse single predicate
-            parsed_predicate = cls.parse_single_predicate(single_predicate, "SinglePredicate_{}".format(input_line.index(single_predicate)),
-                                                          debug=debug)
+            parsed_predicate = cls.parse_single_predicate(single_predicate, logger, debug=debug)
 
             logger.root_logger.info(
                 "Parsed predicate {} / {} successfully. Result: {}".format(input_line.index(single_predicate) + 1,
@@ -286,7 +284,7 @@ class PredicateParser:
         return output
 
     @classmethod
-    def parse_user_interval(cls, user_input, debug=False):
+    def parse_user_interval(cls, user_input, logger):
         """
         Predicate Parser for the interval.
         :variable user_input: Interval as a string
@@ -328,10 +326,8 @@ class PredicateParser:
         NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
 
         """
-        # Logger init
-        logger = WeinhuberApproachLogger("PredicateParser_UserInterval_logger", debug)
 
-        logger.root_logger.info("User interval started processing: {}".format(user_input))
+        logger.root_logger.info("User interval to process: {}".format(user_input))
 
         # simplest special case:
         if user_input == "$i":
@@ -470,5 +466,5 @@ class PredicateParser:
         if len(interval_list) > 1:
             for item in interval_list:
                 final_interval = sp.Union(final_interval, item)
-        logger.root_logger.info("Finished processing user interval: {}. Result: {}.".format(user_input, str(final_interval)))
+        logger.root_logger.info("Finished processing user interval. Result: {}.".format(str(final_interval)))
         return final_interval
