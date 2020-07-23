@@ -1,0 +1,14 @@
+File descriptions:
+    app.py -> Countains the flask application to be run
+    frontFns.py -> A subset of cli.py containing all the necessary functions for app.py
+
+CSS:
+    node-stylings.css -> Styling for SVG tree and nodes, divs, cards, slider
+    new-select.css -> Styling for select (single and multiple) tags
+    sidenav-my.css -> Styling for side navigation menu
+
+JS:
+    heavylifting.js -> Does all the main js work
+
+NOTE:
+    Ctrl(Cmd)+Click for selecting multiple entries in Numeric-predicates and Categorical-predicates selection

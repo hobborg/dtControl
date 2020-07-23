@@ -1,29 +1,61 @@
+// Total number of simulation till now
 var totalSims;
+
+// Current simulation index
 var currentSim;
+
+// List of all simulations
 var x_current = [];
+
+// List [lower_bound,upper_bound] elements for state varaibles
 var x_bounds = [];
+
+// List of all decisions
 var u_current = [];
+
+// Last path in tree for colouring (list of integers)
 var lastPath = [];
+
+// Stores interval as set by the time slider
 var plpause;
 var timeOfSlider = 50;
+
+// Number of state varaibles and decision variables
 var numVars;
 var numResults;
+
+// Stores all created chart variables
 var chart = [];
 var chartConfig = [];
+
+// If readings go out of bounds this is toggled and all concerned buttons are disabled
 var nextDisabled = false;
+
+// Tree animation button toggles this variable
 var treeAnimation = true;
+
+// Tree eidt button toggles this varaible
 var treeEdit = false;
+
+// Used as addressing for selected node in tree edit button
 var selectedNode = [];
 
 const simTableDiv = document.getElementById('tableHere');
 
 const app = document.getElementById('config');
 const app_3 = document.getElementById('config_3');
+
+// Stores default config in config.yml
 var defConf;
+
+// Union of all configs present in config.yml
 var allConfig = {};
+
 const app1 = document.getElementById('controller');
 
-function postload() {
+function fillYML() {
+    // Uses DOM manipulation to populate required forms after reading config.yml
+
     defConf = (data2.presets.default);
     var iter = 0;
     for (y in defConf) {
@@ -129,6 +161,7 @@ function postload() {
 var xhr = new XMLHttpRequest();
 xhr.open('GET', './yml', true);
 xhr.onload = function() {
+    // Reads the config.yml file
     data2 = JSON.parse(this.response);
     if (xhr.status >= 200 && xhr.status < 400) {
         for (x in data2.presets) {
@@ -153,7 +186,7 @@ xhr.onload = function() {
         option_3.setAttribute('value', "custom");
         app_3.appendChild(option_3);
 
-        postload();
+        fillYML();
 
     } else {
         console.log("YML not working");
@@ -172,6 +205,7 @@ xhr.send();
 var modl = new XMLHttpRequest();
 modl.open('GET', './examples', true);
 modl.onload = function() {
+    // Reades example folder and populates controller section in first form
     data1 = JSON.parse(this.response);
     for (var i = 0; i < data1.length; i++) {
         const option = document.createElement('option');
@@ -187,7 +221,7 @@ modl.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
 modl.setRequestHeader('pragma', 'no-cache');
 modl.send();
 
-
+// GLobal variables that store tree data for rendering
 var treeData = "",
     tree = "",
     diagonal = "",
@@ -201,14 +235,9 @@ var margin = { top: 20, right: 120, bottom: 20, left: 120 },
     width = 1560 - margin.right - margin.left,
     height = 500 - margin.top - margin.bottom;
 var width, height;
-// var margin = { top: 20, right: 120, bottom: 20, left: 120 },
-// width = 4560 - margin.right - margin.left,
-// height = 1500 - margin.top - margin.bottom;
 
-
-
-function myFunc() {
-    // ************** Generate the tree diagram	 *****************
+function constructTree() {
+    // Generates the tree diagram
 
     tree = d3.layout.tree()
         .size([height, width]);
@@ -236,6 +265,7 @@ function myFunc() {
 
 }
 
+// Called by clicking a node when edit tree toggle is on
 function openThirdForm(address) {
     $('#formThirdModal').modal('toggle');
     console.log(address);
@@ -254,12 +284,12 @@ function click(d) {
             d.children = d._children;
             d._children = null;
         }
-        // Inefficient but does not work without it
         update(d);
         update(root);
     }
 }
 
+// Updates the svg generated accourding to changes in tree data
 function update(source) {
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
@@ -346,8 +376,7 @@ function update(source) {
     });
 }
 
-var refreshTime = 10000;
-
+// Not used anymore, useful when trying to preserve toggled state of nodes when refreshing the tree (might be useful in tree edit later)
 function foldIt(od, nw) {
     if (!od.children || !nw.children)
         return;
@@ -373,6 +402,7 @@ function foldIt(od, nw) {
     }
 }
 
+// Makes nodes red along the path given as 'str'
 function colourPath(str) {
     if (treeAnimation) {
         root.coleur = "red";
@@ -392,6 +422,7 @@ function colourPath(str) {
     }
 }
 
+// Returns all nodes in tree to white colour
 function recolourPath() {
     if (treeAnimation) {
         root.coleur = "white";
@@ -411,6 +442,7 @@ function recolourPath() {
     }
 }
 
+// Returns height of tree
 function getDepth(depthNode) {
     if (depthNode.children) {
         var ans = 0;
@@ -424,6 +456,7 @@ function getDepth(depthNode) {
 
 }
 
+// Returns number of tree leaves
 function getLeaves(depthNode) {
     if (depthNode.children) {
         if (depthNode.children.length == 0) {
@@ -439,6 +472,7 @@ function getLeaves(depthNode) {
     }
 }
 
+// Expands all tree nodes
 function expandAll(nd) {
     if (nd == null) {
         expandAll(root);
@@ -460,6 +494,7 @@ function expandAll(nd) {
     return;
 }
 
+// Collapses all tree nodes
 function collapseAll(nd) {
     if (nd == null) {
         var len = root.children.length;
@@ -483,8 +518,9 @@ function collapseAll(nd) {
     return;
 }
 
+// If cartpole model used, draws it
 function drawCanvas() {
-    if ($('#controller').val() == "controller.scs") {
+    if ($('#controller').val() == "cartpole.scs") {
         var lineLength = 100;
         var canvas = document.getElementById("cartCanvas");
         var c = canvas.getContext("2d");
@@ -492,7 +528,6 @@ function drawCanvas() {
         c.clearRect(0, 0, 450, 250);
 
         c.fillStyle = "#000000";
-        // to fill 450x250
         c.fillRect(150, 160, 150, 60);
 
         c.beginPath();
@@ -507,6 +542,7 @@ function drawCanvas() {
 
 }
 
+// Checks if state variables go out of bounds at any point
 function checkBounds() {
     for (var i = 0; i < numVars; i++) {
         if (x_current[i][currentSim] < x_bounds[i][0] || x_current[i][currentSim] > x_bounds[i][1]) {
@@ -516,6 +552,7 @@ function checkBounds() {
     return true;
 }
 
+// Renders all the charts using Chart.js
 function renderChart(id, data, labels, ub, lb) {
     var chartIndex = parseInt(id);
 
@@ -612,6 +649,7 @@ function renderChart(id, data, labels, ub, lb) {
     chart[chartIndex] = new Chart(ctx, chartConfig[chartIndex]);
 }
 
+// Called every time when 'Next' or 'Play' button is used
 async function oneStep() {
     console.log('oneStep is called');
     recolourPath();
@@ -713,6 +751,7 @@ $(document).ready(function() {
 
     var numChanges = 0;
 
+    // Submits sidenav form
     $('#formFirst').on('submit', function(event) {
         $.ajax({
                 data: JSON.stringify({
@@ -755,7 +794,7 @@ $(document).ready(function() {
                 }
 
                 if (numChanges == 0)
-                    myFunc();
+                    constructTree();
                 numChanges++;
 
                 root = treeData[0];
@@ -851,6 +890,7 @@ $(document).ready(function() {
 
     });
 
+    // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function(event) {
         console.log('form is submitted');
         var x_toPass = [];
@@ -878,7 +918,7 @@ $(document).ready(function() {
                 }
 
                 // resizing to get largest space for tree
-                if ($('#controller').val() == "controller.scs") {
+                if ($('#controller').val() == "cartpole.scs") {
                     document.getElementById("expandThisDiv").className = "col-lg-6";
                     document.getElementById("hideThisDiv").style.visibility = "visible";
                 } else {
@@ -937,6 +977,7 @@ $(document).ready(function() {
                 drawCanvas();
                 $('#formSecondModal').modal('hide');
 
+                // Alert when dynamics.txt file not present
                 if (!data.dynamics) {
                     alert('The dynamics.txt file seems to be in an incorrect format or is missing from the examples folder. Please try again with a valid dynamics file');
                     nextDisabled = true;
@@ -947,6 +988,7 @@ $(document).ready(function() {
         event.preventDefault();
     });
 
+    // Form that collects edit tree data
     $('#formThird').on('submit', function(event) {
         $.ajax({
                 data: JSON.stringify({
@@ -965,9 +1007,13 @@ $(document).ready(function() {
             })
             .done(function(data) {
                 // Add tree appending functions here
+                // Consult formFirst submit function
+                // ########################################################### Edit her ###########################################################
             })
         event.preventDefault();
     })
+
+    // Form that collects edit tree data (User text predicates)
     $('#formFourth').on('submit', function(event) {
         $.ajax({
                 data: JSON.stringify({
@@ -979,10 +1025,12 @@ $(document).ready(function() {
             })
             .done(function(data) {
                 // Add tree appending functions here
+                // ########################################################### Edit her ###########################################################
             })
         event.preventDefault();
     })
 
+    // Handles the instep function
     $('#instep').on('submit', function(event) {
 
         if (!nextDisabled) {
@@ -1072,6 +1120,7 @@ $(document).ready(function() {
     });
 
 
+    // Handles the player inputs
     $(document).on("click", "input[name=player]", function() {
         var option = parseInt($("input[name=player]:checked").val());
         //play pause next back
@@ -1093,6 +1142,7 @@ $(document).ready(function() {
         event.preventDefault();
     });
 
+    // Handles selection of different rows in simulation table
     $(document).on("change", "input[name=indexers]", function() {
         var ind = parseInt($("input[name='indexers']:checked").val());
         recolourPath();
@@ -1102,6 +1152,7 @@ $(document).ready(function() {
 
     });
 
+    // Handles changing of form selections when different configs are changed
     $("#config").change(function() {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
@@ -1147,6 +1198,7 @@ $(document).ready(function() {
 
     });
 
+    // Handles changing of form selections when different configs are changed (For edit tree popup)
     $("#config_3").change(function() {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
@@ -1192,6 +1244,7 @@ $(document).ready(function() {
 
     });
 
+    // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls
     $(".propList").change(function() {
         document.getElementById("config").value = "custom";
     });
@@ -1207,7 +1260,7 @@ $(document).ready(function() {
     // Simple .change() does not work here because it is dynamically added
 });
 
-
+// Handles play speed slider
 var slider = document.getElementById("timeRange");
 slider.oninput = function() {
     if (parseInt($("input[name=player]:checked").val()) == 0) {
@@ -1219,6 +1272,7 @@ slider.oninput = function() {
     }
 }
 
+// Randomize button in Modal for selecting inital values of state variables
 function randomizeInputs() {
     for (var i = 0; i < numVars; i++) {
         var range = x_bounds[i][1] - x_bounds[i][0];
@@ -1226,13 +1280,14 @@ function randomizeInputs() {
     }
 }
 
+// Opens second form (for initial state variable selection)
 function openSecondForm() {
     $('#formSecondModal').modal('toggle');
 }
 
 // Have to select dynamically created elements like this
+// Handles colouring of table rows when clicked
 $(document).on("click", "#simTable tr", function() {
-    console.log('table was clicked');
     $(this).addClass('selected').siblings().removeClass('selected');
     var value = $(this).find('td:first').html();
     console.log(value);
@@ -1243,6 +1298,8 @@ $(document).on("click", "#simTable tr", function() {
     colourPath(lastPath[ind]);
     drawCanvas();
 });
+
+// 'Animate tree' button and 'Edit tree' button
 
 $(document).on("change", "#animateTree", function() {
     treeAnimation = !treeAnimation;
