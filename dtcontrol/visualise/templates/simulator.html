@@ -28,6 +28,7 @@
 
 <body id="bootstrap-override">
 
+    <!-- Modal that comes on clicking 'Simulate' -->
     <div class="modal fade" id="formSecondModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -37,6 +38,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
+                <!-- formSecond: Selects initial values for state variables -->
                 <form id="formSecond">
                     <div class="modal-body" id="formSecondBody">
 
@@ -52,6 +54,7 @@
         </div>
     </div>
 
+    <!-- Modal that pops up on using the edit tree functionality -->
     <div class="modal fade" id="formThirdModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -164,6 +167,7 @@
         </div>
     </div>
 
+    <!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <form id="formFirst">
@@ -267,6 +271,7 @@
     <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
     <div id="main">
 
+        <!-- Navbar at top -->
         <nav class="navbar navbar-expand-xl navbar-light" style="margin: 1.25rem;">
             <button class="btn" onclick="openNav()"><i class="fa fa-cog"></i></button>
             <a class="navbar-brand" href="https://gitlab.lrz.de/i7/dtcontrol">dtControl</a>
@@ -275,6 +280,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <!-- The four player buttons -->
                 <div class="btn-group btn-group-toggle" data-toggle="buttons" id="playerDiv" style="z-index:5;visibility: hidden;">
                     <label class="btn btn-dark">
                       <input type="radio" name="player" id="play" autocomplete="off" value='0'> Play
@@ -289,17 +295,24 @@
                         <input type="radio" name="player" id="back" autocomplete="off" value='3'> Previous
                     </label>
                 </div>
+
+                <!-- Range slider for speed of simulation -->
                 <input type="range" min="50" max="2000" value="50" class="slider" id="timeRange" style="visibility: hidden;">
+
+                <!-- Instep form -->
                 <form id="instep" class="form-inline my-2 my-lg-0" style="visibility: hidden;">
                     <input class="form-control mr-sm-2" placeholder="Number of steps" aria-label="Number of steps" type="number" id="steps" name="steps" min="1">
                     <button class="btn btn-dark my-2 my-sm-0" type="submit">Step</button>
                 </form>
 
+                <!-- Tree animation toggle -->
                 <div id="animationDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
                     <label class="btn btn-outline-dark active" style="margin-left: 7px;">
                       <input id = "animateTree" type="checkbox" checked autocomplete="off"> Animation
                     </label>
                 </div>
+
+                <!-- Edit tree toggle -->
                 <div id="editTreeDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
                     <label class="btn btn-outline-dark" style="margin: 7px;">
                       <input id = "editTree" type="checkbox" autocomplete="off"> Edit Tree
@@ -308,13 +321,16 @@
             </div>
         </nav>
 
+        <!-- Row in which tree and model visualisation cards get added -->
         <div id="mainRow1" class="row" style="visibility: hidden;">
+            <!-- Column for tree -->
             <div class="col-lg-12" id="expandThisDiv">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <button type="button" class="btn btn-dark" onclick="expandAll(null)">Expand all</button>
                         <button type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
                         <div class="row no-gutters align-items-center">
+                            <!-- Tree in this div -->
                             <div id="treeHere">
 
                             </div>
@@ -324,6 +340,7 @@
                 </div>
             </div>
 
+            <!-- Column for model visualisation -->
             <div class="col-lg-6" id="hideThisDiv" style="visibility:hidden">
                 <div class="card shadow mb-4">
                     <div class="card-body">
@@ -335,11 +352,13 @@
             </div>
         </div>
 
+        <!-- Row for simulation table -->
         <div id="mainRow2" class="row" style="visibility: hidden;">
             <div class="col-lg-12">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div class="table-responsive">
+                            <!-- Table in this div -->
                             <div id="tableHere">
 
                             </div>
@@ -351,6 +370,7 @@
             </div>
         </div>
 
+        <!-- Row for charts with two columns -->
         <div id="mainRow3" class="row" style="visibility: hidden;">
             <div class="col-lg-6" id="chartsHere0">
 

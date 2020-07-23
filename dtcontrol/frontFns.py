@@ -53,6 +53,7 @@ from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 import json, ast
 import numpy as np
 
+# Subset of cli.py with core_parser replaced with main_parse
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
                    name=None):
@@ -232,13 +233,13 @@ def is_valid_file_or_folder(arg):
 
 
 def intoJSON(rt, parent, address):
-    # returns a string
+    # returns a string (JSON format that we need)
+    # address is an array of integers
     rt_name = "sth"
     if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:
         rt_name = rt.print_c_label()
-    # print("Working on ",rt_name," with ",len(rt.children)," children\n")
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
         strdummy["children"].append(intoJSON(rt.children[i], rt_name, address+[i]))
@@ -247,10 +248,10 @@ def intoJSON(rt, parent, address):
 
 def main_parse(args):
     # args will be passed as a dict to this function
+    # works exactly like core_parser in cli.py
     kwargs = dict()
 
     dataset = path.realpath(path.dirname(__file__)) + "/../examples/" + args["controller"]
-    # print(dataset)
     is_valid_file_or_folder(dataset)
 
     kwargs["timeout"] = 20 * 60 * 60
@@ -305,20 +306,9 @@ def main_parse(args):
             "No valid preset selected. Please try again with the correct preset name. Use 'dtcontrol preset --list' to see valid presets.")
         sys.exit("Exiting...")
 
-    # suite.benchmark(classifiers)
     suite.datasets[0].load_if_necessary()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
     classifiers[0].fit(suite.datasets[0])
-    # print("Tried fit now printing root")
-
-    # json_str = []
+    # intoJSON takes the classifier root and returns a JSON in required format
     retDict = intoJSON(classifiers[0].root, "null", [])
-    # classifiers[0].root.predict_one_step(np.array([[3.5, 0]]))
-    # print((classifiers[0].get_stats()))
-
-    # print(suite.datasets[0].x_metadata)
-    # print(suite.datasets[0].y_metadata)
-
-    # print("Retdict type ",type(retDict))
-    # json_str=json.dumps(retDict)
     return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0].root
