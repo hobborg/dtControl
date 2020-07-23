@@ -28,7 +28,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.root = None
         self.current_node = None
 
-        # Checks whether predicate without coefs was already used in current dt path. Can lead in small(!) dt to huge performance boost.
+        # Checks whether predicate without coefs was already used in current dt path. Can lead in small(!) dt to performance boost.
         self.optimized_tree_check_version = True
 
         """
@@ -151,6 +151,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
         predicate_list = []
         if self.optimized_tree_check_version:
+            """
+            Checking whether predicate without coefs was already used in current dt path. Can lead in small(!) dt to huge performance boost.
+            """
             root_path = self.get_path_root_current()
             ancestor_splits = [node.split for node in root_path] if root_path is not None else []
 
@@ -170,9 +173,9 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         All adjusted predicate/split objects will be stored inside the dict 'splits' 
         Key: split object   Value:Impurity of the split
         """
-
-        # Similar approach as in linear_classifier.py
         splits = {}
+        term_collection = []
+        # Similar approach as in linear_classifier.py
         for single_split in predicate_list:
             """
             Checking if every column reference only contains values of its Interval.
@@ -184,11 +187,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
             self.logger.root_logger.info("Processing predicate {} / {}".format(predicate_list.index(single_split) + 1, len(predicate_list)))
             if single_split.check_data_in_column_interval(x_numeric):
                 # Checking whether predicate has to be fitted to data or not.
-                if not single_split.coef_interval:
-                    split_copy = deepcopy(single_split)
-                    split_copy.priority = self.priority
-                    splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
-                else:
+                if single_split.contains_unfixed_coefs():
                     # Creating different copies of the predicate and fitting every copy to one single unique label.
                     for label in np.unique(y):
                         # Creating the label mask (see linear classifier)
@@ -212,29 +211,43 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
 
                         """
 
-                        fixed_coefs = {}
-                        # Checking if coef_interval is containing finite sets with fixed coefs
-                        for coef in single_split.coef_interval:
-                            if isinstance(single_split.coef_interval[coef], sp.FiniteSet):
-                                fixed_coefs[coef] = list(single_split.coef_interval[coef].args)
-
-                        # Creating all combinations
-                        if fixed_coefs:
-                            # unzipping
-                            coef, val = zip(*fixed_coefs.items())
-                            # calculation all combinations and zipping back together
-                            combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
-                        else:
-                            combinations = [[]]
+                        combinations = single_split.get_fixed_coef_combinations()
 
                         # Creating and fitting predicate for every combination
                         for comb in combinations:
                             split_copy = deepcopy(single_split)
                             split_copy.fit(comb, x_numeric, new_y, method=self.curve_fitting_method)
                             split_copy.priority = self.priority
+
                             # Checking whether fitting was successful
                             if split_copy.coef_assignment is not None:
-                                splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                                # Checking for duplicates
+                                evaluated_term = split_copy.term.subs(split_copy.coef_assignment)
+                                for t in term_collection:
+                                    if evaluated_term.equals(t):
+                                        break
+                                else:
+                                    term_collection.append(evaluated_term)
+                                    splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+                else:
+                    # Predicate only contains fixed or no coefs
+                    combinations = single_split.get_fixed_coef_combinations()
+                    # Creating and fitting predicate for every combination
+                    for comb in combinations:
+                        split_copy = deepcopy(single_split)
+                        split_copy.coef_assignment = comb
+                        split_copy.priority = self.priority
+
+                        # Checking for duplicates
+                        evaluated_term = split_copy.term.subs(split_copy.coef_assignment)
+                        for t in term_collection:
+                            if evaluated_term.equals(t):
+                                break
+                        else:
+                            term_collection.append(evaluated_term)
+                            splits[split_copy] = impurity_measure.calculate_impurity(dataset, split_copy)
+            self.logger.root_logger.info(
+                "Finished processing predicate {} / {}".format(predicate_list.index(single_split) + 1, len(predicate_list)))
 
         # Returning dict containing all possible splits with their impurity
         return splits
