@@ -1,11 +1,9 @@
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
-import sympy as sp
 import numpy as np
 from copy import deepcopy
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
-from itertools import product
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
 
