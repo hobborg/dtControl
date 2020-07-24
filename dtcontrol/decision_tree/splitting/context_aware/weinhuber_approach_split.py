@@ -1,5 +1,4 @@
 import warnings
-
 from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
@@ -9,6 +8,7 @@ import re
 from apted import APTED
 from apted.helpers import Tree
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
+from itertools import product
 
 
 class WeinhuberApproachSplit(Split):
@@ -49,6 +49,9 @@ class WeinhuberApproachSplit(Split):
 
     def __repr__(self):
         return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
+
+    def helper_str(self):
+        return str(self.term) + " " + str(self.relation) + " 0"
 
     def helper_equal(self, obj1):
         return isinstance(obj1, WeinhuberApproachSplit) and obj1.column_interval == self.column_interval \
@@ -99,6 +102,62 @@ class WeinhuberApproachSplit(Split):
         # mapping = apted.compute_edit_mapping()
         return ted
 
+    def get_fixed_coef_combinations(self):
+
+        """
+        Returns every combination of already fixed coefs:
+        Example:
+
+        Split: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3+c_4 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
+
+        -->         combinations = [[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)],
+                                    [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)],
+                                    [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]
+
+        --> The other coefs (c_0, c_3, c_4) still have to be determined by fit (curve_fit)
+
+        """
+        fixed_coefs = {}
+        # Checking if coef_interval is containing finite sets with fixed coefs
+        for coef in self.coef_interval:
+            if isinstance(self.coef_interval[coef], sp.FiniteSet):
+                fixed_coefs[coef] = list(self.coef_interval[coef].args)
+
+        # Creating all combinations
+        if fixed_coefs:
+            # unzipping
+            coef, val = zip(*fixed_coefs.items())
+            # calculation all combinations and zipping back together
+            combinations = [list(zip(coef, nbr)) for nbr in product(*val)]
+        else:
+            combinations = [[]]
+
+        return combinations
+
+    def contains_unfixed_coefs(self):
+        """
+
+        Returns whether self contains unfixed coefs.
+        Example:
+
+        Split: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3+c_4 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
+            --> c_0, c_3, c_4 are unfixed --> True
+
+        Split: c_1 + x_0 + c_2 <= 0;c_1 in {1,2,3}; c_2 in {-1,-3}
+            --> no unfixed coefs --> False
+
+        Intention of this function is to decide whether the fit function has to be applied or not.
+
+        """
+        # No coefs at all
+        if not self.coef_interval:
+            return False
+
+        for coef in self.coef_interval:
+            if not isinstance(self.coef_interval[coef], sp.FiniteSet):
+                return True
+        return False
+
     def fit(self, fixed_coefs, x, y, method="lm"):
         """
         determines the best values for every coefficient(key) inside coef_interval(dict), within the range of their interval(value)
@@ -108,8 +167,10 @@ class WeinhuberApproachSplit(Split):
         :param method: {‘lm’, ‘trf’, ‘dogbox’, 'optimized'} -> method used inside curve_fit()
         """
         self.logger.root_logger.info("Started fitting coef predicate: {}".format(str(self)))
-        # Edge Case no coefs used in the term
-        if not self.coef_interval:
+
+        # Edge Case no coefs or no unfixed coefs used in the term
+        if not self.contains_unfixed_coefs():
+            self.logger.root_logger.info("Finished fitting. Predicate does not contain unfixed coefs.")
             return
 
         # Checking type & shape of arguments
@@ -157,7 +218,7 @@ class WeinhuberApproachSplit(Split):
         self.y = None
         self.coef_fit = None
 
-        # Substitution of already fixed coefs in Term
+        # Substitution of already fixed coefs in Term (important to improve performance)
         if fixed_coefs:
             self.term = self.term.subs(fixed_coefs)
 
