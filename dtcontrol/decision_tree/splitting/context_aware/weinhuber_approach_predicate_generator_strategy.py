@@ -104,9 +104,17 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                               (np.min(x_numeric[:, i]) + np.max(x_numeric[:, i])) / 2,
                               median[i],
                               x_meta.get('step_size')[i]] for i in range(x_numeric.shape[1])]
+
+            header_feature = ["COLUMN", "NAME", "MIN", "MAX", "AVG", "MEDIAN", "STEP SIZE"]
+            # Add Units if available
+            if self.dataset_units is not None:
+                for i in range(len(table_feature)):
+                    table_feature[i].append(self.dataset_units[i])
+                header_feature.append("UNIT")
+
             print("\n\t\t\t\t\t\t FEATURE INFORMATION\n" + tabulate(
                 table_feature,
-                ["COLUMN", "NAME", "MIN", "MAX", "AVG", "MEDIAN", "STEP SIZE"],
+                header_feature,
                 tablefmt="psql"))
         else:
             # Meta data not available
@@ -114,9 +122,17 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                               np.max(x_numeric[:, i]),
                               (np.min(x_numeric[:, i]) + np.max(x_numeric[:, i])) / 2,
                               median[i]] for i in range(x_numeric.shape[1])]
+
+            header_feature = ["COLUMN", "MIN", "MAX", "AVG", "MEDIAN"]
+            # Add Units if available
+            if self.dataset_units is not None:
+                for i in range(len(table_feature)):
+                    table_feature[i].append(self.dataset_units[i])
+                header_feature.append("UNIT")
+
             print("\n\t\t\t FEATURE SPECIFICATION\n" + tabulate(
                 table_feature,
-                ["COLUMN", "MIN", "MAX", "AVG", "MEDIAN"],
+                header_feature,
                 tablefmt="psql"))
 
         # LABEL INFORMATION

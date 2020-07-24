@@ -202,11 +202,7 @@ class PredicateParser:
 
         # Edge Case user input == ""
         if not input_line:
-            logger.root_logger.critical("Aborting: input file with user domain knowledge is empty. Please check file.")
-            raise WeinhuberPredicateParserException()
-        else:
-            logger.root_logger.info(
-                "Reading input file containing domain knowledge given by user. Found {} predicate(s).".format(len(input_line)))
+            return None, []
 
         # output list containing all parsed predicates (+ Unit list if existing)
         output = []
@@ -217,6 +213,10 @@ class PredicateParser:
             units = input_line[0].split(" ")[1:]
             converted_units = [str.lower(u) for u in units]
             input_line = input_line[1:]
+            logger.root_logger.info("Units found: {}".format(converted_units))
+
+        logger.root_logger.info(
+            "Reading input file containing domain knowledge given by user. Found {} predicate(s).".format(len(input_line)))
 
         for single_predicate in input_line:
             logger.root_logger.info(
