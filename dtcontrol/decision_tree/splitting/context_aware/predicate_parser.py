@@ -171,8 +171,8 @@ class PredicateParser:
         Function to parse domain knowledge obtained from user (stored in input_file_path)
         :param input_file_path: path with file containing user domain knowledge
         :param debug: Bool for debug mode (see Logger)
-        :returns: List of WeinhuberApproachSplit Objects (if input file contains units: the first member of the list will be a list
-                    containing the specfifc units as string.
+        :returns: Tuple. (Units, List of WeinhuberApproachSplit Objects)
+                        --> if input file does not contains units: (None, List of WeinhuberApproachSplit Objects)
 
         Procedure:
             0. Checking whether input file path is correct/valid
@@ -210,12 +210,12 @@ class PredicateParser:
 
         # output list containing all parsed predicates (+ Unit list if existing)
         output = []
+        converted_units = None
 
         # checking whether first line contains units
         if input_line[0].startswith("#UNITS"):
             units = input_line[0].split(" ")[1:]
             converted_units = [str.lower(u) for u in units]
-            output.append(converted_units)
             input_line = input_line[1:]
 
         for single_predicate in input_line:
@@ -231,7 +231,7 @@ class PredicateParser:
             output.append(parsed_predicate)
 
         logger.root_logger.info("Finished processing of user predicate. Shutting down Predicate Parser")
-        return output
+        return converted_units, output
 
     @classmethod
     def get_predicate(cls, debug=False, input_file_path=r"dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt"):
