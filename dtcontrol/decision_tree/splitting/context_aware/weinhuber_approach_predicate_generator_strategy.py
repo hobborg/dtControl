@@ -199,7 +199,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 print("\n\n" + tabulate([["/help", "display help window"],
                                          ["/use <Index>", "select predicate at index to be returned"],
                                          ["/add <Expression>", "add an expression"],
-                                         ["/add_standard", "add an expression to standard and alt_predicates"],
+                                         ["/add_standard <Expression>", "add an expression to standard and alternative predicates"],
                                          ["/refresh", "will refresh the console output"],
                                          ["/exit", "to exit"]],
                                         tablefmt="psql"))
@@ -213,16 +213,44 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 user_input = input_line.split("/add ")[1]
                 parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
 
-                # add input to recently added predicates collection
-                self.recently_added_predicates.append(parsed_input)
+                # Duplicate check
+                for pred in self.recently_added_predicates:
+                    if pred.helper_equal(parsed_input):
+                        print("ADDING FAILED: duplicate found.")
+                        self.logger.root_logger.info("User tried to add a duplicate predicate to 'recently_added_predicates'.")
+                        break
+                else:
+                    # add input to recently added predicates collection
+                    self.recently_added_predicates.append(parsed_input)
 
-                # add all fitted instances to recently_added_predicates_imp
-                all_pred = self.weinhub_approach_strat([parsed_input], dataset, impurity_measure)
-                self.recently_added_predicates_imp.extend(list(all_pred.items()))
-                self.recently_added_predicates_imp.sort(key=lambda x: x[1])
+                    # add all fitted instances to recently_added_predicates_imp
+                    all_pred = self.weinhub_approach_strat([parsed_input], dataset, impurity_measure)
+                    self.recently_added_predicates_imp.extend(list(all_pred.items()))
+                    self.recently_added_predicates_imp.sort(key=lambda x: x[1])
 
-                self.console_output(dataset)
+                    self.console_output(dataset)
                 print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
+            elif input_line.startswith("/add_standard "):
+                user_input = input_line.split("/add_standard ")[1]
+                parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
+
+                # Duplicate check
+                for pred in self.standard_predicates:
+                    if pred.helper_equal(parsed_input):
+                        print("ADDING FAILED: duplicate found.")
+                        self.logger.root_logger.info("User tried to add a duplicate predicate to 'standard_predicates'.")
+                        break
+                else:
+
+                    # add input to standard predicates collection
+                    self.standard_predicates.append(parsed_input)
+
+                    # add all fitted instances to
+                    all_pred = self.weinhub_approach_strat([parsed_input], dataset, impurity_measure)
+                    self.standard_alt_predicates_imp.extend(list(all_pred.items()))
+                    self.standard_alt_predicates_imp.sort(key=lambda x: x[1])
+
+                    self.console_output(dataset)
             elif input_line == "/refresh":
                 # prints everything again
                 self.console_output(dataset)
