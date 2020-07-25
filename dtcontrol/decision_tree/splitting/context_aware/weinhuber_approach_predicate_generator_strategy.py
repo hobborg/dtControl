@@ -229,7 +229,6 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                     self.recently_added_predicates_imp.sort(key=lambda x: x[1])
 
                     self.console_output(dataset)
-                print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
             elif input_line.startswith("/add_standard "):
                 user_input = input_line.split("/add_standard ")[1]
                 parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
