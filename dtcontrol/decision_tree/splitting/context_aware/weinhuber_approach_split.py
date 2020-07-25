@@ -1,4 +1,6 @@
 import warnings
+from copy import deepcopy
+
 from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
@@ -180,7 +182,7 @@ class WeinhuberApproachSplit(Split):
             raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y. Check logger or comments for more information.")
 
         # Checking structure of fixed_coefs
-        self.coefs_to_determine = sorted(set(self.coef_interval), key=lambda x: int(str(x).split("_")[1]))
+        self.coefs_to_determine = sorted(self.coef_interval, key=lambda x: int(str(x).split("_")[1]))
         for (c_i, _) in fixed_coefs:
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
@@ -210,17 +212,18 @@ class WeinhuberApproachSplit(Split):
             else:
                 method = 'lm'
 
-        # initial guess is very important since otherwise, curve_fit doesn't know how many coefs to fit
-        inital_guess = [1. for coef in self.coefs_to_determine]
-
-        # Values that will be calculated later on
-        calculated_coefs = None
-        self.y = None
-        self.coef_fit = None
+        term_copy = deepcopy(self.term)
 
         # Substitution of already fixed coefs in Term (important to improve performance)
         if fixed_coefs:
             self.term = self.term.subs(fixed_coefs)
+
+        # initial guess is very important since otherwise, curve_fit doesn't know how many coefs to fit
+        inital_guess = [1. for coef in self.coefs_to_determine]
+
+        # Values that will be calculated later on
+        self.y = None
+        self.coef_fit = None
 
         # adapter function representing the term (for curve_fit usage)
         def adapter_function(x, *args):
@@ -278,9 +281,12 @@ class WeinhuberApproachSplit(Split):
 
         # Calculations done --> Assigning calculated coefs
         if self.y is not None and self.coef_fit is not None:
+            self.coef_fit.extend(fixed_coefs)
             self.coef_assignment = self.coef_fit
-
-        self.logger.root_logger.info("Fitting done. Result: {}".format(str(self.coef_assignment)))
+            self.term = term_copy
+            self.logger.root_logger.info("Fitting done. Result: {}".format(str(self.coef_assignment)))
+        else:
+            self.logger.root_logger.info("No fit found for {}".format(str(self.coef_assignment)))
 
     def check_valid_column_reference(self, x):
         """
