@@ -1,9 +1,12 @@
+from copy import deepcopy
+
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from sklearn.linear_model import LogisticRegression
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import WeinhuberApproachSplittingStrategy
@@ -150,7 +153,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 tablefmt="psql"))
         else:
             # No meta data available
-            print("\n No detailed label information available.")
+            print("\nNo detailed label information available.")
 
     def print_standard_alt_predicates(self):
         """
@@ -168,6 +171,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 table_domain,
                 ["INDEX", "IMPURITY", "EXPRESSION"],
                 tablefmt="psql") + "\n(°) Contains predicates obtained by user at startup, as well as one alternative Axis Aligned predicate and one or two Linear.")
+        else:
+            print("\nNo standard and alternative predicates.")
 
     def print_recently_added_predicates(self):
         """
@@ -186,6 +191,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 table_recently_added,
                 ["INDEX", "IMPURITY", "EXPRESSION"],
                 tablefmt="psql"))
+        else:
+            print("\nNo recently added predicates.")
 
     def user_input_handler(self, dataset, impurity_measure):
         """
@@ -196,19 +203,37 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         for input_line in sys.stdin:
             input_line = input_line.strip()
             if input_line == "/help":
-                print("\n\n" + tabulate([["/help", "display help window"],
-                                         ["/use <Index>", "select predicate at index to be returned"],
-                                         ["/add <Expression>", "add an expression"],
-                                         ["/add_standard <Expression>", "add an expression to standard and alternative predicates"],
-                                         ["/refresh", "will refresh the console output"],
-                                         ["/exit", "to exit"]],
-                                        tablefmt="psql"))
+                print("\n" + tabulate([["/help", "display help window"],
+                                       ["/use <Index>", "select predicate at index to be returned. ('use and keep table')"],
+                                       ["/use_empty <Index>",
+                                        "select predicate at index to be returned. Works only on recently added table. ('use and empty table')"],
+                                       ["/add <Expression>", "add an expression"],
+                                       ["/add_standard <Expression>", "add an expression to standard and alternative predicates"],
+                                       ["/del <Index>", "select predicate at index to be deleted"],
+                                       ["/del_all_recent", "clear recently_added_predicates list"],
+                                       ["/del_all_standard", "clear standard and alternative predicates list"],
+                                       ["/refresh", "refresh the console output"],
+                                       ["/exit", "to exit"]],
+                                      tablefmt="psql") + "\n")
             elif input_line == "/exit":
                 sys.exit(187)
             elif re.match("/use \d+", input_line):
                 # Use predicate on index x
-                # TODO: Edge Case when index out of range
+                # TODO: Edge Case index out of range
                 return int(input_line.split("/use ")[1])
+            elif re.match("/use_empty \d+", input_line):
+                # TODO: Edge Case index out of range
+                index = int(input_line.split("/use_empty ")[1])
+                if index < len(self.standard_alt_predicates_imp):
+                    print("Invalid index. /use_empty is only available on recently_added_predicates.")
+                else:
+                    pred = self.index_predicate_mapping(index)
+                    pred.coef_assignment = None
+                    for i in self.recently_added_predicates:
+                        if not i.helper_equal(pred):
+                            self.recently_added_predicates.remove(i)
+                    return index
+
             elif input_line.startswith("/add "):
                 user_input = input_line.split("/add ")[1]
                 parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
@@ -250,6 +275,36 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                     self.standard_alt_predicates_imp.sort(key=lambda x: x[1])
 
                     self.console_output(dataset)
+            elif input_line == "/del_all_recent":
+                self.recently_added_predicates = []
+                self.recently_added_predicates_imp = []
+                self.console_output(dataset)
+            elif input_line == "/del_all_standard":
+                self.standard_predicates = []
+                self.standard_alt_predicates_imp = []
+                self.console_output(dataset)
+            elif re.match("/del \d+", input_line):
+                # del predicate at index
+                # TODO: Edge Case index out of range
+                index = int(input_line.split("/del ")[1])
+                pred = self.index_predicate_mapping(index)
+
+                if not isinstance(pred, WeinhuberApproachSplit):
+                    print("Invalid predicate: You can only delete user added predicates.")
+                else:
+                    pred.coef_assignment = None
+                    # Checking in which list the predicate to delete was
+                    if index < len(self.standard_alt_predicates_imp):
+                        del self.standard_alt_predicates_imp[index]
+                        for i in self.standard_predicates:
+                            if i.helper_equal(pred):
+                                self.standard_predicates.remove(i)
+                    else:
+                        del self.recently_added_predicates_imp[index - len(self.standard_alt_predicates_imp)]
+                        for i in self.recently_added_predicates:
+                            if i.helper_equal(pred):
+                                self.recently_added_predicates.remove(i)
+                self.console_output(dataset)
             elif input_line == "/refresh":
                 # prints everything again
                 self.console_output(dataset)
@@ -292,7 +347,6 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.recently_added_predicates_imp.sort(key=lambda x: x[1])
 
     def find_split(self, dataset, impurity_measure):
-        # TODO: What should happen if there is no domain knowledge or no pre defined user predicates ?
 
         """
         Procedure:
@@ -310,13 +364,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.console_output(dataset)
 
         # handle_user_input
-        return_index = self.user_input_handler(dataset, impurity_measure)
-
-        # mapping of return index to split obj
-        if return_index < len(self.standard_alt_predicates_imp):
-            return_split = self.standard_alt_predicates_imp[return_index][0]
-        else:
-            return_split = self.recently_added_predicates_imp[return_index - len(self.standard_alt_predicates_imp)][0]
+        index = self.user_input_handler(dataset, impurity_measure)
+        return_split = self.index_predicate_mapping(index)
 
         self.logger.root_logger.info("Returned split: {}".format(str(return_split)))
         return return_split
@@ -326,13 +375,26 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         Function to quickly instantiate a NEW instance of WeinhuberApproachSplittingStrategy.
 
         Background Information:
-            A new instance will be created since some functionality like checking the predicates will only be done once at startup.
+            A new instance will be created since some functionality like checking the predicates will only be done once at the first_run.
         """
         weinhub = WeinhuberApproachSplittingStrategy(user_given_splits=user_given_splits, debug=self.debug)
         weinhub.priority = 1
         weinhub.optimized_tree_check_version = False
         weinhub.curve_fitting_method = "optimized"
         return weinhub.get_all_splits(dataset, impurity_measure)
+
+    def index_predicate_mapping(self, index):
+        """
+        Function to map an index to the corresponding predicate.
+        :param index: Integer. Index of predicate as displayed in the console output.
+        :returns: Split Object.
+        """
+        if index < len(self.standard_alt_predicates_imp):
+            return_split = self.standard_alt_predicates_imp[index][0]
+        else:
+            return_split = self.recently_added_predicates_imp[index - len(self.standard_alt_predicates_imp)][0]
+
+        return return_split
 
     def console_output(self, dataset):
         self.print_dataset_specs(dataset)
