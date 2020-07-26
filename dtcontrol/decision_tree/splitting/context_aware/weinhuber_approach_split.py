@@ -1,6 +1,6 @@
 import warnings
 from copy import deepcopy
-
+import uuid
 from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
@@ -48,6 +48,9 @@ class WeinhuberApproachSplit(Split):
 
         # logger
         self.logger = WeinhuberApproachLogger("WeinhuberApproachSplit_logger", debug)
+
+        # id
+        self.id = uuid.uuid4()
 
     def __repr__(self):
         return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
