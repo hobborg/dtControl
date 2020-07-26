@@ -121,7 +121,7 @@ class PredicateParser:
                                 raise WeinhuberPredicateParserException()
                     else:
                         logger.root_logger.critical(
-                            "Aborting: one symbol inside one predicate does not have a valid structure. Column refs only with x_i. Coefs only with c_i. Invalid symbol: {} inside predicate {}".format(
+                            "Aborting: one symbol inside one predicate does not have a valid structure. Column refs only with x_i. Coefs only with c_i. Invalid symbol: '{}' inside predicate {}".format(
                                 str(var), str(single_predicate)))
                         raise WeinhuberPredicateParserException()
 
@@ -146,22 +146,26 @@ class PredicateParser:
                 # e.g. c_0 >= 1; c_0 in {5,7}
                 elif not column_interval:
                     logger.root_logger.critical(
-                        "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: ".format(
+                        "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: {}".format(
                             str(single_predicate)))
                     raise WeinhuberPredicateParserException()
                 # Hidden edge case3: Term evaluates to zero.
                 # e.g. 3-1.5*2 <= 0
                 elif term == 0 or term.evalf() == 0:
                     logger.root_logger.critical(
-                        "Aborting: one predicate does evaluate to zero. Invalid predicate: ".format(str(single_predicate)))
+                        "Aborting: one predicate does evaluate to zero. Invalid predicate: {}".format(str(single_predicate)))
                     raise WeinhuberPredicateParserException()
                 # Hidden edge case4: Invalid states for important key variables reached.
                 elif not split_pred or not term or not column_interval:
-                    logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: ".format(
+                    logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: {}".format(
                         str(single_predicate)))
                     raise WeinhuberPredicateParserException()
 
                 return WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
+
+        logger.root_logger.critical(
+            "Aborting: one predicate contain any relation. Invalid predicate: {}".format(str(single_predicate)))
+        raise WeinhuberPredicateParserException()
 
     @classmethod
     def get_domain_knowledge(cls, debug=False,
