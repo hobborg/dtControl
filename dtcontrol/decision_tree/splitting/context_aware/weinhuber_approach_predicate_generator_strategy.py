@@ -1,9 +1,9 @@
-from copy import deepcopy
-
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
+from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException, \
+    WeinhuberStrategyException
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
@@ -64,11 +64,17 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.recently_added_predicates_imp = []
 
         # List containing alternative splitting strategies [axis, logreg, logreg_unit]
-        self.alternative_strategies = self.set_up_strats()
+        self.alternative_strategies = self.setup_alternative_strategies()
 
-    def set_up_strats(self):
+        # Reference to weinhuber approach splitting strategy, to get all possible splits
+        self.weinhub_strat = self.setup_weinhub_strat()
+
+    def setup_alternative_strategies(self):
         """
         Function to setup the alternative splitting Strategies.
+        --> Sets up Axis Aligned, Linear Classifier and if units are given Linear with respect of units.
+
+        (Units can be given at the first line inside dtcontrol/decision_tree/splitting/context_aware/input_data/input_domain_knowledge.txt)
         """
         # Axis Aligned
         axis = AxisAlignedSplittingStrategy()
@@ -84,11 +90,46 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
 
         return [axis, logreg, logreg_unit] if self.dataset_units is not None else [axis, logreg]
 
+    def setup_weinhub_strat(self):
+        """
+        Function to setup an weinhuber approach splitting strategy instance.
+        """
+        weinhub = WeinhuberApproachSplittingStrategy(user_given_splits=[], debug=self.debug)
+        weinhub.priority = 1
+        weinhub.optimized_tree_check_version = False
+        weinhub.curve_fitting_method = "optimized"
+        return weinhub
+
+    def get_all_weinhub_splits(self, starting_predicates, dataset, impurity_measure):
+        """
+        Function to get all possible fitted instances of one predicate.
+        :param starting_predicates: List of predicates to be processed.
+        :param dataset: the subset of data at the current 'situation'
+        :param impurity_measure: impurity measure to use.
+        :returns: Dict containing all fitted instances. (key: split value: impurity)
+
+        e.g:
+        starting_predicate: c_0*x_0+c_1*x_1+c_2*x_2+c_3*x_3 <= c_4
+
+        returns: {  -0.70769*x_0 - 0.011934*x_1 - 0.38391*x_2 + 0.32438*x_3 + 1.222 <= 0  <= 0: 1.6,
+                    -0.10073*x_0 + 0.00080492*x_1 + 0.5956*x_2 - 0.22309*x_3 - 0.96975 <= 0 <= 0: 1.3219280948873622,
+                    0.6178*x_0 - 0.0033169*x_1 - 0.0099337*x_2 + 0.35789*x_3 - 2.4716 <= 0: inf,
+                    0.19595*x_0 + 0.0047356*x_1 - 0.48916*x_2 - 0.57777*x_3 + 1.2301 <= 0 <= 0: 1.8529325012980808,
+                    -0.27807*x_0 + 0.0071843*x_1 + 0.16831*x_2 + 0.16076*x_3 - 1.4741 <= 0 <= 0: 1.8529325012980808,
+                    0.6178*x_0 - 0.0033169*x_1 - 0.0099337*x_2 + 0.35789*x_3 - 2.4716 <= 0: inf}
+
+        """
+        self.weinhub_strat.first_run = True
+        self.weinhub_strat.user_given_splits = starting_predicates
+        return self.weinhub_strat.get_all_splits(dataset, impurity_measure)
+
     def print_dataset_specs(self, dataset):
         """
+        CAUTION!: It is not recommended to use this function alone. Use it via console_output()
+
         Function to print interesting specifications about the current dataset.
         :param dataset: the subset of data at the current split
-        :returns: None.
+        :returns: None. --> Console output
         """
         x_numeric = dataset.get_numeric_x()
 
@@ -157,6 +198,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
 
     def print_standard_alt_predicates(self):
         """
+        CAUTION!: It is not recommended to use this function alone. Use it via console_output()
+
         Function to print standard_alt_predicates_imp.
         Uses only self.standard_alt_predicates_imp
         :returns: None -> Console Output
@@ -176,6 +219,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
 
     def print_recently_added_predicates(self):
         """
+        CAUTION!: It is not recommended to use this function alone. Use it via console_output()
+
         Function to print recently added predicates.
         Uses only self.recently_added_predicates_imp
         :returns: None -> Console Output
@@ -197,17 +242,21 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
     def user_input_handler(self, dataset, impurity_measure):
         """
         Function to handle the user input via console.
+        :param dataset: only used for console output (dataset infos) and to get all splits (via weinhuber approach strat)
+        :param impurity_measure: only used to get all splits (via weinhuber approach strat)
         :returns: Integer. (index of predicate which should be returned.)
+
         """
 
         for input_line in sys.stdin:
             input_line = input_line.strip()
             if input_line == "/help":
+                # display help window
                 print("\n" + tabulate([["/help", "display help window"],
                                        ["/use <Index>", "select predicate at index to be returned. ('use and keep table')"],
                                        ["/use_empty <Index>",
                                         "select predicate at index to be returned. Works only on recently added table. ('use and empty table')"],
-                                       ["/add <Expression>", "add an expression"],
+                                       ["/add <Expression>", "add an expression. (to 'recently added predicates' table)"],
                                        ["/add_standard <Expression>", "add an expression to standard and alternative predicates"],
                                        ["/del <Index>", "select predicate at index to be deleted"],
                                        ["/del_all_recent", "clear recently_added_predicates list"],
@@ -216,12 +265,14 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                                        ["/exit", "to exit"]],
                                       tablefmt="psql") + "\n")
             elif input_line == "/exit":
+                # exit the program
                 sys.exit(187)
             elif re.match("/use \d+", input_line):
-                # Use predicate on index x
+                # select predicate at index to be returned. ('use and keep table')
                 # TODO: Edge Case index out of range
                 return int(input_line.split("/use ")[1])
             elif re.match("/use_empty \d+", input_line):
+                # select predicate at index to be returned. Works only on recently added table. ('use and empty table')
                 # TODO: Edge Case index out of range
                 index = int(input_line.split("/use_empty ")[1])
                 if index < len(self.standard_alt_predicates_imp):
@@ -233,58 +284,74 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                         if not i.helper_equal(pred):
                             self.recently_added_predicates.remove(i)
                     return index
-
             elif input_line.startswith("/add "):
+                # add an expression (to recently added predicates table)
                 user_input = input_line.split("/add ")[1]
-                parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
-
-                # Duplicate check
-                for pred in self.recently_added_predicates:
-                    if pred.helper_equal(parsed_input):
-                        print("ADDING FAILED: duplicate found.")
-                        self.logger.root_logger.info("User tried to add a duplicate predicate to 'recently_added_predicates'.")
-                        break
+                try:
+                    parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
+                except WeinhuberPredicateParserException:
+                    print("Invalid predicate entered. Please check logger or comments for more information.")
                 else:
-                    # add input to recently added predicates collection
-                    self.recently_added_predicates.append(parsed_input)
+                    # Duplicate check
+                    for pred in self.recently_added_predicates:
+                        if pred.helper_equal(parsed_input):
+                            print("ADDING FAILED: duplicate found.")
+                            self.logger.root_logger.info("User tried to add a duplicate predicate to 'recently_added_predicates'.")
+                            break
+                    else:
+                        try:
+                            all_pred = self.get_all_weinhub_splits([parsed_input], dataset, impurity_measure)
+                        except WeinhuberStrategyException:
+                            print("Invalid predicate parsed. Please check logger or comments for more information.")
+                        else:
+                            # add input to recently added predicates collection
+                            self.recently_added_predicates.append(parsed_input)
 
-                    # add all fitted instances to recently_added_predicates_imp
-                    all_pred = self.weinhub_approach_strat([parsed_input], dataset, impurity_measure)
-                    self.recently_added_predicates_imp.extend(list(all_pred.items()))
-                    self.recently_added_predicates_imp.sort(key=lambda x: x[1])
-
-                    self.console_output(dataset)
+                            # add all fitted instances to recently_added_predicates_imp
+                            self.recently_added_predicates_imp.extend(list(all_pred.items()))
+                            self.recently_added_predicates_imp.sort(key=lambda x: x[1])
+                            # refresh console output
+                            self.console_output(dataset)
             elif input_line.startswith("/add_standard "):
+                # add an expression to standard and alternative predicates
                 user_input = input_line.split("/add_standard ")[1]
-                parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
-
-                # Duplicate check
-                for pred in self.standard_predicates:
-                    if pred.helper_equal(parsed_input):
-                        print("ADDING FAILED: duplicate found.")
-                        self.logger.root_logger.info("User tried to add a duplicate predicate to 'standard_predicates'.")
-                        break
+                try:
+                    parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
+                except WeinhuberPredicateParserException:
+                    print("Invalid predicate entered. Please check logger or comments for more information.")
                 else:
+                    # Duplicate check
+                    for pred in self.standard_predicates:
+                        if pred.helper_equal(parsed_input):
+                            print("ADDING FAILED: duplicate found.")
+                            self.logger.root_logger.info("User tried to add a duplicate predicate to 'standard_predicates'.")
+                            break
+                    else:
+                        try:
+                            all_pred = self.get_all_weinhub_splits([parsed_input], dataset, impurity_measure)
+                        except WeinhuberStrategyException:
+                            print("Invalid predicate parsed. Please check logger or comments for more information.")
+                        else:
+                            # add input to standard predicates collection
+                            self.standard_predicates.append(parsed_input)
 
-                    # add input to standard predicates collection
-                    self.standard_predicates.append(parsed_input)
-
-                    # add all fitted instances to
-                    all_pred = self.weinhub_approach_strat([parsed_input], dataset, impurity_measure)
-                    self.standard_alt_predicates_imp.extend(list(all_pred.items()))
-                    self.standard_alt_predicates_imp.sort(key=lambda x: x[1])
-
-                    self.console_output(dataset)
+                            # add all fitted instances to
+                            self.standard_alt_predicates_imp.extend(list(all_pred.items()))
+                            self.standard_alt_predicates_imp.sort(key=lambda x: x[1])
+                            # refresh console output
+                            self.console_output(dataset)
             elif input_line == "/del_all_recent":
+                # clear recently_added_predicates list
                 self.recently_added_predicates = []
                 self.recently_added_predicates_imp = []
                 self.console_output(dataset)
             elif input_line == "/del_all_standard":
+                # clear standard and alternative predicates list
                 self.standard_predicates = []
                 self.standard_alt_predicates_imp = []
                 self.console_output(dataset)
             elif re.match("/del \d+", input_line):
-                # del predicate at index
+                # select predicate at index to be deleted
                 # TODO: Edge Case index out of range
                 index = int(input_line.split("/del ")[1])
                 pred = self.index_predicate_mapping(index)
@@ -306,7 +373,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                                 self.recently_added_predicates.remove(i)
                 self.console_output(dataset)
             elif input_line == "/refresh":
-                # prints everything again
+                # refresh the console output --> prints everything again
                 self.console_output(dataset)
             else:
                 print("Unknown command. Type '/help' for help.")
@@ -314,6 +381,15 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
     def process_standard_alt_predicates(self, dataset, impurity_measure):
         """
         Function to setup standard_alt_predicates_imp for future usage.
+        :param dataset: the subset of data at the current 'situation'
+        :param impurity_measure: impurity measure to use
+        :returns: None. --> Sets up self.standard_alt_predicates_imp
+
+        self.standard_alt_predicates_imp
+        --> List containing Tuple: [(Predicate, impurity)]
+
+        Contains the 'fitted' instances of its corresponding predicate collection --> (self.standard_predicates)
+        AND alternative_strategies predicates
 
         Procedure:
             1. All predicates inside self.standard_predicates get fit and checked
@@ -323,7 +399,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 2.3 If Units available: Linear with Unit respect
             3. Sort self.standard_alt_predicates_imp
         """
-        all_predicates = self.weinhub_approach_strat(self.standard_predicates, dataset, impurity_measure)
+        all_predicates = self.get_all_weinhub_splits(self.standard_predicates, dataset, impurity_measure)
         self.standard_alt_predicates_imp = list(all_predicates.items())
 
         # Add the split objects from self.alternative_strategies
@@ -337,18 +413,30 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
     def process_recently_added_predicates(self, dataset, impurity_measure):
         """
         Function to setup recently_added_predicates_imp for future usage.
+        :param dataset: the subset of data at the current 'situation'
+        :param impurity_measure: impurity measure to use
+        :returns: None. --> Sets up self.recently_added_predicates_imp
+
+        self.recently_added_predicates_imp
+        --> List containing Tuple: [(Predicate, impurity)]
+
+        contains predicates added by user via user_input_handler() --> '/add <Predicate>'
 
         Procedure:
             1. All predicates inside self.recently_added_predicates get fit and checked
             2. Sort self.standard_alt_predicates_imp
         """
-        all_predicates = self.weinhub_approach_strat(self.recently_added_predicates, dataset, impurity_measure)
+        all_predicates = self.get_all_weinhub_splits(self.recently_added_predicates, dataset, impurity_measure)
         self.recently_added_predicates_imp = list(all_predicates.items())
         self.recently_added_predicates_imp.sort(key=lambda x: x[1])
 
     def find_split(self, dataset, impurity_measure):
 
         """
+        :param dataset: the subset of data at the current split
+        :param impurity_measure: impurity measure to use
+        :returns: split object
+
         Procedure:
             1. Process Standard and alternative predicates
             2. Process recently added predicates
@@ -370,24 +458,11 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.logger.root_logger.info("Returned split: {}".format(str(return_split)))
         return return_split
 
-    def weinhub_approach_strat(self, user_given_splits, dataset, impurity_measure):
-        """
-        Function to quickly instantiate a NEW instance of WeinhuberApproachSplittingStrategy.
-
-        Background Information:
-            A new instance will be created since some functionality like checking the predicates will only be done once at the first_run.
-        """
-        weinhub = WeinhuberApproachSplittingStrategy(user_given_splits=user_given_splits, debug=self.debug)
-        weinhub.priority = 1
-        weinhub.optimized_tree_check_version = False
-        weinhub.curve_fitting_method = "optimized"
-        return weinhub.get_all_splits(dataset, impurity_measure)
-
     def index_predicate_mapping(self, index):
         """
         Function to map an index to the corresponding predicate.
         :param index: Integer. Index of predicate as displayed in the console output.
-        :returns: Split Object.
+        :returns: Split Object at index
         """
         if index < len(self.standard_alt_predicates_imp):
             return_split = self.standard_alt_predicates_imp[index][0]
@@ -397,6 +472,12 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         return return_split
 
     def console_output(self, dataset):
+        """
+        Function to print out the visual representation to the console.
+        :param dataset: the subset of data at the current 'situation'
+        :returns: None --> Console output
+        """
+
         self.print_dataset_specs(dataset)
         self.print_standard_alt_predicates()
         self.print_recently_added_predicates()
