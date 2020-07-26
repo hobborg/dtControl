@@ -167,6 +167,40 @@
         </div>
     </div>
 
+    <!-- Modal that comes on clicking 'Custom Tree' -->
+    <div class="modal fade" id="initialCustomTreeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Input domain knowledge:</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!-- evaluatePredicateImpurityForm: Selects domain knowledge -->
+                <form id="evaluatePredicateImpurityForm">
+                    <div class="modal-body" id="formSecondBody">
+                        <div>
+                            <label for="init_domain_knowledge">Input predicate:</label>
+                            <div class="search_categories">
+                                <input type="text" id="init_domain_knowledge" name="init_domain_knowledge"><br><br>
+                            </div>
+                            <div>Computed Impurity: <span id="computedImpurity"></span></div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="addToDomainKnowledgeTableButton" style="visibility: hidden;" type="button" onclick="addToDomainKnowledgeTable()" class="btn btn-primary">Add</button>
+                        <button id="evaluatePredicateImpurityFormButton" type="submit" value="Send" class="btn btn-primary"> Evaluate </button>
+                        <button type="button" onclick="closeInitialCustomTreeModal()" class="btn btn-primary">Done</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -273,7 +307,7 @@
 
         <!-- Navbar at top -->
         <nav class="navbar navbar-expand-xl navbar-light" style="margin: 1.25rem;">
-            <button class="btn" onclick="openNav()"><i class="fa fa-cog"></i></button>
+            <button id="sideNavOpener" class="btn" onclick="openNav()"><i class="fa fa-cog"></i></button>
             <a class="navbar-brand" href="https://gitlab.lrz.de/i7/dtcontrol">dtControl</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
@@ -318,6 +352,13 @@
                       <input id = "editTree" type="checkbox" autocomplete="off"> Edit Tree
                     </label>
                 </div>
+
+                <!-- Custom tree -->
+                <button id="customTreeButton" type="button" onclick="customTree()" class="btn btn-dark">Custom Tree</button>
+
+                <!-- Split Node -->
+                <button id="splitNodeButton" type="button" onclick="splitNode()" class="btn btn-dark" style="visibility: hidden; margin-left: 7px;">Split Node</button>
+
             </div>
         </nav>
 
@@ -341,12 +382,116 @@
             </div>
 
             <!-- Column for model visualisation -->
-            <div class="col-lg-6" id="hideThisDiv" style="visibility:hidden">
+            <div class="col-lg-6" id="hideThisDiv" style="display:none">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div style="text-align:center;">
                             <canvas id="cartCanvas" width="450" height="250"></canvas>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row for domain knowledge and computed predicates tables -->
+        <div id="mainRow1.1" class="row" style="display: none;">
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h3>Domain Knowledge</h3>
+                        <div class="table-responsive">
+                            <!-- Doman knowledge table in this div -->
+                            <div id="domainKnowledgeTableHere">
+                                <table id="domainKnowledgeTable" class="table table-fixed">
+                                    <tr>
+                                        <th></th>
+                                        <th>Index</th>
+                                        <th>Impurity</th>
+                                        <th>Expression</th>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h3>Computed Predicates</h3>
+                        <div class="table-responsive">
+                            <!-- Computed predicates table in this div -->
+                            <div id="computedPredicatesTableHere">
+                                <table id="computedPredicatesTableFull" class="table table-fixed">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Index</th>
+                                            <th>Impurity</th>
+                                            <th>Expression</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="computedPredicatesTable">
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row for feature specification and label specification tables -->
+        <div id="mainRow1.2" class="row" style="display: none;">
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h3>Feature Specifications</h3>
+                        <div class="table-responsive">
+                            <!-- Feature specifications table in this div -->
+                            <div id="featureSpecificationTableHere">
+                                <table id="featureSpecificationTable" class="table table-fixed">
+                                    <tr>
+                                        <th>Column</th>
+                                        <th>Name</th>
+                                        <th>Min</th>
+                                        <th>Max</th>
+                                        <th>Avg</th>
+                                        <th>Median</th>
+                                        <th>Step Size</th>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h3>Label Specifications</h3>
+                        <div class="table-responsive">
+                            <!-- Label specifications table in this div -->
+                            <div id="labelSpecificationTableHere">
+                                <table id="labelSpecificationTable" class="table table-fixed">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Min</th>
+                                        <th>Max</th>
+                                        <th>Step Size</th>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -386,7 +531,6 @@
     <script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
     <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/d3.v4.js') }}"></script>
-    <script src="{{url_for( 'static', filename='js/heavylifting.js' )}}"></script>
     <script>
         function openNav() {
             document.getElementById("mySidenav").style.width = "285px";
@@ -400,6 +544,7 @@
         }
         openNav();
     </script>
+    <script src="{{url_for( 'static', filename='js/heavylifting.js' )}}"></script>
 </body>
 
 </html>
