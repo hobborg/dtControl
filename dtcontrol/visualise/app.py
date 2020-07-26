@@ -34,6 +34,9 @@ numResults = 0
 # time discretisation parameter
 tau = 0
 
+# Saved domain knowledge predicates
+pred = []
+
 
 def runge_kutta(x, u, nint=10):
     # nint is number of times to run Runga-Kutta loop
@@ -76,7 +79,14 @@ def computation(index, x, u, ll):
 def discretize(x):
     diff = []
     for i in range(numVars):
-        diff.append(minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])))
+        lower = minBounds[i] + stepSize[i] * (int((x[i] - minBounds[i]) / stepSize[i]))
+        upper = minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i]))
+        mid = (lower + upper) / 2
+        if x[i] >= mid:
+            diff.append(upper)
+        else:
+            diff.append(lower)
+        # diff.append(minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])))
     return diff
 
 
@@ -221,6 +231,60 @@ def rc1():
 @app.route("/reconstructRoute2")
 def rc2():
     return []
+
+
+# Called when evaluating impurity of initially entered domain knowledge
+@app.route("/evaluatePredicateImpurity", methods=['POST'])
+def evalImpurityRoute():
+    data = request.get_json()
+    pred = data['predicate']
+
+    returnDict = {"impurity": 0.5}
+    return jsonify(returnDict)
+
+
+# Called when trying to get feature and label specifications
+@app.route("/featureLabelSpecifications", methods=['POST'])
+def returnFeaturesLabels():
+    data = request.get_json()
+    global pred
+    # Contains finally selected domain knowledge, preferably store in some global variable
+    pred = data['domainKnowledge']
+
+    dummy_feature_specifications = [['x_0', 'Ego.Choose', '1', '1', '1', '1', '1'],
+                                    ['x_1', 'Front.Choose', '0', '0', '0', '0', '1']]
+    dummy_label_specifications = [['accelerationEgo', '-2', '2', '2']]
+    returnDict = {"feature_specifications": dummy_feature_specifications,
+                  "label_specifications": dummy_label_specifications}
+    return jsonify(returnDict)
+
+
+# Called when trying to refresh impurities for different nodes
+@app.route("/refreshImpurities", methods=['POST'])
+def refreshImpurities():
+    data = request.get_json()
+    # Contains address of node trying to build
+    address = data['address']
+
+    dummy_domain_knowledge_updated_impurities = ['0.23'] * (len(pred))
+    dummy_computed_predicates = [['12', '0.57', 'x_1 + x_2 <= 0'], ['13', '0.651', 'x_3 + 5.0 <= 0']]
+    returnDict = {"updated_impurities": dummy_domain_knowledge_updated_impurities,
+                  "computed_predicates": dummy_computed_predicates}
+    return jsonify(returnDict)
+
+
+# Returns number of splits for a node on selecting appropriate predicate
+@app.route("/splitNode", methods=['POST'])
+def splitNode():
+    data = request.get_json()
+    # Contains address of node trying to split and predicate
+    address = data['address']
+    pred = data['predicate']
+
+    # Do processing here
+
+    returnDict = {"number_splits": 3}
+    return jsonify(returnDict)
 
 
 # Used to get the list of unzipped examples

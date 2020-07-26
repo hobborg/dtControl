@@ -12,3 +12,15 @@ JS:
 
 NOTE:
     Ctrl(Cmd)+Click for selecting multiple entries in Numeric-predicates and Categorical-predicates selection
+    The dynamics.txt file must be present in ./examples folder to use the simulation functionality.
+    The format of dynamics .txt file must be as follows:
+
+"Parameters:
+...
+
+Dynamics:
+dx_0=...
+...
+"
+
+    There should be no [] and change in state variable 0 is to be denoted as dx_0 not dx[0]

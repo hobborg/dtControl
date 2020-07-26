@@ -39,6 +39,10 @@ var treeEdit = false;
 
 // Used as addressing for selected node in tree edit button
 var selectedNode = [];
+var lastNode = null;
+
+// Used for toggling custom construction behaviour
+var customBuild = false;
 
 const simTableDiv = document.getElementById('tableHere');
 
@@ -274,7 +278,61 @@ function openThirdForm(address) {
 
 // Toggle children on click.
 function click(d) {
-    if (treeEdit) {
+    if (customBuild) {
+        if (lastNode != null)
+            lastNode.coleur = "white";
+
+        d.coleur = "red";
+        update(root);
+
+        selectedNode = d.address;
+        lastNode = d;
+
+        $.ajax({
+                data: JSON.stringify({
+                    address: (d.address)
+                }),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/refreshImpurities'
+            })
+            .done(function(data) {
+                // TODO see what all to refresh here
+                $("#computedPredicatesTableFull > tbody").html("");
+                for (var i = 0; i < data.computed_predicates.length; i++) {
+                    const dumrow = document.createElement('tr');
+
+                    const drc_inp = document.createElement('td');
+                    const drc0_inp = document.createElement('input');
+
+                    drc0_inp.setAttribute('type', 'radio');
+                    drc0_inp.setAttribute('name', 'buildPredicate');
+
+                    // Value set to index passed
+                    drc0_inp.setAttribute('value', data.computed_predicates[i][0]);
+
+                    drc_inp.appendChild(drc0_inp);
+                    dumrow.appendChild(drc_inp);
+
+                    for (var j = 0; j < data.computed_predicates[i].length; j++) {
+                        const drc0 = document.createElement('td');
+                        drc0.textContent = data.computed_predicates[i][j];
+                        if (j == data.computed_predicates[i].length - 1) {
+                            drc0.id = "expression" + data.computed_predicates[i][0];
+                        }
+                        dumrow.appendChild(drc0);
+                    }
+
+                    document.getElementById("computedPredicatesTable").appendChild(dumrow);
+                }
+
+                for (var i = 0; i < data.updated_impurities.length; i++) {
+                    document.getElementById('domainImpurity' + i).textContent = data.updated_impurities[i];
+                }
+
+                document.getElementById("splitNodeButton").style.visibility = "visible";
+            })
+    } else if (treeEdit) {
         openThirdForm(d.address);
     } else {
         if (d.children) {
@@ -316,6 +374,7 @@ function update(source) {
         .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
         .attr("dy", ".35em")
         .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+        .attr("id", function(d) { return "addr" + d.address.toString(); })
         .text(function(d) { return d.name; })
         .style("fill-opacity", 1e-6);
 
@@ -772,6 +831,7 @@ $(document).ready(function() {
                 document.getElementById("openSecondFormButton").style.visibility = "visible";
                 document.getElementById("mainRow1").style.visibility = "visible";
                 document.getElementById("editTreeDiv").style.visibility = "visible";
+                document.getElementById("customTreeButton").style.display = "none";
 
                 treeData = data.classi;
                 numVars = data.numVars;
@@ -920,7 +980,7 @@ $(document).ready(function() {
                 // resizing to get largest space for tree
                 if ($('#controller').val() == "cartpole.scs") {
                     document.getElementById("expandThisDiv").className = "col-lg-6";
-                    document.getElementById("hideThisDiv").style.visibility = "visible";
+                    document.getElementById("hideThisDiv").style.display = "block";
                 } else {
                     document.getElementById("hideThisDiv").remove();
                 }
@@ -1008,7 +1068,7 @@ $(document).ready(function() {
             .done(function(data) {
                 // Add tree appending functions here
                 // Consult formFirst submit function
-                // ########################################################### Edit her ###########################################################
+                // ########################################################### Edit here ###########################################################
             })
         event.preventDefault();
     })
@@ -1025,7 +1085,23 @@ $(document).ready(function() {
             })
             .done(function(data) {
                 // Add tree appending functions here
-                // ########################################################### Edit her ###########################################################
+                // ########################################################### Edit here ###########################################################
+            })
+        event.preventDefault();
+    })
+
+    $('#evaluatePredicateImpurityForm').on('submit', function(event) {
+        $.ajax({
+                data: JSON.stringify({
+                    predicate: $('#init_domain_knowledge').val()
+                }),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/evaluatePredicateImpurity'
+            })
+            .done(function(data) {
+                document.getElementById("computedImpurity").textContent = data.impurity;
+                document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'visible';
             })
         event.preventDefault();
     })
@@ -1270,6 +1346,136 @@ slider.oninput = function() {
     } else {
         timeOfSlider = this.value;
     }
+}
+
+
+// Christoph's additional functionality
+function customTree() {
+    closeNav();
+    document.getElementById("sideNavOpener").disabled = true;
+    document.getElementById("mainRow1").style.visibility = "visible";
+    document.getElementById("mainRow1.1").style.display = "flex";
+    document.getElementById("mainRow1.2").style.display = "flex";
+    $('#initialCustomTreeModal').modal('toggle');
+}
+
+var numDomainKnowledge = 0;
+
+// Contains [impurity,predicate] type objects
+var finalDomainKnowledge = [];
+
+
+function addToDomainKnowledgeTable() {
+    const dumrow = document.createElement('tr');
+    const drc0 = document.createElement('td');
+    const drc0_inp = document.createElement('input');
+
+    drc0_inp.setAttribute('type', 'radio');
+    drc0_inp.setAttribute('name', 'buildPredicate');
+    drc0_inp.setAttribute('value', numDomainKnowledge);
+
+    drc0.appendChild(drc0_inp);
+    dumrow.appendChild(drc0);
+
+    const drc1 = document.createElement('td');
+    drc1.textContent = numDomainKnowledge;
+    dumrow.appendChild(drc1);
+
+    const drc2 = document.createElement('td');
+    drc2.textContent = document.getElementById('computedImpurity').textContent;
+    drc2.id = "domainImpurity" + numDomainKnowledge;
+    dumrow.appendChild(drc2);
+
+    const drc3 = document.createElement('td');
+    drc3.textContent = $('#init_domain_knowledge').val();
+    drc3.id = "expression" + numDomainKnowledge;
+    dumrow.appendChild(drc3);
+
+    numDomainKnowledge++;
+
+    document.getElementById("domainKnowledgeTable").appendChild(dumrow);
+    finalDomainKnowledge.push([drc2.textContent, drc3.textContent]);
+
+    document.getElementById('computedImpurity').textContent = "";
+    document.getElementById('init_domain_knowledge').value = "";
+    document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'hidden';
+}
+
+function closeInitialCustomTreeModal() {
+    $.ajax({
+            data: JSON.stringify({
+                domainKnowledge: (finalDomainKnowledge)
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/featureLabelSpecifications'
+        })
+        .done(function(data) {
+            for (var i = 0; i < data.feature_specifications.length; i++) {
+                const dumrow = document.createElement('tr');
+
+                for (var j = 0; j < data.feature_specifications[i].length; j++) {
+                    const drc0 = document.createElement('td');
+                    drc0.textContent = data.feature_specifications[i][j];
+                    dumrow.appendChild(drc0);
+                }
+
+                document.getElementById("featureSpecificationTable").appendChild(dumrow);
+            }
+            for (var i = 0; i < data.label_specifications.length; i++) {
+                const dumrow = document.createElement('tr');
+
+                for (var j = 0; j < data.label_specifications[i].length; j++) {
+                    const drc0 = document.createElement('td');
+                    drc0.textContent = data.label_specifications[i][j];
+                    dumrow.appendChild(drc0);
+                }
+
+                document.getElementById("labelSpecificationTable").appendChild(dumrow);
+            }
+            $('#initialCustomTreeModal').modal('hide');
+
+            // Drawing out initial tree now
+            treeData = [{ "name": "Build", "parent": null, "coleur": "white", "children": [], "address": [] }]
+            height = 400;
+            width = 1000;
+
+            constructTree();
+
+            root = treeData[0];
+            root.x0 = height / 2;
+            root.y0 = 0;
+            update(root);
+            customBuild = true;
+        })
+}
+
+function splitNode() {
+    var toSendPredicate = $('input[name="buildPredicate"]:checked').val();
+    console.log(toSendPredicate);
+    $.ajax({
+            data: JSON.stringify({
+                address: (selectedNode),
+                predicate: toSendPredicate
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/splitNode'
+        })
+        .done(function(data) {
+            // returns number of splits only
+            var numSplits = data.number_splits;
+            lastNode.children = [];
+            for (var i = 0; i < numSplits; i++) {
+                lastNode.children.push({ "name": "Build", "parent": lastNode.name, "coleur": "white", "children": [], "address": lastNode.address.concat([i]) });
+            }
+            lastNode.coleur = "white";
+            lastNode.name = document.getElementById('expression' + toSendPredicate).textContent;
+            document.getElementById('addr' + lastNode.address).textContent = lastNode.name;
+            update(lastNode);
+            update(root);
+            document.getElementById("splitNodeButton").style.visibility = "hidden";
+        })
 }
 
 // Randomize button in Modal for selecting inital values of state variables
