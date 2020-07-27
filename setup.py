@@ -60,7 +60,10 @@ setuptools.setup(
         'ruamel.yaml==0.16.10',
         'scikit-learn==0.22',
         'tabulate==0.8.6',
-        'tqdm==4.42.0'
+        'tqdm==4.42.0',
+        'flask==1.1.2',
+        'PyYAML==5.3.1',
+        'sympy==1.6.1'
     ],
     package_data={
         'dtcontrol': ['config.yml'],
