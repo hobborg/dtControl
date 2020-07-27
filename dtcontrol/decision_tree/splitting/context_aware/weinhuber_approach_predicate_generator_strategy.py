@@ -379,7 +379,11 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             elif input_line == "/del_all_standard":
                 # clear standard and alternative predicates list
                 self.standard_predicates = []
-                self.standard_alt_predicates_imp = []
+                new_standard_alt_predicates_imp = []
+                for pred in self.standard_alt_predicates_imp:
+                    if not isinstance(pred[0], WeinhuberApproachSplit):
+                        new_standard_alt_predicates_imp.append(pred)
+                self.standard_alt_predicates_imp = new_standard_alt_predicates_imp
                 self.console_output(dataset)
             elif re.match("/del \d+", input_line):
                 # select predicate VIA ID to be deleted
