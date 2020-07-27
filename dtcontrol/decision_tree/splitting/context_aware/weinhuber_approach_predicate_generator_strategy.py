@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
@@ -265,7 +263,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         Function to handle the user input via console.
         :param dataset: only used for console output (dataset infos) and to get all splits (via weinhuber approach strat)
         :param impurity_measure: only used to get all splits (via weinhuber approach strat)
-        :returns: Integer. (index of predicate which should be returned.)
+        :returns: SplitObject
 
         """
 
@@ -283,6 +281,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                                        ["/del_all_recent", "clear recently_added_predicates list"],
                                        ["/del_all_standard", "clear standard and alternative predicates list"],
                                        ["/refresh", "refresh the console output"],
+                                       ["/collection", "displays predicate collection"],
                                        ["/exit", "to exit"]],
                                       tablefmt="psql") + "\n")
             elif input_line == "/exit":
@@ -427,7 +426,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         table_standard = [[i, str(self.standard_predicates[i].term) + " " + self.standard_predicates[i].relation + " 0",
                            self.standard_predicates[i].column_interval, self.standard_predicates[i].coef_interval] for i in
                           range(len(self.standard_predicates))]
-        print("\n\t\t\t\t\t\tSTANDARD PREDICATES\n" + tabulate(table_standard, header, tablefmt="psql") + "\n")
+        print("\n\t\t\t\tSTANDARD PREDICATES COLLECTION\n" + tabulate(table_standard, header, tablefmt="psql") + "\n")
 
         # Print standard and alternative collection
         table_recently_added = [[i + len(self.standard_predicates),
@@ -436,7 +435,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                                 in
                                 range(len(self.recently_added_predicates))]
         # Print recently added collection
-        print("\n\t\t\t\t\t\tRECENTLY ADDED PREDICATES\n" + tabulate(table_recently_added, header, tablefmt="psql") + "\n")
+        print("\n\t\t\t\tRECENTLY ADDED PREDICATES COLLECTION\n" + tabulate(table_recently_added, header, tablefmt="psql") + "\n")
 
     def user_double_check_del(self):
         """
