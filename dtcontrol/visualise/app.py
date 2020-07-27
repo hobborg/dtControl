@@ -311,9 +311,12 @@ def yamlread():
 def runFlask():
     print('##########Opening browser##########')
     # Decomment this and add valid application path if you don't want to open in default browser
-    chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
-    webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
-    # webbrowser.open('http://127.0.0.1:5000/')
+    # chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
+    # webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
+    try:
+        webbrowser.open('http://127.0.0.1:5000/')
+    except:
+        print('Visit http://127.0.0.1:5000/')
     app.run(debug=False)
 
 
