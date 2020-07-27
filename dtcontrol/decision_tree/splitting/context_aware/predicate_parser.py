@@ -201,8 +201,8 @@ class PredicateParser:
             with open(input_file_path, "r") as file:
                 input_line = [predicate.rstrip() for predicate in file]
         except FileNotFoundError:
-            logger.root_logger.critical("Aborting: input file with user domain knowledge not found. Please check input file/path.")
-            raise WeinhuberPredicateParserException()
+            logger.root_logger.info("Couldn't find input_domain_knowledge.txt file. Assuming there is no domain knowledge to start with.")
+            return None, []
 
         # Edge Case user input == ""
         if not input_line:
