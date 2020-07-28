@@ -69,6 +69,9 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         # Reference to weinhuber approach splitting strategy, to get all possible splits
         self.weinhub_strat = self.setup_weinhub_strat()
 
+        # Seen- Parent IDs
+        self.known_parent_id = []
+
     def setup_alternative_strategies(self):
         """
         Function to setup the alternative splitting Strategies.
@@ -206,22 +209,9 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         """
 
         if len(self.standard_alt_predicates_imp) > 0:
-            table = []
-            created_by_index = -1
-            for member in self.standard_alt_predicates_imp:
-                if isinstance(member[0], WeinhuberApproachSplit):
-                    for parent in self.standard_predicates:
-                        if parent.id == member[0].id:
-                            created_by_index = self.standard_predicates.index(parent)
-                            break
-                elif isinstance(member[0], AxisAlignedSplit):
-                    created_by_index = "Axis Aligned"
-                else:
-                    created_by_index = "Linear"
-
-                table.append(
-                    [self.standard_alt_predicates_imp.index(member), round(member[1], ndigits=3), member[0].print_dot().replace("\\n", ""),
-                     created_by_index])
+            table = [[self.standard_alt_predicates_imp.index(pred), round(pred[1], ndigits=3), pred[0].print_dot().replace("\\n", ""),
+                      self.known_parent_id.index(pred[0].id) if isinstance(pred[0], WeinhuberApproachSplit) else "Alternative Strategy"] for
+                     pred in self.standard_alt_predicates_imp]
 
             print("\n\t\t\t STANDARD AND ALTERNATIVE PREDICATES°\n" + tabulate(
                 table,
@@ -240,16 +230,9 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         """
 
         if len(self.recently_added_predicates_imp) > 0:
-            table = []
-            created_by_index = -1
-            for member in self.recently_added_predicates_imp:
-                for parent in self.recently_added_predicates:
-                    if parent.id == member[0].id:
-                        created_by_index = self.recently_added_predicates.index((parent)) + len(self.standard_predicates)
-                        break
-                table.append(
-                    [self.recently_added_predicates_imp.index(member) + len(self.standard_alt_predicates_imp), round(member[1], ndigits=3),
-                     member[0].print_dot().replace("\\n", ""), created_by_index])
+            table = [[self.recently_added_predicates_imp.index(pred) + len(self.standard_alt_predicates_imp), round(pred[1], ndigits=3), pred[0].print_dot().replace("\\n", ""),
+                      self.known_parent_id.index(pred[0].id)] for
+                     pred in self.recently_added_predicates_imp]
 
             print("\n\t\t\t RECENTLY ADDED PREDICATES\n" + tabulate(
                 table,
@@ -308,11 +291,9 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 else:
                     users_choice = self.index_predicate_mapping(index)
                     if users_choice[1] < np.inf or self.user_double_check_inf(users_choice):
-                        pred = users_choice[0]
-                        for i in self.recently_added_predicates:
-                            if i.id != pred.id:
-                                self.recently_added_predicates.remove(i)
-                        return pred
+                        self.recently_added_predicates = []
+                        self.recently_added_predicates_imp = []
+                        return users_choice[0]
                     else:
                         self.console_output(dataset)
             elif input_line.startswith("/add "):
@@ -335,6 +316,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                         except WeinhuberStrategyException:
                             print("Invalid predicate parsed. Please check logger or comments for more information.")
                         else:
+                            # store id
+                            self.known_parent_id.append(parsed_input.id)
                             # add input to recently added predicates collection
                             self.recently_added_predicates.append(parsed_input)
 
@@ -363,6 +346,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                         except WeinhuberStrategyException:
                             print("Invalid predicate parsed. Please check logger or comments for more information.")
                         else:
+                            # store id
+                            self.known_parent_id.append(parsed_input.id)
                             # add input to standard predicates collection
                             self.standard_predicates.append(parsed_input)
 
@@ -389,27 +374,11 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 # select predicate VIA ID to be deleted
                 del_id = int(input_line.split("/del ")[1])
                 if self.user_double_check_del():
-                    if del_id < 0:
-                        print("Invalid Id.")
-                    elif del_id < len(self.standard_predicates):
-                        real_parent_id = self.standard_predicates[del_id].id
-                        del self.standard_predicates[del_id]
-                        new_collection = []
-                        for single_pred in self.standard_alt_predicates_imp:
-                            if not (isinstance(single_pred[0], WeinhuberApproachSplit) and single_pred[0].id == real_parent_id):
-                                new_collection.append(single_pred)
-                        self.standard_alt_predicates_imp = new_collection
-
-                    elif del_id < len(self.standard_predicates) + len(self.recently_added_predicates):
-                        real_parent_id = self.recently_added_predicates[del_id - len(self.standard_predicates)].id
-                        del self.recently_added_predicates[del_id - len(self.standard_predicates)]
-                        new_collection = []
-                        for single_pred in self.recently_added_predicates_imp:
-                            if not (isinstance(single_pred[0], WeinhuberApproachSplit) and single_pred[0].id == real_parent_id):
-                                new_collection.append(single_pred)
-                        self.recently_added_predicates_imp = new_collection
+                    if del_id < 0 or del_id >= len(self.known_parent_id) or len(self.known_parent_id) == 0:
+                        print("Aborting: Invalid Id.")
                     else:
-                        print("Invalid Id.")
+                        real_del_id = self.known_parent_id[del_id]
+                        self.delete_parent_id(real_del_id)
                 self.console_output(dataset)
             elif input_line == "/collection":
                 # display the collections of predicates
@@ -420,6 +389,32 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             else:
                 print("Unknown command. Type '/help' for help.")
 
+    def delete_parent_id(self, parent_id):
+        # check inside standard_predicates
+        new_standard_predicates = []
+        for pred in self.standard_predicates:
+            if not pred.id == parent_id:
+                new_standard_predicates.append(pred)
+        self.standard_predicates = new_standard_predicates
+        # check inside standard_alt_predicates_imp
+        new_standard_alt_predicates_imp = []
+        for pred in self.standard_alt_predicates_imp:
+            if not isinstance(pred[0], WeinhuberApproachSplit) or not pred[0].id == parent_id:
+                new_standard_alt_predicates_imp.append(pred)
+        self.standard_alt_predicates_imp = new_standard_alt_predicates_imp
+        # check inside recently_added_predicates
+        new_recently_added_predicates = []
+        for pred in self.recently_added_predicates:
+            if not pred.id == parent_id:
+                new_recently_added_predicates.append(pred)
+        self.recently_added_predicates = new_recently_added_predicates
+        # check inside recently_added_predictes imp
+        new_recently_added_predicates_imp = []
+        for pred in self.recently_added_predicates_imp:
+            if not pred[0].id == parent_id:
+                new_recently_added_predicates_imp.append(pred)
+        self.recently_added_predicates_imp = new_recently_added_predicates_imp
+
     def print_predicate_collections(self):
         """
         Function to give a visual representation of the predicates collection.
@@ -427,17 +422,15 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         header = ["ID", "TERM", "COLUMN INTERVAL", "COEF INTERVAL"]
 
         # Print standard and alternative collection
-        table_standard = [[i, str(self.standard_predicates[i].term) + " " + self.standard_predicates[i].relation + " 0",
-                           self.standard_predicates[i].column_interval, self.standard_predicates[i].coef_interval] for i in
-                          range(len(self.standard_predicates))]
+        table_standard = [[self.known_parent_id.index(pred.id), str(pred.term) + " " + pred.relation + " 0",
+                           pred.column_interval, pred.coef_interval] for pred in
+                          self.standard_predicates]
         print("\n\t\t\t\tSTANDARD PREDICATES COLLECTION\n" + tabulate(table_standard, header, tablefmt="psql") + "\n")
 
         # Print standard and alternative collection
-        table_recently_added = [[i + len(self.standard_predicates),
-                                 str(self.recently_added_predicates[i].term) + " " + self.recently_added_predicates[i].relation + " 0",
-                                 self.recently_added_predicates[i].column_interval, self.recently_added_predicates[i].coef_interval] for i
-                                in
-                                range(len(self.recently_added_predicates))]
+        table_recently_added = [[self.known_parent_id.index(pred.id), str(pred.term) + " " + pred.relation + " 0",
+                                 pred.column_interval, pred.coef_interval] for pred in
+                                self.recently_added_predicates]
         # Print recently added collection
         print("\n\t\t\t\tRECENTLY ADDED PREDICATES COLLECTION\n" + tabulate(table_recently_added, header, tablefmt="psql") + "\n")
 
@@ -499,6 +492,10 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 2.3 If Units available: Linear with Unit respect
             3. Sort self.standard_alt_predicates_imp
         """
+        for pred in self.standard_predicates:
+            if not self.known_parent_id.__contains__(pred.id):
+                self.known_parent_id.append(pred.id)
+
         all_predicates = self.get_all_weinhub_splits(self.standard_predicates, dataset, impurity_measure)
         self.standard_alt_predicates_imp = list(all_predicates.items())
 
@@ -526,6 +523,10 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             1. All predicates inside self.recently_added_predicates get fit and checked
             2. Sort self.standard_alt_predicates_imp
         """
+        for pred in self.recently_added_predicates:
+            if not self.recently_added_predicates.__contains__(pred.id):
+                self.known_parent_id.append(pred.id)
+
         all_predicates = self.get_all_weinhub_splits(self.recently_added_predicates, dataset, impurity_measure)
         self.recently_added_predicates_imp = list(all_predicates.items())
         self.recently_added_predicates_imp.sort(key=lambda x: x[1])
