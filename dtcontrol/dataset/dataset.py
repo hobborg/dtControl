@@ -7,6 +7,7 @@ from dtcontrol.dataset.prism_dataset_loader import PrismDatasetLoader
 from dtcontrol.dataset.scots_dataset_loader import ScotsDatasetLoader
 from dtcontrol.dataset.storm_dataset_loader import StormDatasetLoader
 from dtcontrol.dataset.uppaal_dataset_loader import UppaalDatasetLoader
+from dtcontrol.dataset.kiss_dataset_loader import StrixDatasetLoader
 from dtcontrol.util import get_filename_and_ext
 
 class Dataset(ABC):
@@ -61,7 +62,8 @@ class Dataset(ABC):
             '.dump': UppaalDatasetLoader(),
             '.csv': CSVDatasetLoader(),
             '.prism': PrismDatasetLoader(),
-            '.storm': StormDatasetLoader()
+            '.storm': StormDatasetLoader(),
+            '.kiss': StrixDatasetLoader()
         }
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')
