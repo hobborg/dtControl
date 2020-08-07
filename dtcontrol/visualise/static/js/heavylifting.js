@@ -249,9 +249,11 @@ function constructTree() {
     diagonal = d3.svg.diagonal()
         .projection(function(d) { return [d.y, d.x]; });
 
+    var row_width = $("#treeHere").parent().width();
+    var row_height = $("#treeHere").parent().height();
     svg = d3.select("#treeHere").append("svg")
-        .attr("width", width + margin.right + margin.left)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", row_width)
+        .attr("height", row_height)
         .attr("style", "overflow-x: auto; overflow-y: auto;")
         .call(d3.zoom().on("zoom", function() {
             svg.attr("transform", d3.event.transform)
@@ -806,9 +808,55 @@ async function oneStep() {
 
 }
 
+function openNav() {
+    document.getElementById("mySidenav").style.width = "310px";
+    document.getElementById("main").style.marginLeft = "310px";
+}
+
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
+function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.marginLeft = "0";
+}
+
 $(document).ready(function() {
 
     var numChanges = 0;
+
+    $('button.hamburger').on('click', function(event) {
+        if ($(this).hasClass("is-active")) {
+            closeNav();
+        } else {
+            openNav();
+        }
+
+        $(this).toggleClass("is-active");
+    });
+
+    $("#openSecondFormButton").on("click", function(event) {
+       if ($(this).hasClass("btn-primary")) {
+           $(this).removeClass("btn-primary");
+           $(this).addClass("btn-secondary");
+           openSecondForm();
+           $(this).html("Simulate off");
+       } else {
+           $(this).removeClass("btn-secondary");
+           $(this).addClass("btn-primary");
+           document.getElementById("mainRow2").style.visibility = "hidden";
+           document.getElementById("mainRow3").style.visibility = "hidden";
+           //document.getElementById("expandThisDiv").style.height = "450px";
+           document.getElementById("playerDiv").style.visibility = "hidden";
+           document.getElementById("timeRange").style.visibility = "hidden";
+           document.getElementById("instep").style.visibility = "hidden";
+           document.getElementById("animationDiv").style.visibility = "hidden";
+
+           //document.getElementById("hideThisDiv").style.display = "block";
+           // TODO: Reset tree colors
+           $(this).html("Simulate");
+       }
+
+    });
+
 
     // Submits sidenav form
     $('#formFirst').on('submit', function(event) {
