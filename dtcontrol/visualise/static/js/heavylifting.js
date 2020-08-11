@@ -247,7 +247,7 @@ function constructTree() {
         .size([height, width]);
 
     diagonal = d3.svg.diagonal()
-        .projection(function(d) { return [d.y, d.x]; });
+        .projection(function(d) { return [d.y, d.x]; });   // Flip this to go horizontal layout
 
     var row_width = $("#treeHere").parent().width();
     var row_height = $("#treeHere").parent().height();
@@ -349,14 +349,15 @@ function click(d) {
     }
 }
 
-// Updates the svg generated accourding to changes in tree data
+// Updates the svg generated according to changes in tree data
 function update(source) {
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
 
     // Normalize for fixed-depth.
-    nodes.forEach(function(d) { d.y = d.depth * 180; });
+    // Horizontal layout: drop d.x = d.x * 12
+    nodes.forEach(function(d) { d.y = d.depth * 180; /* d.x = d.x * 12; */ });
 
     // Update the nodes…
     var node = svg.selectAll("g.node")
@@ -365,7 +366,7 @@ function update(source) {
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
         .attr("class", "node")
-        .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+        .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })  // Horizontal layout: flip x, y
         .on("click", click);
 
     nodeEnter.append("circle")
@@ -383,7 +384,7 @@ function update(source) {
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+        .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });  // Horizontal layout: flip x, y
 
     nodeUpdate.select("circle")
         .attr("r", 10)
@@ -395,7 +396,7 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+        .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })  // Horizontal layout: flip x, y
         .remove();
 
     nodeExit.select("circle")
@@ -822,6 +823,9 @@ function closeNav() {
 $(document).ready(function() {
 
     var numChanges = 0;
+
+    openNav();
+    document.getElementById("navbar-hamburger").className += " is-active";
 
     $('button.hamburger').on('click', function(event) {
         if ($(this).hasClass("is-active")) {
