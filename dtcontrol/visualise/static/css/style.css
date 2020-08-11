@@ -24,3 +24,19 @@
 #mainRow1 .card-body .row {
     height: 100%;
 }
+
+#dynamics-input {
+    width: 100%;
+}
+
+#initial-values {
+    display: none;
+}
+
+#formSecond-randomize-button {
+    display: none;
+}
+
+#formSecond-submit-button {
+    display: none;
+}

@@ -29,7 +29,7 @@
 
 <body id="bootstrap-override">
 
-<!-- Modal that comes on clicking 'Simulate' -->
+<!-- Modal that comes on clicking 'Simulate'-->
 <div class="modal fade" id="formSecondModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
      aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -42,16 +42,21 @@
             </div>
             <!-- formSecond: Selects initial values for state variables -->
             <form id="formSecond">
-                <div class="modal-body" id="formSecondBody">
-
+            <div class="modal-body">
+                <div id="dynamics-body" >
+                    <!-- Enter dynamics of the model -->
+                    <textarea id="dynamics-input" name="dynamics" rows="25" placeholder="Enter dynamics here..."></textarea>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="randomizeInputs()" class="btn btn-primary">Randomise</button>
-                    <button type="submit" value="Send" class="btn btn-primary"> Send</button>
+                <div id="initial-values">
+                    <div id="formSecondBody"></div>
                 </div>
-
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="formSecond-next-button" class="btn btn-primary">Next</button>
+                <button type="button" id="formSecond-randomize-button" onclick="randomizeInputs()" class="btn btn-primary">Randomise</button>
+                <button type="submit" id="formSecond-submit-button" value="Submit" class="btn btn-primary">Submit</button>
+            </div>
             </form>
-
         </div>
     </div>
 </div>

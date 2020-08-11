@@ -841,7 +841,7 @@ $(document).ready(function() {
        if ($(this).hasClass("btn-primary")) {
            $(this).removeClass("btn-primary");
            $(this).addClass("btn-secondary");
-           openSecondForm();
+           triggerDynamicsInput();
            $(this).html("Simulate off");
        } else {
            $(this).removeClass("btn-secondary");
@@ -994,8 +994,6 @@ $(document).ready(function() {
 
                     x_bounds.push([data.bound[0][i], data.bound[1][i]]);
                 }
-
-
             });
 
         event.preventDefault();
@@ -1098,6 +1096,15 @@ $(document).ready(function() {
             });
 
         event.preventDefault();
+    });
+
+    $("#formSecond-next-button").on("click", function(event) {
+        $("#dynamics-body").hide();
+        $("#initial-values").show();
+        $("#formSecond-next-button").hide();
+        $("#formSecond-randomize-button").show();
+        $("#formSecond-submit-button").show();
+        $("#exampleModalLongTitle").html("Enter initial values");
     });
 
     // Form that collects edit tree data
@@ -1539,8 +1546,8 @@ function randomizeInputs() {
 }
 
 // Opens second form (for initial state variable selection)
-function openSecondForm() {
-    $('#formSecondModal').modal('toggle');
+function triggerDynamicsInput() {
+    $('#formSecondModal').modal('show');
 }
 
 // Have to select dynamically created elements like this
