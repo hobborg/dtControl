@@ -13,6 +13,10 @@
     /* Mouse pointer on hover */
 }
 
+.btn-link {
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
 
 /* Darker background on mouse-over */
 

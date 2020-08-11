@@ -553,7 +553,7 @@ function expandAll(nd) {
     for (var it = 0; it < len; it++) {
         expandAll(nd.children[it]);
     }
-    return;
+
 }
 
 // Collapses all tree nodes
@@ -577,7 +577,7 @@ function collapseAll(nd) {
     for (var it = 0; it < len; it++) {
         collapseAll(nd._children[it]);
     }
-    return;
+
 }
 
 // If cartpole model used, draws it
@@ -837,6 +837,13 @@ $(document).ready(function() {
         $(this).toggleClass("is-active");
     });
 
+    const accordionButton = $('#accordionButton');
+    accordionButton.on('click', event => {
+        const wasCollapsed = accordionButton.hasClass('collapsed');
+        accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
+        accordionButton.find('svg').css({'transform' : 'rotate('+ (wasCollapsed ? 90 : 0) +'deg)'});
+    });
+
     $("#openSecondFormButton").on("click", function(event) {
        if ($(this).hasClass("btn-primary")) {
            $(this).removeClass("btn-primary");
@@ -882,8 +889,7 @@ $(document).ready(function() {
             .done(function(data) {
                 document.getElementById("openSecondFormButton").style.visibility = "visible";
                 document.getElementById("mainRow1").style.visibility = "visible";
-                document.getElementById("editTreeDiv").style.visibility = "visible";
-                document.getElementById("customTreeButton").style.display = "none";
+                // document.getElementById("editTreeDiv").style.visibility = "visible";
 
                 treeData = data.classi;
                 numVars = data.numVars;
