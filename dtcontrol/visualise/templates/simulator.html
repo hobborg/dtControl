@@ -1,34 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>dtControl Frontend</title>
-    <meta name="author" content="Tom Doan">
+{% block sidenav_submit %}
+            <button class="btn btn-primary btn-lg btn-block" type="submit" name="construct" style="margin-top: 1.25rem;">Construct
+            </button>
+{% endblock %}
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/new-select.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidenav-my.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/node-stylings.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/hamburger.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        select.selectpicker {
-            display: none;
-            /* Prevent FOUC */
-        }
-    </style>
-</head>
-
-<body id="bootstrap-override">
-
+{% block content %}
 <!-- Modal that comes on clicking 'Simulate'-->
 <div class="modal fade" id="formSecondModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
      aria-hidden="true">
@@ -219,151 +196,6 @@
         </div>
     </div>
 </div>
-
-<!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->
-<div id="mySidenav" class="sidenav">
-    <form id="formFirst">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <label for="controller">Controller</label>
-                    <div class="select">
-                        <select class="custom-select" id="controller" name="controller">
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <label for="config">Preset</label>
-                    <div class="search_categories">
-                        <div class="select">
-                            <select class="custom-select" id="config" name="config">
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Divider -->
-
-            <div class="row mt-3">
-                <div id="accordion">
-                    <button id="accordionButton" type="button" class="btn btn-link collapsed" data-toggle="collapse"
-                            data-target="#advancedOptions">
-                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-right-fill"
-                             fill="currentColor"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12.14 8.753l-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"></path>
-                        </svg>
-{#                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-down-fill hidden"#}
-{#                             fill="currentColor" xmlns="http://www.w3.org/2000/svg">#}
-{#                            <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"></path>#}
-{#                        </svg>#}
-                        <span>Show advanced options</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="advancedOptions" class="collapse" data-parent="#accordion">
-                <div class="row">
-                    <div class="col-12">
-                        <label for="determinize">Determinize</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="determinize" name="determinize">
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="numeric-predicates">Numeric Predicates</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="numeric-predicates" name="numeric-predicates"
-                                        multiple>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="categorical-predicates">Categorical Predicates</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="categorical-predicates"
-                                        name="categorical-predicates" multiple>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="impurity">Impurity</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="impurity" name="impurity">
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="tolerance">Tolerance</label>
-                        <div>
-                            <input class="input-group-text" type="text" id="tolerance" name="tolerance">
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="safe-pruning">Safe-pruning</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" name="safe-pruning" id="safe-pruning">
-                                    <option value="true">True</option>
-                                    <option value="false">False</option>
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button class="btn btn-primary btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">Construct
-            </button>
-        </div>
-
-    </form>
-
-
-</div>
-
-<!-- Navbar at top -->
-<nav class="navbar navbar-expand-xl navbar-light">
-    <!--Add is-active to class to change it-->
-    <button id="navbar-hamburger" class="hamburger hamburger--spin" type="button" onClick="openNav()">
-      <span class="hamburger-box">
-        <span class="hamburger-inner"></span>
-      </span>
-    </button>
-    <a class="navbar-brand" href="https://gitlab.lrz.de/i7/dtcontrol"><img class="logo"
-                                                                           src="{{ url_for('static', filename='images/logo.png') }}"/>dtControl</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-</nav>
-
 
 <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
 <div id="main">
@@ -592,10 +424,4 @@
 
 </div>
 
-<script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
-<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/d3.v4.js') }}"></script>
-<script src="{{ url_for( 'static', filename='js/heavylifting.js' ) }}"></script>
-</body>
-
-</html>
+{% endblock %}

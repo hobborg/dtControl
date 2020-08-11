@@ -95,6 +95,9 @@ def discretize(x):
 def home():
     return render_template("simulator.html")
 
+@app.route("/experiment")
+def experiment():
+    return render_template("experiment.html")
 
 # First call that receives controller and config and returns constructed tree
 @app.route("/simRoute", methods=['POST'])

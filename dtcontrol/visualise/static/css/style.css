@@ -1,3 +1,9 @@
+/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+#main {
+    transition: padding-left .5s;
+    /*padding: 20px;*/
+}
+
 .navbar {
 
 }
@@ -39,4 +45,10 @@
 
 #formSecond-submit-button {
     display: none;
+}
+
+.custom-thead {
+    color:#fff;
+    background-color:#343a40;
+    border-color:#454d55
 }

@@ -811,13 +811,13 @@ async function oneStep() {
 
 function openNav() {
     document.getElementById("mySidenav").style.width = "310px";
-    document.getElementById("main").style.marginLeft = "310px";
+    document.getElementById("main").style.paddingLeft = "310px";
 }
 
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
 function closeNav() {
     document.getElementById("mySidenav").style.width = "0";
-    document.getElementById("main").style.marginLeft = "0";
+    document.getElementById("main").style.paddingLeft = "0";
 }
 
 $(document).ready(function() {
@@ -869,8 +869,8 @@ $(document).ready(function() {
     });
 
 
-    // Submits sidenav form
-    $('#formFirst').on('submit', function(event) {
+    // Construct from sidenav
+    $("input[name='construct'], button[name='construct']").on('click', function(event) {
         $.ajax({
                 data: JSON.stringify({
                     controller: $('#controller').val(),
@@ -1003,6 +1003,35 @@ $(document).ready(function() {
             });
 
         event.preventDefault();
+
+    });
+
+    // Add from sidenav
+    $("input[name='add'], button[name='add']").on('click', function(event) {
+        event.preventDefault();
+        var controller = $('#controller').val();
+        var config = $('#config').val();
+        var determinize = $('#determinize').val();
+        var numeric_predicates = $('#numeric-predicates').val();
+        var categorical_predicates = $('#categorical-predicates').val();
+        var impurity = $('#impurity').val();
+        var tolerance = $('#tolerance').val();
+        var safe_pruning = $('#safe-pruning').val();
+        var row_contents = [controller, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
+
+        var table = document.getElementById("results-table");
+
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        var row = table.insertRow(-1);
+        var fisrtCell = row.insertCell(-1);
+        fisrtCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length-1) + "</th>";
+
+        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
+        for (let j = 0; j < 8; j++) {
+            var c = row.insertCell(-1);
+            c.innerHTML = row_contents[j];
+        }
+
 
     });
 
