@@ -3,6 +3,7 @@ from os.path import basename, splitext
 
 import numpy as np
 
+
 def ignore_convergence_warnings():
     logging.captureWarnings(capture=True)
     logger = logging.getLogger("py.warnings")
@@ -19,8 +20,13 @@ def format_seconds(sec):
         return pattern % (h, m, s)
     return ('%d days, ' + pattern) % (d, h, m, s)
 
-def get_filename_and_ext(filename):
-    path, ext = splitext(filename)
+def split_relevant_extension(filename):
+    if filename.endswith('.storm.json'):
+        return filename.split('.storm.json')[0], '.storm.json'
+    return splitext(filename)
+
+def get_filename_and_relevant_extension(filename):
+    path, ext = split_relevant_extension(filename)
     return basename(path), ext
 
 def make_set(v):

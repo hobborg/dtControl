@@ -3,12 +3,13 @@ import logging
 import pickle
 from abc import ABC, abstractmethod
 from os import makedirs
-from os.path import getmtime, split, exists, join, splitext, isfile
+from os.path import getmtime, split, exists, join, isfile
 
 import numpy as np
 
 import dtcontrol.util as util
-from dtcontrol.util import is_int
+from dtcontrol.util import is_int, split_relevant_extension
+
 
 class DatasetLoader(ABC):
     def __init__(self):
@@ -61,7 +62,7 @@ class DatasetLoader(ABC):
 
     def load_dataset_and_config(self, filename):
         tup = self._load_dataset(filename)
-        name, _ = splitext(filename)
+        name, _ = split_relevant_extension(filename)
         config_name = name + '_config.json'
         if exists(config_name) and isfile(config_name):
             self.update_with_config(config_name, tup[0], tup[1], tup[3])
