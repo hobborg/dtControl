@@ -1030,12 +1030,14 @@ $(document).ready(function() {
         var safe_pruning = $('#safe-pruning').val();
         var row_contents = [controller, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
 
-        var table = document.getElementById("experiments-table").getElementsByTagName('tbody')[0];;
+        $("#experiments-table tr.special").hide();
+
+        var table = document.getElementById("experiments-table").getElementsByTagName('tbody')[0];
 
         // Create an empty <tr> element and add it to the 1st position of the table:
         var row = table.insertRow(-1);
         var fisrtCell = row.insertCell(-1);
-        fisrtCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length) + "</th>";
+        fisrtCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
         for (let j = 0; j < 8; j++) {
@@ -1049,6 +1051,9 @@ $(document).ready(function() {
 
     $("table").on("click", "i.fa-trash", function () {
         $(this).parent().parent().remove();
+        if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 1) {
+            $("#experiments-table tr.special").show();
+        }
     });
 
     function run_single_benchmark(config) {
