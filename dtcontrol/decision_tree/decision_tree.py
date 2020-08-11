@@ -243,10 +243,26 @@ class Node:
             labels = []
             for group in self.split.value_groups:
                 if len(group) == 1:
-                    label = group[0] if not names else names[group[0]]
+                    if not names:
+                        label = group[0]
+                    else:
+                        try:
+                            label = names[group[0]]
+                        except IndexError:
+                            logging.warning("Action label missing in _config.json file. Please ensure that all categorical values are labeled. Using action index instead...")
+                            label = group[0]
                     labels.append(label)
                 else:
-                    str_group = group if not names else [names[v] for v in group]
+                    if not names:
+                        str_group = group
+                    else:
+                        str_group = []
+                        for v in group:
+                            try:
+                                str_group.append(names[v])
+                            except IndexError:
+                                logging.warning("Action label missing in _config.json file. Please ensure that all categorical values are labeled. Using action index instead...")
+                                str_group.append(v)
                     label = f'{{{str_group[0]}'
                     for s in str_group[1:]:
                         label += f',\\n{s}'
