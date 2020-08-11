@@ -553,7 +553,7 @@ function expandAll(nd) {
     for (var it = 0; it < len; it++) {
         expandAll(nd.children[it]);
     }
-    return;
+
 }
 
 // Collapses all tree nodes
@@ -577,7 +577,7 @@ function collapseAll(nd) {
     for (var it = 0; it < len; it++) {
         collapseAll(nd._children[it]);
     }
-    return;
+
 }
 
 // If cartpole model used, draws it
@@ -835,6 +835,13 @@ $(document).ready(function() {
         }
 
         $(this).toggleClass("is-active");
+    });
+
+    const accordionButton = $('#accordionButton');
+    accordionButton.on('click', event => {
+        const wasCollapsed = accordionButton.hasClass('collapsed');
+        accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
+        accordionButton.find('svg').css({'transform' : 'rotate('+ (wasCollapsed ? 90 : 0) +'deg)'});
     });
 
     $("#openSecondFormButton").on("click", function(event) {
