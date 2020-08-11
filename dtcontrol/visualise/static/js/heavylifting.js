@@ -889,8 +889,7 @@ $(document).ready(function() {
             .done(function(data) {
                 document.getElementById("openSecondFormButton").style.visibility = "visible";
                 document.getElementById("mainRow1").style.visibility = "visible";
-                document.getElementById("editTreeDiv").style.visibility = "visible";
-                document.getElementById("customTreeButton").style.display = "none";
+                // document.getElementById("editTreeDiv").style.visibility = "visible";
 
                 treeData = data.classi;
                 numVars = data.numVars;
