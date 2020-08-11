@@ -52,3 +52,8 @@
     background-color:#343a40;
     border-color:#454d55
 }
+
+i.fa {
+    font-size: 1.2em;
+    cursor: pointer;
+}

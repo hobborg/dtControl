@@ -91,8 +91,8 @@ def discretize(x):
 
 
 # route when loading default simulator
-@app.route("/")
-def home():
+@app.route("/simulator")
+def simulator():
     return render_template("simulator.html")
 
 @app.route("/experiment")

@@ -99,12 +99,14 @@ function fillYML() {
         det.appendChild(opt);
     }
     var det = document.getElementById("determinize_3");
-    for (var i = 0; i < allConfig['determinize'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['determinize'][i];
-        opt.setAttribute('value', allConfig['determinize'][i]);
-        opt.setAttribute('id', allConfig['determinize'][i] + "_3");
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['determinize'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['determinize'][i];
+            opt.setAttribute('value', allConfig['determinize'][i]);
+            opt.setAttribute('id', allConfig['determinize'][i] + "_3");
+            det.appendChild(opt);
+        }
     }
 
     var det = document.getElementById("numeric-predicates");
@@ -116,12 +118,14 @@ function fillYML() {
         det.appendChild(opt);
     }
     var det = document.getElementById("numeric-predicates_3");
-    for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['numeric-predicates'][i];
-        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
-        opt.setAttribute('id', allConfig['numeric-predicates'][i]);
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['numeric-predicates'][i];
+            opt.setAttribute('value', allConfig['numeric-predicates'][i]);
+            opt.setAttribute('id', allConfig['numeric-predicates'][i]);
+            det.appendChild(opt);
+        }
     }
 
     var det = document.getElementById("categorical-predicates");
@@ -132,13 +136,16 @@ function fillYML() {
         opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
         det.appendChild(opt);
     }
+
     var det = document.getElementById("categorical-predicates_3");
-    for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['categorical-predicates'][i];
-        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
-        opt.setAttribute('id', allConfig['categorical-predicates'][i]);
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['categorical-predicates'][i];
+            opt.setAttribute('value', allConfig['categorical-predicates'][i]);
+            opt.setAttribute('id', allConfig['categorical-predicates'][i]);
+            det.appendChild(opt);
+        }
     }
 
     var det = document.getElementById("impurity");
@@ -150,12 +157,14 @@ function fillYML() {
         det.appendChild(opt);
     }
     var det = document.getElementById("impurity_3");
-    for (var i = 0; i < allConfig['impurity'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['impurity'][i];
-        opt.setAttribute('value', allConfig['impurity'][i]);
-        opt.setAttribute('id', allConfig['impurity'][i] + "_3");
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['impurity'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['impurity'][i];
+            opt.setAttribute('value', allConfig['impurity'][i]);
+            opt.setAttribute('id', allConfig['impurity'][i] + "_3");
+            det.appendChild(opt);
+        }
     }
 
     $("#config").trigger("change");
@@ -163,7 +172,7 @@ function fillYML() {
 }
 
 var xhr = new XMLHttpRequest();
-xhr.open('GET', './yml', true);
+xhr.open('GET', '/yml', true);
 xhr.onload = function() {
     // Reads the config.yml file
     data2 = JSON.parse(this.response);
@@ -179,16 +188,18 @@ xhr.onload = function() {
         option.setAttribute('value', "custom");
         app.appendChild(option);
 
-        for (x in data2.presets) {
+        if (app_3) {
+            for (x in data2.presets) {
+                const option_3 = document.createElement('option');
+                option_3.textContent = x;
+                option_3.setAttribute('value', x);
+                app_3.appendChild(option_3);
+            }
             const option_3 = document.createElement('option');
-            option_3.textContent = x;
-            option_3.setAttribute('value', x);
+            option_3.textContent = "custom";
+            option_3.setAttribute('value', "custom");
             app_3.appendChild(option_3);
         }
-        const option_3 = document.createElement('option');
-        option_3.textContent = "custom";
-        option_3.setAttribute('value', "custom");
-        app_3.appendChild(option_3);
 
         fillYML();
 
@@ -872,20 +883,20 @@ $(document).ready(function() {
     // Construct from sidenav
     $("input[name='construct'], button[name='construct']").on('click', function(event) {
         $.ajax({
-                data: JSON.stringify({
-                    controller: $('#controller').val(),
-                    config: $('#config').val(),
-                    determinize: $('#determinize').val(),
-                    numeric_predicates: $('#numeric-predicates').val(),
-                    categorical_predicates: $('#categorical-predicates').val(),
-                    impurity: $('#impurity').val(),
-                    tolerance: $('#tolerance').val(),
-                    safe_pruning: $('#safe-pruning').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/simRoute'
-            })
+            data: JSON.stringify({
+                controller: $('#controller').val(),
+                config: $('#config').val(),
+                determinize: $('#determinize').val(),
+                numeric_predicates: $('#numeric-predicates').val(),
+                categorical_predicates: $('#categorical-predicates').val(),
+                impurity: $('#impurity').val(),
+                tolerance: $('#tolerance').val(),
+                safe_pruning: $('#safe-pruning').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/simRoute'
+        })
             .done(function(data) {
                 document.getElementById("openSecondFormButton").style.visibility = "visible";
                 document.getElementById("mainRow1").style.visibility = "visible";
@@ -1019,12 +1030,12 @@ $(document).ready(function() {
         var safe_pruning = $('#safe-pruning').val();
         var row_contents = [controller, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
 
-        var table = document.getElementById("results-table");
+        var table = document.getElementById("experiments-table").getElementsByTagName('tbody')[0];;
 
         // Create an empty <tr> element and add it to the 1st position of the table:
         var row = table.insertRow(-1);
         var fisrtCell = row.insertCell(-1);
-        fisrtCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length-1) + "</th>";
+        fisrtCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
         for (let j = 0; j < 8; j++) {
@@ -1032,7 +1043,78 @@ $(document).ready(function() {
             c.innerHTML = row_contents[j];
         }
 
+        var icon = row.insertCell(-1);
+        icon.innerHTML = "<i class=\"fa fa-trash\"></i>&nbsp;&nbsp;<i class=\"fa fa-play\" aria-hidden=\"true\"></i>";
+    });
 
+    $("table").on("click", "i.fa-trash", function () {
+        $(this).parent().parent().remove();
+    });
+
+    function run_single_benchmark(config) {
+        $.ajax({
+            data: JSON.stringify({
+                controller: config[1],
+                config: config[2],
+                determinize: config[3],
+                numeric_predicates: config[4],
+                categorical_predicates: config[5],
+                impurity: config[6],
+                tolerance: config[7],
+                safe_pruning: config[8]
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/simRoute',
+            beforeSend: function(jqXHR) {
+                var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+
+                // Create an empty <tr> element and add it to the 1st position of the table:
+                var row = table.insertRow(-1);
+                var fisrtCell = row.insertCell(-1);
+                fisrtCell.outerHTML = "<th scope=\"row\">" + String(config[0]) + "</th>";
+
+                // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
+                // Set controller
+                var c = row.insertCell(-1);
+                c.innerHTML = config[1];
+
+                // Set preset
+                c = row.insertCell(-1);
+                c.innerHTML = config[2];
+
+                // Set status
+                c = row.insertCell(-1);
+                c.innerHTML = "Running";
+
+                for (let j = 0; j < 4; j++) {
+                    row.insertCell(-1);
+                }
+            }
+        }).done(function(data) {
+                treeData = data.classi;
+                numVars = data.numVars;
+                numResults = data.numResults;
+
+                // Set status to completed
+                var rows = $("#results-table tbody tr");
+                for (let j = 0; j < rows.length; j++) {
+                    experiment_id = rows[j].children[0].innerHTML;
+                    if (experiment_id == config[0]) {
+                        rows[j].children[3].innerHTML = "Completed";
+                    }
+                }
+        });
+    }
+
+    $("table").on("click", "i.fa-play", function (event) {
+        // Write code to call simRoute
+        var row_items = $(this).parent().parent().find('th,td');
+        row_content = []
+        row_items.each(function(k, v) {
+           row_content.push(v.innerHTML);
+        });
+        run_single_benchmark(row_content);
     });
 
     // Submits popup modal form (for passing initial values of state variables)
@@ -1432,13 +1514,15 @@ $(document).ready(function() {
 
 // Handles play speed slider
 var slider = document.getElementById("timeRange");
-slider.oninput = function() {
-    if (parseInt($("input[name=player]:checked").val()) == 0) {
-        timeOfSlider = this.value;
-        clearInterval(plpause);
-        plpause = setInterval(oneStep, timeOfSlider);
-    } else {
-        timeOfSlider = this.value;
+if (slider) {
+    slider.oninput = function () {
+        if (parseInt($("input[name=player]:checked").val()) == 0) {
+            timeOfSlider = this.value;
+            clearInterval(plpause);
+            plpause = setInterval(oneStep, timeOfSlider);
+        } else {
+            timeOfSlider = this.value;
+        }
     }
 }
 
