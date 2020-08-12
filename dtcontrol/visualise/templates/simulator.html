@@ -277,14 +277,19 @@
         <div class="col-lg-12" id="expandThisDiv">
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <button type="button" class="btn btn-dark" onclick="expandAll(null)">Expand all</button>
-                    <button type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
-                    <div class="row no-gutters align-items-center">
+                    <div class="container-fluid h-100">
+                        <div class="row">
+                            <button type="button" class="btn btn-dark mr-2" onclick="expandAll(null)">Expand all</button>
+                            <button type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
+                        </div>
                         <!-- Tree in this div -->
-                        <div id="treeHere">
+                        <div class="row" id="treeHere">
 
                         </div>
 
+                        <div class="row mb-2 align-self-end">
+                            <div class="col-auto mr-auto" style="font-size:0.9em">Click and drag to pan, scroll to zoom.</div>
+                        </div>
                     </div>
                 </div>
             </div>

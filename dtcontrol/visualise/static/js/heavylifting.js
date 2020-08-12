@@ -272,11 +272,11 @@ function constructTree() {
             return [d.y, d.x];
         });   // Flip this to go horizontal layout
 
-    var row_width = $("#treeHere").parent().width();
-    var row_height = $("#treeHere").parent().height();
+    var row_width = $("#treeHere").parent().width()*0.98;
+    var row_height = $("#treeHere").parent().height()*0.9;
     svg = d3.select("#treeHere").append("svg")
-        .attr("width", row_width)
-        .attr("height", row_height)
+        .attr("width", "100%")
+        .attr("height", "100%")
         .attr("style", "overflow-x: auto; overflow-y: auto;")
         .call(d3.zoom().on("zoom", function () {
             svg.attr("transform", d3.event.transform)

@@ -27,9 +27,9 @@
     display: flex;
 }
 
-#mainRow1 .card-body .row {
-    height: 100%;
-}
+/*#mainRow1 .card-body .row {*/
+/*    height: 100%;*/
+/*}*/
 
 #dynamics-input {
     width: 100%;
