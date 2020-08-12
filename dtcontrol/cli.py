@@ -370,7 +370,6 @@ def main():
         sys.exit()
 
     def call_frontend(args):
-        print("Frontend called")
         runFlask()
 
     def clear_run_cache():

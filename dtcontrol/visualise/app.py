@@ -356,7 +356,7 @@ def yamlread():
     return json.dumps(data)
 
 def runFlask():
-    print('##########Opening browser##########')
+    print('Starting dtControl web interface...')
     # Decomment this and add valid application path if you don't want to open in default browser
     # chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
     # webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
@@ -364,8 +364,8 @@ def runFlask():
         webbrowser.open('http://127.0.0.1:5000/')
     except:
         print('Visit http://127.0.0.1:5000/')
-    app.run(debug=True, use_reloader=False)
-
+    # app.run(debug=True, use_reloader=False)
+    app.run(debug=False)
 
 if __name__ == "__main__":
     runFlask()
