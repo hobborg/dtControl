@@ -817,12 +817,10 @@ async function oneStep() {
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
                 }
-                tab.appendChild(dumrow);
-                document.querySelector("#simTable tr:last-child").scrollIntoView({
-                    behaviour: 'smooth',
-                    block: 'nearest',
-                    inline: 'start'
-                });
+                tab.getElementsByTagName('tbody')[0].appendChild(dumrow);
+                $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
+                scrollToEndOfTable();
+
 
                 colourPath(data.x_new[2]);
 
@@ -873,6 +871,11 @@ function closeNav() {
     if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "0";
     document.getElementById("main").style.paddingLeft = "0";
+}
+
+function scrollToEndOfTable() {
+    var elem = document.querySelector("#simTable");
+    elem.scrollTop = elem.scrollHeight;
 }
 
 $(document).ready(function () {
@@ -968,12 +971,12 @@ $(document).ready(function () {
 
             update(root);
 
-            const tab = document.createElement('table');
-            tab.setAttribute('id', "simTable");
-            tab.setAttribute('class', "table table-fixed");
-            const dumrow = document.createElement('tr');
+            const tab = document.getElementById('simTable');
 
+            // Header row
+            const dumrow = document.createElement('tr');
             const drc0 = document.createElement('th');
+            drc0.setAttribute("scope", "col");
             drc0.textContent = "Index";
             dumrow.appendChild(drc0);
 
@@ -982,6 +985,7 @@ $(document).ready(function () {
 
             for (var i = 0; i < numVars; i++) {
                 const drc1 = document.createElement('th');
+                drc1.setAttribute("scope", "col");
                 drc1.textContent = "x" + i;
                 dumrow.appendChild(drc1);
 
@@ -1015,16 +1019,19 @@ $(document).ready(function () {
 
             if (numResults == 1) {
                 const drc2 = document.createElement('th');
+                drc2.setAttribute("scope", "col");
                 drc2.textContent = "u";
                 dumrow.appendChild(drc2);
             } else {
                 for (var i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('th');
+                    drc2.setAttribute("scope", "col");
                     drc2.textContent = "u" + i;
                     dumrow.appendChild(drc2);
                 }
             }
-            tab.appendChild(dumrow);
+            tab.deleteRow(-1);
+            tab.tHead.appendChild(dumrow);
             simTableDiv.appendChild(tab);
 
             const opt = document.getElementById("formSecondBody");
@@ -1246,7 +1253,9 @@ $(document).ready(function () {
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
                 }
-                tab.appendChild(dumrow);
+                tab.getElementsByTagName('tbody')[0].appendChild(dumrow);
+                $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
+                scrollToEndOfTable();
                 colourPath(data.path);
 
                 for (var i = 0; i < numVars; i++) {
@@ -1404,12 +1413,9 @@ $(document).ready(function () {
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
                         }
-                        tab.appendChild(dumrow);
-                        document.querySelector("#simTable tr:last-child").scrollIntoView({
-                            behaviour: 'smooth',
-                            block: 'nearest',
-                            inline: 'start'
-                        });
+                        tab.getElementsByTagName('tbody')[0].appendChild(dumrow);
+                        $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
+                        scrollToEndOfTable();
 
                         for (var j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
@@ -1753,16 +1759,22 @@ function triggerDynamicsInput() {
 
 // Have to select dynamically created elements like this
 // Handles colouring of table rows when clicked
-$(document).on("click", "#simTable tr", function () {
+$(document).on("click", "#simTable tbody tr", function () {
     $(this).addClass('selected').siblings().removeClass('selected');
-    var value = $(this).find('td:first').html();
+    var value = $(this).find('td:first').children()[0].getAttribute("value")
     console.log(value);
     $(this).find('td input[type=radio]').prop('checked', true);
-    var ind = parseInt($("input[name='indexers']:checked").val());
+    // var ind = parseInt($("input[name='indexers']:checked").val());
+    var ind = parseInt(value);
     recolourPath();
     currentSim = ind;
     colourPath(lastPath[ind]);
     drawCanvas();
+});
+
+document.getElementById("simTable").addEventListener("scroll", function(){
+   var translate = "translate(0,"+this.scrollTop+"px)";
+   this.querySelector("thead").style.transform = translate;
 });
 
 // 'Animate tree' button and 'Edit tree' button

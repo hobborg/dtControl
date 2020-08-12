@@ -335,9 +335,9 @@ def runFlask():
     # chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
     # webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
     try:
-        webbrowser.open('http://127.0.0.1:5000/simulator')
+        webbrowser.open('http://127.0.0.1:5000/')
     except:
-        print('Visit http://127.0.0.1:5000/simulator')
+        print('Visit http://127.0.0.1:5000/')
     app.run(debug=True, use_reloader=False)
 
 
