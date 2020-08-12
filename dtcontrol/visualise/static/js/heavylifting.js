@@ -1592,6 +1592,20 @@ $(document).ready(function () {
         document.getElementById("config_3").value = "custom";
     });
     // Simple .change() does not work here because it is dynamically added
+
+    $('#dynamics-file').on('change',function(){
+        //get the file name
+        var fileName = $(this).val().replace('C:\\fakepath\\', "");
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+        var file = document.getElementById("dynamics-file").files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // The file's text will be printed here
+            $("#dynamics-input").val(e.target.result);
+        };
+        reader.readAsText(file);
+    });
 });
 
 // Handles play speed slider

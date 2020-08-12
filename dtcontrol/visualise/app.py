@@ -328,7 +328,6 @@ def yamlread():
     data = yaml.load(open(json_url), Loader=yaml.FullLoader)
     return json.dumps(data)
 
-
 def runFlask():
     print('##########Opening browser##########')
     # Decomment this and add valid application path if you don't want to open in default browser

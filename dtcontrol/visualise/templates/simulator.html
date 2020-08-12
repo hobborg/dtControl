@@ -19,9 +19,23 @@
             <!-- formSecond: Selects initial values for state variables -->
             <form id="formSecond">
             <div class="modal-body">
-                <div id="dynamics-body" >
+                <div id="dynamics-body" class="container">
                     <!-- Enter dynamics of the model -->
-                    <textarea id="dynamics-input" name="dynamics" rows="25" placeholder="Enter dynamics here..."></textarea>
+                    <div class="row-10 custom-file">
+                            <div class="input-group mb-4">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
+                                </div>
+                                <div class="custom-file">
+                                    <input id="dynamics-file" type="file" name="file" class="custom-file-input" id="inputGroupFile01"
+                                           aria-describedby="inputGroupFileAddon01">
+                                    <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="row-10 mt-4">
+                        <textarea id="dynamics-input" name="dynamics" rows="15" placeholder="Or enter dynamics here..."></textarea>
+                    </div>
                 </div>
                 <div id="initial-values">
                     <div id="formSecondBody"></div>
