@@ -8,6 +8,7 @@ Run dtcontrol --help to see usage.
 
 import logging
 import sys
+import time
 from collections import namedtuple, OrderedDict
 from os import path
 from os.path import exists
@@ -300,8 +301,10 @@ def main_parse(args):
         sys.exit("Exiting...")
 
     suite.datasets[0].load_if_necessary()
+    start = time.time()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
     classifiers[0].fit(suite.datasets[0])
+    run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
     retDict = intoJSON(classifiers[0].root, "null", [])
-    return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0]
+    return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0], run_time

@@ -885,6 +885,35 @@ $(document).ready(function () {
     if (!isSimulator) {
         openNav();
         document.getElementById("navbar-hamburger").className += " is-active";
+        $(".runall").hide();
+
+
+        //MJ load data and init listeners
+        $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
+        $.get('/results', results => {
+            results.forEach(e => addToResultsTable(e));
+            if(results.some(r => r[3] === 'Running...')) {
+                startPolling();
+            }
+        });
+
+        function startPolling() {
+            console.log('start interval');
+            const interval = setInterval(() => {
+                $.get('/results', results => {
+                    console.log(results);
+                    results.filter(r => r[3] === 'Completed').forEach(r => {
+                        const row = getResultsTableRow(r[0]);
+                        if(row.children[3].innerHTML === 'Running...') {
+                            addToResultsTable(r);
+                        }
+                    });
+                    if(results.every(r => r[3] === 'Completed')) {
+                        clearInterval(interval);
+                    }
+                })
+            }, 5000);
+        }
     }
 
     $('button.hamburger').on('click', function (event) {
@@ -1070,14 +1099,24 @@ $(document).ready(function () {
         var safe_pruning = $('#safe-pruning').val();
         var row_contents = [controller, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
 
+        $.ajax('/experiments', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(row_contents),
+            success: () => addToExperimentsTable(row_contents)
+        });
+    });
+
+    function addToExperimentsTable(row_contents) {
         $("#experiments-table tr.special").hide();
+        $(".runall").show();
 
         var table = document.getElementById("experiments-table").getElementsByTagName('tbody')[0];
 
         // Create an empty <tr> element and add it to the 1st position of the table:
         var row = table.insertRow(-1);
-        var fisrtCell = row.insertCell(-1);
-        fisrtCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
+        var firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
         for (let j = 0; j < 8; j++) {
@@ -1087,18 +1126,10 @@ $(document).ready(function () {
 
         var icon = row.insertCell(-1);
         icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
-    });
+    }
 
-    $("table").on("click", "i.fa-trash", function () {
-        $(this).parent().parent().remove();
-        if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 1) {
-            $("#experiments-table tr.special").show();
-        }
-    });
-
-    var constructionTimes = {};
     Number.prototype.milliSecondsToHHMMSS = function () {
-        var sec_num = this / 1000;
+        var sec_num = this;
         var hours = Math.floor(sec_num / 3600);
         var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
         var seconds = sec_num - (hours * 3600) - (minutes * 60);
@@ -1116,9 +1147,11 @@ $(document).ready(function () {
     }
 
     function run_single_benchmark(config) {
-        constructionTimes[config[0]] = new Date().getTime();
+        config[3] = 'Running...';
+        config[4] = config[5] = config[6] = config[7] = null;
         $.ajax({
             data: JSON.stringify({
+                id: config[0],
                 controller: config[1],
                 config: config[2],
                 determinize: config[3],
@@ -1130,67 +1163,94 @@ $(document).ready(function () {
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
-            url: '/simRoute',
-            beforeSend: function (jqXHR) {
-                $("#results-table tr.special").hide();
-                var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+            url: '/construct',
+            beforeSend: () => addToResultsTable(config)
+        }).done(data => addToResultsTable(data));
+    }
 
-                // Create an empty <tr> element and add it to the 1st position of the table:
-                var row = table.insertRow(-1);
-                var firstCell = row.insertCell(-1);
-                firstCell.outerHTML = "<th scope=\"row\">" + String(config[0]) + "</th>";
-
-                // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-                // Set controller
-                var c = row.insertCell(-1);
-                c.innerHTML = config[1];
-
-                // Set preset
-                c = row.insertCell(-1);
-                c.innerHTML = config[2];
-
-                // Set status
-                c = row.insertCell(-1);
-                c.innerHTML = "Running...";
-
-                for (let j = 0; j < 4; j++) {
-                    row.insertCell(-1);
-                }
+    function getResultsTableRow(id) {
+        let rows = $("#results-table tbody tr");
+        for (let j = 0; j < rows.length; j++) {
+            const experiment_id = rows[j].children[0].innerHTML;
+            if (parseInt(experiment_id, 10) === id) {
+                return rows[j];
             }
-        }).done(function (data) {
-            let experimentRow;
-            let rows = $("#results-table tbody tr");
-            for (let j = 0; j < rows.length; j++) {
-                experiment_id = rows[j].children[0].innerHTML;
-                if (experiment_id === config[0]) {
-                    experimentRow = rows[j];
-                }
-            }
-            console.assert(experimentRow);
+        }
+    }
+
+    function addToResultsTable(row_contents) {
+        $("#results-table tr.special").hide();
+
+        let experimentRow = getResultsTableRow(row_contents[0]);
+        if (experimentRow) {
             experimentRow.children[3].innerHTML = "Completed";
-            experimentRow.children[4].innerHTML = data['inner nodes'];
-            experimentRow.children[5].innerHTML = data['nodes'] - data['inner nodes'];
-            const elapsedTime = new Date().getTime() - constructionTimes[config[0]];
-            experimentRow.children[6].innerHTML = elapsedTime.milliSecondsToHHMMSS();
+            experimentRow.children[4].innerHTML = row_contents[4]
+            experimentRow.children[5].innerHTML = row_contents[5];
+            experimentRow.children[6].innerHTML = row_contents[6].milliSecondsToHHMMSS();
             experimentRow.children[7].innerHTML = '<i class="fa fa-eye text-primary"></i>';
-
             $(experimentRow.children[7]).find('i.fa-eye').on('click', (event) => {
-                $.post('/select', {runConfigIndex: config[0]}, () => {
+                $.post('/select', {runConfigIndex: row_contents[0]}, () => {
                     window.location.href = 'simulator'
                 });
             });
-        });
+            return;
+        }
+
+        var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        var row = table.insertRow(-1);
+        var firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+
+        for (let j = 1; j < 7; j++) {
+            const cell = row.insertCell(-1);
+            if (row_contents[j]) {
+                cell.innerHTML = row_contents[j];
+            }
+        }
+        let lastCell = row.insertCell(-1);
+        if(row_contents[3] === 'Completed') {
+            lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
+            $(lastCell).find('i.fa-eye').on('click', (event) => {
+                $.post('/select', {runConfigIndex: row_contents[0]}, () => {
+                    window.location.href = 'simulator'
+                });
+            });
+        }
     }
 
-    $("table").on("click", "i.fa-play", function (event) {
-        // Write code to call simRoute
-        var row_items = $(this).parent().parent().find('th,td');
-        row_content = []
-        row_items.each(function (k, v) {
-            row_content.push(v.innerHTML);
+    function initTableListeners() {
+        $("table").on("click", "i.fa-trash", function () {
+            const row = $(this).parent().parent();
+            const index = parseInt(row.find('th').textContent, 10) - 1;
+
+            //MJ delete data
+
+            row.remove();
+            if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 1) {
+                $("#experiments-table tr.special").show();
+            }
         });
-        run_single_benchmark(row_content);
-    });
+
+        $("table").on("click", "i.fa-play", function (event) {
+            if($(this).id === 'runall-icon') return;
+            var row_items = $(this).parent().parent().find('th,td');
+            row_content = []
+            row_items.each(function (k, v) {
+                row_content.push(v.innerHTML);
+            });
+            run_single_benchmark(row_content);
+        });
+
+        $('#runall').on('click', event => {
+            $("table i.fa-play").each((_, btn) => {
+                if(btn.id === 'runall-icon') return;
+                console.log(btn);
+                btn.click();
+            });
+        })
+    }
 
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {
