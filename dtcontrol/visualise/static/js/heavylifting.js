@@ -782,6 +782,8 @@ async function oneStep() {
                     dumrow.appendChild(drc2);
                 }
                 tab.appendChild(dumrow);
+                document.querySelector("#simTable tr:last-child").scrollIntoView({behaviour: 'smooth', block: 'nearest', inline: 'start'});
+
                 colourPath(data.x_new[2]);
 
                 for (var i = 0; i < numVars; i++) {
@@ -871,6 +873,13 @@ $(document).ready(function() {
            document.getElementById("timeRange").style.visibility = "hidden";
            document.getElementById("instep").style.visibility = "hidden";
            document.getElementById("animationDiv").style.visibility = "hidden";
+
+           $("#dynamics-body").show();
+           $("#initial-values").hide();
+           $("#formSecond-next-button").show();
+           $("#formSecond-randomize-button").hide();
+           $("#formSecond-submit-button").hide();
+           $("#exampleModalLongTitle").html("Enter system dynamics");
 
            //document.getElementById("hideThisDiv").style.display = "block";
            // TODO: Reset tree colors
@@ -1127,10 +1136,10 @@ $(document).ready(function() {
         console.log('form is submitted');
         var x_toPass = [];
         for (var i = 0; i < numVars; i++) {
-            x_toPass.push(parseFloat($('#x' + i).val()));
+            x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
-                data: JSON.stringify({ pass: x_toPass }),
+                data: JSON.stringify({ pass: x_toPass, dynamics: $("#dynamics-input").val() }),
                 contentType: "application/json; charset=utf-8",
                 type: 'POST',
                 url: '/initRoute'
@@ -1288,7 +1297,7 @@ $(document).ready(function() {
     })
 
     // Handles the instep function
-    $('#instep').on('submit', function(event) {
+    $('#instep button').on('click', function(event) {
 
         if (!nextDisabled) {
             recolourPath();
@@ -1300,9 +1309,14 @@ $(document).ready(function() {
             for (var i = 0; i < numResults; i++) {
                 u_toPass.push(u_current[i][currentSim]);
             }
+            var steps = $('#steps').val();
+            if (steps === "") {
+                $('#steps').val("1");
+                steps = 1;
+            }
             $.ajax({
                     data: JSON.stringify({
-                        steps: $('#steps').val(),
+                        steps: steps,
                         x_pass: (x_toPass),
                         u_pass: (u_toPass)
 
@@ -1313,9 +1327,8 @@ $(document).ready(function() {
                 })
                 .done(function(data) {
                     const tab = document.getElementById('simTable');
-                    var numSteps = parseInt($('#steps').val());
 
-                    for (var i = 0; i < numSteps; i++) {
+                    for (var i = 0; i < steps; i++) {
                         const dumrow = document.createElement('tr');
                         const drc0 = document.createElement('td');
                         const drc0_inp = document.createElement('input');
@@ -1338,6 +1351,7 @@ $(document).ready(function() {
                             dumrow.appendChild(drc2);
                         }
                         tab.appendChild(dumrow);
+                        document.querySelector("#simTable tr:last-child").scrollIntoView({behaviour: 'smooth', block: 'nearest', inline: 'start'});
 
                         for (var j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
@@ -1378,12 +1392,11 @@ $(document).ready(function() {
 
 
     // Handles the player inputs
-    $(document).on("click", "input[name=player]", function() {
+    $(document).on("click", "input[name=player]", function(event) {
         var option = parseInt($("input[name=player]:checked").val());
         //play pause next back
         if (option == 0) {
             plpause = setInterval(oneStep, timeOfSlider);
-
         } else if (option == 1) {
             clearInterval(plpause);
         } else if (option == 2) {

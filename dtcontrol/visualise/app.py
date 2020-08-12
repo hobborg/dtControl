@@ -147,43 +147,39 @@ def simroute():
 def initroute():
     data = request.get_json()
     x = data['pass']
+    dynamics_text = data['dynamics'].split('\n')
 
     # Predict_one_step returns the decision taken as well as the path (list of ints) to reach that decision
     initDecision = saved_tree.predict_one_step(np.array([discretize(x)]))
     returnDict = {"decision": initDecision[0], "path": initDecision[1], "dynamics": True}
 
     is_dynamics = False
-    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
-    dynamics_data_file = os.path.join(SITE_ROOT, '..', '..', 'examples/dynamics.txt')
 
     # Opens dynamics file and saves obtained variables and lambda functions as lists (variable_subs and lambda_list)
-    try:
-        with open(dynamics_data_file) as f:
-            my_list = f.read().splitlines()
-        for i in my_list:
+    if 'Dynamics:' in dynamics_text and 'Parameters:' in dynamics_text:
+        for line in dynamics_text:
             global variable_subs, lambda_list, tau
-            i = i.strip()
-            if i == 'Dynamics:':
+            line = line.strip()
+            if line == 'Dynamics:':
                 is_dynamics = True
-            elif i == 'Parameters:':
+            elif line == 'Parameters:':
                 is_dynamics = False
             else:
-                if i != '':
+                if line != '':
                     if not is_dynamics:
-                        foo = i.split("=")
+                        foo = line.split("=")
                         variable_subs.append((foo[0].strip(), float(foo[1])))
                         if foo[0].strip() == "tau" or foo[0].strip() == "Tau":
                             tau = float(foo[1])
                     else:
-                        foo = i.split("=")
+                        foo = line.split("=")
                         tmp = sp.sympify(foo[1].strip())
                         tmp = tmp.subs(variable_subs)
                         lam_1 = sp.lambdify(tmp.free_symbols, tmp)
                         lambda_list.append((foo[0].strip(), lam_1, tmp.free_symbols))
         lambda_list = sorted(lambda_list, key=lambda x: int(x[0].split("_")[1]))
-
-    except:
-        # If dynamic.txt is not present sets this to false and browser raises an exception
+    else:
+        # If dynamics is not present sets this to false and browser raises an exception
         returnDict["dynamics"] = False
 
     return jsonify(returnDict)
@@ -206,6 +202,7 @@ def stepRoute():
 # Called when using the instep function
 @app.route("/inStepRoute", methods=['POST'])
 def inStepRoute():
+    print(request.get_json())
     data = request.get_json()
     steps = data['steps']
     x = data['x_pass']
@@ -317,10 +314,10 @@ def runFlask():
     # chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
     # webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
     try:
-        webbrowser.open('http://127.0.0.1:5000/')
+        webbrowser.open('http://127.0.0.1:5000/simulator')
     except:
-        print('Visit http://127.0.0.1:5000/')
-    app.run(debug=False)
+        print('Visit http://127.0.0.1:5000/simulator')
+    app.run(debug=True, use_reloader=False)
 
 
 if __name__ == "__main__":

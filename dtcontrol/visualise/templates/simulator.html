@@ -12,7 +12,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLongTitle">Select initial values</h5>
+                <h5 class="modal-title" id="exampleModalLongTitle">Enter system dynamics</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -229,11 +229,11 @@
                    style="visibility: hidden;">
 
             <!-- Instep form -->
-            <form id="instep" class="form-inline my-2 my-lg-0" style="visibility: hidden;">
-                <input class="form-control mr-sm-2" placeholder="Number of steps" aria-label="Number of steps"
+            <div id="instep" class="form-inline my-2 my-lg-0" style="visibility: hidden;">
+                <input class="form-control w-50 mr-2" placeholder="# steps" aria-label="Number of steps"
                        type="number" id="steps" name="steps" min="1">
-                <button class="btn btn-dark my-2 my-sm-0" type="submit">Step</button>
-            </form>
+                <button class="btn btn-dark my-2 my-sm-0">Step</button>
+            </div>
 
             <!-- Tree animation toggle -->
             <div id="animationDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
