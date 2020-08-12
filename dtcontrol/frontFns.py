@@ -6,16 +6,12 @@ README
 Run dtcontrol --help to see usage.
 """
 
-import argparse
 import logging
-import re
-import shutil
 import sys
 from collections import namedtuple, OrderedDict
-from os import makedirs, remove, path
-from os.path import exists, isfile, splitext
-import platform
-from typing import Tuple, Union, List
+from os import path
+from os.path import exists
+from typing import Tuple, Union
 
 import pkg_resources
 from pkg_resources import Requirement, resource_filename
@@ -23,7 +19,6 @@ from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-from tabulate import tabulate
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.decision_tree.decision_tree import DecisionTree
@@ -50,8 +45,6 @@ from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
-import json, ast
-import numpy as np
 
 # Subset of cli.py with core_parser replaced with main_parse
 
@@ -242,7 +235,7 @@ def intoJSON(rt, parent, address):
         rt_name = rt.print_c_label()
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address+[i]))
+        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i]))
     return strdummy
 
 
@@ -311,4 +304,4 @@ def main_parse(args):
     classifiers[0].fit(suite.datasets[0])
     # intoJSON takes the classifier root and returns a JSON in required format
     retDict = intoJSON(classifiers[0].root, "null", [])
-    return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0].root
+    return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0]

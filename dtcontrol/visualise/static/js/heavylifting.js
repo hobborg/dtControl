@@ -49,6 +49,8 @@ const simTableDiv = document.getElementById('tableHere');
 const app = document.getElementById('config');
 const app_3 = document.getElementById('config_3');
 
+var isSimulator;
+
 // Stores default config in config.yml
 var defConf;
 
@@ -174,6 +176,7 @@ function fillYML() {
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/yml', true);
 xhr.onload = function () {
+    if (isSimulator) return;
     // Reads the config.yml file
     data2 = JSON.parse(this.response);
     if (xhr.status >= 200 && xhr.status < 400) {
@@ -181,6 +184,9 @@ xhr.onload = function () {
             const option = document.createElement('option');
             option.textContent = x;
             option.setAttribute('value', x);
+            if (x === 'mlentropy') {
+                option.setAttribute('selected', 'selected');
+            }
             app.appendChild(option);
         }
         const option = document.createElement('option');
@@ -220,12 +226,16 @@ xhr.send();
 var modl = new XMLHttpRequest();
 modl.open('GET', './examples', true);
 modl.onload = function () {
+    if (isSimulator) return;
     // Reades example folder and populates controller section in first form
     data1 = JSON.parse(this.response);
     for (var i = 0; i < data1.length; i++) {
         const option = document.createElement('option');
         option.textContent = data1[i];
         option.setAttribute('value', data1[i]);
+        if (data1[i] === '10rooms.scs') {
+            option.setAttribute('selected', 'selected');
+        }
         app1.appendChild(option);
     }
 }
@@ -853,22 +863,26 @@ async function oneStep() {
 }
 
 function openNav() {
+    if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "310px";
     document.getElementById("main").style.paddingLeft = "310px";
 }
 
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
 function closeNav() {
+    if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "0";
     document.getElementById("main").style.paddingLeft = "0";
 }
 
 $(document).ready(function () {
-
+    isSimulator = $('.simulator').length > 0;
     var numChanges = 0;
 
-    openNav();
-    document.getElementById("navbar-hamburger").className += " is-active";
+    if (!isSimulator) {
+        openNav();
+        document.getElementById("navbar-hamburger").className += " is-active";
+    }
 
     $('button.hamburger').on('click', function (event) {
         if ($(this).hasClass("is-active")) {
@@ -918,143 +932,123 @@ $(document).ready(function () {
 
     });
 
+    if (isSimulator) {
+        $.get('/computed', (data) => {
+            document.getElementById("openSecondFormButton").style.visibility = "visible";
+            document.getElementById("mainRow1").style.visibility = "visible";
+            // document.getElementById("editTreeDiv").style.visibility = "visible";
 
-    // Construct from sidenav
-    $("input[name='construct'], button[name='construct']").on('click', function (event) {
-        $.ajax({
-            data: JSON.stringify({
-                controller: $('#controller').val(),
-                config: $('#config').val(),
-                determinize: $('#determinize').val(),
-                numeric_predicates: $('#numeric-predicates').val(),
-                categorical_predicates: $('#categorical-predicates').val(),
-                impurity: $('#impurity').val(),
-                tolerance: $('#tolerance').val(),
-                safe_pruning: $('#safe-pruning').val()
-            }),
-            type: 'POST',
-            contentType: "application/json; charset=utf-8",
-            url: '/simRoute'
-        })
-            .done(function (data) {
-                document.getElementById("openSecondFormButton").style.visibility = "visible";
-                document.getElementById("mainRow1").style.visibility = "visible";
-                // document.getElementById("editTreeDiv").style.visibility = "visible";
+            treeData = data.classi;
+            numVars = data.numVars;
+            numResults = data.numResults;
 
-                treeData = data.classi;
-                numVars = data.numVars;
-                numResults = data.numResults;
+            console.log(treeData);
 
-                console.log(treeData);
+            // height = 50 * getLeaves(treeData[0]);
+            height = 25 * getLeaves(treeData[0]);
+            // height = 650;
+            width = 200 * getDepth(treeData[0]);
 
-                // height = 50 * getLeaves(treeData[0]);
-                height = 25 * getLeaves(treeData[0]);
-                // height = 650;
-                width = 200 * getDepth(treeData[0]);
+            for (var i = 0; i < numVars; i++) {
+                x_current.push([]);
+                chart.push([]);
+                chartConfig.push([]);
+            }
+            for (var i = 0; i < numResults; i++) {
+                u_current.push([]);
+            }
 
-                for (var i = 0; i < numVars; i++) {
-                    x_current.push([]);
-                    chart.push([]);
-                    chartConfig.push([]);
-                }
-                for (var i = 0; i < numResults; i++) {
-                    u_current.push([]);
-                }
+            if (numChanges == 0)
+                constructTree();
+            numChanges++;
 
-                if (numChanges == 0)
-                    constructTree();
-                numChanges++;
+            root = treeData[0];
+            root.x0 = height / 2;
+            root.y0 = 0;
 
-                root = treeData[0];
-                root.x0 = height / 2;
-                root.y0 = 0;
+            update(root);
 
-                update(root);
+            const tab = document.createElement('table');
+            tab.setAttribute('id', "simTable");
+            tab.setAttribute('class', "table table-fixed");
+            const dumrow = document.createElement('tr');
 
-                const tab = document.createElement('table');
-                tab.setAttribute('id', "simTable");
-                tab.setAttribute('class', "table table-fixed");
-                const dumrow = document.createElement('tr');
+            const drc0 = document.createElement('th');
+            drc0.textContent = "Index";
+            dumrow.appendChild(drc0);
 
-                const drc0 = document.createElement('th');
-                drc0.textContent = "Index";
-                dumrow.appendChild(drc0);
+            const chartsDiv0 = document.getElementById('chartsHere0');
+            const chartsDiv1 = document.getElementById('chartsHere1');
 
-                const chartsDiv0 = document.getElementById('chartsHere0');
-                const chartsDiv1 = document.getElementById('chartsHere1');
+            for (var i = 0; i < numVars; i++) {
+                const drc1 = document.createElement('th');
+                drc1.textContent = "x" + i;
+                dumrow.appendChild(drc1);
 
-                for (var i = 0; i < numVars; i++) {
-                    const drc1 = document.createElement('th');
-                    drc1.textContent = "x" + i;
-                    dumrow.appendChild(drc1);
+                const someChartDiv = document.createElement('div');
+                someChartDiv.style.width = "100%";
+                someChartDiv.style.float = 'left';
+                someChartDiv.style.height = someChartDiv.style.width;
+                const someChart = document.createElement('canvas');
+                someChart.setAttribute('id', 'chartContainer' + i.toString());
+                someChartDiv.appendChild(someChart);
 
-                    const someChartDiv = document.createElement('div');
-                    someChartDiv.style.width = "100%";
-                    someChartDiv.style.float = 'left';
-                    someChartDiv.style.height = someChartDiv.style.width;
-                    const someChart = document.createElement('canvas');
-                    someChart.setAttribute('id', 'chartContainer' + i.toString());
-                    someChartDiv.appendChild(someChart);
+                const heir0 = document.createElement('div');
+                heir0.setAttribute('class', "card shadow mb-4");
 
-                    const heir0 = document.createElement('div');
-                    heir0.setAttribute('class', "card shadow mb-4");
+                const heir1 = document.createElement('div');
+                heir1.setAttribute('class', "card-body");
 
-                    const heir1 = document.createElement('div');
-                    heir1.setAttribute('class', "card-body");
+                const heir2 = document.createElement('div');
+                heir2.setAttribute('style', "text-align:center;");
 
-                    const heir2 = document.createElement('div');
-                    heir2.setAttribute('style', "text-align:center;");
-
-                    heir2.appendChild(someChartDiv);
-                    heir1.appendChild(heir2);
-                    heir0.appendChild(heir1);
-                    if (i % 2 == 0) {
-                        chartsDiv0.appendChild(heir0);
-                    } else {
-                        chartsDiv1.appendChild(heir0);
-                    }
-
-                }
-
-                if (numResults == 1) {
-                    const drc2 = document.createElement('th');
-                    drc2.textContent = "u";
-                    dumrow.appendChild(drc2);
+                heir2.appendChild(someChartDiv);
+                heir1.appendChild(heir2);
+                heir0.appendChild(heir1);
+                if (i % 2 == 0) {
+                    chartsDiv0.appendChild(heir0);
                 } else {
-                    for (var i = 0; i < numResults; i++) {
-                        const drc2 = document.createElement('th');
-                        drc2.textContent = "u" + i;
-                        dumrow.appendChild(drc2);
-                    }
+                    chartsDiv1.appendChild(heir0);
                 }
-                tab.appendChild(dumrow);
-                simTableDiv.appendChild(tab);
 
-                const opt = document.getElementById("formSecondBody");
-                for (var i = 0; i < numVars; i++) {
-                    const dumDiv = document.createElement('div');
+            }
 
-                    const dumLabel = document.createElement('label');
-                    dumLabel.setAttribute('for', 'x' + i);
-                    dumLabel.textContent = "Choose an x" + i + ":";
-
-                    const dumInput = document.createElement('input');
-                    dumInput.setAttribute('type', 'text');
-                    dumInput.setAttribute('id', 'x' + i);
-                    dumInput.setAttribute('name', 'x' + i);
-
-                    dumDiv.appendChild(dumLabel);
-                    dumDiv.appendChild(dumInput);
-
-                    opt.appendChild(dumDiv);
-
-                    x_bounds.push([data.bound[0][i], data.bound[1][i]]);
+            if (numResults == 1) {
+                const drc2 = document.createElement('th');
+                drc2.textContent = "u";
+                dumrow.appendChild(drc2);
+            } else {
+                for (var i = 0; i < numResults; i++) {
+                    const drc2 = document.createElement('th');
+                    drc2.textContent = "u" + i;
+                    dumrow.appendChild(drc2);
                 }
-            });
+            }
+            tab.appendChild(dumrow);
+            simTableDiv.appendChild(tab);
 
-        event.preventDefault();
+            const opt = document.getElementById("formSecondBody");
+            for (var i = 0; i < numVars; i++) {
+                const dumDiv = document.createElement('div');
 
-    });
+                const dumLabel = document.createElement('label');
+                dumLabel.setAttribute('for', 'x' + i);
+                dumLabel.textContent = "Choose an x" + i + ":";
+
+                const dumInput = document.createElement('input');
+                dumInput.setAttribute('type', 'text');
+                dumInput.setAttribute('id', 'x' + i);
+                dumInput.setAttribute('name', 'x' + i);
+
+                dumDiv.appendChild(dumLabel);
+                dumDiv.appendChild(dumInput);
+
+                opt.appendChild(dumDiv);
+
+                x_bounds.push([data.bound[0][i], data.bound[1][i]]);
+            }
+        });
+    }
 
     // Add from sidenav
     $("input[name='add'], button[name='add']").on('click', function (event) {
@@ -1085,7 +1079,7 @@ $(document).ready(function () {
         }
 
         var icon = row.insertCell(-1);
-        icon.innerHTML = "<i class=\"fa fa-trash\"></i>&nbsp;&nbsp;<i class=\"fa fa-play\" aria-hidden=\"true\"></i>";
+        icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
     });
 
     $("table").on("click", "i.fa-trash", function () {
@@ -1095,7 +1089,27 @@ $(document).ready(function () {
         }
     });
 
+    var constructionTimes = {};
+    Number.prototype.milliSecondsToHHMMSS = function () {
+        var sec_num = this / 1000;
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+        if (hours < 10) {
+            hours = "0" + hours;
+        }
+        if (minutes < 10) {
+            minutes = "0" + minutes;
+        }
+        if (seconds < 10) {
+            seconds = "0" + seconds;
+        }
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
     function run_single_benchmark(config) {
+        constructionTimes[config[0]] = new Date().getTime();
         $.ajax({
             data: JSON.stringify({
                 controller: config[1],
@@ -1111,12 +1125,13 @@ $(document).ready(function () {
             contentType: "application/json; charset=utf-8",
             url: '/simRoute',
             beforeSend: function (jqXHR) {
+                $("#results-table tr.special").hide();
                 var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
 
                 // Create an empty <tr> element and add it to the 1st position of the table:
                 var row = table.insertRow(-1);
-                var fisrtCell = row.insertCell(-1);
-                fisrtCell.outerHTML = "<th scope=\"row\">" + String(config[0]) + "</th>";
+                var firstCell = row.insertCell(-1);
+                firstCell.outerHTML = "<th scope=\"row\">" + String(config[0]) + "</th>";
 
                 // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
                 // Set controller
@@ -1129,25 +1144,34 @@ $(document).ready(function () {
 
                 // Set status
                 c = row.insertCell(-1);
-                c.innerHTML = "Running";
+                c.innerHTML = "Running...";
 
                 for (let j = 0; j < 4; j++) {
                     row.insertCell(-1);
                 }
             }
         }).done(function (data) {
-            treeData = data.classi;
-            numVars = data.numVars;
-            numResults = data.numResults;
-
-            // Set status to completed
-            var rows = $("#results-table tbody tr");
+            let experimentRow;
+            let rows = $("#results-table tbody tr");
             for (let j = 0; j < rows.length; j++) {
                 experiment_id = rows[j].children[0].innerHTML;
-                if (experiment_id == config[0]) {
-                    rows[j].children[3].innerHTML = "Completed";
+                if (experiment_id === config[0]) {
+                    experimentRow = rows[j];
                 }
             }
+            console.assert(experimentRow);
+            experimentRow.children[3].innerHTML = "Completed";
+            experimentRow.children[4].innerHTML = data['inner nodes'];
+            experimentRow.children[5].innerHTML = data['nodes'] - data['inner nodes'];
+            const elapsedTime = new Date().getTime() - constructionTimes[config[0]];
+            experimentRow.children[6].innerHTML = elapsedTime.milliSecondsToHHMMSS();
+            experimentRow.children[7].innerHTML = '<i class="fa fa-eye text-primary"></i>';
+
+            $(experimentRow.children[7]).find('i.fa-eye').on('click', (event) => {
+                $.post('/select', {runConfigIndex: config[0]}, () => {
+                    window.location.href = 'simulator'
+                });
+            });
         });
     }
 
