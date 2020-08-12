@@ -37,7 +37,11 @@ class StrixDatasetLoader(DatasetLoader):
         output_size = int(read_lines[3].split(' ')[-1])
         lines = int(read_lines[4].split(' ')[-1])
         num_states = int(read_lines[5].split(' ')[-1])
-        size_per_state = len(read_lines[6].split(' ')[-1].split(','))
+        size_per_state = read_lines[6].split(' ')[-1][1:-2].split(',')
+        if len(size_per_state) == 1 and size_per_state[0]=='':
+            size_per_state = 0
+        else:
+            size_per_state = len(size_per_state)
 
         state_size = input_size + size_per_state
 
@@ -47,7 +51,7 @@ class StrixDatasetLoader(DatasetLoader):
         max_non_determinism = 0
 
         # find all possible values that the goal state can contain
-        opened = [i.split(' ')[1:2] for i in read_lines[7:7+lines]]
+        opened = [i.split(' ')[1]+i.split(' ')[2] for i in read_lines[7:7+lines]]
         flatten = lambda l: [item.replace('(','').replace(')','').replace('-','').replace('+','').replace('\n','').replace(',','') for sublist in l for item in sublist]
         opened = np.unique(np.array([i for i  in flatten(opened) if i!=''], dtype=int))
 
@@ -104,6 +108,9 @@ class StrixDatasetLoader(DatasetLoader):
                 list_of_possible_goal_states = [goal_state_array]
                 for index in non_determined_input_bits:
                     list_of_possible_goal_states = get_possible_evaluations(list_of_possible_goal_states, index, opened)
+                    if len(list_of_possible_goal_states)>10000:
+                        print("More than 10000 goal states")
+                        return ([],dict(),[],dict(),dict())
 
             # get all possible output values
             outputs = line[:-1].split(' ')[3:]
@@ -132,7 +139,16 @@ class StrixDatasetLoader(DatasetLoader):
             y_list.extend([add_list]*number_of_added)
         x = np.array(x_list)
 
-        y_flat = [item for sublist in y_list for item in sublist]
+        if len(y_list)*max_non_determinism>100000:
+            print('length',len(y_list),'det',max_non_determinism)
+
+            y_flat = []
+            for liste in y_list:
+                for val in liste:
+                    if not val in y_flat:
+                        y_flat.append(val)
+        else:
+            y_flat = [item for sublist in y_list for item in sublist]
         unique_label_to_float = {x+1: y for x, y in enumerate(np.unique(y_flat))}
         float_to_label = {y: x+1 for x,y in enumerate(np.unique(y_flat))}
         replace_float = lambda l : [float_to_label[item] for item in l]
