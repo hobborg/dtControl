@@ -1272,12 +1272,14 @@ $(document).ready(function () {
                 document.getElementById("playerDiv").style.visibility = "visible";
                 document.getElementById("timeRange").style.visibility = "visible";
                 document.getElementById("instep").style.visibility = "visible";
-                document.getElementById("animationDiv").style.visibility = "visible";
+                // document.getElementById("animationDiv").style.visibility = "visible"; // TODO Enable this again
 
                 var mini = document.getElementsByClassName("card-body");
                 for (var i = 0; i < mini.length; i++) {
                     mini[i].style.height = "425px";
                 }
+                document.getElementById("treeHere").style.height = "85%";
+                document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree
                 if ($('#controller').val() == "cartpole.scs") {
