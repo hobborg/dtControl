@@ -173,7 +173,7 @@ function fillYML() {
 
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/yml', true);
-xhr.onload = function() {
+xhr.onload = function () {
     // Reads the config.yml file
     data2 = JSON.parse(this.response);
     if (xhr.status >= 200 && xhr.status < 400) {
@@ -219,7 +219,7 @@ xhr.send();
 
 var modl = new XMLHttpRequest();
 modl.open('GET', './examples', true);
-modl.onload = function() {
+modl.onload = function () {
     // Reades example folder and populates controller section in first form
     data1 = JSON.parse(this.response);
     for (var i = 0; i < data1.length; i++) {
@@ -246,7 +246,7 @@ var i = 0,
     duration = 0,
     root;
 
-var margin = { top: 20, right: 120, bottom: 20, left: 120 },
+var margin = {top: 20, right: 120, bottom: 20, left: 120},
     width = 1560 - margin.right - margin.left,
     height = 500 - margin.top - margin.bottom;
 var width, height;
@@ -258,7 +258,9 @@ function constructTree() {
         .size([height, width]);
 
     diagonal = d3.svg.diagonal()
-        .projection(function(d) { return [d.y, d.x]; });   // Flip this to go horizontal layout
+        .projection(function (d) {
+            return [d.y, d.x];
+        });   // Flip this to go horizontal layout
 
     var row_width = $("#treeHere").parent().width();
     var row_height = $("#treeHere").parent().height();
@@ -266,7 +268,7 @@ function constructTree() {
         .attr("width", row_width)
         .attr("height", row_height)
         .attr("style", "overflow-x: auto; overflow-y: auto;")
-        .call(d3.zoom().on("zoom", function() {
+        .call(d3.zoom().on("zoom", function () {
             svg.attr("transform", d3.event.transform)
         }))
         .append("g")
@@ -302,14 +304,14 @@ function click(d) {
         lastNode = d;
 
         $.ajax({
-                data: JSON.stringify({
-                    address: (d.address)
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/refreshImpurities'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                address: (d.address)
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/refreshImpurities'
+        })
+            .done(function (data) {
                 // TODO see what all to refresh here
                 $("#computedPredicatesTableFull > tbody").html("");
                 for (var i = 0; i < data.computed_predicates.length; i++) {
@@ -368,38 +370,58 @@ function update(source) {
 
     // Normalize for fixed-depth.
     // Horizontal layout: drop d.x = d.x * 12
-    nodes.forEach(function(d) { d.y = d.depth * 180; /* d.x = d.x * 12; */ });
+    nodes.forEach(function (d) {
+        d.y = d.depth * 180; /* d.x = d.x * 12; */
+    });
 
     // Update the nodes…
     var node = svg.selectAll("g.node")
-        .data(nodes, function(d) { return d.id || (d.id = ++i); });
+        .data(nodes, function (d) {
+            return d.id || (d.id = ++i);
+        });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
         .attr("class", "node")
-        .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })  // Horizontal layout: flip x, y
+        .attr("transform", function (d) {
+            return "translate(" + source.y0 + "," + source.x0 + ")";
+        })  // Horizontal layout: flip x, y
         .on("click", click);
 
     nodeEnter.append("circle")
         .attr("r", 1e-6)
-        .style("fill", function(d) { return d._children ? "lightsteelblue" : d.coleur; });
+        .style("fill", function (d) {
+            return d._children ? "lightsteelblue" : d.coleur;
+        });
 
     nodeEnter.append("text")
-        .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
+        .attr("x", function (d) {
+            return d.children || d._children ? -13 : 13;
+        })
         .attr("dy", ".35em")
-        .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-        .attr("id", function(d) { return "addr" + d.address.toString(); })
-        .text(function(d) { return d.name; })
+        .attr("text-anchor", function (d) {
+            return d.children || d._children ? "end" : "start";
+        })
+        .attr("id", function (d) {
+            return "addr" + d.address.toString();
+        })
+        .text(function (d) {
+            return d.name;
+        })
         .style("fill-opacity", 1e-6);
 
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });  // Horizontal layout: flip x, y
+        .attr("transform", function (d) {
+            return "translate(" + d.y + "," + d.x + ")";
+        });  // Horizontal layout: flip x, y
 
     nodeUpdate.select("circle")
         .attr("r", 10)
-        .style("fill", function(d) { return d._children ? "lightsteelblue" : d.coleur; });
+        .style("fill", function (d) {
+            return d._children ? "lightsteelblue" : d.coleur;
+        });
 
     nodeUpdate.select("text")
         .style("fill-opacity", 1);
@@ -407,7 +429,9 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })  // Horizontal layout: flip x, y
+        .attr("transform", function (d) {
+            return "translate(" + source.y + "," + source.x + ")";
+        })  // Horizontal layout: flip x, y
         .remove();
 
     nodeExit.select("circle")
@@ -418,14 +442,16 @@ function update(source) {
 
     // Update the links…
     var link = svg.selectAll("path.link")
-        .data(links, function(d) { return d.target.id; });
+        .data(links, function (d) {
+            return d.target.id;
+        });
 
     // Enter any new links at the parent's previous position.
     link.enter().insert("path", "g")
         .attr("class", "link")
-        .attr("d", function(d) {
-            var o = { x: source.x0, y: source.y0 };
-            return diagonal({ source: o, target: o });
+        .attr("d", function (d) {
+            var o = {x: source.x0, y: source.y0};
+            return diagonal({source: o, target: o});
         });
 
     // Transition links to their new position.
@@ -436,14 +462,14 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     link.exit().transition()
         .duration(duration)
-        .attr("d", function(d) {
-            var o = { x: source.x, y: source.y };
-            return diagonal({ source: o, target: o });
+        .attr("d", function (d) {
+            var o = {x: source.x, y: source.y};
+            return diagonal({source: o, target: o});
         })
         .remove();
 
     // Stash the old positions for transition.
-    nodes.forEach(function(d) {
+    nodes.forEach(function (d) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
@@ -636,11 +662,11 @@ function renderChart(id, data, labels, ub, lb) {
         data: {
             labels: labels,
             datasets: [{
-                    label: 'Value of x' + chartIndex,
-                    data: data,
-                    borderColor: "#3e95cd",
-                    fill: false
-                },
+                label: 'Value of x' + chartIndex,
+                data: data,
+                borderColor: "#3e95cd",
+                fill: false
+            },
                 {
                     label: 'UB of x' + chartIndex,
                     data: ub,
@@ -744,15 +770,15 @@ async function oneStep() {
         }
 
         $.ajax({
-                data: JSON.stringify({
-                    x_pass: x_toPass,
-                    u_pass: u_toPass
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/stepRoute'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                x_pass: x_toPass,
+                u_pass: u_toPass
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/stepRoute'
+        })
+            .done(function (data) {
 
                 const tab = document.getElementById('simTable');
                 const dumrow = document.createElement('tr');
@@ -782,7 +808,11 @@ async function oneStep() {
                     dumrow.appendChild(drc2);
                 }
                 tab.appendChild(dumrow);
-                document.querySelector("#simTable tr:last-child").scrollIntoView({behaviour: 'smooth', block: 'nearest', inline: 'start'});
+                document.querySelector("#simTable tr:last-child").scrollIntoView({
+                    behaviour: 'smooth',
+                    block: 'nearest',
+                    inline: 'start'
+                });
 
                 colourPath(data.x_new[2]);
 
@@ -833,14 +863,14 @@ function closeNav() {
     document.getElementById("main").style.paddingLeft = "0";
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
 
     var numChanges = 0;
 
     openNav();
     document.getElementById("navbar-hamburger").className += " is-active";
 
-    $('button.hamburger').on('click', function(event) {
+    $('button.hamburger').on('click', function (event) {
         if ($(this).hasClass("is-active")) {
             closeNav();
         } else {
@@ -854,43 +884,43 @@ $(document).ready(function() {
     accordionButton.on('click', event => {
         const wasCollapsed = accordionButton.hasClass('collapsed');
         accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
-        accordionButton.find('svg').css({'transform' : 'rotate('+ (wasCollapsed ? 90 : 0) +'deg)'});
+        accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
     });
 
-    $("#openSecondFormButton").on("click", function(event) {
-       if ($(this).hasClass("btn-primary")) {
-           $(this).removeClass("btn-primary");
-           $(this).addClass("btn-secondary");
-           triggerDynamicsInput();
-           $(this).html("Simulate off");
-       } else {
-           $(this).removeClass("btn-secondary");
-           $(this).addClass("btn-primary");
-           document.getElementById("mainRow2").style.visibility = "hidden";
-           document.getElementById("mainRow3").style.visibility = "hidden";
-           //document.getElementById("expandThisDiv").style.height = "450px";
-           document.getElementById("playerDiv").style.visibility = "hidden";
-           document.getElementById("timeRange").style.visibility = "hidden";
-           document.getElementById("instep").style.visibility = "hidden";
-           document.getElementById("animationDiv").style.visibility = "hidden";
+    $("#openSecondFormButton").on("click", function (event) {
+        if ($(this).hasClass("btn-primary")) {
+            $(this).removeClass("btn-primary");
+            $(this).addClass("btn-secondary");
+            triggerDynamicsInput();
+            $(this).html("Simulate off");
+        } else {
+            $(this).removeClass("btn-secondary");
+            $(this).addClass("btn-primary");
+            document.getElementById("mainRow2").style.visibility = "hidden";
+            document.getElementById("mainRow3").style.visibility = "hidden";
+            //document.getElementById("expandThisDiv").style.height = "450px";
+            document.getElementById("playerDiv").style.visibility = "hidden";
+            document.getElementById("timeRange").style.visibility = "hidden";
+            document.getElementById("instep").style.visibility = "hidden";
+            document.getElementById("animationDiv").style.visibility = "hidden";
 
-           $("#dynamics-body").show();
-           $("#initial-values").hide();
-           $("#formSecond-next-button").show();
-           $("#formSecond-randomize-button").hide();
-           $("#formSecond-submit-button").hide();
-           $("#exampleModalLongTitle").html("Enter system dynamics");
+            $("#dynamics-body").show();
+            $("#initial-values").hide();
+            $("#formSecond-next-button").show();
+            $("#formSecond-randomize-button").hide();
+            $("#formSecond-submit-button").hide();
+            $("#exampleModalLongTitle").html("Enter system dynamics");
 
-           //document.getElementById("hideThisDiv").style.display = "block";
-           // TODO: Reset tree colors
-           $(this).html("Simulate");
-       }
+            //document.getElementById("hideThisDiv").style.display = "block";
+            // TODO: Reset tree colors
+            $(this).html("Simulate");
+        }
 
     });
 
 
     // Construct from sidenav
-    $("input[name='construct'], button[name='construct']").on('click', function(event) {
+    $("input[name='construct'], button[name='construct']").on('click', function (event) {
         $.ajax({
             data: JSON.stringify({
                 controller: $('#controller').val(),
@@ -906,7 +936,7 @@ $(document).ready(function() {
             contentType: "application/json; charset=utf-8",
             url: '/simRoute'
         })
-            .done(function(data) {
+            .done(function (data) {
                 document.getElementById("openSecondFormButton").style.visibility = "visible";
                 document.getElementById("mainRow1").style.visibility = "visible";
                 // document.getElementById("editTreeDiv").style.visibility = "visible";
@@ -1027,7 +1057,7 @@ $(document).ready(function() {
     });
 
     // Add from sidenav
-    $("input[name='add'], button[name='add']").on('click', function(event) {
+    $("input[name='add'], button[name='add']").on('click', function (event) {
         event.preventDefault();
         var controller = $('#controller').val();
         var config = $('#config').val();
@@ -1080,7 +1110,7 @@ $(document).ready(function() {
             type: 'POST',
             contentType: "application/json; charset=utf-8",
             url: '/simRoute',
-            beforeSend: function(jqXHR) {
+            beforeSend: function (jqXHR) {
                 var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
 
                 // Create an empty <tr> element and add it to the 1st position of the table:
@@ -1105,19 +1135,19 @@ $(document).ready(function() {
                     row.insertCell(-1);
                 }
             }
-        }).done(function(data) {
-                treeData = data.classi;
-                numVars = data.numVars;
-                numResults = data.numResults;
+        }).done(function (data) {
+            treeData = data.classi;
+            numVars = data.numVars;
+            numResults = data.numResults;
 
-                // Set status to completed
-                var rows = $("#results-table tbody tr");
-                for (let j = 0; j < rows.length; j++) {
-                    experiment_id = rows[j].children[0].innerHTML;
-                    if (experiment_id == config[0]) {
-                        rows[j].children[3].innerHTML = "Completed";
-                    }
+            // Set status to completed
+            var rows = $("#results-table tbody tr");
+            for (let j = 0; j < rows.length; j++) {
+                experiment_id = rows[j].children[0].innerHTML;
+                if (experiment_id == config[0]) {
+                    rows[j].children[3].innerHTML = "Completed";
                 }
+            }
         });
     }
 
@@ -1125,26 +1155,26 @@ $(document).ready(function() {
         // Write code to call simRoute
         var row_items = $(this).parent().parent().find('th,td');
         row_content = []
-        row_items.each(function(k, v) {
-           row_content.push(v.innerHTML);
+        row_items.each(function (k, v) {
+            row_content.push(v.innerHTML);
         });
         run_single_benchmark(row_content);
     });
 
     // Submits popup modal form (for passing initial values of state variables)
-    $('#formSecond').on('submit', function(event) {
+    $('#formSecond').on('submit', function (event) {
         console.log('form is submitted');
         var x_toPass = [];
         for (var i = 0; i < numVars; i++) {
             x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
-                data: JSON.stringify({ pass: x_toPass, dynamics: $("#dynamics-input").val() }),
-                contentType: "application/json; charset=utf-8",
-                type: 'POST',
-                url: '/initRoute'
-            })
-            .done(function(data) {
+            data: JSON.stringify({pass: x_toPass, dynamics: $("#dynamics-input").val()}),
+            contentType: "application/json; charset=utf-8",
+            type: 'POST',
+            url: '/initRoute'
+        })
+            .done(function (data) {
                 document.getElementById("mainRow2").style.visibility = "visible";
                 document.getElementById("mainRow3").style.visibility = "visible";
                 document.getElementById("expandThisDiv").style.height = "450px";
@@ -1229,7 +1259,7 @@ $(document).ready(function() {
         event.preventDefault();
     });
 
-    $("#formSecond-next-button").on("click", function(event) {
+    $("#formSecond-next-button").on("click", function (event) {
         $("#dynamics-body").hide();
         $("#initial-values").show();
         $("#formSecond-next-button").hide();
@@ -1239,23 +1269,23 @@ $(document).ready(function() {
     });
 
     // Form that collects edit tree data
-    $('#formThird').on('submit', function(event) {
+    $('#formThird').on('submit', function (event) {
         $.ajax({
-                data: JSON.stringify({
-                    controller: $('#controller_3').val(),
-                    config: $('#config_3').val(),
-                    determinize: $('#determinize_3').val(),
-                    numeric_predicates: $('#numeric-predicates_3').val(),
-                    categorical_predicates: $('#categorical-predicates_3').val(),
-                    impurity: $('#impurity_3').val(),
-                    tolerance: $('#tolerance_3').val(),
-                    safe_pruning: $('#safe-pruning_3').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/reconstructRoute1'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                controller: $('#controller_3').val(),
+                config: $('#config_3').val(),
+                determinize: $('#determinize_3').val(),
+                numeric_predicates: $('#numeric-predicates_3').val(),
+                categorical_predicates: $('#categorical-predicates_3').val(),
+                impurity: $('#impurity_3').val(),
+                tolerance: $('#tolerance_3').val(),
+                safe_pruning: $('#safe-pruning_3').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/reconstructRoute1'
+        })
+            .done(function (data) {
                 // Add tree appending functions here
                 // Consult formFirst submit function
                 // ########################################################### Edit here ###########################################################
@@ -1264,32 +1294,32 @@ $(document).ready(function() {
     })
 
     // Form that collects edit tree data (User text predicates)
-    $('#formFourth').on('submit', function(event) {
+    $('#formFourth').on('submit', function (event) {
         $.ajax({
-                data: JSON.stringify({
-                    predicate: $('#user_pred').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/reconstructRoute2'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                predicate: $('#user_pred').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/reconstructRoute2'
+        })
+            .done(function (data) {
                 // Add tree appending functions here
                 // ########################################################### Edit here ###########################################################
             })
         event.preventDefault();
     })
 
-    $('#evaluatePredicateImpurityForm').on('submit', function(event) {
+    $('#evaluatePredicateImpurityForm').on('submit', function (event) {
         $.ajax({
-                data: JSON.stringify({
-                    predicate: $('#init_domain_knowledge').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/evaluatePredicateImpurity'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                predicate: $('#init_domain_knowledge').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/evaluatePredicateImpurity'
+        })
+            .done(function (data) {
                 document.getElementById("computedImpurity").textContent = data.impurity;
                 document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'visible';
             })
@@ -1297,7 +1327,7 @@ $(document).ready(function() {
     })
 
     // Handles the instep function
-    $('#instep button').on('click', function(event) {
+    $('#instep button').on('click', function (event) {
 
         if (!nextDisabled) {
             recolourPath();
@@ -1315,17 +1345,17 @@ $(document).ready(function() {
                 steps = 1;
             }
             $.ajax({
-                    data: JSON.stringify({
-                        steps: steps,
-                        x_pass: (x_toPass),
-                        u_pass: (u_toPass)
+                data: JSON.stringify({
+                    steps: steps,
+                    x_pass: (x_toPass),
+                    u_pass: (u_toPass)
 
-                    }),
-                    type: 'POST',
-                    contentType: "application/json; charset=utf-8",
-                    url: '/inStepRoute'
-                })
-                .done(function(data) {
+                }),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/inStepRoute'
+            })
+                .done(function (data) {
                     const tab = document.getElementById('simTable');
 
                     for (var i = 0; i < steps; i++) {
@@ -1351,7 +1381,11 @@ $(document).ready(function() {
                             dumrow.appendChild(drc2);
                         }
                         tab.appendChild(dumrow);
-                        document.querySelector("#simTable tr:last-child").scrollIntoView({behaviour: 'smooth', block: 'nearest', inline: 'start'});
+                        document.querySelector("#simTable tr:last-child").scrollIntoView({
+                            behaviour: 'smooth',
+                            block: 'nearest',
+                            inline: 'start'
+                        });
 
                         for (var j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
@@ -1392,7 +1426,7 @@ $(document).ready(function() {
 
 
     // Handles the player inputs
-    $(document).on("click", "input[name=player]", function(event) {
+    $(document).on("click", "input[name=player]", function (event) {
         var option = parseInt($("input[name=player]:checked").val());
         //play pause next back
         if (option == 0) {
@@ -1413,7 +1447,7 @@ $(document).ready(function() {
     });
 
     // Handles selection of different rows in simulation table
-    $(document).on("change", "input[name=indexers]", function() {
+    $(document).on("change", "input[name=indexers]", function () {
         var ind = parseInt($("input[name='indexers']:checked").val());
         recolourPath();
         currentSim = ind;
@@ -1423,7 +1457,7 @@ $(document).ready(function() {
     });
 
     // Handles changing of form selections when different configs are changed
-    $("#config").change(function() {
+    $("#config").change(function () {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
             for (x in data2.presets) {
@@ -1469,7 +1503,7 @@ $(document).ready(function() {
     });
 
     // Handles changing of form selections when different configs are changed (For edit tree popup)
-    $("#config_3").change(function() {
+    $("#config_3").change(function () {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
             for (x in data2.presets) {
@@ -1515,16 +1549,16 @@ $(document).ready(function() {
     });
 
     // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls
-    $(".propList").change(function() {
+    $(".propList").change(function () {
         document.getElementById("config").value = "custom";
     });
-    $(".propList_3").change(function() {
+    $(".propList_3").change(function () {
         document.getElementById("config_3").value = "custom";
     });
-    $("#tolerance").on("input", function() {
+    $("#tolerance").on("input", function () {
         document.getElementById("config").value = "custom";
     });
-    $("#tolerance_3").on("input", function() {
+    $("#tolerance_3").on("input", function () {
         document.getElementById("config_3").value = "custom";
     });
     // Simple .change() does not work here because it is dynamically added
@@ -1599,14 +1633,14 @@ function addToDomainKnowledgeTable() {
 
 function closeInitialCustomTreeModal() {
     $.ajax({
-            data: JSON.stringify({
-                domainKnowledge: (finalDomainKnowledge)
-            }),
-            type: 'POST',
-            contentType: "application/json; charset=utf-8",
-            url: '/featureLabelSpecifications'
-        })
-        .done(function(data) {
+        data: JSON.stringify({
+            domainKnowledge: (finalDomainKnowledge)
+        }),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/featureLabelSpecifications'
+    })
+        .done(function (data) {
             for (var i = 0; i < data.feature_specifications.length; i++) {
                 const dumrow = document.createElement('tr');
 
@@ -1632,7 +1666,7 @@ function closeInitialCustomTreeModal() {
             $('#initialCustomTreeModal').modal('hide');
 
             // Drawing out initial tree now
-            treeData = [{ "name": "Build", "parent": null, "coleur": "white", "children": [], "address": [] }]
+            treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
             height = 400;
             width = 1000;
 
@@ -1650,20 +1684,26 @@ function splitNode() {
     var toSendPredicate = $('input[name="buildPredicate"]:checked').val();
     console.log(toSendPredicate);
     $.ajax({
-            data: JSON.stringify({
-                address: (selectedNode),
-                predicate: toSendPredicate
-            }),
-            type: 'POST',
-            contentType: "application/json; charset=utf-8",
-            url: '/splitNode'
-        })
-        .done(function(data) {
+        data: JSON.stringify({
+            address: (selectedNode),
+            predicate: toSendPredicate
+        }),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/splitNode'
+    })
+        .done(function (data) {
             // returns number of splits only
             var numSplits = data.number_splits;
             lastNode.children = [];
             for (var i = 0; i < numSplits; i++) {
-                lastNode.children.push({ "name": "Build", "parent": lastNode.name, "coleur": "white", "children": [], "address": lastNode.address.concat([i]) });
+                lastNode.children.push({
+                    "name": "Build",
+                    "parent": lastNode.name,
+                    "coleur": "white",
+                    "children": [],
+                    "address": lastNode.address.concat([i])
+                });
             }
             lastNode.coleur = "white";
             lastNode.name = document.getElementById('expression' + toSendPredicate).textContent;
@@ -1689,7 +1729,7 @@ function triggerDynamicsInput() {
 
 // Have to select dynamically created elements like this
 // Handles colouring of table rows when clicked
-$(document).on("click", "#simTable tr", function() {
+$(document).on("click", "#simTable tr", function () {
     $(this).addClass('selected').siblings().removeClass('selected');
     var value = $(this).find('td:first').html();
     console.log(value);
@@ -1703,11 +1743,11 @@ $(document).on("click", "#simTable tr", function() {
 
 // 'Animate tree' button and 'Edit tree' button
 
-$(document).on("change", "#animateTree", function() {
+$(document).on("change", "#animateTree", function () {
     treeAnimation = !treeAnimation;
     console.log(treeAnimation);
 });
-$(document).on("change", "#editTree", function() {
+$(document).on("change", "#editTree", function () {
     treeEdit = !treeEdit;
     console.log(treeEdit);
 });
