@@ -250,6 +250,7 @@ modl.send();
 var treeData = "",
     tree = "",
     diagonal = "",
+    controllerName = "",
     svg = "";
 
 var i = 0,
@@ -272,8 +273,6 @@ function constructTree() {
             return [d.y, d.x];
         });   // Flip this to go horizontal layout
 
-    var row_width = $("#treeHere").parent().width()*0.98;
-    var row_height = $("#treeHere").parent().height()*0.9;
     svg = d3.select("#treeHere").append("svg")
         .attr("width", "100%")
         .attr("height", "100%")
@@ -381,7 +380,7 @@ function update(source) {
     // Normalize for fixed-depth.
     // Horizontal layout: drop d.x = d.x * 12
     nodes.forEach(function (d) {
-        d.y = d.depth * 180; /* d.x = d.x * 12; */
+        d.y = d.depth * 150; d.x = d.x * 2.5;
     });
 
     // Update the nodes…
@@ -629,7 +628,7 @@ function collapseAll(nd) {
 
 // If cartpole model used, draws it
 function drawCanvas() {
-    if ($('#controller').val() == "cartpole.scs") {
+    if (controllerName == "cartpole.scs") {
         var lineLength = 100;
         var canvas = document.getElementById("cartCanvas");
         var c = canvas.getContext("2d");
@@ -957,7 +956,7 @@ $(document).ready(function () {
             $("#formSecond-submit-button").hide();
             $("#exampleModalLongTitle").html("Enter system dynamics");
 
-            //document.getElementById("hideThisDiv").style.display = "block";
+            document.getElementById("hideThisDiv").style.display = "block";
             // TODO: Reset tree colors
             $(this).html("Simulate");
         }
@@ -973,6 +972,7 @@ $(document).ready(function () {
             treeData = data.classi;
             numVars = data.numVars;
             numResults = data.numResults;
+            controllerName = data.controllerName;
 
             console.log(treeData);
 
@@ -1089,7 +1089,7 @@ $(document).ready(function () {
     // Add from sidenav
     $("input[name='add'], button[name='add']").on('click', function (event) {
         event.preventDefault();
-        var controller = $('#controller').val();
+        var controller = $("#controller").val();
         var config = $('#config').val();
         var determinize = $('#determinize').val();
         var numeric_predicates = $('#numeric-predicates').val();
@@ -1272,7 +1272,7 @@ $(document).ready(function () {
                 document.getElementById("playerDiv").style.visibility = "visible";
                 document.getElementById("timeRange").style.visibility = "visible";
                 document.getElementById("instep").style.visibility = "visible";
-                // document.getElementById("animationDiv").style.visibility = "visible"; // TODO Enable this again
+                document.getElementById("animationDiv").style.visibility = "visible"; // TODO Animate button, enable this again
 
                 var mini = document.getElementsByClassName("card-body");
                 for (var i = 0; i < mini.length; i++) {
@@ -1282,7 +1282,7 @@ $(document).ready(function () {
                 document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree
-                if ($('#controller').val() == "cartpole.scs") {
+                if (controllerName == "cartpole.scs") {
                     document.getElementById("expandThisDiv").className = "col-lg-6";
                     document.getElementById("hideThisDiv").style.display = "block";
                 } else {

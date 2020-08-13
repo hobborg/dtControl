@@ -2,6 +2,9 @@ import json
 import os
 import webbrowser
 
+import math
+import decimal
+import sys
 import numpy as np
 import sympy as sp
 import yaml
@@ -48,8 +51,7 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
-
-def runge_kutta(x, u, nint=10):
+def runge_kutta(x, u, nint=5):
     # nint is number of times to run Runga-Kutta loop
     global tau, lambda_list
     h = tau / nint
@@ -61,28 +63,29 @@ def runge_kutta(x, u, nint=10):
 
     for iter in range(1, nint + 1):
         for i in range(len(x)):
-            k0[i] = h * computation(i, x, u, list(lambda_list))
+            k0[i] = computation(i, x, u, list(lambda_list))
         for i in range(len(x)):
-            k1[i] = h * computation(i, [(x[j] + 0.5 * k0[j]) for j in range(len(x))], u, list(lambda_list))
+            k1[i] = computation(i, [(x[j] + h * 0.5 * k0[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
-            k2[i] = h * computation(i, [(x[j] + 0.5 * k1[j]) for j in range(len(x))], u, list(lambda_list))
+            k2[i] = computation(i, [(x[j] + h * 0.5 * k1[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
-            k3[i] = h * computation(i, [(x[j] + k2[j]) for j in range(len(x))], u, list(lambda_list))
+            k3[i] = computation(i, [(x[j] + h * k2[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
-            x[i] = x[i] + (1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
+            x[i] = x[i] + (h * 1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
     return x
 
 
 # returns computed value of lambda function every time Runga-Kutta needs it
-def computation(index, x, u, ll):
+def computation(index, x, u, lambda_list):
     new_vl = []
-    for name in ll[index][2]:
+    for name in lambda_list[index][2]:
         spilt_of_var = (str(name)).split('_')
         if spilt_of_var[0] == 'x':
             new_vl.append(x[int(spilt_of_var[1])])
         else:
             new_vl.append(u[int(spilt_of_var[1])])
-    return_float = float(ll[index][1](*tuple(new_vl)))
+    # Apply lambda function
+    return_float = float(lambda_list[index][1](*tuple(new_vl)))
     return return_float
 
 
@@ -90,14 +93,24 @@ def computation(index, x, u, ll):
 def discretize(x):
     diff = []
     for i in range(numVars):
-        lower = minBounds[i] + stepSize[i] * (int((x[i] - minBounds[i]) / stepSize[i]))
-        upper = minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i]))
-        mid = (lower + upper) / 2
-        if x[i] >= mid:
-            diff.append(upper)
-        else:
-            diff.append(lower)
+        # lower = minBounds[i] + stepSize[i] * (int((x[i] - minBounds[i]) / stepSize[i]))
+        # upper = minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i]))
+        # mid = (lower + upper) / 2
+        # if x[i] >= mid:
+        #     diff.append(upper)
+        # else:
+        #     diff.append(lower)
         # diff.append(minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])))
+        # print(f"minBounds[i] = {minBounds[i]}, stepSize[i] = {stepSize[i]}, maxBounds[i] = {maxBounds[i]}")
+
+        for xx in np.arange(minBounds[i], maxBounds[i]+stepSize[i], stepSize[i]):
+            if round(xx, 6) > round(x[i], 6):  # TODO Fix this mess
+                diff.append(xx)
+                # print(x[i], xx, minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])),
+                #       minBounds[i] + stepSize[i] * math.ceil((x[i] - minBounds[i]) / stepSize[i]))
+                break
+
+        # diff.append(minBounds[i] + stepSize[i] * math.ceil((x[i] - minBounds[i])/stepSize[i]))
     return diff
 
 
@@ -151,7 +164,7 @@ def construct():
     stepSize = classi[1]["step_size"]
     run_time = round(classi[4], 2)
 
-    computed_configs[id] = ([classi[0]], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults)
+    computed_configs[id] = ([classi[0]], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
     stats = classi[3].get_stats()
     new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
     this_result = None
@@ -184,9 +197,9 @@ def simulator():
 @app.route("/computed")
 def computed():
     global saved_tree, minBounds, maxBounds, stepSize, numVars, numResults
-    json_tree, saved_tree, minBounds, maxBounds, stepSize, numVars, numResults = selected_computation_result
+    json_tree, saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, controller_name = selected_computation_result
     returnDict = {"classi": json_tree, "numVars": numVars, "numResults": numResults,
-                  "bound": [minBounds, maxBounds]}
+                  "bound": [minBounds, maxBounds], "controllerName": controller_name}
     return jsonify(returnDict)
 
 
@@ -215,16 +228,16 @@ def initroute():
             else:
                 if line != '':
                     if not is_dynamics:
-                        foo = line.split("=")
-                        variable_subs.append((foo[0].strip(), float(foo[1])))
-                        if foo[0].strip() == "tau" or foo[0].strip() == "Tau":
-                            tau = float(foo[1])
+                        lhs, rhs = line.split("=")
+                        variable_subs.append((lhs.strip(), float(rhs)))
+                        if lhs.strip() == "tau" or lhs.strip() == "Tau":
+                            tau = float(rhs)
                     else:
-                        foo = line.split("=")
-                        tmp = sp.sympify(foo[1].strip())
+                        lhs, rhs = line.split("=")
+                        tmp = sp.sympify(rhs.strip())
                         tmp = tmp.subs(variable_subs)
                         lam_1 = sp.lambdify(tmp.free_symbols, tmp)
-                        lambda_list.append((foo[0].strip(), lam_1, tmp.free_symbols))
+                        lambda_list.append((lhs.strip(), lam_1, tmp.free_symbols))
         lambda_list = sorted(lambda_list, key=lambda x: int(x[0].split("_")[1]))
     else:
         # If dynamics is not present sets this to false and browser raises an exception
@@ -342,7 +355,7 @@ def showscs():
     egs_path = os.path.join(SITE_ROOT, '..', '..', 'examples')
     valid_egs_list = []
     for file in os.scandir(egs_path):
-        if file.name.endswith(".scs") and (not file.name.startswith(".")):
+        if (file.name.endswith(".scs") or file.name.endswith(".storm.json") or file.name.endswith(".prism")) and (not file.name.startswith(".")):
             valid_egs_list.append(file.name)
     return json.dumps(valid_egs_list)
 
