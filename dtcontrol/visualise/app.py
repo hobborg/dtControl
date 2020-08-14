@@ -51,7 +51,7 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
-def runge_kutta(x, u, nint=5):
+def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
     global tau, lambda_list
     h = tau / nint
@@ -93,24 +93,20 @@ def computation(index, x, u, lambda_list):
 def discretize(x):
     diff = []
     for i in range(numVars):
-        # lower = minBounds[i] + stepSize[i] * (int((x[i] - minBounds[i]) / stepSize[i]))
-        # upper = minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i]))
-        # mid = (lower + upper) / 2
-        # if x[i] >= mid:
-        #     diff.append(upper)
-        # else:
-        #     diff.append(lower)
-        # diff.append(minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])))
-        # print(f"minBounds[i] = {minBounds[i]}, stepSize[i] = {stepSize[i]}, maxBounds[i] = {maxBounds[i]}")
+        # SCOTS picks the closest grid point
+        # for xx in np.arange(minBounds[i], maxBounds[i]+stepSize[i], stepSize[i]):
+        #     if round(xx, 6) > round(x[i], 6):  # TODO Fix this mess
+        #         if xx - x[i] > x[i] - xx - stepSize[i]:
+        #             diff.append(xx - stepSize[i])
+        #         else:
+        #             diff.append(xx)
+        #         # print(x[i], xx, minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])),
+        #         #       minBounds[i] + stepSize[i] * math.ceil((x[i] - minBounds[i]) / stepSize[i]))
+        #         break
 
-        for xx in np.arange(minBounds[i], maxBounds[i]+stepSize[i], stepSize[i]):
-            if round(xx, 6) > round(x[i], 6):  # TODO Fix this mess
-                diff.append(xx)
-                # print(x[i], xx, minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])),
-                #       minBounds[i] + stepSize[i] * math.ceil((x[i] - minBounds[i]) / stepSize[i]))
-                break
-
-        # diff.append(minBounds[i] + stepSize[i] * math.ceil((x[i] - minBounds[i])/stepSize[i]))
+        # Reference: https://gitlab.lrz.de/matthias/SCOTSv0.2/-/blob/master/src/UniformGrid.hh#L234
+        halfStepSize = (stepSize[i] / 2.0)
+        diff.append( (((x[i] - minBounds[i]) + halfStepSize)//stepSize[i]) * stepSize[i] + minBounds[i] )
     return diff
 
 
@@ -158,7 +154,7 @@ def construct():
     saved_tree = classi[3].root
 
     numVars = len(classi[1]["min"])
-    numResults = len(classi[2]["variables"])
+    numResults = len(classi[2]["variables"]) if "variables" in classi[2] else 0
     minBounds = classi[1]["min"]
     maxBounds = classi[1]["max"]
     stepSize = classi[1]["step_size"]

@@ -259,8 +259,8 @@ var i = 0,
 
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
     width = 1560 - margin.right - margin.left,
-    height = 500 - margin.top - margin.bottom;
-var width, height;
+    height = 800 - margin.top - margin.bottom;
+// var width, height;
 
 function constructTree() {
     // Generates the tree diagram
@@ -281,7 +281,7 @@ function constructTree() {
             svg.attr("transform", d3.event.transform)
         }))
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.right + ")");
 
     root = treeData[0];
     root.x0 = height / 2;
@@ -1773,7 +1773,7 @@ function closeInitialCustomTreeModal() {
 
             // Drawing out initial tree now
             treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
-            height = 400;
+            height = 800;
             width = 1000;
 
             constructTree();
