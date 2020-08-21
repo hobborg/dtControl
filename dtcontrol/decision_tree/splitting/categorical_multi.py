@@ -3,10 +3,9 @@ import sys
 
 import numpy as np
 
-import json
-
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
+
 
 class CategoricalMultiSplittingStrategy(SplittingStrategy):
     def __init__(self, value_grouping=False, tolerance=1e-5):
@@ -66,6 +65,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
                         best_new_impurity = new_impurity
                         best_new_value_groups = new_groups
         return value_groups, impurity
+
 
 class CategoricalMultiSplit(Split):
     def __init__(self, feature, value_groups=None):

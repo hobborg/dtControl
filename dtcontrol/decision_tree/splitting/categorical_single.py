@@ -1,7 +1,6 @@
-import json
-
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
+
 
 class CategoricalSingleSplittingStrategy(SplittingStrategy):
     def find_split(self, dataset, impurity_measure):
@@ -16,6 +15,7 @@ class CategoricalSingleSplittingStrategy(SplittingStrategy):
         if not splits:
             return None
         return min(splits.keys(), key=splits.get)
+
 
 class CategoricalSingleSplit(Split):
     """

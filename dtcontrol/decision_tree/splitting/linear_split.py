@@ -1,9 +1,9 @@
-import json
 from abc import ABC
 
 import numpy as np
 
 from dtcontrol.decision_tree.splitting.split import Split
+
 
 class LinearSplit(Split, ABC):
     """

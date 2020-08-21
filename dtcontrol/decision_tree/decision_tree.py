@@ -1,6 +1,6 @@
+import json
 import logging
 import pickle
-import json
 from collections.abc import Iterable
 from functools import reduce
 from typing import Sequence
@@ -16,6 +16,7 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
+
 
 class DecisionTree(BenchmarkSuiteClassifier):
     def __init__(self, splitting_strategies, impurity_measure, name, label_pre_processor=None, early_stopping=False,
@@ -170,7 +171,7 @@ class Node:
         assert len(subsets) > 1
         if any(len(s.x) == 0 for s in subsets):
             self.logger.warning("Aborting branch: no split possible. "
-                          "You might want to consider adding more splitting strategies.")
+                                "You might want to consider adding more splitting strategies.")
             return
         for subset in subsets:
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
@@ -386,6 +387,7 @@ class Node:
     def to_json_dict(self, variables=None, category_names=None):
         return {
             "actual_label": str(self.actual_label),
-            "children": [child.to_json_dict(variables=variables, category_names=category_names) for child in self.children],
+            "children": [child.to_json_dict(variables=variables, category_names=category_names) for child in
+                         self.children],
             "split": self.split.to_json_dict(variables=variables, category_names=category_names) if self.split else None
         }
