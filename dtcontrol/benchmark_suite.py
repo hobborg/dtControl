@@ -156,7 +156,7 @@ class BenchmarkSuite:
             else:
                 stats = classifier.get_stats()
                 cell = {'stats': stats, 'time': format_seconds(run_time)}
-                self.save_dot_and_c(classifier, dataset)
+                self.save_dot_c_json(classifier, dataset)
                 # if not isinstance(classifier, OC1Wrapper):
                 #     vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
                 #     classifier.print_vhdl(len(dataset.x_metadata["variables"]), vhdl_filename)
@@ -168,7 +168,7 @@ class BenchmarkSuite:
             cell = 'timeout'
         return cell
 
-    def save_dot_and_c(self, classifier, dataset):
+    def save_dot_c_json(self, classifier, dataset):
         # TODO: as seen with the BDDs, this should probably be abstracted. For instance, the classifier itself could
         # provide a list of file formats that it can print to and the benchmark suite would then simply call the
         # corresponding methods
