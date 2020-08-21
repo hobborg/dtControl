@@ -10,6 +10,7 @@ from os.path import join, exists, isfile
 
 import numpy as np
 from jinja2 import FileSystemLoader, Environment
+import json
 
 import dtcontrol
 from dtcontrol import util
@@ -185,6 +186,10 @@ class BenchmarkSuite:
         c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
         with open(c_filename, 'w+') as outfile:
             outfile.write(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
+
+        json_filename = self.get_filename(self.output_folder, dataset, classifier, '.json')
+        with open(json_filename, 'w+') as outfile:
+            outfile.write(classifier.toJSON(dataset.x_metadata, dataset.y_metadata))
 
     @staticmethod
     def get_filename(folder, dataset, classifier, extension, unique=False):

@@ -1,5 +1,6 @@
 import logging
 import pickle
+import json
 from collections.abc import Iterable
 from functools import reduce
 from typing import Sequence
@@ -81,6 +82,11 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def print_c(self):
         return self.root.print_c()
+
+    def toJSON(self, x_metadata, y_metadata):
+        variables = x_metadata.get('variables')
+        category_names = x_metadata.get('category_names')
+        return json.dumps(self.root.to_json_dict(variables=variables, category_names=category_names), indent=4)
 
     # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in
     # the "entity" block
@@ -376,3 +382,10 @@ class Node:
                 i += 1
             return result
         return f'y <= {str(label)};'
+
+    def to_json_dict(self, variables=None, category_names=None):
+        return {
+            "actual_label": str(self.actual_label),
+            "children": [child.to_json_dict(variables=variables, category_names=category_names) for child in self.children],
+            "split": self.split.to_json_dict(variables=variables, category_names=category_names) if self.split else None
+        }

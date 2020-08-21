@@ -3,6 +3,8 @@ import sys
 
 import numpy as np
 
+import json
+
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
@@ -100,3 +102,10 @@ class CategoricalMultiSplit(Split):
 
     def print_vhdl(self):
         return f'x{self.feature}]'
+
+    def to_json_dict(self, variables=None, category_names=None):
+        return {
+            "lhs":
+                {"coeff": 1, "var": variables[self.feature] if variables else self.feature},
+            "op": "multi",
+            "rhs": ""}
