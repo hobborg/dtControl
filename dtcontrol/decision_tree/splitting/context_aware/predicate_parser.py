@@ -125,16 +125,6 @@ class PredicateParser:
                                 str(var), str(single_predicate)))
                         raise WeinhuberPredicateParserException()
 
-                # Checking if every interval-Definition, actually occurs in in the term.
-                # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term.
-                if all_interval_defs:
-                    logger.root_logger.critical(
-                        "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
-                            str(all_interval_defs), str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
-
-                # Hidden edge cases which may occured:
-
                 # Hidden edge case1: Undefined functions.
                 # e.g. f(x) * c1 * x_3 >= 1 <--> f(x) is an undefined function.
                 if term.atoms(AppliedUndef):
@@ -160,6 +150,18 @@ class PredicateParser:
                     logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: {}".format(
                         str(single_predicate)))
                     raise WeinhuberPredicateParserException()
+
+                # Checking if every interval-Definition, actually occurs in in the term.
+                # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term.
+                for var in all_interval_defs:
+                    # additional column restrictions are allowed
+                    if re.match(r"x_\d+", str(var)):
+                        column_interval[var] = all_interval_defs[var]
+                    else:
+                        logger.root_logger.critical(
+                            "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
+                                str(all_interval_defs), str(single_predicate)))
+                        raise WeinhuberPredicateParserException()
 
                 return WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
 
