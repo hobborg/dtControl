@@ -76,7 +76,7 @@ class BenchmarkSuite:
         if isfile(path):
             return [path]
         else:
-            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism', '*.storm'] for p in glob.glob(join(path, ext))
+            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism', '*.storm', '*.kiss'] for p in glob.glob(join(path, ext))
                     if not p.endswith('_states.prism')]
 
     def display_html(self):
@@ -198,6 +198,7 @@ class BenchmarkSuite:
         return join(dir, name)
 
     def save_result(self, classifier_name, dataset, result):
+
         if dataset.get_name() not in self.results:
             self.results[dataset.get_name()] = {'classifiers': {},
                                                 'metadata': {
@@ -261,6 +262,8 @@ class BenchmarkSuite:
                 f.readline()
                 _, input_dim = map(int, f.readline().split("BEGIN")[1].split())
                 return input_dim > 1
+        elif "kiss" in ext:
+            return True
         else:
             return False
 

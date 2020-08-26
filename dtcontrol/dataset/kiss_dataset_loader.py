@@ -168,8 +168,8 @@ class StrixDatasetLoader(DatasetLoader):
         y_metadata["variables"] = [f"so_{i}" for i in range(size_per_state)]
         y_metadata["variables"].extend([f"o_{i}" for i in range(output_size)])
         y_metadata["min"] = [int(i) for i in min_value]
-        y_metadata["max"] = [i for i in np.amax(y_list, axis=(0,1))]
-        y_metadata["step_size"] = [1 for _ in x[0]]
+        y_metadata["max"] = [int(i) for i in np.amax(y_list, axis=(0,1))]
+        y_metadata["step_size"] = [int(1) for _ in x[0]]
 
         y = np.zeros((np.shape(y_list)[2],np.shape(y_list)[0],np.shape(y_list)[1]))
         for i in range(np.shape(y_list)[2]):

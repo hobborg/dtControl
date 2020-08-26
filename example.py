@@ -13,16 +13,16 @@ suite = BenchmarkSuite(timeout=60,
                        benchmark_file='benchmark',
                        rerun=False)
 
-suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['cartpole'])
+suite.add_datasets(['examples', 'examples/prism', 'examples/storm', 'examples/Strix']) #, include=['ActionConverter'])
 
 aa = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 classifiers = [
     DecisionTree([aa], Entropy(), 'CART'),
     DecisionTree([aa, logreg], Entropy(), 'LogReg'),
-    DecisionTree([aa], Entropy(), 'Early-stopping', early_stopping=True),
-    DecisionTree([aa], Entropy(MaxFreqDeterminizer()), 'MaxFreq', early_stopping=True),
-    DecisionTree([aa], MultiLabelEntropy(), 'MultiLabelEntropy', early_stopping=True)
+#    DecisionTree([aa], Entropy(MaxFreqDeterminizer()), 'MaxFreq', early_stopping=True),
+    DecisionTree([aa], MultiLabelEntropy(), 'MultiLabelEntropy', early_stopping=True),
+    DecisionTree([aa, logreg], MultiLabelEntropy(), 'MultiLabelEntropy-LogReg', early_stopping=True)
 ]
 suite.benchmark(classifiers)
 suite.display_html()
