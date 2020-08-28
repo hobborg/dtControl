@@ -308,14 +308,14 @@ def main_parse(args):
             "No valid preset selected. Please try again with the correct preset name. Use 'dtcontrol preset --list' to see valid presets.")
         sys.exit("Exiting...")
 
-    logging.info("Loading dataset...")
+    logging.info("Frontend: loading dataset...")
     ds.load_if_necessary()
     start = time.time()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
 
-    logging.info("Calling fit...")
+    logging.info("Frontend: fitting dataset to tree...")
     classifier.fit(ds)
-    logging.info("Fit complete...")
+    logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
     retDict = intoJSON(classifier.root, "null", [])

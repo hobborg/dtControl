@@ -1,11 +1,12 @@
 import json
+import logging
 import os
-import webbrowser
+from signal import signal, SIGINT
 
 import numpy as np
 import sympy as sp
-import yaml
 from flask import Flask, render_template, json, jsonify, request
+from gevent.pywsgi import WSGIServer
 
 from dtcontrol import frontend_helper
 
@@ -138,7 +139,6 @@ def construct():
     cont = data['controller']
     config = data['config']
     results.append([id, cont, config, 'Running...', None, None, None])
-    print(results)
 
     if config == "custom":
         to_parse_dict = {"controller": cont, "determinize": data['determinize'],
@@ -171,7 +171,6 @@ def construct():
             result[4] = new_stats[0]
             result[5] = new_stats[1]
             result[6] = new_stats[2]
-    print(results)
     return jsonify(this_result)
 
 
@@ -259,7 +258,6 @@ def stepRoute():
 # Called when using the instep function
 @app.route("/inStepRoute", methods=['POST'])
 def inStepRoute():
-    print(request.get_json())
     data = request.get_json()
     steps = data['steps']
     x = data['x_pass']
@@ -370,18 +368,23 @@ def yamlread():
     return json.dumps(data)
 
 
-def run_flask():
+def handler(signal_received, frame):
+    # Handle any cleanup here
+    print('SIGINT or CTRL-C detected. Exiting gracefully')
+    exit(0)
+
+
+def start_web_frontend():
     print('Starting dtControl web interface...')
-    # Decomment this and add valid application path if you don't want to open in default browser
-    # chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
-    # webbrowser.get(chrome_path).open('http://127.0.0.1:5000/')
-    try:
-        webbrowser.open('http://127.0.0.1:5000/')
-    except:
-        print('Visit http://127.0.0.1:5000/')
+    logging.warning('dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
+    print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
     # app.run(debug=True, use_reloader=False)
-    app.run(debug=False)
+    http_server = WSGIServer(('', 5000), app)
+    http_server.serve_forever()
 
 
 if __name__ == "__main__":
-    run_flask()
+    # Tell Python to run the handler() function when SIGINT is recieved
+    signal(SIGINT, handler)
+
+    start_web_frontend()

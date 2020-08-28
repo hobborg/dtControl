@@ -1208,7 +1208,6 @@ $(document).ready(function () {
     }
 
     function addToResultsTable(row_contents) {
-        console.log(row_contents);
         $("#results-table tr.special").hide();
 
         let experimentRow = getResultsTableRow(row_contents[0]);
