@@ -1,6 +1,6 @@
 File descriptions:
     app.py -> Countains the flask application to be run
-    frontFns.py -> A subset of cli.py containing all the necessary functions for app.py
+    frontend_helper.py -> A subset of cli.py containing all the necessary functions for app.py
 
 CSS:
     node-stylings.css -> Styling for SVG tree and nodes, divs, cards, slider
