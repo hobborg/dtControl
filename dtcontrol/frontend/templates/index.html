@@ -16,9 +16,21 @@
         <div class="container">
             <div class="row">
                 <div class="col-12">
+                    <label for="controller-search-directory">Controller Directory</label>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="controller-search-directory" placeholder="Path to controller files"/>
+                        <div class="input-group-append">
+                            <button id="controller-directory-load" class="btn btn-secondary" style="height:calc(1.5em + .6rem + 2px);" type="button">Load</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
                     <label for="controller">Controller</label>
                     <div class="select">
                         <select class="custom-select" id="controller" name="controller">
+                            <option selected>Enter controller directory first</option>
                         </select>
                     </div>
                 </div>
@@ -149,6 +161,7 @@
                     <thead class="custom-thead">
                     <tr>
                         <th scope="col">#</th>
+                        <th scope="col" style="display:none">Full Path</th>
                         <th scope="col">Controller</th>
                         <th scope="col">Preset</th>
                         <th scope="col">Determinize</th>

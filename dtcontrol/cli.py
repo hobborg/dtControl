@@ -50,7 +50,7 @@ from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 #Import flask file
-from dtcontrol.visualise.app import runFlask
+from dtcontrol.frontend.app import run_flask
 
 def main():
     def is_valid_file_or_folder(parser, arg):
@@ -370,7 +370,7 @@ def main():
         sys.exit()
 
     def call_frontend(args):
-        runFlask()
+        run_flask()
 
     def clear_run_cache():
         logging.info("Clearing default benchmark files 'benchmark.html' and 'benchmark.json'...")

@@ -57,8 +57,6 @@ var defConf;
 // Union of all configs present in config.yml
 var allConfig = {};
 
-const app1 = document.getElementById('controller');
-
 function fillYML() {
     // Uses DOM manipulation to populate required forms after reading config.yml
 
@@ -223,28 +221,50 @@ xhr.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
 xhr.setRequestHeader('pragma', 'no-cache');
 xhr.send();
 
-var modl = new XMLHttpRequest();
-modl.open('GET', './examples', true);
-modl.onload = function () {
-    if (isSimulator) return;
-    // Reades example folder and populates controller section in first form
-    data1 = JSON.parse(this.response);
-    for (var i = 0; i < data1.length; i++) {
-        const option = document.createElement('option');
-        option.textContent = data1[i];
-        option.setAttribute('value', data1[i]);
-        if (data1[i] === '10rooms.scs') {
-            option.setAttribute('selected', 'selected');
+function loadControllers(path) {
+    console.log(path);
+
+    var http = new XMLHttpRequest();
+    var url = '/examples';
+    var params = 'location=' + encodeURIComponent(path);
+    http.open('POST', url, true);
+
+    //Send the proper header information along with the request
+    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+    http.onreadystatechange = function() {//Call a function when the state changes.
+        if(http.readyState == 4 && http.status == 200) {
+            data1 = JSON.parse(http.responseText);
+            if (data1["status"] == 1) {
+                select_menu = document.getElementById("controller");
+                select_menu.innerHTML = "";
+                files = data1["files"];
+                for (var i = 0; i < files.length; i++) {
+                    const option = document.createElement('option');
+                    controller_name = files[i].replace(path, "");
+                    if (controller_name.startsWith("/")) {
+                        controller_name = controller_name.substr(1);
+                    }
+                    option.textContent = controller_name;
+                    option.setAttribute('value', files[i]);
+                    if (files[i] === '10rooms.scs') {
+                        option.setAttribute('selected', 'selected');
+                    }
+                    select_menu.appendChild(option);
+                }
+            } else {
+                console.log("Folder doesn't exist");
+                const option = document.createElement("option");
+                option.textContent = "Enter valid controller directory";
+                option.setAttribute('selected', 'selected');
+                select_menu = document.getElementById("controller");
+                select_menu.innerHTML = "";
+                select_menu.appendChild(option);
+            }
         }
-        app1.appendChild(option);
     }
+    http.send(params);
 }
-modl.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
-modl.setRequestHeader('cache-control', 'max-age=0');
-modl.setRequestHeader('expires', '0');
-modl.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
-modl.setRequestHeader('pragma', 'no-cache');
-modl.send();
 
 // GLobal variables that store tree data for rendering
 var treeData = "",
@@ -886,7 +906,6 @@ $(document).ready(function () {
         document.getElementById("navbar-hamburger").className += " is-active";
         $(".runall").hide();
 
-
         //MJ load data and init listeners
         $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
         $.get('/results', results => {
@@ -894,6 +913,10 @@ $(document).ready(function () {
             if(results.some(r => r[3] === 'Running...')) {
                 startPolling();
             }
+        });
+
+        $("#controller-directory-load").click(function() {
+            loadControllers($("#controller-search-directory").val());
         });
 
         function startPolling() {
@@ -1090,6 +1113,10 @@ $(document).ready(function () {
     $("input[name='add'], button[name='add']").on('click', function (event) {
         event.preventDefault();
         var controller = $("#controller").val();
+        var nice_name = $("#controller").val().replace($("#controller-search-directory").val(), "");
+        if (nice_name.startsWith("/")) {
+            nice_name = nice_name.substr(1);
+        }
         var config = $('#config').val();
         var determinize = $('#determinize').val();
         var numeric_predicates = $('#numeric-predicates').val();
@@ -1097,7 +1124,7 @@ $(document).ready(function () {
         var impurity = $('#impurity').val();
         var tolerance = $('#tolerance').val();
         var safe_pruning = $('#safe-pruning').val();
-        var row_contents = [controller, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
+        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
 
         $.ajax('/experiments', {
             type: 'POST',
@@ -1119,8 +1146,11 @@ $(document).ready(function () {
         firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        for (let j = 0; j < 8; j++) {
+        for (let j = 0; j < 9; j++) {
             var c = row.insertCell(-1);
+            if (j == 0) {
+                c.style = "display: none";
+            }
             c.innerHTML = row_contents[j];
         }
 
@@ -1147,24 +1177,23 @@ $(document).ready(function () {
     }
 
     function run_single_benchmark(config) {
-        config[3] = 'Running...';
-        config[4] = config[5] = config[6] = config[7] = null;
         $.ajax({
             data: JSON.stringify({
                 id: config[0],
                 controller: config[1],
-                config: config[2],
-                determinize: config[3],
-                numeric_predicates: config[4],
-                categorical_predicates: config[5],
-                impurity: config[6],
-                tolerance: config[7],
-                safe_pruning: config[8]
+                nice_name: config[2],
+                config: config[3],
+                determinize: config[4],
+                numeric_predicates: config[5],
+                categorical_predicates: config[6],
+                impurity: config[7],
+                tolerance: config[8],
+                safe_pruning: config[9]
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
             url: '/construct',
-            beforeSend: () => addToResultsTable(config)
+            beforeSend: addToResultsTable(config)
         }).done(data => addToResultsTable(data));
     }
 
@@ -1179,21 +1208,26 @@ $(document).ready(function () {
     }
 
     function addToResultsTable(row_contents) {
+        console.log(row_contents);
         $("#results-table tr.special").hide();
 
         let experimentRow = getResultsTableRow(row_contents[0]);
         if (experimentRow) {
-            experimentRow.children[3].innerHTML = "Completed";
-            experimentRow.children[4].innerHTML = row_contents[4]
-            experimentRow.children[5].innerHTML = row_contents[5];
-            experimentRow.children[6].innerHTML = row_contents[6].milliSecondsToHHMMSS();
-            experimentRow.children[7].innerHTML = '<i class="fa fa-eye text-primary"></i>';
-            $(experimentRow.children[7]).find('i.fa-eye').on('click', (event) => {
+            experimentRow.children[4].innerHTML = "Completed";
+            experimentRow.children[5].innerHTML = row_contents[4]
+            experimentRow.children[6].innerHTML = row_contents[5];
+            experimentRow.children[7].innerHTML = row_contents[6].milliSecondsToHHMMSS();
+            experimentRow.children[8].innerHTML = '<i class="fa fa-eye text-primary"></i>';
+            $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
                 $.post('/select', {runConfigIndex: row_contents[0]}, () => {
                     window.location.href = 'simulator'
                 });
             });
             return;
+        }
+        else {
+            row_contents[4] = 'Running...';
+            row_contents[5] = row_contents[6] = row_contents[7] = row_contents[8] = null;
         }
 
         var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
@@ -1203,8 +1237,11 @@ $(document).ready(function () {
         var firstCell = row.insertCell(-1);
         firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
 
-        for (let j = 1; j < 7; j++) {
+        for (let j = 1; j < 8; j++) {
             const cell = row.insertCell(-1);
+            if (j == 1) {
+                cell.style = "display: none";
+            }
             if (row_contents[j]) {
                 cell.innerHTML = row_contents[j];
             }
@@ -1848,10 +1885,12 @@ $(document).on("click", "#simTable tbody tr", function () {
     drawCanvas();
 });
 
-document.getElementById("simTable").addEventListener("scroll", function(){
-   var translate = "translate(0,"+this.scrollTop+"px)";
-   this.querySelector("thead").style.transform = translate;
-});
+if (isSimulator) {
+    document.getElementById("simTable").addEventListener("scroll", function () {
+        var translate = "translate(0," + this.scrollTop + "px)";
+        this.querySelector("thead").style.transform = translate;
+    });
+}
 
 // 'Animate tree' button and 'Edit tree' button
 

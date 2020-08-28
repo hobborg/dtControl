@@ -175,10 +175,12 @@ class BenchmarkSuite:
         if isinstance(classifier, BDD):
             return
 
+        logging.info(f"INFO: Writing DOT file into {self.output_folder}.\n")
         dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
         with open(dot_filename, 'w+') as outfile:
             outfile.write(classifier.print_dot(dataset.x_metadata, dataset.y_metadata))
 
+        logging.info(f"INFO: Writing C file into {self.output_folder}.\n")
         num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
         template = multi_output_c_template if num_outputs > 1 else single_output_c_template
         example = f'{{{",".join(str(i) + (".f" if isinstance(i, np.integer) else "f") for i in dataset.x[0])}}}'
