@@ -368,13 +368,18 @@ def yamlread():
     return json.dumps(data)
 
 
+global http_server
+
 def handler(signal_received, frame):
+    global http_server
     # Handle any cleanup here
     print('SIGINT or CTRL-C detected. Exiting gracefully')
+    http_server.stop()
     exit(0)
 
 
 def start_web_frontend():
+    global http_server
     print('Starting dtControl web interface...')
     logging.warning('dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
     print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
