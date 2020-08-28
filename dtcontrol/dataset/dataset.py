@@ -7,7 +7,8 @@ from dtcontrol.dataset.prism_dataset_loader import PrismDatasetLoader
 from dtcontrol.dataset.scots_dataset_loader import ScotsDatasetLoader
 from dtcontrol.dataset.storm_dataset_loader import StormDatasetLoader
 from dtcontrol.dataset.uppaal_dataset_loader import UppaalDatasetLoader
-from dtcontrol.util import get_filename_and_ext
+from dtcontrol.util import get_filename_and_relevant_extension
+
 
 class Dataset(ABC):
     """
@@ -55,13 +56,13 @@ class Dataset(ABC):
 
     def __init__(self, filename):
         self.filename = filename
-        self.name, self.extension = get_filename_and_ext(filename)
+        self.name, self.extension = get_filename_and_relevant_extension(filename)
         self.extension_to_loader = {
             '.scs': ScotsDatasetLoader(),
             '.dump': UppaalDatasetLoader(),
             '.csv': CSVDatasetLoader(),
             '.prism': PrismDatasetLoader(),
-            '.storm': StormDatasetLoader()
+            '.storm.json': StormDatasetLoader()
         }
         if self.extension not in self.extension_to_loader:
             raise ValueError('Unknown file format.')

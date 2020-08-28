@@ -14,7 +14,6 @@ import sys
 from collections import namedtuple, OrderedDict
 from os import makedirs, remove
 from os.path import exists, isfile, splitext
-import platform
 from typing import Tuple, Union, List
 
 import pkg_resources
@@ -49,6 +48,7 @@ from dtcontrol.post_processing.safe_pruning import SafePruning
 # Import preprocessing strategies
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
+
 
 def main():
     def is_valid_file_or_folder(parser, arg):
@@ -366,6 +366,7 @@ def main():
             clear_output_cache()
             clear_run_cache()
         sys.exit()
+
 
     def clear_run_cache():
         logging.info("Clearing default benchmark files 'benchmark.html' and 'benchmark.json'...")

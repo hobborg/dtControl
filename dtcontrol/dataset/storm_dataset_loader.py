@@ -44,13 +44,18 @@ class StormDatasetLoader(DatasetLoader):
                        get a valid MDP.
                     '''
                     choice_string = ":loop:"
-                elif "action-label" in non_deterministic_choice["origin"] and non_deterministic_choice["origin"]["action-label"]:
-                    choice_string = non_deterministic_choice["origin"]["action-label"]
+                    break
+                # elif "action-label" in non_deterministic_choice["origin"] and non_deterministic_choice["origin"]["action-label"]:
+                #     choice_string = non_deterministic_choice["origin"]["action-label"]
                 else:
                     if json.dumps(non_deterministic_choice["origin"], ensure_ascii=False) not in long_action:
                         long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)] = new_long_action
                         new_long_action = new_long_action + 1
-                    choice_string = f'act{long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)]}'
+                    if "action-label" in non_deterministic_choice["origin"] and non_deterministic_choice["origin"]["action-label"]:
+                        choice_string_prefix = non_deterministic_choice["origin"]["action-label"]
+                    else:
+                        choice_string_prefix = "act"
+                    choice_string = f'{choice_string_prefix}{long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)]}'
 
                 if choice_string not in choice_to_index:
                     index_to_choice[new_action_index] = choice_string
@@ -59,6 +64,9 @@ class StormDatasetLoader(DatasetLoader):
 
                 index = choice_to_index[choice_string]
                 y_current.append(index+1)
+
+            if ":loop:" in choice_string:
+                continue
 
             y_list.append(y_current)
 

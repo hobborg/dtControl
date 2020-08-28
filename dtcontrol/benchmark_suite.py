@@ -18,7 +18,7 @@ from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.timeout import call_with_timeout
 from dtcontrol.ui.table_controller import TableController
-from dtcontrol.util import format_seconds, get_filename_and_ext
+from dtcontrol.util import format_seconds, get_filename_and_relevant_extension
 
 file_loader = FileSystemLoader([path + "/c_templates" for path in dtcontrol.__path__])
 env = Environment(loader=file_loader)
@@ -60,7 +60,7 @@ class BenchmarkSuite:
             paths = [paths]
         for path in paths:
             for file in self.get_files(path):
-                name, ext = get_filename_and_ext(file)
+                name, ext = get_filename_and_relevant_extension(file)
                 if ((not include) or name in include) and name not in exclude:
                     if self.is_multiout(file, ext):
                         ds = MultiOutputDataset(file)
@@ -76,7 +76,7 @@ class BenchmarkSuite:
         if isfile(path):
             return [path]
         else:
-            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism', '*.storm'] for p in glob.glob(join(path, ext))
+            return [p for ext in ['*.scs', '*.dump', '*.csv', '*.prism', '*.storm.json'] for p in glob.glob(join(path, ext))
                     if not p.endswith('_states.prism')]
 
     def display_html(self):
@@ -175,10 +175,12 @@ class BenchmarkSuite:
         if isinstance(classifier, BDD):
             return
 
+        logging.info(f"INFO: Writing DOT file into {self.output_folder}.\n")
         dot_filename = self.get_filename(self.output_folder, dataset, classifier, '.dot')
         with open(dot_filename, 'w+') as outfile:
             outfile.write(classifier.print_dot(dataset.x_metadata, dataset.y_metadata))
 
+        logging.info(f"INFO: Writing C file into {self.output_folder}.\n")
         num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
         template = multi_output_c_template if num_outputs > 1 else single_output_c_template
         example = f'{{{",".join(str(i) + (".f" if isinstance(i, np.integer) else "f") for i in dataset.x[0])}}}'

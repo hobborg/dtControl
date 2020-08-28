@@ -37,12 +37,14 @@ setuptools.setup(
               'dtcontrol.decision_tree.impurity',
               'dtcontrol.decision_tree.splitting',
               'dtcontrol.decision_tree.OC1_source',
+              'dtcontrol.frontend',
               'dtcontrol.post_processing',
               'dtcontrol.pre_processing',
               'dtcontrol.ui',
               ],
     entry_points={
-        'console_scripts': ['dtcontrol=dtcontrol.cli:main'],
+        'console_scripts': ['dtcontrol=dtcontrol.cli:main',
+                            'dtcontrol-frontend=dtcontrol.frontend.app:start_web_frontend'],
     },
     classifiers=[
         "Programming Language :: Python :: 3.6",
@@ -60,12 +62,17 @@ setuptools.setup(
         'ruamel.yaml==0.16.10',
         'scikit-learn==0.22',
         'tabulate==0.8.6',
-        'tqdm==4.42.0'
+        'tqdm==4.42.0',
+        'flask==1.1.2',
+        'gevent==20.6.2',
+        'sympy==1.6.1'
     ],
     package_data={
         'dtcontrol': ['config.yml'],
         'dtcontrol.c_templates': ['*.c'],
         'dtcontrol.ui': ['*.js', '*.css', '*.html', '*.py'],
+        'dtcontrol.frontend': ['*/*/*.js', '*/*/*.css', '*/*/*.png', '*/*.html'],
+        'dtcontrol.frontend.static.fonts': ['*'],
         'dtcontrol.decision_tree.OC1_source': ['*.c', '*.h', 'makefile', '*.readme', 'README'],
     }
 )
