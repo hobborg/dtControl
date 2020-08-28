@@ -105,7 +105,7 @@ def main():
 
     def preset_parser(args):
         if args.list:
-            _config = load_default_config()
+            system_config = load_default_config()
             user_config = None
 
             if args.config:
