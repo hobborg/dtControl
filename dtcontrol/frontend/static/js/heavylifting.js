@@ -18,7 +18,7 @@ var lastPath = [];
 
 // Stores interval as set by the time slider
 var plpause;
-var timeOfSlider = 50;
+var timeOfSlider = 500;
 
 // Number of state varaibles and decision variables
 var numVars;
@@ -968,7 +968,7 @@ $(document).ready(function () {
             document.getElementById("mainRow3").style.visibility = "hidden";
             //document.getElementById("expandThisDiv").style.height = "450px";
             document.getElementById("playerDiv").style.visibility = "hidden";
-            document.getElementById("timeRange").style.visibility = "hidden";
+            document.getElementById("timeRangeContainer").style.visibility = "hidden";
             document.getElementById("instep").style.visibility = "hidden";
             document.getElementById("animationDiv").style.visibility = "hidden";
 
@@ -1306,7 +1306,7 @@ $(document).ready(function () {
                 document.getElementById("mainRow3").style.visibility = "visible";
                 document.getElementById("expandThisDiv").style.height = "450px";
                 document.getElementById("playerDiv").style.visibility = "visible";
-                document.getElementById("timeRange").style.visibility = "visible";
+                document.getElementById("timeRangeContainer").style.visibility = "visible";
                 document.getElementById("instep").style.visibility = "visible";
                 document.getElementById("animationDiv").style.visibility = "visible"; // TODO Animate button, enable this again
 
@@ -1710,13 +1710,15 @@ $(document).ready(function () {
 var slider = document.getElementById("timeRange");
 if (slider) {
     slider.oninput = function () {
+        // 1x = 500ms
         if (parseInt($("input[name=player]:checked").val()) == 0) {
-            timeOfSlider = this.value;
+            timeOfSlider = 500*this.value;
             clearInterval(plpause);
             plpause = setInterval(oneStep, timeOfSlider);
         } else {
-            timeOfSlider = this.value;
+            timeOfSlider = 500*this.value;
         }
+        document.getElementById("timeRate").innerText = parseFloat(this.value).toFixed(2) + "x";
     }
 }
 

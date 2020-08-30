@@ -57,3 +57,13 @@ i.fa {
     font-size: 1.2em;
     cursor: pointer;
 }
+
+#timeRangeLabel {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#timeRate {
+    margin-top: 11px;
+    margin-bottom: 11px;
+}
