@@ -1143,7 +1143,7 @@ $(document).ready(function () {
         // Create an empty <tr> element and add it to the 1st position of the table:
         var row = table.insertRow(-1);
         var firstCell = row.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
+        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
         for (let j = 0; j < 9; j++) {
