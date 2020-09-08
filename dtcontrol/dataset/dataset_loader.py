@@ -65,6 +65,7 @@ class DatasetLoader(ABC):
         name, _ = split_relevant_extension(filename)
         config_name = name + '_config.json'
         if exists(config_name) and isfile(config_name):
+            logging.info(f"Found model-specific config file: {config_name}.")
             self.update_with_config(config_name, tup[0], tup[1], tup[3])
         return tup
 
