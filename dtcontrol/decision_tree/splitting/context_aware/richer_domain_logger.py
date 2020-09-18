@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-class WeinhuberApproachLogger:
+class RicherDomainLogger:
     def __init__(self, loggername, debug):
         """
 
@@ -25,7 +25,7 @@ class WeinhuberApproachLogger:
 
         # logger file handler
         if debug:
-            file_handler = logging.FileHandler('WeinhuberApproachLogger.log')
+            file_handler = logging.FileHandler('RicherDomainLogger.log')
             file_handler.setFormatter(formatter)
             file_handler.setLevel(logging.DEBUG)
             self.root_logger.addHandler(file_handler)

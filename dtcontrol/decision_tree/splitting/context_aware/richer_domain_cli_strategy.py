@@ -2,23 +2,23 @@ from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_str
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException, \
-    WeinhuberStrategyException
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainPredicateParserException, \
+    RicherDomainStrategyException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy, AxisAlignedSplit
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_split import RicherDomainSplit
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from sklearn.linear_model import LogisticRegression
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_splitting_strategy import WeinhuberApproachSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
 import sys
 import numpy as np
 import re
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_linear_units_classifier import \
-    WeinhuberApproachLinearUnitsClassifier
+from dtcontrol.decision_tree.splitting.context_aware.linear_units_classifier import \
+    LinearUnitsClassifier
 from tabulate import tabulate
 
 
-class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy):
+class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
 
     def __init__(self, domain_knowledge=None, determinizer=LabelPowersetDeterminizer(), debug=False):
         super().__init__()
@@ -32,7 +32,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 --> Is optional. If the first line doesn't contain units, dataset_units will just remain None
                 
         standard_predicates:
-            List of WeinhuberApproachSplit Objects given at startup inside 'domain knowledge file'
+            List of RicherDomainSplit Objects given at startup inside 'domain knowledge file'
                 
         """
 
@@ -44,7 +44,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         self.current_node = None
 
         # logger
-        self.logger = WeinhuberApproachLogger("WeinhuberApproachPredicateGenerator_logger", debug)
+        self.logger = RicherDomainLogger("RicherDomainCliStrategy_logger", debug)
         self.debug = debug
 
         """
@@ -66,8 +66,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         # List containing alternative splitting strategies [axis, logreg, logreg_unit]
         self.alternative_strategies = self.setup_alternative_strategies()
 
-        # Reference to weinhuber approach splitting strategy, to get all possible splits
-        self.weinhub_strat = self.setup_weinhub_strat()
+        # Reference to richer domain splitting strategy, to get all possible splits
+        self.richer_domain_strat = self.setup_richer_domain_strat()
 
         # Seen- Parent IDs
         self.known_parent_id = []
@@ -88,22 +88,23 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         logreg.priority = 1
 
         # Linear Units (Only if there are units given)
-        logreg_unit = WeinhuberApproachLinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
+        logreg_unit = LinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
         logreg_unit.priority = 1
 
         return [axis, logreg, logreg_unit] if self.dataset_units is not None else [axis, logreg]
 
-    def setup_weinhub_strat(self):
+    def setup_richer_domain_strat(self):
         """
-        Function to setup an weinhuber approach splitting strategy instance.
+        Function to setup a richer domain splitting strategy instance.
         """
-        weinhub = WeinhuberApproachSplittingStrategy(user_given_splits=[], debug=self.debug)
-        weinhub.priority = 1
-        weinhub.optimized_tree_check_version = False
-        weinhub.curve_fitting_method = "optimized"
-        return weinhub
 
-    def get_all_weinhub_splits(self, starting_predicates, dataset, impurity_measure):
+        tmp_richer_domain = RicherDomainSplittingStrategy(user_given_splits=[], debug=self.debug)
+        tmp_richer_domain.priority = 1
+        tmp_richer_domain.optimized_tree_check_version = False
+        tmp_richer_domain.curve_fitting_method = "optimized"
+        return tmp_richer_domain
+
+    def get_all_richer_domain_splits(self, starting_predicates, dataset, impurity_measure):
         """
         Function to get all possible fitted instances of one predicate.
         :param starting_predicates: List of predicates to be processed.
@@ -122,9 +123,9 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                     0.6178*x_0 - 0.0033169*x_1 - 0.0099337*x_2 + 0.35789*x_3 - 2.4716 <= 0: inf}
 
         """
-        self.weinhub_strat.first_run = True
-        self.weinhub_strat.user_given_splits = starting_predicates
-        return self.weinhub_strat.get_all_splits(dataset, impurity_measure)
+        self.richer_domain_strat.first_run = True
+        self.richer_domain_strat.user_given_splits = starting_predicates
+        return self.richer_domain_strat.get_all_splits(dataset, impurity_measure)
 
     def print_dataset_specs(self, dataset):
         """
@@ -210,7 +211,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
 
         if len(self.standard_alt_predicates_imp) > 0:
             table = [[self.standard_alt_predicates_imp.index(pred), round(pred[1], ndigits=3), pred[0].print_dot().replace("\\n", ""),
-                      self.known_parent_id.index(pred[0].id) if isinstance(pred[0], WeinhuberApproachSplit) else "Alternative Strategy"] for
+                      self.known_parent_id.index(pred[0].id) if isinstance(pred[0], RicherDomainSplit) else "Alternative Strategy"] for
                      pred in self.standard_alt_predicates_imp]
 
             print("\n\t\t\t STANDARD AND ALTERNATIVE PREDICATES°\n" + tabulate(
@@ -244,8 +245,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
     def user_input_handler(self, dataset, impurity_measure):
         """
         Function to handle the user input via console.
-        :param dataset: only used for console output (dataset infos) and to get all splits (via weinhuber approach strat)
-        :param impurity_measure: only used to get all splits (via weinhuber approach strat)
+        :param dataset: only used for console output (dataset infos) and to get all splits (via richer domain strat)
+        :param impurity_measure: only used to get all splits (via richer domain strat)
         :returns: SplitObject
 
         """
@@ -301,7 +302,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 user_input = input_line.split("/add ")[1]
                 try:
                     parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
-                except WeinhuberPredicateParserException:
+                except RicherDomainPredicateParserException:
                     print("Invalid predicate entered. Please check logger or comments for more information.")
                 else:
                     # Duplicate check
@@ -312,8 +313,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                             break
                     else:
                         try:
-                            all_pred = self.get_all_weinhub_splits([parsed_input], dataset, impurity_measure)
-                        except WeinhuberStrategyException:
+                            all_pred = self.get_all_richer_domain_splits([parsed_input], dataset, impurity_measure)
+                        except RicherDomainStrategyException:
                             print("Invalid predicate parsed. Please check logger or comments for more information.")
                         else:
                             # store id
@@ -331,7 +332,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 user_input = input_line.split("/add_standard ")[1]
                 try:
                     parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
-                except WeinhuberPredicateParserException:
+                except RicherDomainPredicateParserException:
                     print("Invalid predicate entered. Please check logger or comments for more information.")
                 else:
                     # Duplicate check
@@ -342,8 +343,8 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                             break
                     else:
                         try:
-                            all_pred = self.get_all_weinhub_splits([parsed_input], dataset, impurity_measure)
-                        except WeinhuberStrategyException:
+                            all_pred = self.get_all_richer_domain_splits([parsed_input], dataset, impurity_measure)
+                        except RicherDomainStrategyException:
                             print("Invalid predicate parsed. Please check logger or comments for more information.")
                         else:
                             # store id
@@ -366,7 +367,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
                 self.standard_predicates = []
                 new_standard_alt_predicates_imp = []
                 for pred in self.standard_alt_predicates_imp:
-                    if not isinstance(pred[0], WeinhuberApproachSplit):
+                    if not isinstance(pred[0], RicherDomainSplit):
                         new_standard_alt_predicates_imp.append(pred)
                 self.standard_alt_predicates_imp = new_standard_alt_predicates_imp
                 self.console_output(dataset)
@@ -399,7 +400,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
         # check inside standard_alt_predicates_imp
         new_standard_alt_predicates_imp = []
         for pred in self.standard_alt_predicates_imp:
-            if not isinstance(pred[0], WeinhuberApproachSplit) or not pred[0].id == parent_id:
+            if not isinstance(pred[0], RicherDomainSplit) or not pred[0].id == parent_id:
                 new_standard_alt_predicates_imp.append(pred)
         self.standard_alt_predicates_imp = new_standard_alt_predicates_imp
         # check inside recently_added_predicates
@@ -496,7 +497,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             if not self.known_parent_id.__contains__(pred.id):
                 self.known_parent_id.append(pred.id)
 
-        all_predicates = self.get_all_weinhub_splits(self.standard_predicates, dataset, impurity_measure)
+        all_predicates = self.get_all_richer_domain_splits(self.standard_predicates, dataset, impurity_measure)
         self.standard_alt_predicates_imp = list(all_predicates.items())
 
         # Add the split objects from self.alternative_strategies
@@ -527,7 +528,7 @@ class WeinhuberApproachPredicateGeneratorStrategy(ContextAwareSplittingStrategy)
             if not self.recently_added_predicates.__contains__(pred.id):
                 self.known_parent_id.append(pred.id)
 
-        all_predicates = self.get_all_weinhub_splits(self.recently_added_predicates, dataset, impurity_measure)
+        all_predicates = self.get_all_richer_domain_splits(self.recently_added_predicates, dataset, impurity_measure)
         self.recently_added_predicates_imp = list(all_predicates.items())
         self.recently_added_predicates_imp.sort(key=lambda x: x[1])
 

@@ -1,7 +1,7 @@
 import unittest
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_split import RicherDomainSplit
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainPredicateParserException
 import os
 import sympy as sp
 
@@ -68,7 +68,7 @@ class TestPredicateParser(unittest.TestCase):
     def test_useful_predicates(self):
         # USAGE OF FILE 1
         # Non existing input file
-        with self.assertRaises(WeinhuberPredicateParserException):
+        with self.assertRaises(RicherDomainPredicateParserException):
             PredicateParser.get_predicate(input_file_path="None")
 
         # Check if parsing of file 1 was successful
@@ -76,7 +76,7 @@ class TestPredicateParser(unittest.TestCase):
 
         # Checking right instance
         for obj in parsed_predicate:
-            self.assertIsInstance(obj, WeinhuberApproachSplit)
+            self.assertIsInstance(obj, RicherDomainSplit)
 
         x_0, x_1, x_2, x_3, x_4, x_5, c_0, c_1, c_2, c_3, c_4, c_5 = sp.symbols('x_0 x_1 x_2 x_3 x_4 x_5 c_0 c_1 c_2 c_3 c_4 c_5')
 
@@ -161,17 +161,17 @@ class TestPredicateParser(unittest.TestCase):
 
     def test_predicates_without_column_ref(self):
         # USAGE OF FILE 2
-        with self.assertRaises(WeinhuberPredicateParserException):
+        with self.assertRaises(RicherDomainPredicateParserException):
             parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file2.txt")
 
     def test_typo_predicates(self):
         # USAGE OF FILE 3
-        with self.assertRaises(WeinhuberPredicateParserException):
+        with self.assertRaises(RicherDomainPredicateParserException):
             parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file3.txt")
 
     def test_invalid_relation_predicates(self):
         # USAGE OF FILE 4
-        with self.assertRaises(WeinhuberPredicateParserException):
+        with self.assertRaises(RicherDomainPredicateParserException):
             parsed_predicate = PredicateParser.get_predicate(input_file_path="../input_data/test_file4.txt")
 
 print("The Critical Logger statements are supposed to appear on the console.")

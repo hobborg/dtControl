@@ -1,9 +1,9 @@
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_split import RicherDomainSplit
 import re
 import sympy as sp
 from sympy.core.function import AppliedUndef
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberPredicateParserException
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainPredicateParserException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
 
 
 class PredicateParser:
@@ -11,14 +11,14 @@ class PredicateParser:
     @classmethod
     def parse_single_predicate(cls, single_predicate, logger, debug=False):
         """
-        Function to parse a single predicate and return a WeinhuberApproachSplitObject
+        Function to parse a single predicate and return a RicherDomainSplitObject
         :param single_predicate: String containing the predicate
         :param logger_name: String containing the logger name
         :param debug: Bool for debug mode (see Logger)
 
         e.g.
         Input_line:  c_1 * x_1 - c_2 + x_2 - c_3  <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
-        Output: WeinhuberApproachSplit Object with:
+        Output: RicherDomainSplit Object with:
 
         column_interval     =       {x_1:(-Inf,Inf), x_2:{1,2,3}}                           --> Key: Sympy Symbol Value: Sympy Interval
         coef_interval       =       {c_1:(-Inf,Inf), c_2:{1,2,3}, c_3:{5,10,32,40}          --> Key: Sympy Symbol Value: Sympy Interval
@@ -68,7 +68,7 @@ class PredicateParser:
                     logger.root_logger.critical(
                         "Aborting: one predicate does not have a valid structure. Invalid predicate: {}. Please check for typos and read the comments inside predicate_parser.py. For more information take a look at the sympy library (https://docs.sympy.org/latest/tutorial/basic_operations.html#converting-strings-to-sympy-expressions).".format(
                             str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
 
                 all_interval_defs = {}
                 column_interval = {}
@@ -85,7 +85,7 @@ class PredicateParser:
                     logger.root_logger.critical(
                         "Aborting: one predicate does not have a valid structure. Invalid predicate: {}. Please check for typos and read the comments inside predicate_parser.py. For more information take a look at the sympy library (https://docs.sympy.org/latest/tutorial/basic_operations.html#converting-strings-to-sympy-expressions).".format(
                             str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
 
                 """
                 ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
@@ -118,12 +118,12 @@ class PredicateParser:
                                 logger.root_logger.critical(
                                     "Aborting: invalid interval for a coefficient declared. Only finite or (-Inf,Inf) allowed. Coefficient: {} with invalid interval: {} from predicate: {}".format(
                                         str(var), str(check_interval), str(single_predicate)))
-                                raise WeinhuberPredicateParserException()
+                                raise RicherDomainPredicateParserException()
                     else:
                         logger.root_logger.critical(
                             "Aborting: one symbol inside one predicate does not have a valid structure. Column refs only with x_i. Coefs only with c_i. Invalid symbol: '{}' inside predicate {}".format(
                                 str(var), str(single_predicate)))
-                        raise WeinhuberPredicateParserException()
+                        raise RicherDomainPredicateParserException()
 
                 # Hidden edge case1: Undefined functions.
                 # e.g. f(x) * c1 * x_3 >= 1 <--> f(x) is an undefined function.
@@ -131,25 +131,25 @@ class PredicateParser:
                     logger.root_logger.critical(
                         "Aborting: one predicate contains an undefined function. Undefined function: {}. Invalid predicate: {}".format(
                             str(term.atoms(AppliedUndef)), str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
                 # Hidden edge case2: No symbols to reference columns used.
                 # e.g. c_0 >= 1; c_0 in {5,7}
                 elif not column_interval:
                     logger.root_logger.critical(
                         "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: {}".format(
                             str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
                 # Hidden edge case3: Term evaluates to zero.
                 # e.g. 3-1.5*2 <= 0
                 elif term == 0 or term.evalf() == 0:
                     logger.root_logger.critical(
                         "Aborting: one predicate does evaluate to zero. Invalid predicate: {}".format(str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
                 # Hidden edge case4: Invalid states for important key variables reached.
                 elif not split_pred or not term or not column_interval:
                     logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: {}".format(
                         str(single_predicate)))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
 
                 # Checking if every interval-Definition, actually occurs in in the term.
                 # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term.
@@ -161,13 +161,13 @@ class PredicateParser:
                         logger.root_logger.critical(
                             "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
                                 str(all_interval_defs), str(single_predicate)))
-                        raise WeinhuberPredicateParserException()
+                        raise RicherDomainPredicateParserException()
 
-                return WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
+                return RicherDomainSplit(column_interval, coef_interval, term, relation, debug)
 
         logger.root_logger.critical(
             "Aborting: one predicate did not contain any relation. Invalid predicate: {}".format(str(single_predicate)))
-        raise WeinhuberPredicateParserException()
+        raise RicherDomainPredicateParserException()
 
     @classmethod
     def get_domain_knowledge(cls, debug=False,
@@ -177,14 +177,14 @@ class PredicateParser:
         Function to parse domain knowledge obtained from user (stored in input_file_path)
         :param input_file_path: path with file containing user domain knowledge
         :param debug: Bool for debug mode (see Logger)
-        :returns: Tuple. (Units, List of WeinhuberApproachSplit Objects)
-                        --> if input file does not contains units: (None, List of WeinhuberApproachSplit Objects)
+        :returns: Tuple. (Units, List of RicherDomainSplit Objects)
+                        --> if input file does not contains units: (None, List of RicherDomainSplit Objects)
 
         Procedure:
             0. Checking whether input file path is correct/valid
             1. Processing the units from line 1
             2. Applying cls.parse_single_predicate() to every other line
-            2. Returning List of all WeinhuberApproachSplit Objects
+            2. Returning List of all RicherDomainSplit Objects
 
         Structure of input file:
         # <UnitOfColumn_1> <UnitOfColumn_2> <UnitOfColumn_3> ... <UnitOfColumn_i>
@@ -195,7 +195,7 @@ class PredicateParser:
         (<DomainKnowledgeExpression> contains a predicate, parsed by the function:  parse_single_predicate())
         """
         # Logger Init
-        logger = WeinhuberApproachLogger("GetDomainKnowledge_Logger", debug)
+        logger = RicherDomainLogger("GetDomainKnowledge_Logger", debug)
         logger.root_logger.info("Starting Domain Knowledge Parser.")
 
         # Opening and checking the input file
@@ -246,15 +246,15 @@ class PredicateParser:
         Function to parse predicates obtained from user (stored in input_file_path)
         :param input_file_path: path with file containing user predicates (in every line one predicate)
         :param debug: Bool for debug mode (see Logger)
-        :returns: List of WeinhuberApproachSplit Objects
+        :returns: List of RicherDomainSplit Objects
 
         Procedure:
             0. Checking whether input file path is correct/valid
             1. Applying cls.parse_single_predicate() to every line
-            2. Returning List of all WeinhuberApproachSplit Objects
+            2. Returning List of all RicherDomainSplit Objects
         """
         # Logger Init
-        logger = WeinhuberApproachLogger("GetPredicate_Logger", debug)
+        logger = RicherDomainLogger("GetPredicate_Logger", debug)
         logger.root_logger.info("Starting Predciate Parser.")
 
         # Opening and checking the input file
@@ -263,12 +263,12 @@ class PredicateParser:
                 input_line = [predicate.rstrip() for predicate in file]
         except FileNotFoundError:
             logger.root_logger.critical("Aborting: input file with user predicate(s) not found. Please check input file/path.")
-            raise WeinhuberPredicateParserException()
+            raise RicherDomainPredicateParserException()
 
         # Edge Case user input == ""
         if not input_line:
             logger.root_logger.critical("Aborting: input file with user predicates is empty. Please check file.")
-            raise WeinhuberPredicateParserException()
+            raise RicherDomainPredicateParserException()
         else:
             logger.root_logger.info(
                 "Reading input file containing predicate(s) given by user. Found {} predicate(s).".format(len(input_line)))
@@ -341,14 +341,14 @@ class PredicateParser:
         # super basic beginning and end char check of whole input
         if not user_input.strip():
             logger.root_logger.critical("Aborting: no interval found.")
-            raise WeinhuberPredicateParserException()
+            raise RicherDomainPredicateParserException()
         elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[":
             logger.root_logger.critical("Aborting: interval starts with an invalid char. Invalid interval: {}".format(user_input))
-            raise WeinhuberPredicateParserException()
+            raise RicherDomainPredicateParserException()
         elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[
             -1] is not "]":
             logger.root_logger.critical("Aborting: interval ends with an invalid char. Invalid interval: {}".format(user_input))
-            raise WeinhuberPredicateParserException()
+            raise RicherDomainPredicateParserException()
 
         user_input = user_input.lower()
         # Modify user_input and convert every union symbol/word into "∪" <-- ASCII Sign for Union not letter U
@@ -387,31 +387,31 @@ class PredicateParser:
                             tmp = sp.sympify(var).evalf()
                         except Exception:
                             logger.root_logger.critical("Aborting: invalid member found. Invalid interval: {}".format(user_input))
-                            raise WeinhuberPredicateParserException()
+                            raise RicherDomainPredicateParserException()
                         if tmp == sp.nan:
                             logger.root_logger.critical("Aborting: invalid NaN member found. Invalid interval: {}".format(user_input))
-                            raise WeinhuberPredicateParserException()
+                            raise RicherDomainPredicateParserException()
                         elif tmp == sp.S.Infinity or tmp == sp.S.NegativeInfinity:
                             logger.root_logger.critical("Aborting: infinity is an invalid member. Invalid interval: {}".format(user_input))
-                            raise WeinhuberPredicateParserException()
+                            raise RicherDomainPredicateParserException()
                         elif isinstance(tmp, sp.Number):
                             checked_members.append(tmp)
                         else:
                             logger.root_logger.critical(
                                 "Aborting: Invalid member found in finite interval. Invalid member: {} Invalid interval: {}".format(
                                     str(tmp), user_input))
-                            raise WeinhuberPredicateParserException()
+                            raise RicherDomainPredicateParserException()
                     # Edge case: if no member is valid --> empty set will be returned.
                     out = sp.FiniteSet(*checked_members)
                     if out == sp.EmptySet:
                         logger.root_logger.critical("Aborting: Invalid empty interval found. Invalid interval: {}".format(user_input))
-                        raise WeinhuberPredicateParserException()
+                        raise RicherDomainPredicateParserException()
                     else:
                         interval_list.append(out)
                 else:
                     # Interval starts with { but does not end with }
                     logger.root_logger.critical("Aborting: Invalid char at end of interval found. Invalid interval: {}".format(user_input))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
             elif interval[0] == "(" or interval[0] == "[":
                 # normal intervals of structure (1,2] etc
 
@@ -422,22 +422,22 @@ class PredicateParser:
                     left_open = False
                 else:
                     logger.root_logger.critical("Aborting: interval starts with an invalid char. Invalid interval: {}".format(user_input))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
                 # Checking boundaries of interval
                 tmp = interval[1:-1].split(",")
                 if len(tmp) > 2:
                     logger.root_logger.critical("Aborting: too many numbers inside an interval. Invalid interval: {}".format(user_input))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
                 try:
                     a = sp.sympify(tmp[0]).evalf()
                     b = sp.sympify(tmp[1]).evalf()
                     if a == sp.nan or b == sp.nan:
                         logger.root_logger.critical(
                             "Aborting: invalid NaN interval boundary found. Invalid interval: {}".format(user_input))
-                        raise WeinhuberPredicateParserException()
+                        raise RicherDomainPredicateParserException()
                 except Exception:
                     logger.root_logger.critical("Aborting: Invalid member found inside interval. Invalid interval: {}".format(user_input))
-                    raise WeinhuberPredicateParserException()
+                    raise RicherDomainPredicateParserException()
                 else:
                     if isinstance(a, sp.Number) and isinstance(b, sp.Number):
                         # Checking of last char
@@ -449,20 +449,20 @@ class PredicateParser:
                         else:
                             logger.root_logger.critical(
                                 "Aborting: interval ends with an invalid char. Invalid interval: {}".format(user_input))
-                            raise WeinhuberPredicateParserException()
+                            raise RicherDomainPredicateParserException()
                         out = sp.Interval(a, b, right_open=right_open, left_open=left_open)
                         if out == sp.EmptySet:
                             logger.root_logger.critical("Aborting: Invalid empty interval found. Invalid interval: {}".format(user_input))
-                            raise WeinhuberPredicateParserException()
+                            raise RicherDomainPredicateParserException()
                         else:
                             interval_list.append(out)
                     else:
                         logger.root_logger.critical(
                             "Aborting: Invalid member found inside interval. Invalid interval: {}".format(user_input))
-                        raise WeinhuberPredicateParserException()
+                        raise RicherDomainPredicateParserException()
             else:
                 logger.root_logger.critical("Aborting: Invalid char found inside interval. Invalid interval: {}".format(user_input))
-                raise WeinhuberPredicateParserException()
+                raise RicherDomainPredicateParserException()
 
         # Union
         final_interval = interval_list[0]

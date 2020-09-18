@@ -1,15 +1,15 @@
 import unittest
 from hypothesis import given
 import sympy as sp
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_split import WeinhuberApproachSplit
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_split import RicherDomainSplit
 from copy import deepcopy
 import numpy as np
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberSplitException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainSplitException
 
 
 class TestSplitCurveFit(unittest.TestCase):
     """
-    Test cases for fit() inside WeinhuberApproachSplit Objects (weinhuber_approach_split.py)
+    Test cases for fit() inside RicherDomainSplit Objects (richer_domain_split.py)
     """
     data_x_1 = np.array(
         [[1., 4.6, 1., 3.],
@@ -50,49 +50,49 @@ class TestSplitCurveFit(unittest.TestCase):
                       c_2: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term1 = c_0 * x_0 + c_1 * x_1 + c_2 * x_2 + c_3 * x_3 + c_4
     relation1 = "<="
-    split1 = WeinhuberApproachSplit(column_interval1, coef_interval1, term1, relation1)
+    split1 = RicherDomainSplit(column_interval1, coef_interval1, term1, relation1)
 
     # Split 2
     column_interval2 = {x_4: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     coef_interval2 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term2 = c_0 * x_4
     relation2 = "<="
-    split2 = WeinhuberApproachSplit(column_interval2, coef_interval2, term2, relation2)
+    split2 = RicherDomainSplit(column_interval2, coef_interval2, term2, relation2)
 
     # Split 3
     column_interval3 = {x_4: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity), x_5: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     coef_interval3 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term3 = c_0 * x_4 * x_5
     relation3 = "<="
-    split3 = WeinhuberApproachSplit(column_interval3, coef_interval3, term3, relation3)
+    split3 = RicherDomainSplit(column_interval3, coef_interval3, term3, relation3)
 
     # Split 4
     column_interval4 = {x_6: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     coef_interval4 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term4 = c_0 + x_6
     relation4 = "<="
-    split4 = WeinhuberApproachSplit(column_interval4, coef_interval4, term4, relation4)
+    split4 = RicherDomainSplit(column_interval4, coef_interval4, term4, relation4)
 
     # Split 5
     column_interval5 = {x_0: sp.FiniteSet(1.0, 2.0)}
     coef_interval5 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term5 = c_0 - x_0
     relation5 = "<="
-    split5 = WeinhuberApproachSplit(column_interval5, coef_interval5, term5, relation5)
+    split5 = RicherDomainSplit(column_interval5, coef_interval5, term5, relation5)
 
     # Split 6
     column_interval6 = {x_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity), x_1: sp.FiniteSet(6.0, 12.0)}
     coef_interval6 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term6 = c_0 * x_0 * x_1
     relation6 = "<="
-    split6 = WeinhuberApproachSplit(column_interval6, coef_interval6, term6, relation6)
+    split6 = RicherDomainSplit(column_interval6, coef_interval6, term6, relation6)
 
     # Split 7
     column_interval7 = {x_0: sp.FiniteSet(3.0)}
     coef_interval7 = {c_0: sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)}
     term7 = c_0 - x_0
     relation7 = "<="
-    split7 = WeinhuberApproachSplit(column_interval7, coef_interval7, term7, relation7)
+    split7 = RicherDomainSplit(column_interval7, coef_interval7, term7, relation7)
 
     def helper_fit(self, split, x, y):
         copy_split = deepcopy(split)
@@ -126,9 +126,9 @@ class TestSplitCurveFit(unittest.TestCase):
     def test_fit_invalid_edge_cases(self):
         split = deepcopy(self.split1)
         # Invalid argument types
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             split.fit([], [], [])
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             split.fit([],
                       [[1., 4.6, 1., 3.],
                        [1., 4.6, 2., 3.],
@@ -140,7 +140,7 @@ class TestSplitCurveFit(unittest.TestCase):
                        [1., 228., 1., 5.],
                        [2., 93., 1., 2.],
                        [2., 59., 3., 2.]], np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             split.fit([], np.array(
                 [[1., 4.6, 1., 3.],
                  [1., 4.6, 2., 3.],
@@ -152,7 +152,7 @@ class TestSplitCurveFit(unittest.TestCase):
                  [1., 228., 1., 5.],
                  [2., 93., 1., 2.],
                  [2., 59., 3., 2.]]), [1, 1, -1, -1, -1, -1, -1, -1, -1, -1])
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             # Invalid shapes (x rows > y column)
             split.fit([], np.array(
                 [[1., 4.6, 1., 3.],
@@ -164,7 +164,7 @@ class TestSplitCurveFit(unittest.TestCase):
                  [2., 53., 2., 3.],
                  [1., 228., 1., 5.],
                  [2., 93., 1., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1]))
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             # Invalid shapes (x rows < y column)
             split.fit([], np.array(
                 [[1., 4.6, 1., 3.],
@@ -177,7 +177,7 @@ class TestSplitCurveFit(unittest.TestCase):
                  [1., 228., 1., 5.],
                  [2., 93., 1., 2.],
                  [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1]))
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             # Invalid shapes (x rows > y column)
             split.fit([], np.array(
                 [[1., 4.6, 1., 3.],
@@ -206,7 +206,7 @@ class TestSplitCurveFit(unittest.TestCase):
              [2., 93., 1., 2.],
              [2., 59., 3., 2.]]), np.array([1, 1, -1, -1, -1, -1, -1, -1, -1, -1])))
 
-        with self.assertRaises(WeinhuberSplitException):
+        with self.assertRaises(RicherDomainSplitException):
             # Too many fixed coefs
             split.fit([(c_1, 1), (c_2, -3), (c_0, -3), (c_3, -3), (c_4, -3), (c_5, 0)], np.array(
                 [[1., 4.6, 1., 3.],

@@ -4,11 +4,11 @@ from dtcontrol.decision_tree.determinization.label_powerset_determinizer import 
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainStrategyException
 
 
-class WeinhuberApproachLinearUnitsClassifier(SplittingStrategy):
+class LinearUnitsClassifier(SplittingStrategy):
     """
     Splitting Strategy is basically the same as in dtcontrol/decision_tree/splitting/linear_classifier.py, with the only difference,
     that the Linear expression will respect the units given in self.unit.
@@ -31,7 +31,7 @@ class WeinhuberApproachLinearUnitsClassifier(SplittingStrategy):
         self.kwargs = kwargs
 
         # logger
-        self.logger = WeinhuberApproachLogger("LinearUnitsClassifier_logger", debug)
+        self.logger = RicherDomainLogger("LinearUnitsClassifier_logger", debug)
 
     def find_split(self, dataset, impurity_measure):
         x_numeric = dataset.get_numeric_x()
@@ -45,7 +45,7 @@ class WeinhuberApproachLinearUnitsClassifier(SplittingStrategy):
             self.logger.root_logger.critical(
                 "Aborting: Invalid amount of given units. Please give one unit for every column. Given units: {}. Columns: {}.".format(
                     len(self.units), x_numeric.shape[1]))
-            raise WeinhuberStrategyException("Aborting: Invalid amount of given units. Check logger or comments for more information.")
+            raise RicherDomainStrategyException("Aborting: Invalid amount of given units. Check logger or comments for more information.")
 
         self.logger.root_logger.info("Converting the dataset to every unique unit.")
 

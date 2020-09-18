@@ -5,15 +5,15 @@ from dtcontrol.decision_tree.splitting.split import Split
 import numpy as np
 import sympy as sp
 from scipy.optimize import curve_fit
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberSplitException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainSplitException
 import re
 from apted import APTED
 from apted.helpers import Tree
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
 from itertools import product
 
 
-class WeinhuberApproachSplit(Split):
+class RicherDomainSplit(Split):
     """
     e.g.
     c_1 * x_1 - c_2 + x_2 - c_3  <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3}; c_3 in {5, 10, 32, 40}
@@ -47,19 +47,19 @@ class WeinhuberApproachSplit(Split):
         self.get_mask_lookup = None
 
         # logger
-        self.logger = WeinhuberApproachLogger("WeinhuberApproachSplit_logger", debug)
+        self.logger = RicherDomainLogger("RicherDomainSplit_logger", debug)
 
         # id
         self.id = uuid.uuid4()
 
     def __repr__(self):
-        return "WeinhuberSplit: " + str(self.term) + " " + str(self.relation) + " 0"
+        return "RicherDomainSplit: " + str(self.term) + " " + str(self.relation) + " 0"
 
     def helper_str(self):
         return str(self.term) + " " + str(self.relation) + " 0"
 
     def helper_equal(self, obj1):
-        return isinstance(obj1, WeinhuberApproachSplit) and obj1.column_interval == self.column_interval \
+        return isinstance(obj1, RicherDomainSplit) and obj1.column_interval == self.column_interval \
                and obj1.coef_interval == self.coef_interval \
                and obj1.term == self.term and obj1.relation == self.relation
 
@@ -67,7 +67,7 @@ class WeinhuberApproachSplit(Split):
 
         """
         Function to compute the tree edit distance between two predicate terms.
-        :param predicate: WeinhuberApproachSplit Object
+        :param predicate: RicherDomainSplit Object
         :returns: Integer (tree edit distance between these predicate1 and predicate2)
 
         terminal command: python -m apted -t tree1 tree2 -mv
@@ -76,7 +76,7 @@ class WeinhuberApproachSplit(Split):
         def helper_formatting(tree):
             """
             Helper/Adapter function to transform tree format from sympy format to APTED format
-            :param tree: term attribute of a WeinhuberApproachSplit Object
+            :param tree: term attribute of a RicherDomainSplit Object
             :returns: String (formatted version of term in APTED format)
 
             e.g.
@@ -93,8 +93,8 @@ class WeinhuberApproachSplit(Split):
 
         predicate1 = self.term
 
-        if not (isinstance(predicate, WeinhuberApproachSplit) and isinstance(predicate.term, sp.Basic)):
-            raise WeinhuberSplitException("Aborting: Wrong instance type of parameter 'predicate'. Required: WeinhuberApproachSplit.")
+        if not (isinstance(predicate, RicherDomainSplit) and isinstance(predicate.term, sp.Basic)):
+            raise RicherDomainSplitException("Aborting: Wrong instance type of parameter 'predicate'. Required: RicherDomainSplit.")
 
         predicate2 = predicate.term
 
@@ -182,7 +182,7 @@ class WeinhuberApproachSplit(Split):
         if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray) or x.shape[0] <= 0 or x.shape[0] != y.shape[0] or not isinstance(
                 fixed_coefs, list):
             self.logger.root_logger.critical("Aborting: invalid structure of the arguments x, y.")
-            raise WeinhuberSplitException("Aborting: invalid structure of arguments x, y. Check logger or comments for more information.")
+            raise RicherDomainSplitException("Aborting: invalid structure of arguments x, y. Check logger or comments for more information.")
 
         # Checking structure of fixed_coefs
         self.coefs_to_determine = sorted(self.coef_interval, key=lambda x: int(str(x).split("_")[1]))
@@ -190,7 +190,7 @@ class WeinhuberApproachSplit(Split):
             if c_i not in self.coef_interval:
                 # Checking if fixed_coefs are valid (every fixed coef must appear inside coef_interval)
                 self.logger.root_logger.critical("Aborting: invalid fixed_coefs member found. (Does not appear inside coef_interval)")
-                raise WeinhuberSplitException("Aborting: invalid fixed_coefs member found. Check logger or comments for more information.")
+                raise RicherDomainSplitException("Aborting: invalid fixed_coefs member found. Check logger or comments for more information.")
             else:
                 # Calculate coefs to determine with curve_fit
                 self.coefs_to_determine.remove(c_i)
@@ -201,12 +201,12 @@ class WeinhuberApproachSplit(Split):
         # Predicate was already fitted.
         if self.coef_assignment is not None:
             self.logger.root_logger.critical("Aborting: predicate was already fitted")
-            raise WeinhuberSplitException("Aborting: predicate was already fitted. Check logger or comments for more information.")
+            raise RicherDomainSplitException("Aborting: predicate was already fitted. Check logger or comments for more information.")
 
         # Method checking
         if not (method == "optimized" or method == "lm" or method == "trf" or method == "dogbox"):
             self.logger.root_logger.critical("Aborting: invalid curve fitting method.")
-            raise WeinhuberSplitException(
+            raise RicherDomainSplitException(
                 "Aborting: invalid curve fitting method. Check logger or comments for more information.")
 
         if method == "optimized":
@@ -267,7 +267,7 @@ class WeinhuberApproachSplit(Split):
                         return np.array(out)
                 else:
                     self.logger.root_logger.critical("Aborting: invalid relation found.")
-                    raise WeinhuberSplitException(
+                    raise RicherDomainSplitException(
                         "Aborting: Split with invalid relation can not be fitted. Check logger or comments for more information.")
 
             # For optimization reasons, once the first solution was found (with right accuracy), the loop should end.
@@ -354,7 +354,7 @@ class WeinhuberApproachSplit(Split):
             check = offset == 0
         else:
             self.logger.root_logger.critical("Aborting: invalid relation found from inside check_offset.")
-            raise WeinhuberSplitException("Aborting: Invalid relation found. Check logger or comments for more information.")
+            raise RicherDomainSplitException("Aborting: Invalid relation found. Check logger or comments for more information.")
         return check
 
     def predict(self, features):

@@ -4,11 +4,11 @@ from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import Pre
 import numpy as np
 from copy import deepcopy
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_exceptions import WeinhuberStrategyException
-from dtcontrol.decision_tree.splitting.context_aware.weinhuber_approach_logger import WeinhuberApproachLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainStrategyException
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
 
 
-class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
+class RicherDomainSplittingStrategy(ContextAwareSplittingStrategy):
 
     def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer(), debug=False):
 
@@ -45,7 +45,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         self.curve_fitting_method = "lm"
 
         # logger
-        self.logger = WeinhuberApproachLogger("WeinhuberApproachSplittingStrategy_logger", debug)
+        self.logger = RicherDomainLogger("RicherDomainSplittingStrategy_logger", debug)
 
     def get_path_root_current(self, ancestor_range=0, observed_node=None, path=[]):
 
@@ -137,13 +137,13 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
                 if not single_split.check_valid_column_reference(x_numeric):
                     self.logger.root_logger.critical(
                         "Aborting: one predicate uses an invalid column reference. Invalid predicate {}".format(str(single_split)))
-                    raise WeinhuberStrategyException(
+                    raise RicherDomainStrategyException(
                         "Aborting: one predicate uses an invalid column reference. Check logger or comments for more information.")
             self.first_run = False
         else:
             # creating some additional logger information
             self.logger.root_logger.info(
-                "Calling WeinhuberApproachSplittingStrategy with: \n- Current dataset size:\n\t- rows: {}\n\t- columns: {}".format(
+                "Calling RicherDomainSplittingStrategy with: \n- Current dataset size:\n\t- rows: {}\n\t- columns: {}".format(
                     x_numeric.shape[0],
                     x_numeric.shape[1]))
 
@@ -266,7 +266,7 @@ class WeinhuberApproachSplittingStrategy(ContextAwareSplittingStrategy):
         splits = self.get_all_splits(dataset, impurity_measure)
 
         # Returning split with lowest impurity
-        weinhuber_split = min(splits.keys(), key=splits.get) if splits else None
+        output_split = min(splits.keys(), key=splits.get) if splits else None
 
-        self.logger.root_logger.info("Returned split: {}".format(str(weinhuber_split)))
-        return weinhuber_split
+        self.logger.root_logger.info("Returned split: {}".format(str(output_split)))
+        return output_split
