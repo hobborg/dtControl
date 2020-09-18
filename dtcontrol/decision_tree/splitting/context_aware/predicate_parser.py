@@ -166,7 +166,7 @@ class PredicateParser:
                 return WeinhuberApproachSplit(column_interval, coef_interval, term, relation, debug)
 
         logger.root_logger.critical(
-            "Aborting: one predicate contain any relation. Invalid predicate: {}".format(str(single_predicate)))
+            "Aborting: one predicate did not contain any relation. Invalid predicate: {}".format(str(single_predicate)))
         raise WeinhuberPredicateParserException()
 
     @classmethod
@@ -321,16 +321,15 @@ class PredicateParser:
         V = {predicate, combination, interval, real_interval, bracket_left, bracket_right, number, finite_interval, number_finit, num}
         Σ = { (, [, ), ], R, +oo, -oo, ,, ∪, -Inf, Inf, -INF, INF, -inf, inf, or, Or, OR, u}
         P:
-        PREDICATE       -->     INTERVAL | INTERVAL ∪ COMBINATION
-        INTERVAL        -->     REAL_INTERVAL | FINITE_INTERVAL
-        REAL_INTERVAL   -->     BRACKET_LEFT NUMBER , NUMBER BRACKET_RIGHT
-        BRACKET_LEFT    -->     ( | [
-        BRACKET_RIGHT   -->     ) | ]
-        NUMBER          -->     {x | x ∊ R} | +oo | -oo
-        FINITE_INTERVAL -->     {NUMBER_FINITE NUM}
-        NUMBER_FINITE   -->     {x | x ∊ R}
-        NUM             -->     ,NUMBER_FINITE | ,NUMBER_FINITE NUM
-
+        DEF                 -->     SET | SET ∪ SET
+        SET                 -->     INFINITE_INTERVAL | FINITE_SET
+        INFINITE_INTERVAL   -->     BRACKET_LEFT NUMBER_INFINITE , NUMBER_INFINITE BRACKET_RIGHT
+        BRACKET_LEFT        -->     ( | [
+        BRACKET_RIGHT       -->     ) | ]
+        NUMBER_INFINITE     -->     {x | x ∊ R} | +oo | -oo
+        FINITE_SET          -->     {NUMBER_FINITE NUM}
+        NUMBER_FINITE       -->     {x | x ∊ R}
+        NUM                 -->     epsilon | ,NUMBER_FINITE | ,NUMBER_FINITE NUM
         """
 
         logger.root_logger.info("User interval to process: {}".format(user_input))
