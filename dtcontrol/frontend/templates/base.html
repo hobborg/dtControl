@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>dtControl Frontend</title>
+    <meta name="author" content="Tom Doan">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/new-select.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidenav-my.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/node-stylings.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hamburger.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        select.selectpicker {
+            display: none;
+            /* Prevent FOUC */
+        }
+    </style>
+</head>
+
+<body id="bootstrap-override">
+
+<!-- Navbar at top -->
+<nav class="navbar navbar-expand-xl navbar-light">
+    {% block hamburger %}{% endblock %}
+    <a class="navbar-brand ml-0" href="/"><img class="logo"
+                                                                           src="{{ url_for('static', filename='images/logo.png') }}"/>dtControl</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</nav>
+
+{% block content %}{% endblock %}
+
+<script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/d3.v4.js') }}"></script>
+<script src="{{ url_for( 'static', filename='js/heavylifting.js' ) }}"></script>
+</body>
+
+</html>

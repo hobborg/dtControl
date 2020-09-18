@@ -14,7 +14,6 @@ import sys
 from collections import namedtuple, OrderedDict
 from os import makedirs, remove
 from os.path import exists, isfile, splitext
-import platform
 from typing import Tuple, Union, List
 
 import pkg_resources
@@ -49,8 +48,7 @@ from dtcontrol.post_processing.safe_pruning import SafePruning
 # Import preprocessing strategies
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
-#Import flask file
-from dtcontrol.visualise.app import runFlask
+
 
 def main():
     def is_valid_file_or_folder(parser, arg):
@@ -105,7 +103,7 @@ def main():
 
     def preset_parser(args):
         if args.list:
-            _config = load_default_config()
+            system_config = load_default_config()
             user_config = None
 
             if args.config:
@@ -369,9 +367,6 @@ def main():
             clear_run_cache()
         sys.exit()
 
-    def call_frontend(args):
-        print("Frontend called")
-        runFlask()
 
     def clear_run_cache():
         logging.info("Clearing default benchmark files 'benchmark.html' and 'benchmark.json'...")
@@ -589,9 +584,6 @@ def main():
     parser_conf.add_argument("--sample", "-s", action='store_true',
                              help="Print a sample user configuration file")
     parser_conf.set_defaults(func=preset_parser)
-
-    parser_vis = subparsers.add_parser(name="frontend")
-    parser_vis.set_defaults(func=call_frontend)
 
     parser_clean = subparsers.add_parser(name="clean")
     parser_clean.add_argument("--all", "-a", action='store_true',

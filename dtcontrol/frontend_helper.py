@@ -6,16 +6,13 @@ README
 Run dtcontrol --help to see usage.
 """
 
-import argparse
 import logging
-import re
-import shutil
 import sys
+import time
 from collections import namedtuple, OrderedDict
-from os import makedirs, remove, path
-from os.path import exists, isfile, splitext
-import platform
-from typing import Tuple, Union, List
+from os import path
+from os.path import exists
+from typing import Tuple, Union
 
 import pkg_resources
 from pkg_resources import Requirement, resource_filename
@@ -23,9 +20,10 @@ from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-from tabulate import tabulate
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 # Import determinizers
@@ -50,8 +48,6 @@ from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
-import json, ast
-import numpy as np
 
 # Subset of cli.py with core_parser replaced with main_parse
 
@@ -242,30 +238,36 @@ def intoJSON(rt, parent, address):
         rt_name = rt.print_c_label()
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address+[i]))
+        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i]))
     return strdummy
 
 
 def main_parse(args):
     # args will be passed as a dict to this function
     # works exactly like core_parser in cli.py
-    kwargs = dict()
+    # kwargs = dict()
 
-    dataset = path.realpath(path.dirname(__file__)) + "/../examples/" + args["controller"]
-    is_valid_file_or_folder(dataset)
+    file = args["controller"]
+    is_valid_file_or_folder(file)
 
-    kwargs["timeout"] = 20 * 60 * 60
+    # kwargs["timeout"] = 20 * 60 * 60
+    #
+    # kwargs["benchmark_file"] = 'benchmark'
 
-    kwargs["benchmark_file"] = 'benchmark'
+    # suite = BenchmarkSuite(**kwargs)
+    # suite.add_datasets(dataset)
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
 
-    suite = BenchmarkSuite(**kwargs)
-    suite.add_datasets(dataset)
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
 
     # Parse config files
     default_config: OrderedDict = load_default_config()
     user_config: Union[None, OrderedDict] = None
 
-    classifiers = []
     run_config_table = []
     Row = namedtuple('Row',
                      ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
@@ -285,6 +287,7 @@ def main_parse(args):
         tolerance = float(args["tolerance"])
         safe_pruning = (args["safe-pruning"] == "true")
 
+    classifier = None
     try:
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
                                     tolerance=tolerance,
@@ -295,20 +298,25 @@ def main_parse(args):
     except Exception:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. Skipping...\n")
 
-    classifiers.append(classifier)
     run_config_table.append(
         Row(Name=presets, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
             Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
             SafePruning=safe_pruning))
 
-    if not classifiers:
+    if not classifier:
         logging.warning(
             "No valid preset selected. Please try again with the correct preset name. Use 'dtcontrol preset --list' to see valid presets.")
         sys.exit("Exiting...")
 
-    suite.datasets[0].load_if_necessary()
+    logging.info("Frontend: loading dataset...")
+    ds.load_if_necessary()
+    start = time.time()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
-    classifiers[0].fit(suite.datasets[0])
+
+    logging.info("Frontend: fitting dataset to tree...")
+    classifier.fit(ds)
+    logging.info("Frontend: tree constructed.")
+    run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
-    retDict = intoJSON(classifiers[0].root, "null", [])
-    return retDict, suite.datasets[0].x_metadata, suite.datasets[0].y_metadata, classifiers[0].root
+    retDict = intoJSON(classifier.root, "null", [])
+    return retDict, ds.x_metadata, ds.y_metadata, classifier, run_time

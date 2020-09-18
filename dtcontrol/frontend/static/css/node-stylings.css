@@ -20,6 +20,7 @@
 
 #treeHere {
     overflow: scroll;
+    height: 90%;
 }
 
 #tableHere {
@@ -34,7 +35,11 @@
 }
 
 #expandThisDiv {
-    height: 650px;
+    height: 750px;
+}
+
+#expandThisDiv .card {
+    height: 100%;
 }
 
 .card-body {
@@ -44,9 +49,8 @@
 }
 
 .selected {
-    background-color: rgba(59, 160, 255, 0.5);
+    background-color: rgba(203, 230, 255, 0.5);
     color: black;
-    font-weight: bolder;
 }
 
 table {

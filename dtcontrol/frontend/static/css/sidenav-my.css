@@ -13,6 +13,10 @@
     /* Mouse pointer on hover */
 }
 
+.btn-link {
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
 
 /* Darker background on mouse-over */
 
@@ -25,6 +29,8 @@
 /* The side navigation menu */
 
 .sidenav {
+    color: #000;
+    font-size: 0.9em;
     height: 100%;
     /* 100% Full-height */
     width: 0;
@@ -36,11 +42,11 @@
     top: 0;
     /* Stay at the top */
     left: 0;
-    background-color: #111;
+    background-color: #fff;
     /* Black*/
     overflow-x: hidden;
     /* Disable horizontal scroll */
-    padding-top: 60px;
+    margin-top: 6rem;
     /* Place content 60px from the top */
     transition: 0.5s;
     /* 0.5 second transition effect to slide in the sidenav */
@@ -68,54 +74,35 @@
 
 /* The navigation menu links */
 
-.sidenav form {
-    padding: 8px 32px 8px 32px;
-    text-decoration: none;
-    font-size: 25px;
-    color: #818181;
-    display: block;
-    transition: 0.5s;
-}
+/*.sidenav form {*/
+/*    padding: 8px 32px 8px 32px;*/
+/*    text-decoration: none;*/
+/*    font-size: 25px;*/
+/*    color: #818181;*/
+/*    display: block;*/
+/*    transition: 0.5s;*/
+/*}*/
 
 .sidenav select {
-    padding: 8px 32px 8px 32px;
-    text-decoration: none;
-    font-size: 12px;
-    color: #818181;
-    display: block;
-    transition: 0s;
+    font-size: 1em;
+    width: 100%;
+    border-bottom-right-radius: 0.35em !important;
+    border-top-right-radius: 0.35em !important;
+}
+
+.sidenav input {
+    font-size: 1em;
+    text-align: left;
+    background-color: #ffffff;
+    width: 100%;
 }
 
 
 /* When you mouse over the navigation links, change their color */
 
 .sidenav form:hover {
-    color: #f1f1f1;
+    color: #000;
 }
-
-
-/* Position and style the close button (top right corner) */
-
-.sidenav .closebtn {
-    position: absolute;
-    top: 0;
-    right: 25px;
-    font-size: 36px;
-    margin-left: 50px;
-}
-
-hr.solid {
-    border-top: 3px solid #bbb;
-}
-
-
-/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
-
-#main {
-    transition: margin-left .5s;
-    padding: 20px;
-}
-
 
 /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
 
@@ -124,6 +111,6 @@ hr.solid {
         padding-top: 15px;
     }
     .sidenav a {
-        font-size: 18px;
+        font-size: 16px;
     }
 }

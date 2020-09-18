@@ -1,0 +1,69 @@
+/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+#main {
+    transition: padding-left .5s;
+    /*padding: 20px;*/
+}
+
+.navbar {
+
+}
+
+.navbar-brand {
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.logo {
+    height: 3rem;
+    padding-right: 0.5em;
+    padding-bottom: 10px;
+}
+
+#controls {
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    align-items: center;
+    display: flex;
+}
+
+/*#mainRow1 .card-body .row {*/
+/*    height: 100%;*/
+/*}*/
+
+#dynamics-input {
+    width: 100%;
+}
+
+#initial-values {
+    display: none;
+}
+
+#formSecond-randomize-button {
+    display: none;
+}
+
+#formSecond-submit-button {
+    display: none;
+}
+
+.custom-thead {
+    color:#fff;
+    background-color:#343a40;
+    border-color:#454d55
+}
+
+i.fa {
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+#timeRangeLabel {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#timeRate {
+    margin-top: 11px;
+    margin-bottom: 11px;
+}

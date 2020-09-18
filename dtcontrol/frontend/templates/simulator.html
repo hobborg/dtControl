@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+
+{% block hamburger %}
+    <span class="ml-4"></span>
+{% endblock %}
+
+{% block content %}
+<!-- Modal that comes on clicking 'Simulate'-->
+<div class="modal fade" id="formSecondModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Enter system dynamics</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <!-- formSecond: Selects initial values for state variables -->
+            <form id="formSecond">
+            <div class="modal-body">
+                <div id="dynamics-body" class="container">
+                    <!-- Enter dynamics of the model -->
+                    <div class="row-10 custom-file">
+                            <div class="input-group mb-4">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
+                                </div>
+                                <div class="custom-file">
+                                    <input id="dynamics-file" type="file" name="file" class="custom-file-input" id="inputGroupFile01"
+                                           aria-describedby="inputGroupFileAddon01">
+                                    <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="row-10 mt-4">
+                        <textarea id="dynamics-input" name="dynamics" rows="15" placeholder="Or enter dynamics here..."></textarea>
+                    </div>
+                </div>
+                <div id="initial-values">
+                    <div id="formSecondBody"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="formSecond-next-button" class="btn btn-primary">Next</button>
+                <button type="button" id="formSecond-randomize-button" onclick="randomizeInputs()" class="btn btn-primary">Randomise</button>
+                <button type="submit" id="formSecond-submit-button" value="Submit" class="btn btn-primary">Submit</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal that pops up on using the edit tree functionality -->
+<div class="modal fade" id="formThirdModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select user predicate/preset</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body" id="formThirdBody">
+                <form id="formThird">
+                    <div>
+                        <label for="config_3">Config:</label>
+                        <div class="search_categories">
+                            <div class="select">
+                                <select id="config_3" name="config_3">
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <hr class="solid">
+
+                    <div>
+                        <label for="determinize_3">Determinize:</label>
+                        <div class="search_categories">
+                            <div class="select">
+                                <select class="propList_3" id="determinize_3" name="determinize_3">
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="numeric-predicates_3">Numeric-Predicates:</label>
+                        <div class="search_categories">
+                            <div class="select">
+                                <select class="propList_3" id="numeric-predicates_3" name="numeric-predicates_3"
+                                        multiple>
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="categorical-predicates_3">Categorical-Predicates:</label>
+                        <div class="search_categories">
+                            <div class="select">
+                                <select class="propList_3" id="categorical-predicates_3" name="categorical-predicates_3"
+                                        multiple>
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="impurity_3">Impurity:</label>
+                        <div class="search_categories">
+                            <div class="select">
+                                <select class="propList_3" id="impurity_3" name="impurity_3">
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div>
+                        <label for="tolerance_3">Tolerance:</label>
+                        <div class="search_categories">
+                            <input type="text" id="tolerance_3" name="tolerance_3"><br><br>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="safe-pruning_3">Safe-pruning:</label>
+                        <div class="search_categories">
+                            <div class="select">
+                                <select class="propList_3" name="safe-pruning_3" id="safe-pruning_3">
+                                    <option value="true">True</opotion>
+                                    <option value="false">False</opotion>
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">
+                        Re-construct with presets
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <hr class="solid">
+
+                <form id="formFourth">
+                    <div>
+                        <label for="user_pred">Input predicate:</label>
+                        <div class="search_categories">
+                            <input type="text" id="user_pred" name="user_pred"><br><br>
+                        </div>
+                    </div>
+                    <button class="btn btn-dark btn-lg btn-block" type="submit" style="margin-top: 1.25rem;">
+                        Re-construct with user-predicates
+                    </button>
+                </form>
+
+            </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal that comes on clicking 'Custom Tree' -->
+<div class="modal fade" id="initialCustomTreeModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Input domain knowledge:</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <!-- evaluatePredicateImpurityForm: Selects domain knowledge -->
+            <form id="evaluatePredicateImpurityForm">
+                <div class="modal-body" id="formSecondBody">
+                    <div>
+                        <label for="init_domain_knowledge">Input predicate:</label>
+                        <div class="search_categories">
+                            <input type="text" id="init_domain_knowledge" name="init_domain_knowledge"><br><br>
+                        </div>
+                        <div>Computed Impurity: <span id="computedImpurity"></span></div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="addToDomainKnowledgeTableButton" style="visibility: hidden;" type="button"
+                            onclick="addToDomainKnowledgeTable()" class="btn btn-primary">Add
+                    </button>
+                    <button id="evaluatePredicateImpurityFormButton" type="submit" value="Send" class="btn btn-primary">
+                        Evaluate
+                    </button>
+                    <button type="button" onclick="closeInitialCustomTreeModal()" class="btn btn-primary">Done</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+<div id="main" class="simulator container-fluid">
+    <!-- Control buttons at the top-->
+    <div class="col-lg-12">
+        <div id="controls" class="row ml-2 mb-2">
+
+            <button id="openSecondFormButton" class="btn btn-primary" type="button"
+                    style="visibility: hidden;">Simulate
+            </button>
+
+            <!-- The four player buttons -->
+            <div class="btn-group btn-group-toggle ml-2" data-toggle="buttons" id="playerDiv"
+                 style="z-index:5;visibility: hidden;">
+                <label class="btn btn-dark">
+                    <input type="radio" name="player" id="play" autocomplete="off" value='0'> Play
+                </label>
+                <label class="btn btn-dark active">
+                    <input type="radio" name="player" id="pause" autocomplete="off" value='1' checked> Pause
+                </label>
+                <label class="btn btn-dark">
+                    <input type="radio" name="player" id="next" autocomplete="off" value='2'> Next
+                </label>
+                <label class="btn btn-dark">
+                    <input type="radio" name="player" id="back" autocomplete="off" value='3'> Previous
+                </label>
+            </div>
+
+            <!-- Range slider for speed of simulation -->
+            <div id="timeRangeContainer" style="visibility: hidden;">
+                <label id="timeRangeLabel" class="ml-4 float-left" for="timeRange">Animation Speed</label>
+                <input type="range" min="0.25" max="2" value="1" step="0.05" class="slider float-left" id="timeRange">
+                <div id="timeRate" class="ml-1 mr-4 float-left">1x</div>
+            </div>
+
+            <!-- Instep form -->
+            <div id="instep" class="form-inline my-2 my-lg-0" style="visibility: hidden;">
+                <input class="form-control w-50 mr-2" placeholder="# steps" aria-label="Number of steps"
+                       type="number" id="steps" name="steps" min="1">
+                <button class="btn btn-dark my-2 my-sm-0">Step Forward</button>
+            </div>
+
+            <!-- Tree animation toggle -->
+            <div id="animationDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
+                <label class="btn btn-outline-dark active" style="margin-left: 7px;">
+                    <input id="animateTree" type="checkbox" checked autocomplete="off">Toggle Animation
+                </label>
+            </div>
+
+            <!-- Edit tree toggle -->
+            <!--        TODO: Christoph-->
+            <div id="editTreeDiv" class="btn-group-toggle" data-toggle="buttons" style="visibility: hidden;">
+                <label class="btn btn-outline-dark" style="margin: 7px;">
+                    <input id="editTree" type="checkbox" autocomplete="off"> Edit Tree
+                </label>
+            </div>
+
+            <!-- Split Node -->
+            <button id="splitNodeButton" type="button" onclick="splitNode()" class="btn btn-dark"
+                    style="visibility: hidden; margin-left: 7px;">Split Node
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Row in which tree and model visualisation cards get added -->
+    <div id="mainRow1" class="row ml-2" style="visibility: hidden;">
+        <!-- Column for tree -->
+        <div class="col-lg-12" id="expandThisDiv">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="container-fluid h-100">
+                        <div class="row">
+                            <button type="button" class="btn btn-dark mr-2" onclick="expandAll(null)">Expand all</button>
+                            <button type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
+                        </div>
+                        <!-- Tree in this div -->
+                        <div class="row" id="treeHere">
+
+                        </div>
+
+                        <div class="row mb-2 align-self-end">
+                            <div class="col-auto mr-auto" style="font-size:0.9em">Click and drag to pan, scroll to zoom.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column for model visualisation -->
+        <div class="col-lg-6" id="hideThisDiv" style="display:none">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div style="text-align:center;">
+                        <canvas id="cartCanvas" width="450" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row for domain knowledge and computed predicates tables -->
+    <div id="mainRow1.1" class="row ml-2" style="display: none;">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h3>Domain Knowledge</h3>
+                    <div class="table-responsive">
+                        <!-- Doman knowledge table in this div -->
+                        <div id="domainKnowledgeTableHere">
+                            <table id="domainKnowledgeTable" class="table table-fixed">
+                                <tr>
+                                    <th></th>
+                                    <th>Index</th>
+                                    <th>Impurity</th>
+                                    <th>Expression</th>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h3>Computed Predicates</h3>
+                    <div class="table-responsive">
+                        <!-- Computed predicates table in this div -->
+                        <div id="computedPredicatesTableHere">
+                            <table id="computedPredicatesTableFull" class="table table-fixed">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Index</th>
+                                    <th>Impurity</th>
+                                    <th>Expression</th>
+                                </tr>
+                                </thead>
+                                <tbody id="computedPredicatesTable">
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row for feature specification and label specification tables -->
+    <div id="mainRow1.2" class="row ml-2" style="display: none;">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h3>Feature Specifications</h3>
+                    <div class="table-responsive">
+                        <!-- Feature specifications table in this div -->
+                        <div id="featureSpecificationTableHere">
+                            <table id="featureSpecificationTable" class="table table-fixed">
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Name</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Avg</th>
+                                    <th>Median</th>
+                                    <th>Step Size</th>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h3>Label Specifications</h3>
+                    <div class="table-responsive">
+                        <!-- Label specifications table in this div -->
+                        <div id="labelSpecificationTableHere">
+                            <table id="labelSpecificationTable" class="table table-fixed">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Step Size</th>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row for simulation table -->
+    <div id="mainRow2" class="row ml-2" style="visibility: hidden;">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <!-- Table in this div -->
+                        <div id="tableHere">
+                            <table id="simTable" class="table table-fixed rounded">
+                                <thead class="custom-thead">
+
+                                </thead>
+                                <tbody>
+                                <tr class="special">
+                                    <td colspan="10" style="text-align: center">Start simulation to view trace here</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row for charts with two columns -->
+    <div id="mainRow3" class="row ml-2" style="visibility: hidden;">
+        <div class="col-lg-6" id="chartsHere0">
+
+        </div>
+
+        <div class="col-lg-6" id="chartsHere1">
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

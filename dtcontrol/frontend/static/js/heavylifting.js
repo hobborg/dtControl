@@ -18,7 +18,7 @@ var lastPath = [];
 
 // Stores interval as set by the time slider
 var plpause;
-var timeOfSlider = 50;
+var timeOfSlider = 500;
 
 // Number of state varaibles and decision variables
 var numVars;
@@ -49,13 +49,13 @@ const simTableDiv = document.getElementById('tableHere');
 const app = document.getElementById('config');
 const app_3 = document.getElementById('config_3');
 
+var isSimulator;
+
 // Stores default config in config.yml
 var defConf;
 
 // Union of all configs present in config.yml
 var allConfig = {};
-
-const app1 = document.getElementById('controller');
 
 function fillYML() {
     // Uses DOM manipulation to populate required forms after reading config.yml
@@ -99,12 +99,14 @@ function fillYML() {
         det.appendChild(opt);
     }
     var det = document.getElementById("determinize_3");
-    for (var i = 0; i < allConfig['determinize'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['determinize'][i];
-        opt.setAttribute('value', allConfig['determinize'][i]);
-        opt.setAttribute('id', allConfig['determinize'][i] + "_3");
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['determinize'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['determinize'][i];
+            opt.setAttribute('value', allConfig['determinize'][i]);
+            opt.setAttribute('id', allConfig['determinize'][i] + "_3");
+            det.appendChild(opt);
+        }
     }
 
     var det = document.getElementById("numeric-predicates");
@@ -116,12 +118,14 @@ function fillYML() {
         det.appendChild(opt);
     }
     var det = document.getElementById("numeric-predicates_3");
-    for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['numeric-predicates'][i];
-        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
-        opt.setAttribute('id', allConfig['numeric-predicates'][i]);
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['numeric-predicates'][i];
+            opt.setAttribute('value', allConfig['numeric-predicates'][i]);
+            opt.setAttribute('id', allConfig['numeric-predicates'][i]);
+            det.appendChild(opt);
+        }
     }
 
     var det = document.getElementById("categorical-predicates");
@@ -132,13 +136,16 @@ function fillYML() {
         opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
         det.appendChild(opt);
     }
+
     var det = document.getElementById("categorical-predicates_3");
-    for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['categorical-predicates'][i];
-        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
-        opt.setAttribute('id', allConfig['categorical-predicates'][i]);
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['categorical-predicates'][i];
+            opt.setAttribute('value', allConfig['categorical-predicates'][i]);
+            opt.setAttribute('id', allConfig['categorical-predicates'][i]);
+            det.appendChild(opt);
+        }
     }
 
     var det = document.getElementById("impurity");
@@ -150,12 +157,14 @@ function fillYML() {
         det.appendChild(opt);
     }
     var det = document.getElementById("impurity_3");
-    for (var i = 0; i < allConfig['impurity'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['impurity'][i];
-        opt.setAttribute('value', allConfig['impurity'][i]);
-        opt.setAttribute('id', allConfig['impurity'][i] + "_3");
-        det.appendChild(opt);
+    if (det) {
+        for (var i = 0; i < allConfig['impurity'].length; i++) {
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['impurity'][i];
+            opt.setAttribute('value', allConfig['impurity'][i]);
+            opt.setAttribute('id', allConfig['impurity'][i] + "_3");
+            det.appendChild(opt);
+        }
     }
 
     $("#config").trigger("change");
@@ -163,8 +172,9 @@ function fillYML() {
 }
 
 var xhr = new XMLHttpRequest();
-xhr.open('GET', './yml', true);
-xhr.onload = function() {
+xhr.open('GET', '/yml', true);
+xhr.onload = function () {
+    if (isSimulator) return;
     // Reads the config.yml file
     data2 = JSON.parse(this.response);
     if (xhr.status >= 200 && xhr.status < 400) {
@@ -172,6 +182,9 @@ xhr.onload = function() {
             const option = document.createElement('option');
             option.textContent = x;
             option.setAttribute('value', x);
+            if (x === 'mlentropy') {
+                option.setAttribute('selected', 'selected');
+            }
             app.appendChild(option);
         }
         const option = document.createElement('option');
@@ -179,16 +192,18 @@ xhr.onload = function() {
         option.setAttribute('value', "custom");
         app.appendChild(option);
 
-        for (x in data2.presets) {
+        if (app_3) {
+            for (x in data2.presets) {
+                const option_3 = document.createElement('option');
+                option_3.textContent = x;
+                option_3.setAttribute('value', x);
+                app_3.appendChild(option_3);
+            }
             const option_3 = document.createElement('option');
-            option_3.textContent = x;
-            option_3.setAttribute('value', x);
+            option_3.textContent = "custom";
+            option_3.setAttribute('value', "custom");
             app_3.appendChild(option_3);
         }
-        const option_3 = document.createElement('option');
-        option_3.textContent = "custom";
-        option_3.setAttribute('value', "custom");
-        app_3.appendChild(option_3);
 
         fillYML();
 
@@ -206,39 +221,66 @@ xhr.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
 xhr.setRequestHeader('pragma', 'no-cache');
 xhr.send();
 
-var modl = new XMLHttpRequest();
-modl.open('GET', './examples', true);
-modl.onload = function() {
-    // Reades example folder and populates controller section in first form
-    data1 = JSON.parse(this.response);
-    for (var i = 0; i < data1.length; i++) {
-        const option = document.createElement('option');
-        option.textContent = data1[i];
-        option.setAttribute('value', data1[i]);
-        app1.appendChild(option);
+function loadControllers(path) {
+    console.log(path);
+
+    var http = new XMLHttpRequest();
+    var url = '/examples';
+    var params = 'location=' + encodeURIComponent(path);
+    http.open('POST', url, true);
+
+    //Send the proper header information along with the request
+    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+    http.onreadystatechange = function() {//Call a function when the state changes.
+        if(http.readyState == 4 && http.status == 200) {
+            data1 = JSON.parse(http.responseText);
+            if (data1["status"] == 1) {
+                select_menu = document.getElementById("controller");
+                select_menu.innerHTML = "";
+                files = data1["files"];
+                for (var i = 0; i < files.length; i++) {
+                    const option = document.createElement('option');
+                    controller_name = files[i].replace(path, "");
+                    if (controller_name.startsWith("/")) {
+                        controller_name = controller_name.substr(1);
+                    }
+                    option.textContent = controller_name;
+                    option.setAttribute('value', files[i]);
+                    if (files[i] === '10rooms.scs') {
+                        option.setAttribute('selected', 'selected');
+                    }
+                    select_menu.appendChild(option);
+                }
+            } else {
+                console.log("Folder doesn't exist");
+                const option = document.createElement("option");
+                option.textContent = "Enter valid controller directory";
+                option.setAttribute('selected', 'selected');
+                select_menu = document.getElementById("controller");
+                select_menu.innerHTML = "";
+                select_menu.appendChild(option);
+            }
+        }
     }
+    http.send(params);
 }
-modl.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
-modl.setRequestHeader('cache-control', 'max-age=0');
-modl.setRequestHeader('expires', '0');
-modl.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
-modl.setRequestHeader('pragma', 'no-cache');
-modl.send();
 
 // GLobal variables that store tree data for rendering
 var treeData = "",
     tree = "",
     diagonal = "",
+    controllerName = "",
     svg = "";
 
 var i = 0,
     duration = 0,
     root;
 
-var margin = { top: 20, right: 120, bottom: 20, left: 120 },
+var margin = {top: 20, right: 120, bottom: 20, left: 120},
     width = 1560 - margin.right - margin.left,
-    height = 500 - margin.top - margin.bottom;
-var width, height;
+    height = 800 - margin.top - margin.bottom;
+// var width, height;
 
 function constructTree() {
     // Generates the tree diagram
@@ -247,17 +289,19 @@ function constructTree() {
         .size([height, width]);
 
     diagonal = d3.svg.diagonal()
-        .projection(function(d) { return [d.y, d.x]; });
+        .projection(function (d) {
+            return [d.y, d.x];
+        });   // Flip this to go horizontal layout
 
     svg = d3.select("#treeHere").append("svg")
-        .attr("width", width + margin.right + margin.left)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", "100%")
+        .attr("height", "100%")
         .attr("style", "overflow-x: auto; overflow-y: auto;")
-        .call(d3.zoom().on("zoom", function() {
+        .call(d3.zoom().on("zoom", function () {
             svg.attr("transform", d3.event.transform)
         }))
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.right + ")");
 
     root = treeData[0];
     root.x0 = height / 2;
@@ -289,14 +333,14 @@ function click(d) {
         lastNode = d;
 
         $.ajax({
-                data: JSON.stringify({
-                    address: (d.address)
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/refreshImpurities'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                address: (d.address)
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/refreshImpurities'
+        })
+            .done(function (data) {
                 // TODO see what all to refresh here
                 $("#computedPredicatesTableFull > tbody").html("");
                 for (var i = 0; i < data.computed_predicates.length; i++) {
@@ -347,45 +391,66 @@ function click(d) {
     }
 }
 
-// Updates the svg generated accourding to changes in tree data
+// Updates the svg generated according to changes in tree data
 function update(source) {
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
 
     // Normalize for fixed-depth.
-    nodes.forEach(function(d) { d.y = d.depth * 180; });
+    // Horizontal layout: drop d.x = d.x * 12
+    nodes.forEach(function (d) {
+        d.y = d.depth * 150; d.x = d.x * 2.5;
+    });
 
     // Update the nodes…
     var node = svg.selectAll("g.node")
-        .data(nodes, function(d) { return d.id || (d.id = ++i); });
+        .data(nodes, function (d) {
+            return d.id || (d.id = ++i);
+        });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
         .attr("class", "node")
-        .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+        .attr("transform", function (d) {
+            return "translate(" + source.y0 + "," + source.x0 + ")";
+        })  // Horizontal layout: flip x, y
         .on("click", click);
 
     nodeEnter.append("circle")
         .attr("r", 1e-6)
-        .style("fill", function(d) { return d._children ? "lightsteelblue" : d.coleur; });
+        .style("fill", function (d) {
+            return d._children ? "lightsteelblue" : d.coleur;
+        });
 
     nodeEnter.append("text")
-        .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
+        .attr("x", function (d) {
+            return d.children || d._children ? -13 : 13;
+        })
         .attr("dy", ".35em")
-        .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-        .attr("id", function(d) { return "addr" + d.address.toString(); })
-        .text(function(d) { return d.name; })
+        .attr("text-anchor", function (d) {
+            return d.children || d._children ? "end" : "start";
+        })
+        .attr("id", function (d) {
+            return "addr" + d.address.toString();
+        })
+        .text(function (d) {
+            return d.name;
+        })
         .style("fill-opacity", 1e-6);
 
     // Transition nodes to their new position.
     var nodeUpdate = node.transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+        .attr("transform", function (d) {
+            return "translate(" + d.y + "," + d.x + ")";
+        });  // Horizontal layout: flip x, y
 
     nodeUpdate.select("circle")
         .attr("r", 10)
-        .style("fill", function(d) { return d._children ? "lightsteelblue" : d.coleur; });
+        .style("fill", function (d) {
+            return d._children ? "lightsteelblue" : d.coleur;
+        });
 
     nodeUpdate.select("text")
         .style("fill-opacity", 1);
@@ -393,7 +458,9 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+        .attr("transform", function (d) {
+            return "translate(" + source.y + "," + source.x + ")";
+        })  // Horizontal layout: flip x, y
         .remove();
 
     nodeExit.select("circle")
@@ -404,14 +471,16 @@ function update(source) {
 
     // Update the links…
     var link = svg.selectAll("path.link")
-        .data(links, function(d) { return d.target.id; });
+        .data(links, function (d) {
+            return d.target.id;
+        });
 
     // Enter any new links at the parent's previous position.
     link.enter().insert("path", "g")
         .attr("class", "link")
-        .attr("d", function(d) {
-            var o = { x: source.x0, y: source.y0 };
-            return diagonal({ source: o, target: o });
+        .attr("d", function (d) {
+            var o = {x: source.x0, y: source.y0};
+            return diagonal({source: o, target: o});
         });
 
     // Transition links to their new position.
@@ -422,14 +491,14 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     link.exit().transition()
         .duration(duration)
-        .attr("d", function(d) {
-            var o = { x: source.x, y: source.y };
-            return diagonal({ source: o, target: o });
+        .attr("d", function (d) {
+            var o = {x: source.x, y: source.y};
+            return diagonal({source: o, target: o});
         })
         .remove();
 
     // Stash the old positions for transition.
-    nodes.forEach(function(d) {
+    nodes.forEach(function (d) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
@@ -550,7 +619,7 @@ function expandAll(nd) {
     for (var it = 0; it < len; it++) {
         expandAll(nd.children[it]);
     }
-    return;
+
 }
 
 // Collapses all tree nodes
@@ -574,12 +643,12 @@ function collapseAll(nd) {
     for (var it = 0; it < len; it++) {
         collapseAll(nd._children[it]);
     }
-    return;
+
 }
 
 // If cartpole model used, draws it
 function drawCanvas() {
-    if ($('#controller').val() == "cartpole.scs") {
+    if (controllerName == "cartpole.scs") {
         var lineLength = 100;
         var canvas = document.getElementById("cartCanvas");
         var c = canvas.getContext("2d");
@@ -622,11 +691,11 @@ function renderChart(id, data, labels, ub, lb) {
         data: {
             labels: labels,
             datasets: [{
-                    label: 'Value of x' + chartIndex,
-                    data: data,
-                    borderColor: "#3e95cd",
-                    fill: false
-                },
+                label: 'Value of x' + chartIndex,
+                data: data,
+                borderColor: "#3e95cd",
+                fill: false
+            },
                 {
                     label: 'UB of x' + chartIndex,
                     data: ub,
@@ -730,15 +799,15 @@ async function oneStep() {
         }
 
         $.ajax({
-                data: JSON.stringify({
-                    x_pass: x_toPass,
-                    u_pass: u_toPass
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/stepRoute'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                x_pass: x_toPass,
+                u_pass: u_toPass
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/stepRoute'
+        })
+            .done(function (data) {
 
                 const tab = document.getElementById('simTable');
                 const dumrow = document.createElement('tr');
@@ -767,7 +836,11 @@ async function oneStep() {
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
                 }
-                tab.appendChild(dumrow);
+                tab.getElementsByTagName('tbody')[0].appendChild(dumrow);
+                $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
+                scrollToEndOfTable();
+
+
                 colourPath(data.x_new[2]);
 
                 for (var i = 0; i < numVars; i++) {
@@ -806,179 +879,446 @@ async function oneStep() {
 
 }
 
-$(document).ready(function() {
+function openNav() {
+    if (isSimulator) return;
+    document.getElementById("mySidenav").style.width = "310px";
+    document.getElementById("main").style.paddingLeft = "310px";
+}
 
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
+function closeNav() {
+    if (isSimulator) return;
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.paddingLeft = "0";
+}
+
+function scrollToEndOfTable() {
+    var elem = document.querySelector("#simTable");
+    elem.scrollTop = elem.scrollHeight;
+}
+
+$(document).ready(function () {
+    isSimulator = $('.simulator').length > 0;
     var numChanges = 0;
 
-    // Submits sidenav form
-    $('#formFirst').on('submit', function(event) {
-        $.ajax({
-                data: JSON.stringify({
-                    controller: $('#controller').val(),
-                    config: $('#config').val(),
-                    determinize: $('#determinize').val(),
-                    numeric_predicates: $('#numeric-predicates').val(),
-                    categorical_predicates: $('#categorical-predicates').val(),
-                    impurity: $('#impurity').val(),
-                    tolerance: $('#tolerance').val(),
-                    safe_pruning: $('#safe-pruning').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/simRoute'
-            })
-            .done(function(data) {
-                document.getElementById("openSecondFormButton").style.visibility = "visible";
-                document.getElementById("mainRow1").style.visibility = "visible";
-                document.getElementById("editTreeDiv").style.visibility = "visible";
-                document.getElementById("customTreeButton").style.display = "none";
+    if (!isSimulator) {
+        openNav();
+        document.getElementById("navbar-hamburger").className += " is-active";
+        $(".runall").hide();
 
-                treeData = data.classi;
-                numVars = data.numVars;
-                numResults = data.numResults;
+        //MJ load data and init listeners
+        $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
+        $.get('/results', results => {
+            results.forEach(e => addToResultsTable(e));
+            if(results.some(r => r[3] === 'Running...')) {
+                startPolling();
+            }
+        });
 
-                console.log(treeData);
+        $("#controller-directory-load").click(function() {
+            loadControllers($("#controller-search-directory").val());
+        });
 
-                // height = 50 * getLeaves(treeData[0]);
-                height = 25 * getLeaves(treeData[0]);
-                // height = 650;
-                width = 200 * getDepth(treeData[0]);
-
-                for (var i = 0; i < numVars; i++) {
-                    x_current.push([]);
-                    chart.push([]);
-                    chartConfig.push([]);
-                }
-                for (var i = 0; i < numResults; i++) {
-                    u_current.push([]);
-                }
-
-                if (numChanges == 0)
-                    constructTree();
-                numChanges++;
-
-                root = treeData[0];
-                root.x0 = height / 2;
-                root.y0 = 0;
-
-                update(root);
-
-                const tab = document.createElement('table');
-                tab.setAttribute('id', "simTable");
-                tab.setAttribute('class', "table table-fixed");
-                const dumrow = document.createElement('tr');
-
-                const drc0 = document.createElement('th');
-                drc0.textContent = "Index";
-                dumrow.appendChild(drc0);
-
-                const chartsDiv0 = document.getElementById('chartsHere0');
-                const chartsDiv1 = document.getElementById('chartsHere1');
-
-                for (var i = 0; i < numVars; i++) {
-                    const drc1 = document.createElement('th');
-                    drc1.textContent = "x" + i;
-                    dumrow.appendChild(drc1);
-
-                    const someChartDiv = document.createElement('div');
-                    someChartDiv.style.width = "100%";
-                    someChartDiv.style.float = 'left';
-                    someChartDiv.style.height = someChartDiv.style.width;
-                    const someChart = document.createElement('canvas');
-                    someChart.setAttribute('id', 'chartContainer' + i.toString());
-                    someChartDiv.appendChild(someChart);
-
-                    const heir0 = document.createElement('div');
-                    heir0.setAttribute('class', "card shadow mb-4");
-
-                    const heir1 = document.createElement('div');
-                    heir1.setAttribute('class', "card-body");
-
-                    const heir2 = document.createElement('div');
-                    heir2.setAttribute('style', "text-align:center;");
-
-                    heir2.appendChild(someChartDiv);
-                    heir1.appendChild(heir2);
-                    heir0.appendChild(heir1);
-                    if (i % 2 == 0) {
-                        chartsDiv0.appendChild(heir0);
-                    } else {
-                        chartsDiv1.appendChild(heir0);
+        function startPolling() {
+            console.log('start interval');
+            const interval = setInterval(() => {
+                $.get('/results', results => {
+                    console.log(results);
+                    results.filter(r => r[3] === 'Completed').forEach(r => {
+                        const row = getResultsTableRow(r[0]);
+                        if(row.children[3].innerHTML === 'Running...') {
+                            addToResultsTable(r);
+                        }
+                    });
+                    if(results.every(r => r[3] === 'Completed')) {
+                        clearInterval(interval);
                     }
+                })
+            }, 5000);
+        }
+    }
 
-                }
+    $('button.hamburger').on('click', function (event) {
+        if ($(this).hasClass("is-active")) {
+            closeNav();
+        } else {
+            openNav();
+        }
 
-                if (numResults == 1) {
-                    const drc2 = document.createElement('th');
-                    drc2.textContent = "u";
-                    dumrow.appendChild(drc2);
-                } else {
-                    for (var i = 0; i < numResults; i++) {
-                        const drc2 = document.createElement('th');
-                        drc2.textContent = "u" + i;
-                        dumrow.appendChild(drc2);
-                    }
-                }
-                tab.appendChild(dumrow);
-                simTableDiv.appendChild(tab);
+        $(this).toggleClass("is-active");
+    });
 
-                const opt = document.getElementById("formSecondBody");
-                for (var i = 0; i < numVars; i++) {
-                    const dumDiv = document.createElement('div');
+    const accordionButton = $('#accordionButton');
+    accordionButton.on('click', event => {
+        const wasCollapsed = accordionButton.hasClass('collapsed');
+        accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
+        accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
+    });
 
-                    const dumLabel = document.createElement('label');
-                    dumLabel.setAttribute('for', 'x' + i);
-                    dumLabel.textContent = "Choose an x" + i + ":";
+    $("#openSecondFormButton").on("click", function (event) {
+        if ($(this).hasClass("btn-primary")) {
+            $(this).removeClass("btn-primary");
+            $(this).addClass("btn-secondary");
+            triggerDynamicsInput();
+            $(this).html("Simulate off");
+        } else {
+            $(this).removeClass("btn-secondary");
+            $(this).addClass("btn-primary");
+            document.getElementById("mainRow2").style.visibility = "hidden";
+            document.getElementById("mainRow3").style.visibility = "hidden";
+            //document.getElementById("expandThisDiv").style.height = "450px";
+            document.getElementById("playerDiv").style.visibility = "hidden";
+            document.getElementById("timeRangeContainer").style.visibility = "hidden";
+            document.getElementById("instep").style.visibility = "hidden";
+            document.getElementById("animationDiv").style.visibility = "hidden";
 
-                    const dumInput = document.createElement('input');
-                    dumInput.setAttribute('type', 'text');
-                    dumInput.setAttribute('id', 'x' + i);
-                    dumInput.setAttribute('name', 'x' + i);
+            $("#dynamics-body").show();
+            $("#initial-values").hide();
+            $("#formSecond-next-button").show();
+            $("#formSecond-randomize-button").hide();
+            $("#formSecond-submit-button").hide();
+            $("#exampleModalLongTitle").html("Enter system dynamics");
 
-                    dumDiv.appendChild(dumLabel);
-                    dumDiv.appendChild(dumInput);
-
-                    opt.appendChild(dumDiv);
-
-                    x_bounds.push([data.bound[0][i], data.bound[1][i]]);
-                }
-
-
-            });
-
-        event.preventDefault();
+            document.getElementById("hideThisDiv").style.display = "block";
+            // TODO: Reset tree colors
+            $(this).html("Simulate");
+        }
 
     });
 
+    if (isSimulator) {
+        $.get('/computed', (data) => {
+            document.getElementById("openSecondFormButton").style.visibility = "visible";
+            document.getElementById("mainRow1").style.visibility = "visible";
+            // document.getElementById("editTreeDiv").style.visibility = "visible";
+
+            treeData = data.classi;
+            numVars = data.numVars;
+            numResults = data.numResults;
+            controllerName = data.controllerName;
+
+            console.log(treeData);
+
+            // height = 50 * getLeaves(treeData[0]);
+            height = 25 * getLeaves(treeData[0]);
+            // height = 650;
+            width = 200 * getDepth(treeData[0]);
+
+            for (var i = 0; i < numVars; i++) {
+                x_current.push([]);
+                chart.push([]);
+                chartConfig.push([]);
+            }
+            for (var i = 0; i < numResults; i++) {
+                u_current.push([]);
+            }
+
+            if (numChanges == 0)
+                constructTree();
+            numChanges++;
+
+            root = treeData[0];
+            root.x0 = height / 2;
+            root.y0 = 0;
+
+            update(root);
+
+            const tab = document.getElementById('simTable');
+
+            // Header row
+            const dumrow = document.createElement('tr');
+            const drc0 = document.createElement('th');
+            drc0.setAttribute("scope", "col");
+            drc0.textContent = "Index";
+            dumrow.appendChild(drc0);
+
+            const chartsDiv0 = document.getElementById('chartsHere0');
+            const chartsDiv1 = document.getElementById('chartsHere1');
+
+            for (var i = 0; i < numVars; i++) {
+                const drc1 = document.createElement('th');
+                drc1.setAttribute("scope", "col");
+                drc1.textContent = "x" + i;
+                dumrow.appendChild(drc1);
+
+                const someChartDiv = document.createElement('div');
+                someChartDiv.style.width = "100%";
+                someChartDiv.style.float = 'left';
+                someChartDiv.style.height = someChartDiv.style.width;
+                const someChart = document.createElement('canvas');
+                someChart.setAttribute('id', 'chartContainer' + i.toString());
+                someChartDiv.appendChild(someChart);
+
+                const heir0 = document.createElement('div');
+                heir0.setAttribute('class', "card shadow mb-4");
+
+                const heir1 = document.createElement('div');
+                heir1.setAttribute('class', "card-body");
+
+                const heir2 = document.createElement('div');
+                heir2.setAttribute('style', "text-align:center;");
+
+                heir2.appendChild(someChartDiv);
+                heir1.appendChild(heir2);
+                heir0.appendChild(heir1);
+                if (i % 2 == 0) {
+                    chartsDiv0.appendChild(heir0);
+                } else {
+                    chartsDiv1.appendChild(heir0);
+                }
+
+            }
+
+            if (numResults == 1) {
+                const drc2 = document.createElement('th');
+                drc2.setAttribute("scope", "col");
+                drc2.textContent = "u";
+                dumrow.appendChild(drc2);
+            } else {
+                for (var i = 0; i < numResults; i++) {
+                    const drc2 = document.createElement('th');
+                    drc2.setAttribute("scope", "col");
+                    drc2.textContent = "u" + i;
+                    dumrow.appendChild(drc2);
+                }
+            }
+            tab.deleteRow(-1);
+            tab.tHead.appendChild(dumrow);
+            simTableDiv.appendChild(tab);
+
+            const opt = document.getElementById("formSecondBody");
+            for (var i = 0; i < numVars; i++) {
+                const dumDiv = document.createElement('div');
+
+                const dumLabel = document.createElement('label');
+                dumLabel.setAttribute('for', 'x' + i);
+                dumLabel.textContent = "Choose an x" + i + ":";
+
+                const dumInput = document.createElement('input');
+                dumInput.setAttribute('type', 'text');
+                dumInput.setAttribute('id', 'x' + i);
+                dumInput.setAttribute('name', 'x' + i);
+
+                dumDiv.appendChild(dumLabel);
+                dumDiv.appendChild(dumInput);
+
+                opt.appendChild(dumDiv);
+
+                x_bounds.push([data.bound[0][i], data.bound[1][i]]);
+            }
+        });
+    }
+
+    // Add from sidenav
+    $("input[name='add'], button[name='add']").on('click', function (event) {
+        event.preventDefault();
+        var controller = $("#controller").val();
+        var nice_name = $("#controller").val().replace($("#controller-search-directory").val(), "");
+        if (nice_name.startsWith("/")) {
+            nice_name = nice_name.substr(1);
+        }
+        var config = $('#config').val();
+        var determinize = $('#determinize').val();
+        var numeric_predicates = $('#numeric-predicates').val();
+        var categorical_predicates = $('#categorical-predicates').val();
+        var impurity = $('#impurity').val();
+        var tolerance = $('#tolerance').val();
+        var safe_pruning = $('#safe-pruning').val();
+        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
+
+        $.ajax('/experiments', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(row_contents),
+            success: () => addToExperimentsTable(row_contents)
+        });
+    });
+
+    function addToExperimentsTable(row_contents) {
+        $("#experiments-table tr.special").hide();
+        $(".runall").show();
+
+        var table = document.getElementById("experiments-table").getElementsByTagName('tbody')[0];
+
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        var row = table.insertRow(-1);
+        var firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
+
+        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
+        for (let j = 0; j < 9; j++) {
+            var c = row.insertCell(-1);
+            if (j == 0) {
+                c.style = "display: none";
+            }
+            c.innerHTML = row_contents[j];
+        }
+
+        var icon = row.insertCell(-1);
+        icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
+    }
+
+    Number.prototype.milliSecondsToHHMMSS = function () {
+        var sec_num = this;
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+        if (hours < 10) {
+            hours = "0" + hours;
+        }
+        if (minutes < 10) {
+            minutes = "0" + minutes;
+        }
+        if (seconds < 10) {
+            seconds = "0" + seconds;
+        }
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
+    function run_single_benchmark(config) {
+        $.ajax({
+            data: JSON.stringify({
+                id: config[0],
+                controller: config[1],
+                nice_name: config[2],
+                config: config[3],
+                determinize: config[4],
+                numeric_predicates: config[5],
+                categorical_predicates: config[6],
+                impurity: config[7],
+                tolerance: config[8],
+                safe_pruning: config[9]
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/construct',
+            beforeSend: addToResultsTable(config)
+        }).done(data => addToResultsTable(data));
+    }
+
+    function getResultsTableRow(id) {
+        let rows = $("#results-table tbody tr");
+        for (let j = 0; j < rows.length; j++) {
+            const experiment_id = rows[j].children[0].innerHTML;
+            if (parseInt(experiment_id, 10) === id) {
+                return rows[j];
+            }
+        }
+    }
+
+    function addToResultsTable(row_contents) {
+        $("#results-table tr.special").hide();
+
+        let experimentRow = getResultsTableRow(row_contents[0]);
+        if (experimentRow) {
+            experimentRow.children[4].innerHTML = "Completed";
+            experimentRow.children[5].innerHTML = row_contents[4]
+            experimentRow.children[6].innerHTML = row_contents[5];
+            experimentRow.children[7].innerHTML = row_contents[6].milliSecondsToHHMMSS();
+            experimentRow.children[8].innerHTML = '<i class="fa fa-eye text-primary"></i>';
+            $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
+                $.post('/select', {runConfigIndex: row_contents[0]}, () => {
+                    window.location.href = 'simulator'
+                });
+            });
+            return;
+        }
+        else {
+            row_contents[4] = 'Running...';
+            row_contents[5] = row_contents[6] = row_contents[7] = row_contents[8] = null;
+        }
+
+        var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        var row = table.insertRow(-1);
+        var firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+
+        for (let j = 1; j < 8; j++) {
+            const cell = row.insertCell(-1);
+            if (j == 1) {
+                cell.style = "display: none";
+            }
+            if (row_contents[j]) {
+                cell.innerHTML = row_contents[j];
+            }
+        }
+        let lastCell = row.insertCell(-1);
+        if(row_contents[3] === 'Completed') {
+            lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
+            $(lastCell).find('i.fa-eye').on('click', (event) => {
+                $.post('/select', {runConfigIndex: row_contents[0]}, () => {
+                    window.location.href = 'simulator'
+                });
+            });
+        }
+    }
+
+    function initTableListeners() {
+        $("table").on("click", "i.fa-trash", function () {
+            const row = $(this).parent().parent();
+            const index = parseInt(row.find('th').textContent, 10) - 1;
+
+            //MJ delete data
+
+            row.remove();
+            if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 1) {
+                $("#experiments-table tr.special").show();
+            }
+        });
+
+        $("table").on("click", "i.fa-play", function (event) {
+            if($(this).id === 'runall-icon') return;
+            var row_items = $(this).parent().parent().find('th,td');
+            row_content = []
+            row_items.each(function (k, v) {
+                row_content.push(v.innerHTML);
+            });
+            run_single_benchmark(row_content);
+        });
+
+        $('#runall').on('click', event => {
+            $("table i.fa-play").each((_, btn) => {
+                if(btn.id === 'runall-icon') return;
+                console.log(btn);
+                btn.click();
+            });
+        })
+    }
+
     // Submits popup modal form (for passing initial values of state variables)
-    $('#formSecond').on('submit', function(event) {
+    $('#formSecond').on('submit', function (event) {
         console.log('form is submitted');
         var x_toPass = [];
         for (var i = 0; i < numVars; i++) {
-            x_toPass.push(parseFloat($('#x' + i).val()));
+            x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
-                data: JSON.stringify({ pass: x_toPass }),
-                contentType: "application/json; charset=utf-8",
-                type: 'POST',
-                url: '/initRoute'
-            })
-            .done(function(data) {
+            data: JSON.stringify({pass: x_toPass, dynamics: $("#dynamics-input").val()}),
+            contentType: "application/json; charset=utf-8",
+            type: 'POST',
+            url: '/initRoute'
+        })
+            .done(function (data) {
                 document.getElementById("mainRow2").style.visibility = "visible";
                 document.getElementById("mainRow3").style.visibility = "visible";
                 document.getElementById("expandThisDiv").style.height = "450px";
                 document.getElementById("playerDiv").style.visibility = "visible";
-                document.getElementById("timeRange").style.visibility = "visible";
+                document.getElementById("timeRangeContainer").style.visibility = "visible";
                 document.getElementById("instep").style.visibility = "visible";
-                document.getElementById("animationDiv").style.visibility = "visible";
+                document.getElementById("animationDiv").style.visibility = "visible"; // TODO Animate button, enable this again
 
                 var mini = document.getElementsByClassName("card-body");
                 for (var i = 0; i < mini.length; i++) {
                     mini[i].style.height = "425px";
                 }
+                document.getElementById("treeHere").style.height = "85%";
+                document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree
-                if ($('#controller').val() == "cartpole.scs") {
+                if (controllerName == "cartpole.scs") {
                     document.getElementById("expandThisDiv").className = "col-lg-6";
                     document.getElementById("hideThisDiv").style.display = "block";
                 } else {
@@ -1011,7 +1351,9 @@ $(document).ready(function() {
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
                 }
-                tab.appendChild(dumrow);
+                tab.getElementsByTagName('tbody')[0].appendChild(dumrow);
+                $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
+                scrollToEndOfTable();
                 colourPath(data.path);
 
                 for (var i = 0; i < numVars; i++) {
@@ -1048,24 +1390,33 @@ $(document).ready(function() {
         event.preventDefault();
     });
 
+    $("#formSecond-next-button").on("click", function (event) {
+        $("#dynamics-body").hide();
+        $("#initial-values").show();
+        $("#formSecond-next-button").hide();
+        $("#formSecond-randomize-button").show();
+        $("#formSecond-submit-button").show();
+        $("#exampleModalLongTitle").html("Enter initial values");
+    });
+
     // Form that collects edit tree data
-    $('#formThird').on('submit', function(event) {
+    $('#formThird').on('submit', function (event) {
         $.ajax({
-                data: JSON.stringify({
-                    controller: $('#controller_3').val(),
-                    config: $('#config_3').val(),
-                    determinize: $('#determinize_3').val(),
-                    numeric_predicates: $('#numeric-predicates_3').val(),
-                    categorical_predicates: $('#categorical-predicates_3').val(),
-                    impurity: $('#impurity_3').val(),
-                    tolerance: $('#tolerance_3').val(),
-                    safe_pruning: $('#safe-pruning_3').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/reconstructRoute1'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                controller: $('#controller_3').val(),
+                config: $('#config_3').val(),
+                determinize: $('#determinize_3').val(),
+                numeric_predicates: $('#numeric-predicates_3').val(),
+                categorical_predicates: $('#categorical-predicates_3').val(),
+                impurity: $('#impurity_3').val(),
+                tolerance: $('#tolerance_3').val(),
+                safe_pruning: $('#safe-pruning_3').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/reconstructRoute1'
+        })
+            .done(function (data) {
                 // Add tree appending functions here
                 // Consult formFirst submit function
                 // ########################################################### Edit here ###########################################################
@@ -1074,32 +1425,32 @@ $(document).ready(function() {
     })
 
     // Form that collects edit tree data (User text predicates)
-    $('#formFourth').on('submit', function(event) {
+    $('#formFourth').on('submit', function (event) {
         $.ajax({
-                data: JSON.stringify({
-                    predicate: $('#user_pred').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/reconstructRoute2'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                predicate: $('#user_pred').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/reconstructRoute2'
+        })
+            .done(function (data) {
                 // Add tree appending functions here
                 // ########################################################### Edit here ###########################################################
             })
         event.preventDefault();
     })
 
-    $('#evaluatePredicateImpurityForm').on('submit', function(event) {
+    $('#evaluatePredicateImpurityForm').on('submit', function (event) {
         $.ajax({
-                data: JSON.stringify({
-                    predicate: $('#init_domain_knowledge').val()
-                }),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/evaluatePredicateImpurity'
-            })
-            .done(function(data) {
+            data: JSON.stringify({
+                predicate: $('#init_domain_knowledge').val()
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/evaluatePredicateImpurity'
+        })
+            .done(function (data) {
                 document.getElementById("computedImpurity").textContent = data.impurity;
                 document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'visible';
             })
@@ -1107,7 +1458,7 @@ $(document).ready(function() {
     })
 
     // Handles the instep function
-    $('#instep').on('submit', function(event) {
+    $('#instep button').on('click', function (event) {
 
         if (!nextDisabled) {
             recolourPath();
@@ -1119,22 +1470,26 @@ $(document).ready(function() {
             for (var i = 0; i < numResults; i++) {
                 u_toPass.push(u_current[i][currentSim]);
             }
+            var steps = $('#steps').val();
+            if (steps === "") {
+                $('#steps').val("1");
+                steps = 1;
+            }
             $.ajax({
-                    data: JSON.stringify({
-                        steps: $('#steps').val(),
-                        x_pass: (x_toPass),
-                        u_pass: (u_toPass)
+                data: JSON.stringify({
+                    steps: steps,
+                    x_pass: (x_toPass),
+                    u_pass: (u_toPass)
 
-                    }),
-                    type: 'POST',
-                    contentType: "application/json; charset=utf-8",
-                    url: '/inStepRoute'
-                })
-                .done(function(data) {
+                }),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/inStepRoute'
+            })
+                .done(function (data) {
                     const tab = document.getElementById('simTable');
-                    var numSteps = parseInt($('#steps').val());
 
-                    for (var i = 0; i < numSteps; i++) {
+                    for (var i = 0; i < steps; i++) {
                         const dumrow = document.createElement('tr');
                         const drc0 = document.createElement('td');
                         const drc0_inp = document.createElement('input');
@@ -1156,7 +1511,9 @@ $(document).ready(function() {
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
                         }
-                        tab.appendChild(dumrow);
+                        tab.getElementsByTagName('tbody')[0].appendChild(dumrow);
+                        $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
+                        scrollToEndOfTable();
 
                         for (var j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
@@ -1197,12 +1554,11 @@ $(document).ready(function() {
 
 
     // Handles the player inputs
-    $(document).on("click", "input[name=player]", function() {
+    $(document).on("click", "input[name=player]", function (event) {
         var option = parseInt($("input[name=player]:checked").val());
         //play pause next back
         if (option == 0) {
             plpause = setInterval(oneStep, timeOfSlider);
-
         } else if (option == 1) {
             clearInterval(plpause);
         } else if (option == 2) {
@@ -1219,7 +1575,7 @@ $(document).ready(function() {
     });
 
     // Handles selection of different rows in simulation table
-    $(document).on("change", "input[name=indexers]", function() {
+    $(document).on("change", "input[name=indexers]", function () {
         var ind = parseInt($("input[name='indexers']:checked").val());
         recolourPath();
         currentSim = ind;
@@ -1229,7 +1585,7 @@ $(document).ready(function() {
     });
 
     // Handles changing of form selections when different configs are changed
-    $("#config").change(function() {
+    $("#config").change(function () {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
             for (x in data2.presets) {
@@ -1275,7 +1631,7 @@ $(document).ready(function() {
     });
 
     // Handles changing of form selections when different configs are changed (For edit tree popup)
-    $("#config_3").change(function() {
+    $("#config_3").change(function () {
         if ($(this).val() != "custom") {
             // clearCheckBoxes();
             for (x in data2.presets) {
@@ -1321,30 +1677,48 @@ $(document).ready(function() {
     });
 
     // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls
-    $(".propList").change(function() {
+    $(".propList").change(function () {
         document.getElementById("config").value = "custom";
     });
-    $(".propList_3").change(function() {
+    $(".propList_3").change(function () {
         document.getElementById("config_3").value = "custom";
     });
-    $("#tolerance").on("input", function() {
+    $("#tolerance").on("input", function () {
         document.getElementById("config").value = "custom";
     });
-    $("#tolerance_3").on("input", function() {
+    $("#tolerance_3").on("input", function () {
         document.getElementById("config_3").value = "custom";
     });
     // Simple .change() does not work here because it is dynamically added
+
+    $('#dynamics-file').on('change',function(){
+        //get the file name
+        var fileName = $(this).val().replace('C:\\fakepath\\', "");
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+        var file = document.getElementById("dynamics-file").files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // The file's text will be printed here
+            $("#dynamics-input").val(e.target.result);
+        };
+        reader.readAsText(file);
+    });
 });
 
 // Handles play speed slider
 var slider = document.getElementById("timeRange");
-slider.oninput = function() {
-    if (parseInt($("input[name=player]:checked").val()) == 0) {
-        timeOfSlider = this.value;
-        clearInterval(plpause);
-        plpause = setInterval(oneStep, timeOfSlider);
-    } else {
-        timeOfSlider = this.value;
+if (slider) {
+    slider.oninput = function () {
+        // 1x = 500ms
+        if (parseInt($("input[name=player]:checked").val()) == 0) {
+            timeOfSlider = 500*this.value;
+            clearInterval(plpause);
+            plpause = setInterval(oneStep, timeOfSlider);
+        } else {
+            timeOfSlider = 500*this.value;
+        }
+        document.getElementById("timeRate").innerText = parseFloat(this.value).toFixed(2) + "x";
     }
 }
 
@@ -1403,14 +1777,14 @@ function addToDomainKnowledgeTable() {
 
 function closeInitialCustomTreeModal() {
     $.ajax({
-            data: JSON.stringify({
-                domainKnowledge: (finalDomainKnowledge)
-            }),
-            type: 'POST',
-            contentType: "application/json; charset=utf-8",
-            url: '/featureLabelSpecifications'
-        })
-        .done(function(data) {
+        data: JSON.stringify({
+            domainKnowledge: (finalDomainKnowledge)
+        }),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/featureLabelSpecifications'
+    })
+        .done(function (data) {
             for (var i = 0; i < data.feature_specifications.length; i++) {
                 const dumrow = document.createElement('tr');
 
@@ -1436,8 +1810,8 @@ function closeInitialCustomTreeModal() {
             $('#initialCustomTreeModal').modal('hide');
 
             // Drawing out initial tree now
-            treeData = [{ "name": "Build", "parent": null, "coleur": "white", "children": [], "address": [] }]
-            height = 400;
+            treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
+            height = 800;
             width = 1000;
 
             constructTree();
@@ -1454,20 +1828,26 @@ function splitNode() {
     var toSendPredicate = $('input[name="buildPredicate"]:checked').val();
     console.log(toSendPredicate);
     $.ajax({
-            data: JSON.stringify({
-                address: (selectedNode),
-                predicate: toSendPredicate
-            }),
-            type: 'POST',
-            contentType: "application/json; charset=utf-8",
-            url: '/splitNode'
-        })
-        .done(function(data) {
+        data: JSON.stringify({
+            address: (selectedNode),
+            predicate: toSendPredicate
+        }),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/splitNode'
+    })
+        .done(function (data) {
             // returns number of splits only
             var numSplits = data.number_splits;
             lastNode.children = [];
             for (var i = 0; i < numSplits; i++) {
-                lastNode.children.push({ "name": "Build", "parent": lastNode.name, "coleur": "white", "children": [], "address": lastNode.address.concat([i]) });
+                lastNode.children.push({
+                    "name": "Build",
+                    "parent": lastNode.name,
+                    "coleur": "white",
+                    "children": [],
+                    "address": lastNode.address.concat([i])
+                });
             }
             lastNode.coleur = "white";
             lastNode.name = document.getElementById('expression' + toSendPredicate).textContent;
@@ -1487,31 +1867,39 @@ function randomizeInputs() {
 }
 
 // Opens second form (for initial state variable selection)
-function openSecondForm() {
-    $('#formSecondModal').modal('toggle');
+function triggerDynamicsInput() {
+    $('#formSecondModal').modal('show');
 }
 
 // Have to select dynamically created elements like this
 // Handles colouring of table rows when clicked
-$(document).on("click", "#simTable tr", function() {
+$(document).on("click", "#simTable tbody tr", function () {
     $(this).addClass('selected').siblings().removeClass('selected');
-    var value = $(this).find('td:first').html();
+    var value = $(this).find('td:first').children()[0].getAttribute("value")
     console.log(value);
     $(this).find('td input[type=radio]').prop('checked', true);
-    var ind = parseInt($("input[name='indexers']:checked").val());
+    // var ind = parseInt($("input[name='indexers']:checked").val());
+    var ind = parseInt(value);
     recolourPath();
     currentSim = ind;
     colourPath(lastPath[ind]);
     drawCanvas();
 });
 
+if (isSimulator) {
+    document.getElementById("simTable").addEventListener("scroll", function () {
+        var translate = "translate(0," + this.scrollTop + "px)";
+        this.querySelector("thead").style.transform = translate;
+    });
+}
+
 // 'Animate tree' button and 'Edit tree' button
 
-$(document).on("change", "#animateTree", function() {
+$(document).on("change", "#animateTree", function () {
     treeAnimation = !treeAnimation;
     console.log(treeAnimation);
 });
-$(document).on("change", "#editTree", function() {
+$(document).on("change", "#editTree", function () {
     treeEdit = !treeEdit;
     console.log(treeEdit);
 });
