@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 
 class Split(ABC):
+    def __init__(self):
+        self.priority = 1
+
     @abstractmethod
     def predict(self, features):
         """

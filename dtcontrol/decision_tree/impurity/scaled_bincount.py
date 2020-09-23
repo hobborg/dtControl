@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 
 from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
@@ -10,13 +8,13 @@ class ScaledBincount(MultiLabelImpurityMeasure):
 
     def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
-            return sys.maxsize
+            return np.inf
         y = dataset.get_single_labels()
         impurity = 0
         for mask in split.get_masks(dataset):
             subset = y[mask, :]
             if len(subset) == 0:
-                return sys.maxsize
+                return np.inf
             impurity += (len(subset) / len(y)) * self.calculate_scaled_bincount(subset)
         return impurity
 

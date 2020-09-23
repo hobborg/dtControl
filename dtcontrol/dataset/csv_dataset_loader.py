@@ -13,6 +13,11 @@ class CSVDatasetLoader(DatasetLoader):
 
             state_dim, input_dim = map(int, f.readline().split("BEGIN")[1].split())
 
+            types = f.readline().split("TYPES")[1].split()
+            state_dim_types = types[:state_dim]
+            input_dim_types = types[state_dim:]
+            # print("\nstate_dim_types: ",state_dim_types, "\ninput_dim_types: ", input_dim_types)
+
             ds = pd.read_csv(f, header=None)
 
             unique_list = []
@@ -20,7 +25,6 @@ class CSVDatasetLoader(DatasetLoader):
                 unique_list += ds[i].unique().tolist()
             index_to_actual = {x + 1: y for x, y in enumerate(set(unique_list))}
             value_to_index = {y: x for x, y in index_to_actual.items()}
-
             ds[[i for i in range(state_dim, state_dim + input_dim)]] = ds[
                 [i for i in range(state_dim, state_dim + input_dim)]].applymap(lambda x: value_to_index[x])
 
@@ -54,11 +58,17 @@ class CSVDatasetLoader(DatasetLoader):
             x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
             x_metadata["step_size"] = None  # todo
 
+            #TODO Add to dataset constructor
+            x_metadata["types"] = state_dim_types
+
             y_metadata = dict()
             y_metadata["variables"] = [f"u_{i}" for i in range(input_dim)]
             y_metadata["min"] = [min(index_to_actual.values())]
             y_metadata["max"] = [max(index_to_actual.values())]
             y_metadata["step_size"] = None  # todo
+
+            # TODO Add to dataset constructor
+            y_metadata["types"] = input_dim_types
 
             logging.debug(x_metadata)
             logging.debug(y_metadata)
