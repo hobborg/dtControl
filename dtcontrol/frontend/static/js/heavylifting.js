@@ -393,6 +393,7 @@ function click(d) {
 
 // Updates the svg generated according to changes in tree data
 function update(source) {
+    console.log(source)
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
@@ -478,6 +479,8 @@ function update(source) {
     // Enter any new links at the parent's previous position.
     link.enter().insert("path", "g")
         .attr("class", "link")
+        .style("stroke-dasharray", function(d) { var foo = d.target.address[d.target.address.length -1];
+                                    return (foo == 1) ? "10,10" : "1,0"; })
         .attr("d", function (d) {
             var o = {x: source.x0, y: source.y0};
             return diagonal({source: o, target: o});
