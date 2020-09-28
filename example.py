@@ -13,7 +13,7 @@ suite = BenchmarkSuite(timeout=60,
                        benchmark_file='benchmark',
                        rerun=False)
 
-suite.add_datasets(['examples', 'examples/prism', 'examples/storm'], include=['cartpole'])
+suite.add_datasets(['examples', 'examples/prism', 'examples/storm', 'examples/cps'], include=['cartpole'])
 
 aa = AxisAlignedSplittingStrategy()
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
