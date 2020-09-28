@@ -1,7 +1,6 @@
 stages:
   - test
   - version
-  - build
   - deploy
 
 test:python3.7:
