@@ -11,6 +11,7 @@
     /* Set a font size */
     cursor: pointer;
     /* Mouse pointer on hover */
+    margin-right: 10px;
 }
 
 .btn-link {

@@ -902,6 +902,8 @@ $(document).ready(function () {
     var numChanges = 0;
 
     if (!isSimulator) {
+        // Disable Add-Button until controller directory is loaded
+        document.getElementById("add-experiments-button").disabled = true;
         openNav();
         document.getElementById("navbar-hamburger").className += " is-active";
         $(".runall").hide();
@@ -915,7 +917,10 @@ $(document).ready(function () {
             }
         });
 
+        // Load Button pressed
         $("#controller-directory-load").click(function() {
+            // Reactive Add-Button
+            document.getElementById("add-experiments-button").disabled = false;
             loadControllers($("#controller-search-directory").val());
         });
 
@@ -955,6 +960,7 @@ $(document).ready(function () {
         accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
     });
 
+    // Simulate Button
     $("#openSecondFormButton").on("click", function (event) {
         if ($(this).hasClass("btn-primary")) {
             $(this).removeClass("btn-primary");
@@ -986,9 +992,19 @@ $(document).ready(function () {
 
     });
 
+    // Edit Button
+    $("#openThirdFormButton").on("click", function (event) {
+        if ($(this).hasClass("btn-primary")) {
+            $(this).removeClass("btn-primary");
+            $(this).addClass("btn-secondary");
+            $(this).html("Edit off");}
+    });
+
+
     if (isSimulator) {
         $.get('/computed', (data) => {
             document.getElementById("openSecondFormButton").style.visibility = "visible";
+            document.getElementById("openThirdFormButton").style.visibility = "visible";
             document.getElementById("mainRow1").style.visibility = "visible";
             // document.getElementById("editTreeDiv").style.visibility = "visible";
 
