@@ -123,6 +123,11 @@ def experimentsRoute():
         experiments.append(request.get_json())
         return jsonify(success=True)
 
+@app.route('/experiments/delete', methods=['GET', 'POST'])
+def deleteExperimentsRoute():
+    global experiments
+    experiments.remove(request.get_json())
+    return jsonify(success=True)
 
 @app.route('/results', methods=['GET'])
 def resultsRoute():

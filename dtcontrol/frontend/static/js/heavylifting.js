@@ -1280,18 +1280,33 @@ $(document).ready(function () {
             const row = $(this).parent().parent();
             const index = parseInt(row.find('th').textContent, 10) - 1;
 
-            //MJ delete data
+            var row_items = $(this).parent().parent().find('th,td');
+            var row_content = [];
+            row_items.each(function (k, v) {
+                row_content.push(v.innerHTML);
+            });
+            row_content = row_content.slice(1,-1); // Drop the index and the actions
+            row_content[4] = row_content[4].split(","); // Numerical
+            row_content[5] = row_content[5].split(","); // and categorical predicates as arrays
 
-            row.remove();
-            if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 1) {
-                $("#experiments-table tr.special").show();
-            }
+            $.ajax('/experiments/delete', {
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(row_content),
+                success: () => {
+                    row.remove();
+                    if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 2) {
+                        $(".runall").hide();
+                        $("#experiments-table tr.special").show();
+                    }
+                }
+            });
         });
 
         $("table").on("click", "i.fa-play", function (event) {
             if($(this).id === 'runall-icon') return;
             var row_items = $(this).parent().parent().find('th,td');
-            row_content = []
+            var row_content = []
             row_items.each(function (k, v) {
                 row_content.push(v.innerHTML);
             });
