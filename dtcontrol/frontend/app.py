@@ -142,8 +142,9 @@ def construct():
     data = request.get_json()
     id = int(data['id'])
     cont = data['controller']
+    nice_name = data['nice_name']
     config = data['config']
-    results.append([id, cont, config, 'Running...', None, None, None])
+    results.append([id, cont, nice_name, config, 'Running...', None, None, None])
 
     if config == "custom":
         to_parse_dict = {"controller": cont, "determinize": data['determinize'],
@@ -154,28 +155,36 @@ def construct():
         to_parse_dict = {"controller": cont, "config": config}
 
     # main_parse takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
-    classifier = frontend_helper.main_parse(to_parse_dict)
-    # root is saved in a global variable for use later
-    saved_tree = classifier[3].root
+    try:
+        classifier = frontend_helper.main_parse(to_parse_dict)
 
-    numVars = len(classifier[1]["min"])
-    numResults = len(classifier[2]["variables"]) if "variables" in classifier[2] else 0
-    minBounds = classifier[1]["min"]
-    maxBounds = classifier[1]["max"]
-    stepSize = classifier[1]["step_size"]
-    run_time = round(classifier[4], 2)
+        # root is saved in a global variable for use later
+        saved_tree = classifier[3].root
 
-    computed_configs[id] = ([classifier[0]], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
-    stats = classifier[3].get_stats()
-    new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
-    this_result = None
-    for result in results:
-        if result[0] == id:
-            this_result = result
-            result[3] = 'Completed'
-            result[4] = new_stats[0]
-            result[5] = new_stats[1]
-            result[6] = new_stats[2]
+        numVars = len(classifier[1]["min"])
+        numResults = len(classifier[2]["variables"]) if "variables" in classifier[2] else 0
+        minBounds = classifier[1]["min"]
+        maxBounds = classifier[1]["max"]
+        stepSize = classifier[1]["step_size"]
+        run_time = round(classifier[4], 2)
+
+        computed_configs[id] = ([classifier[0]], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
+        stats = classifier[3].get_stats()
+        new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
+        this_result = None
+        for result in results:
+            if result[0] == id:
+                this_result = result
+                result[4] = 'Completed'
+                result[5] = new_stats[0]
+                result[6] = new_stats[1]
+                result[7] = new_stats[2]
+    except Exception as e:
+        for result in results:
+            if result[0] == id:
+                this_result = result
+                result[4] = 'Error / ' + type(e).__name__
+
     return jsonify(this_result)
 
 
