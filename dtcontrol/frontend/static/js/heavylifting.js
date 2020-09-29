@@ -1645,6 +1645,9 @@ $(document).ready(function () {
                 }
             }
         }
+        else { // In case custom is selected
+            $('#accordionButton').click();
+        }
 
 
     });
