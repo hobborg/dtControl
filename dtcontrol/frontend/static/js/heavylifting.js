@@ -57,6 +57,9 @@ var defConf;
 // Union of all configs present in config.yml
 var allConfig = {};
 
+// Edit Mode activated?
+var editMode = false;
+
 function fillYML() {
     // Uses DOM manipulation to populate required forms after reading config.yml
 
@@ -232,8 +235,8 @@ function loadControllers(path) {
     //Send the proper header information along with the request
     http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
-    http.onreadystatechange = function() {//Call a function when the state changes.
-        if(http.readyState == 4 && http.status == 200) {
+    http.onreadystatechange = function () {//Call a function when the state changes.
+        if (http.readyState == 4 && http.status == 200) {
             data1 = JSON.parse(http.responseText);
             if (data1["status"] == 1) {
                 select_menu = document.getElementById("controller");
@@ -280,6 +283,7 @@ var i = 0,
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
     width = 1560 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
+
 // var width, height;
 
 function constructTree() {
@@ -322,7 +326,13 @@ function openThirdForm(address) {
 
 // Toggle children on click.
 function click(d) {
-    if (customBuild) {
+    if (editMode){
+        console.log(d);
+        // document.getElementById("nodeAt:" + d.address).firstChild.setAttribute("style", "fill: red");
+        var pred = prompt("Please enter your predicate");
+        $(location).attr('href', 'http://stackoverflow.com')
+    }
+    else if (customBuild) {
         if (lastNode != null)
             lastNode.coleur = "white";
 
@@ -401,7 +411,8 @@ function update(source) {
     // Normalize for fixed-depth.
     // Horizontal layout: drop d.x = d.x * 12
     nodes.forEach(function (d) {
-        d.y = d.depth * 150; d.x = d.x * 2.5;
+        d.y = d.depth * 150;
+        d.x = d.x * 2.5;
     });
 
     // Update the nodes…
@@ -413,6 +424,9 @@ function update(source) {
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
         .attr("class", "node")
+        .attr("id", function (d) {
+            return (d.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.address;
+        })
         .attr("transform", function (d) {
             return "translate(" + source.y0 + "," + source.x0 + ")";
         })  // Horizontal layout: flip x, y
@@ -479,8 +493,10 @@ function update(source) {
     // Enter any new links at the parent's previous position.
     link.enter().insert("path", "g")
         .attr("class", "link")
-        .style("stroke-dasharray", function(d) { var foo = d.target.address[d.target.address.length -1];
-                                    return (foo == 1) ? "10,10" : "1,0"; })
+        .style("stroke-dasharray", function (d) {
+            var foo = d.target.address[d.target.address.length - 1];
+            return (foo == 1) ? "10,10" : "1,0";
+        })
         .attr("d", function (d) {
             var o = {x: source.x0, y: source.y0};
             return diagonal({source: o, target: o});
@@ -915,13 +931,13 @@ $(document).ready(function () {
         $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
         $.get('/results', results => {
             results.forEach(e => addToResultsTable(e));
-            if(results.some(r => r[3] === 'Running...')) {
+            if (results.some(r => r[3] === 'Running...')) {
                 startPolling();
             }
         });
 
         // Load Button pressed
-        $("#controller-directory-load").click(function() {
+        $("#controller-directory-load").click(function () {
             // Reactive Add-Button
             document.getElementById("add-experiments-button").disabled = false;
             loadControllers($("#controller-search-directory").val());
@@ -934,11 +950,11 @@ $(document).ready(function () {
                     console.log(results);
                     results.filter(r => r[3] === 'Completed').forEach(r => {
                         const row = getResultsTableRow(r[0]);
-                        if(row.children[3].innerHTML === 'Running...') {
+                        if (row.children[3].innerHTML === 'Running...') {
                             addToResultsTable(r);
                         }
                     });
-                    if(results.every(r => r[3] === 'Completed')) {
+                    if (results.every(r => r[3] === 'Completed')) {
                         clearInterval(interval);
                     }
                 })
@@ -995,12 +1011,37 @@ $(document).ready(function () {
 
     });
 
-    // Edit Button
+    // Edit Button pressed
     $("#openThirdFormButton").on("click", function (event) {
+        // Activate Edit Mode
         if ($(this).hasClass("btn-primary")) {
             $(this).removeClass("btn-primary");
             $(this).addClass("btn-secondary");
-            $(this).html("Edit off");}
+            $(this).html("Edit off");
+            document.getElementById("saveEditButton").style.visibility = "visible";
+            document.getElementById("cancelEditButton").style.visibility = "visible";
+            document.getElementById("expandAllButton").disabled = "true";
+            document.getElementById("collapseAllButton").disabled = "true";
+
+            editMode = true;
+            update(root);
+
+
+        } else {
+            //Deactivate Edit Mode
+            $(this).removeClass("btn-secondary");
+            $(this).addClass("btn-primary");
+            $(this).html("Edit");
+            document.getElementById("saveEditButton").style.visibility = "hidden";
+            document.getElementById("cancelEditButton").style.visibility = "hidden";
+            document.getElementById("expandAllButton").removeAttribute("disabled");
+            document.getElementById("collapseAllButton").removeAttribute("disabled");
+
+            editMode = false;
+            update(root);
+        }
+
+
     });
 
 
@@ -1242,8 +1283,7 @@ $(document).ready(function () {
                 });
             });
             return;
-        }
-        else {
+        } else {
             row_contents[4] = 'Running...';
             row_contents[5] = row_contents[6] = row_contents[7] = row_contents[8] = null;
         }
@@ -1265,7 +1305,7 @@ $(document).ready(function () {
             }
         }
         let lastCell = row.insertCell(-1);
-        if(row_contents[3] === 'Completed') {
+        if (row_contents[3] === 'Completed') {
             lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
             $(lastCell).find('i.fa-eye').on('click', (event) => {
                 $.post('/select', {runConfigIndex: row_contents[0]}, () => {
@@ -1289,7 +1329,7 @@ $(document).ready(function () {
         });
 
         $("table").on("click", "i.fa-play", function (event) {
-            if($(this).id === 'runall-icon') return;
+            if ($(this).id === 'runall-icon') return;
             var row_items = $(this).parent().parent().find('th,td');
             row_content = []
             row_items.each(function (k, v) {
@@ -1300,7 +1340,7 @@ $(document).ready(function () {
 
         $('#runall').on('click', event => {
             $("table i.fa-play").each((_, btn) => {
-                if(btn.id === 'runall-icon') return;
+                if (btn.id === 'runall-icon') return;
                 console.log(btn);
                 btn.click();
             });
@@ -1710,14 +1750,14 @@ $(document).ready(function () {
     });
     // Simple .change() does not work here because it is dynamically added
 
-    $('#dynamics-file').on('change',function(){
+    $('#dynamics-file').on('change', function () {
         //get the file name
         var fileName = $(this).val().replace('C:\\fakepath\\', "");
         //replace the "Choose a file" label
         $(this).next('.custom-file-label').html(fileName);
         var file = document.getElementById("dynamics-file").files[0];
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             // The file's text will be printed here
             $("#dynamics-input").val(e.target.result);
         };
@@ -1731,11 +1771,11 @@ if (slider) {
     slider.oninput = function () {
         // 1x = 500ms
         if (parseInt($("input[name=player]:checked").val()) == 0) {
-            timeOfSlider = 500*this.value;
+            timeOfSlider = 500 * this.value;
             clearInterval(plpause);
             plpause = setInterval(oneStep, timeOfSlider);
         } else {
-            timeOfSlider = 500*this.value;
+            timeOfSlider = 500 * this.value;
         }
         document.getElementById("timeRate").innerText = parseFloat(this.value).toFixed(2) + "x";
     }

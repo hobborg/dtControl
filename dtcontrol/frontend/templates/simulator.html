@@ -221,7 +221,7 @@
             </button>
 
             <button id="openThirdFormButton" class="btn btn-primary" type="button"
-                        style="visibility: hidden;">Edit
+                        style="visibility: hidden;" onclick="expandAll(null);expandAll(null);collapseAll(null)">Edit
             </button>
 
             <!-- The four player buttons -->
@@ -286,8 +286,10 @@
                 <div class="card-body">
                     <div class="container-fluid h-100">
                         <div class="row">
-                            <button type="button" class="btn btn-dark mr-2" onclick="expandAll(null)">Expand all</button>
-                            <button type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
+                            <button id = "expandAllButton" type="button" class="btn btn-dark mr-2" onclick="expandAll(null);expandAll(null)">Expand all</button>
+                            <button id = "collapseAllButton" type="button" class="btn btn-dark" onclick="collapseAll(null)">Collapse all</button>
+                            <button id = "saveEditButton" type="button" class="btn btn-dark mr-2" style="visibility: hidden;">Save</button>
+                            <button id = "cancelEditButton" type="button" class="btn btn-dark" style="visibility: hidden;">Cancel</button>
                         </div>
                         <!-- Tree in this div -->
                         <div class="row" id="treeHere">
