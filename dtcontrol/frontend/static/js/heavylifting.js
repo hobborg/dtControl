@@ -1268,50 +1268,101 @@ $(document).ready(function () {
     }
 
     function addToResultsTable(row_contents) {
+        // This function is called both when
+        // 1. a new experiment is started
+        // 2. to populate the results table when results arrive from polling
+        // 3. to populate the results table when the page is refreshed
+
         $("#results-table tr.special").hide();
-
-        let experimentRow = getResultsTableRow(row_contents[0]);
-        if (experimentRow) {
-            experimentRow.children[4].innerHTML = "Completed";
-            experimentRow.children[5].innerHTML = row_contents[4]
-            experimentRow.children[6].innerHTML = row_contents[5];
-            experimentRow.children[7].innerHTML = row_contents[6].milliSecondsToHHMMSS();
-            experimentRow.children[8].innerHTML = '<i class="fa fa-eye text-primary"></i>';
-            $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
-                $.post('/select', {runConfigIndex: row_contents[0]}, () => {
-                    window.location.href = 'simulator'
-                });
-            });
-            return;
-        } else {
-            row_contents[4] = 'Running...';
-            row_contents[5] = row_contents[6] = row_contents[7] = row_contents[8] = null;
-        }
-
         var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
 
-        // Create an empty <tr> element and add it to the 1st position of the table:
-        var row = table.insertRow(-1);
-        var firstCell = row.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-
-        for (let j = 1; j < 8; j++) {
-            const cell = row.insertCell(-1);
-            if (j == 1) {
-                cell.style = "display: none";
+        if (row_contents[4] == "Completed") {
+            let experimentRow = getResultsTableRow(row_contents[0]);
+            if (experimentRow) {
+                for (let j = 4; j <= 7; j++) {
+                    experimentRow.children[j].innerHTML = row_contents[j];
+                }
+                experimentRow.children[7].innerHTML = row_contents[7].milliSecondsToHHMMSS();
             }
-            if (row_contents[j]) {
-                cell.innerHTML = row_contents[j];
+            else {
+                experimentRow = table.insertRow(-1);
+                var firstCell = experimentRow.insertCell(-1);
+                firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+                for (let j = 1; j <= 7; j++) {
+                    const cell = experimentRow.insertCell(-1);
+                    if (j == 1) {
+                        cell.style = "display: none";
+                    }
+                    if (j <= 6) {
+                        cell.innerHTML = row_contents[j];
+                    }
+                    if (j == 7) {
+                        cell.innerHTML = row_contents[j].milliSecondsToHHMMSS();
+                    }
+                }
+            }
+            if (experimentRow.children.length < 9) {
+                let lastCell = experimentRow.insertCell(-1);
+                lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
+                $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
+                    $.post('/select', {runConfigIndex: row_contents[0]}, () => {
+                        window.location.href = 'simulator'
+                    });
+                });
             }
         }
-        let lastCell = row.insertCell(-1);
-        if (row_contents[3] === 'Completed') {
-            lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
-            $(lastCell).find('i.fa-eye').on('click', (event) => {
-                $.post('/select', {runConfigIndex: row_contents[0]}, () => {
-                    window.location.href = 'simulator'
-                });
-            });
+        else if (row_contents[4].startsWith("Error")) {
+            let experimentRow = getResultsTableRow(row_contents[0]);
+            if (experimentRow) {
+                experimentRow.children[4].innerHTML = row_contents[4];
+            }
+            else {
+                experimentRow = table.insertRow(-1);
+                firstCell = experimentRow.insertCell(-1);
+                firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+                for (let j = 1; j <= 7; j++) {
+                    const cell = experimentRow.insertCell(-1);
+                    if (j === 1) {
+                        cell.style = "display: none";
+                    }
+                    if (j <= 3) {
+                        cell.innerHTML = row_contents[j];
+                    }
+                    if (j === 4) {
+                        cell.innerHTML = row_contents[j];
+                    }
+                }
+            }
+        }
+        else { // This is the case where a new controller is added
+            /*
+                id: row_contents[0],
+                controller: row_contents[1],
+                nice_name: row_contents[2],
+                config: row_contents[3],
+                determinize: row_contents[4],
+                numeric_predicates: row_contents[5],
+                categorical_predicates: row_contents[6],
+                impurity: row_contents[7],
+                tolerance: row_contents[8],
+                safe_pruning: row_contents[9]
+             */
+            // Create an empty <tr> element and add it to the 1st position of the table:
+            var row = table.insertRow(-1);
+            var firstCell = row.insertCell(-1);
+            firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+            for (let j = 1; j <= 7; j++) {
+                const cell = row.insertCell(-1);
+                if (j == 1) {
+                    cell.style = "display: none";
+                }
+                if (j <= 3) {
+                    cell.innerHTML = row_contents[j];
+                }
+                if (j == 4) {
+                    cell.innerHTML = "Running...";
+                }
+            }
         }
     }
 
@@ -1320,22 +1371,37 @@ $(document).ready(function () {
             const row = $(this).parent().parent();
             const index = parseInt(row.find('th').textContent, 10) - 1;
 
-            //MJ delete data
+            var row_items = $(this).parent().parent().find('th,td');
+            var row_content = [];
+            row_items.each(function (k, v) {
+                row_content.push(v.innerHTML);
+            });
+            row_content = row_content.slice(1,-1); // Drop the index and the actions
+            row_content[4] = row_content[4].split(","); // Numerical
+            row_content[5] = row_content[5].split(","); // and categorical predicates as arrays
 
-            row.remove();
-            if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 1) {
-                $("#experiments-table tr.special").show();
-            }
+            $.ajax('/experiments/delete', {
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(row_content),
+                success: () => {
+                    row.remove();
+                    if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 2) {
+                        $(".runall").hide();
+                        $("#experiments-table tr.special").show();
+                    }
+                }
+            });
         });
 
         $("table").on("click", "i.fa-play", function (event) {
             if ($(this).id === 'runall-icon') return;
             var row_items = $(this).parent().parent().find('th,td');
-            row_content = []
+            var row_content = []
             row_items.each(function (k, v) {
                 row_content.push(v.innerHTML);
             });
-            run_single_benchmark(row_content);
+            run_single_benchmark(row_content.slice(0, -1));
         });
 
         $('#runall').on('click', event => {
@@ -1684,6 +1750,9 @@ $(document).ready(function () {
 
                 }
             }
+        }
+        else { // In case custom is selected
+            $('#accordionButton').click();
         }
 
 
