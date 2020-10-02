@@ -972,10 +972,11 @@ $(document).ready(function () {
             }, 5000);
         }
     }
-    // else if (isSimulator) {
-    //     // If we are in simulator, there is no need for having the "load controller directory" etc available
-    //     document.getElementById("controllerSearchDirectoryRow").remove();
-    //     document.getElementById("controllerSelectRow").remove();
+    else if (isSimulator) {
+        // If we are in simulator, there is no need for having the "load controller directory" etc available
+        document.getElementById("controllerSearchDirectoryRow").remove();
+        document.getElementById("controllerSelectRow").remove();
+        document.getElementById("add-experiments-button").innerText = "Select Retrain Node";
     //
     //     // Add interactive mode to preset
     //     const option = document.createElement('option');
@@ -983,7 +984,7 @@ $(document).ready(function () {
     //     option.setAttribute('value', "interactive mode");
     //     app.appendChild(option);
     //
-    // }
+     }
 
 
     $('button.hamburger').on('click', function (event) {
@@ -1212,6 +1213,8 @@ $(document).ready(function () {
 
         if (config == "automatic"){
              config += " (Fallback: " + $("#fallback").val() + ")";
+             numeric_predicates = [""];
+             categorical_predicates = [""];
         }
 
         var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
@@ -1791,9 +1794,14 @@ $(document).ready(function () {
             // In case interactive mode is selected
         }
         else if ($(this).val() == "automatic"){
+
+
             document.getElementById("userPredicatesInputRow").classList.remove("collapse");
             document.getElementById("fallbackSelectRow").classList.remove("collapse");
 
+            document.getElementById("numericPredicatesSelectRow").classList.add("collapse");
+            document.getElementById("categoricalPredicatesSelectRow").classList.add("collapse");
+            document.getElementById("tolerance").value = 0.00001;
         }
 
 
