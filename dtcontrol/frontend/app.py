@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from signal import signal, SIGINT
+import html
 
 import numpy as np
 import sympy as sp
@@ -126,7 +127,13 @@ def experimentsRoute():
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
     global experiments
-    experiments.remove(request.get_json())
+    experiment_to_delete = request.get_json()
+
+    """
+    experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
+    """
+    experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
+    experiments.remove(experiment_to_delete)
     return jsonify(success=True)
 
 @app.route('/results', methods=['GET'])

@@ -1209,15 +1209,16 @@ $(document).ready(function () {
         var impurity = $('#impurity').val();
         var tolerance = $('#tolerance').val();
         var safe_pruning = $('#safe-pruning').val();
-
+        var user_predicates = "";
 
         if (config == "automatic"){
              config += " (Fallback: " + $("#fallback").val() + ")";
              numeric_predicates = [""];
              categorical_predicates = [""];
+             user_predicates = $('#userPredicatesInput').val();
         }
 
-        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
+        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning, user_predicates];
 
 
 
@@ -1241,9 +1242,9 @@ $(document).ready(function () {
         firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        for (let j = 0; j < 9; j++) {
+        for (let j = 0; j < 10; j++) {
             var c = row.insertCell(-1);
-            if (j == 0) {
+            if (j == 0 || j == 9) {
                 c.style = "display: none";
             }
             c.innerHTML = row_contents[j];
