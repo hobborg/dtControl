@@ -47,7 +47,9 @@ var customBuild = false;
 const simTableDiv = document.getElementById('tableHere');
 
 const app = document.getElementById('config');
-const app_3 = document.getElementById('config_3');
+
+// All presets available for fallback
+const  fallback_app = document.getElementById("fallback");
 
 var isSimulator;
 
@@ -60,22 +62,25 @@ var allConfig = {};
 // Edit Mode activated?
 var editMode = false;
 
-function fillYML() {
+// preset data json
+var preset_json;
+
+function fillYML(preset_json) {
     // Uses DOM manipulation to populate required forms after reading config.yml
 
-    defConf = (data2.presets.default);
+    defConf = (preset_json.presets.default);
     var iter = 0;
     for (y in defConf) {
         allConfig[y] = [];
     }
 
-    for (x in data2.presets) {
+    for (x in preset_json.presets) {
         //loop over preset names
         for (y in defConf) {
             //loop over properties
-            if (y in data2.presets[x]) {
+            if (y in preset_json.presets[x]) {
                 //if that preset contains that property
-                var valu = data2.presets[x][y];
+                var valu = preset_json.presets[x][y];
                 if (Array.isArray(valu)) {
                     for (z in valu) {
                         if (!allConfig[y].includes(valu[z])) {
@@ -179,36 +184,41 @@ xhr.open('GET', '/yml', true);
 xhr.onload = function () {
     if (isSimulator) return;
     // Reads the config.yml file
-    data2 = JSON.parse(this.response);
+    preset_json = JSON.parse(this.response);
     if (xhr.status >= 200 && xhr.status < 400) {
-        for (x in data2.presets) {
+        for (x in preset_json.presets) {
             const option = document.createElement('option');
             option.textContent = x;
             option.setAttribute('value', x);
             if (x === 'mlentropy') {
                 option.setAttribute('selected', 'selected');
             }
+
             app.appendChild(option);
+            const option_copy = option.cloneNode(true);
+            fallback_app.appendChild(option_copy);
+
         }
+
+        // Add custom to preset
         const option = document.createElement('option');
         option.textContent = "custom";
         option.setAttribute('value', "custom");
         app.appendChild(option);
 
-        if (app_3) {
-            for (x in data2.presets) {
-                const option_3 = document.createElement('option');
-                option_3.textContent = x;
-                option_3.setAttribute('value', x);
-                app_3.appendChild(option_3);
-            }
-            const option_3 = document.createElement('option');
-            option_3.textContent = "custom";
-            option_3.setAttribute('value', "custom");
-            app_3.appendChild(option_3);
-        }
+        // Add interactive mode to preset
+        const option2 = document.createElement('option');
+        option2.textContent = "interactive";
+        option2.setAttribute('value', "interactive");
+        app.appendChild(option2);
 
-        fillYML();
+        // Add automatic mode to preset
+        const option3 = document.createElement('option');
+        option3.textContent = "automatic";
+        option3.setAttribute('value', "automatic");
+        app.appendChild(option3);
+
+        fillYML(preset_json);
 
     } else {
         console.log("YML not working");
@@ -899,14 +909,14 @@ async function oneStep() {
 }
 
 function openNav() {
-    if (isSimulator) return;
+    // if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "310px";
     document.getElementById("main").style.paddingLeft = "310px";
 }
 
 /* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
 function closeNav() {
-    if (isSimulator) return;
+    // if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "0";
     document.getElementById("main").style.paddingLeft = "0";
 }
@@ -920,11 +930,12 @@ $(document).ready(function () {
     isSimulator = $('.simulator').length > 0;
     var numChanges = 0;
 
+    openNav();
+    document.getElementById("navbar-hamburger").className += " is-active";
+
     if (!isSimulator) {
         // Disable Add-Button until controller directory is loaded
         document.getElementById("add-experiments-button").disabled = true;
-        openNav();
-        document.getElementById("navbar-hamburger").className += " is-active";
         $(".runall").hide();
 
         //MJ load data and init listeners
@@ -961,6 +972,19 @@ $(document).ready(function () {
             }, 5000);
         }
     }
+    // else if (isSimulator) {
+    //     // If we are in simulator, there is no need for having the "load controller directory" etc available
+    //     document.getElementById("controllerSearchDirectoryRow").remove();
+    //     document.getElementById("controllerSelectRow").remove();
+    //
+    //     // Add interactive mode to preset
+    //     const option = document.createElement('option');
+    //     option.textContent = "custom";
+    //     option.setAttribute('value', "interactive mode");
+    //     app.appendChild(option);
+    //
+    // }
+
 
     $('button.hamburger').on('click', function (event) {
         if ($(this).hasClass("is-active")) {
@@ -1184,7 +1208,15 @@ $(document).ready(function () {
         var impurity = $('#impurity').val();
         var tolerance = $('#tolerance').val();
         var safe_pruning = $('#safe-pruning').val();
+
+
+        if (config == "automatic"){
+             config += " (Fallback: " + $("#fallback").val() + ")";
+        }
+
         var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning];
+
+
 
         $.ajax('/experiments', {
             type: 'POST',
@@ -1711,37 +1743,37 @@ $(document).ready(function () {
 
     // Handles changing of form selections when different configs are changed
     $("#config").change(function () {
-        if ($(this).val() != "custom") {
+        if ($(this).val() != "custom" && $(this).val() != "interactive" && $(this).val() != "automatic") {
             // clearCheckBoxes();
-            for (x in data2.presets) {
+            for (x in preset_json.presets) {
                 //x is  preset names
                 if ($(this).val() == x) {
                     //x is now selected preset
                     for (y in defConf) {
                         //y is  property names
-                        if (y in data2.presets[x]) {
+                        if (y in preset_json.presets[x]) {
                             if (y == "tolerance") {
-                                document.getElementById("tolerance").value = data2.presets[x][y];
+                                document.getElementById("tolerance").value = preset_json.presets[x][y];
                             } else if (y == "safe-pruning") {
-                                if (data2.presets[x]["safe-pruning"]) {
+                                if (preset_json.presets[x]["safe-pruning"]) {
                                     $('#safe-pruning').val("true");
                                 } else {
                                     $('#safe-pruning').val("false");
                                 }
                             } else {
-                                $("#" + y).val(data2.presets[x][y]);
+                                $("#" + y).val(preset_json.presets[x][y]);
                             }
                         } else {
                             if (y == "tolerance") {
                                 document.getElementById("tolerance").value = defConf[y];
                             } else if (y == "safe-pruning") {
-                                if (data2.presets["default"]["safe-pruning"]) {
+                                if (preset_json.presets["default"]["safe-pruning"]) {
                                     $('#safe-pruning').val("true");
                                 } else {
                                     $('#safe-pruning').val("false");
                                 }
                             } else {
-                                $("#" + y).val(data2.presets["default"][y]);
+                                $("#" + y).val(preset_json.presets["default"][y]);
                             }
                         }
                     }
@@ -1751,54 +1783,17 @@ $(document).ready(function () {
                 }
             }
         }
-        else { // In case custom is selected
+        else if ($(this).val() == "custom"){
+            // In case custom is selected
             $('#accordionButton').click();
         }
+        else if ($(this).val() == "interactive"){
+            // In case interactive mode is selected
+        }
+        else if ($(this).val() == "automatic"){
+            document.getElementById("userPredicatesInputRow").classList.remove("collapse");
+            document.getElementById("fallbackSelectRow").classList.remove("collapse");
 
-
-    });
-
-    // Handles changing of form selections when different configs are changed (For edit tree popup)
-    $("#config_3").change(function () {
-        if ($(this).val() != "custom") {
-            // clearCheckBoxes();
-            for (x in data2.presets) {
-                //x is  preset names
-                if ($(this).val() == x) {
-                    //x is now selected preset
-                    for (y in defConf) {
-                        //y is  property names
-                        if (y in data2.presets[x]) {
-                            if (y == "tolerance") {
-                                document.getElementById("tolerance_3").value = data2.presets[x][y];
-                            } else if (y == "safe-pruning") {
-                                if (data2.presets[x]["safe-pruning"]) {
-                                    $('#safe-pruning_3').val("true");
-                                } else {
-                                    $('#safe-pruning_3').val("false");
-                                }
-                            } else {
-                                $("#" + y + "_3").val(data2.presets[x][y]);
-                            }
-                        } else {
-                            if (y == "tolerance") {
-                                document.getElementById("tolerance_3").value = defConf[y];
-                            } else if (y == "safe-pruning") {
-                                if (data2.presets["default"]["safe-pruning"]) {
-                                    $('#safe-pruning_3').val("true");
-                                } else {
-                                    $('#safe-pruning_3').val("false");
-                                }
-                            } else {
-                                $("#" + y + "_3").val(data2.presets["default"][y]);
-                            }
-                        }
-                    }
-
-                    break;
-
-                }
-            }
         }
 
 
