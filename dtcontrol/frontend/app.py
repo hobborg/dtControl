@@ -172,7 +172,6 @@ def construct():
     # main_parse takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
     try:
         classifier = frontend_helper.main_parse(to_parse_dict)
-        print(classifier)
         # root is saved in a global variable for use later
         saved_tree = classifier[3].root
 
