@@ -11,6 +11,8 @@ from gevent.pywsgi import WSGIServer
 
 from dtcontrol import frontend_helper
 
+from traceback import print_exc
+
 app = Flask(__name__)
 
 # stored experiments
@@ -124,6 +126,7 @@ def experimentsRoute():
         experiments.append(request.get_json())
         return jsonify(success=True)
 
+
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
     global experiments
@@ -158,13 +161,18 @@ def construct():
                          "numeric-predicates": data['numeric_predicates'],
                          "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
+    elif config.startswith("automatic"):
+        # automatic strategy with user predicates
+        to_parse_dict = {"controller": cont, "config": "automatic", "fallback": config.split("Fallback: ")[1][:-1],
+                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
+                         "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
         to_parse_dict = {"controller": cont, "config": config}
 
     # main_parse takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
     try:
         classifier = frontend_helper.main_parse(to_parse_dict)
-
+        print(classifier)
         # root is saved in a global variable for use later
         saved_tree = classifier[3].root
 
@@ -187,6 +195,7 @@ def construct():
                 result[6] = new_stats[1]
                 result[7] = new_stats[2]
     except Exception as e:
+        print_exc()
         for result in results:
             if result[0] == id:
                 this_result = result
@@ -362,14 +371,17 @@ def splitNode():
     returnDict = {"number_splits": 3}
     return jsonify(returnDict)
 
+
 def recursive_scan(baseDir):
     for entry in os.scandir(baseDir):
         if entry.is_file():
-            if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(".prism")) and (
+            if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(".prism") or entry.name.endswith(
+                    ".csv")) and (
                     not entry.name.startswith(".")):
                 yield os.path.join(baseDir, entry.name)
         else:
             yield from recursive_scan(entry.path)
+
 
 # Used to get the list of unzipped examples
 @app.route("/examples", methods=['POST'])
@@ -391,6 +403,7 @@ def yamlread():
 
 global http_server
 
+
 def handler(signal_received, frame):
     global http_server
     # Handle any cleanup here
@@ -402,7 +415,8 @@ def handler(signal_received, frame):
 def start_web_frontend():
     global http_server
     print('Starting dtControl web interface...')
-    logging.warning('dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
+    logging.warning(
+        'dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
     print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
     # app.run(debug=True, use_reloader=False)
     http_server = WSGIServer(('', 5000), app)

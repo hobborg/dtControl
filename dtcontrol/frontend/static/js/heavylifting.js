@@ -1273,6 +1273,7 @@ $(document).ready(function () {
     }
 
     function run_single_benchmark(config) {
+        console.log(config);
         $.ajax({
             data: JSON.stringify({
                 id: config[0],
@@ -1284,7 +1285,8 @@ $(document).ready(function () {
                 categorical_predicates: config[6],
                 impurity: config[7],
                 tolerance: config[8],
-                safe_pruning: config[9]
+                safe_pruning: config[9],
+                user_predicates: config[10]
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",

@@ -44,6 +44,7 @@ from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSing
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
 # Import preprocessing strategies
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
@@ -52,7 +53,7 @@ from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 # Subset of cli.py with core_parser replaced with main_parse
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
-                   name=None):
+                   name=None, user_predicates=None, fallback=None):
     """
     Creates classifier objects for each method
 
@@ -94,6 +95,8 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
+        'richer-domain': lambda x, y: RicherDomainSplittingStrategy(user_given_splits=x, determinizer=y),
+
     }
     impurity_map = {
         'auroc': lambda x: AUROC(determinizer=x),
@@ -145,6 +148,19 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     for sp in combined_split:
         if sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
             splitting_strategy.append(splitting_map[sp](determinization_map[determinize](None)))
+        elif sp in ['richer-domain']:
+            splitting_strategy.append(splitting_map[sp](user_predicates, determinization_map[determinize](None)))
+            if fallback:
+                # add fallbacks to strategy
+                for fallback_sp in fallback[0]+fallback[1]:
+                    if fallback_sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
+                        f_sp = splitting_map[fallback_sp](determinization_map[determinize](None))
+                        f_sp.priority = 0
+                        splitting_strategy.append(f_sp)
+                    else:
+                        f_sp = splitting_map[fallback_sp](None)
+                        f_sp.priority = 0
+                        splitting_strategy.append(f_sp)
         else:
             splitting_strategy.append(splitting_map[sp](None))
 
@@ -268,16 +284,27 @@ def main_parse(args):
     default_config: OrderedDict = load_default_config()
     user_config: Union[None, OrderedDict] = None
 
-    run_config_table = []
-    Row = namedtuple('Row',
-                     ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
-                      'SafePruning'])
+    fallback_numeric, fallback_categorical = None, None
+    user_predicates = None
 
     if "config" in args.keys():
         presets = args["config"]
-        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
-                                                                                                      user_config,
-                                                                                                      default_config)
+
+        if "automatic" in presets:
+            presets = args["config"]
+            numeric_split = ["richer-domain"]
+            categorical_split = []
+            determinize = args["determinize"]
+            impurity = args["impurity"]
+            tolerance = float(args["tolerance"])
+            safe_pruning = (args["safe-pruning"] == "true")
+            fallback_numeric = get_preset(args["fallback"], user_config, default_config)[0]
+            fallback_categorical = get_preset(args["fallback"], user_config, default_config)[1]
+            user_predicates = args["user_predicates"]
+        else:
+            numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
+                                                                                                          user_config,
+                                                                                                          default_config)
     else:
         presets = "default"
         numeric_split = args["numeric-predicates"]
@@ -291,17 +318,13 @@ def main_parse(args):
     try:
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
                                     tolerance=tolerance,
-                                    safe_pruning=safe_pruning, name=presets)
+                                    safe_pruning=safe_pruning, name=presets, user_predicates=user_predicates,
+                                    fallback=(fallback_numeric, fallback_categorical))
     except EnvironmentError:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. This could be "
                         f"because the preset '{presets}' is not supported on this platform. Skipping...\n")
     except Exception:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. Skipping...\n")
-
-    run_config_table.append(
-        Row(Name=presets, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
-            Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
-            SafePruning=safe_pruning))
 
     if not classifier:
         logging.warning(

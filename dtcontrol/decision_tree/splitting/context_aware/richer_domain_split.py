@@ -6,11 +6,10 @@ import numpy as np
 import sympy as sp
 from scipy.optimize import curve_fit
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainSplitException
-import re
-from apted import APTED
-from apted.helpers import Tree
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
 from itertools import product
+
+# For tree edit distance functionality --> 6605ba8c0f9231784a0c45d682ddbcbfb4897b1c
 
 
 class RicherDomainSplit(Split):
@@ -62,50 +61,6 @@ class RicherDomainSplit(Split):
         return isinstance(obj1, RicherDomainSplit) and obj1.column_interval == self.column_interval \
                and obj1.coef_interval == self.coef_interval \
                and obj1.term == self.term and obj1.relation == self.relation
-
-    def tree_edit_distance(self, predicate):
-
-        """
-        Function to compute the tree edit distance between two predicate terms.
-        :param predicate: RicherDomainSplit Object
-        :returns: Integer (tree edit distance between these predicate1 and predicate2)
-
-        terminal command: python -m apted -t tree1 tree2 -mv
-        """
-
-        def helper_formatting(tree):
-            """
-            Helper/Adapter function to transform tree format from sympy format to APTED format
-            :param tree: term attribute of a RicherDomainSplit Object
-            :returns: String (formatted version of term in APTED format)
-
-            e.g.
-            Sympy format: Add(Mul(Integer(11), Symbol('x_1')), Mul(Integer(2), Symbol('x_2')), Integer(-11))
-            APTED format: {Add{Mul{{Variable}{Symbol1}}Mul{{Variable}{Symbol2}}{Variable}}}
-            """
-            tree = sp.srepr(tree)
-
-            formated_tree = re.sub("Integer\(.+?\)|Float\(.+?\)|Rational\(.+?\)", "{Variable}", tree)
-            formated_tree = formated_tree.replace("(", "{").replace(")", "}").replace("{'x_", "").replace("'}", "").replace(
-                ", ", "")
-            formated_tree = "{" + re.sub("(Symbol\d+)", "{\\1}", formated_tree) + "}"
-            return formated_tree
-
-        predicate1 = self.term
-
-        if not (isinstance(predicate, RicherDomainSplit) and isinstance(predicate.term, sp.Basic)):
-            raise RicherDomainSplitException("Aborting: Wrong instance type of parameter 'predicate'. Required: RicherDomainSplit.")
-
-        predicate2 = predicate.term
-
-        tree1 = Tree.from_text(helper_formatting(predicate1))
-        tree2 = Tree.from_text(helper_formatting(predicate2))
-
-        apted = APTED(tree1, tree2)
-        ted = apted.compute_edit_distance()
-        # To display mapping between those two predicates
-        # mapping = apted.compute_edit_mapping()
-        return ted
 
     def get_fixed_coef_combinations(self):
 

@@ -17,7 +17,7 @@ class RicherDomainSplittingStrategy(ContextAwareSplittingStrategy):
         :param determinizer: determinizer
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.get_predicate(debug=debug) if user_given_splits is None else user_given_splits
+        self.user_given_splits = PredicateParser.parse_user_string(user_given_splits) if user_given_splits is not None else PredicateParser.get_predicate()
         self.determinizer = determinizer
         self.first_run = True
 

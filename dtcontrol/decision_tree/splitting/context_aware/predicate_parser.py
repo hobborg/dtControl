@@ -473,3 +473,30 @@ class PredicateParser:
                 final_interval = sp.Union(final_interval, item)
         logger.root_logger.info("Finished processing user interval. Result: {}.".format(str(final_interval)))
         return final_interval
+
+    @classmethod
+    def parse_user_string(cls, user_input):
+        """
+        Method to parse a string obtained from the frontend and create the corresponding richer domain splits.
+        """
+        # Logger Init
+        logger = RicherDomainLogger("GetPredicate_Logger", False)
+        logger.root_logger.info("Starting Predciate Parser.")
+
+        predicate_list = user_input.split("\n")
+
+        # output list containing all parsed predicates
+        output = []
+        for single_predicate in predicate_list:
+            logger.root_logger.info("Processing user predicate {} / {}.".format(predicate_list.index(single_predicate) + 1, len(predicate_list)))
+
+            # Parse single predicate
+            parsed_predicate = cls.parse_single_predicate(single_predicate, logger, debug=False)
+
+            logger.root_logger.info(
+                "Parsed predicate {} / {} successfully. Result: {}".format(predicate_list.index(single_predicate) + 1,
+                                                                           len(predicate_list), str(parsed_predicate)))
+            output.append(parsed_predicate)
+
+        logger.root_logger.info("Finished processing of user predicate. Shutting down Predicate Parser")
+        return output
