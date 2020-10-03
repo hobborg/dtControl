@@ -7,6 +7,7 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 
 class LinearClassifierOnlyLeafSplittingStrategy(SplittingStrategy):
     def __init__(self, classifier_class, determinizer=LabelPowersetDeterminizer(), **kwargs):
+        super().__init__()
         self.determinizer = determinizer
         self.classifier_class = classifier_class
         self.kwargs = kwargs

@@ -21,6 +21,7 @@ class CategoricalSingleSplit(Split):
     """
 
     def __init__(self, feature, value):
+        super().__init__()
         self.feature = feature
         self.value = value
 
