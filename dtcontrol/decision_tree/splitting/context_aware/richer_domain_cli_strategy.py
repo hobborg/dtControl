@@ -98,7 +98,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         Function to setup a richer domain splitting strategy instance.
         """
 
-        tmp_richer_domain = RicherDomainSplittingStrategy(user_given_splits=[], debug=self.debug)
+        tmp_richer_domain = RicherDomainSplittingStrategy(debug=self.debug)
         tmp_richer_domain.priority = 1
         tmp_richer_domain.optimized_tree_check_version = False
         tmp_richer_domain.curve_fitting_method = "optimized"
