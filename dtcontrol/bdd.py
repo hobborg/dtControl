@@ -48,6 +48,7 @@ class BDD(BenchmarkSuiteClassifier):
             self.x_metadata["variables"] = [f"x{i}" for i in range(0,len(dataset.x[0]))]
         # generate blasted vars for state vars, add them to BDD 
         self.blast_vars(self.x_metadata)
+        print("Blasted state vars")
 
         # Add blasted vars for actions; two cases: Or-ing all allowed actions (0) or unique labels (1)
         # (Stuff like minnorm comes in case by modifying dataset before)
@@ -66,8 +67,13 @@ class BDD(BenchmarkSuiteClassifier):
             sys.exit()
         self.blast_vars(self.act_metadata)
 
+        print("Blasted act vars")
+
+
         # Random starting order
         self.reorder_randomly()
+
+        print("Reordered")
 
         # Finally construct the BDD
         row_num = -1
@@ -117,9 +123,17 @@ class BDD(BenchmarkSuiteClassifier):
     # generate blasted vars for vars, add them to BDD 
     # Usual means that we take num_bits = ceil( ld( (max-min)/step_size ) )
     def blast_vars(self, metadata):
+        print("Now blasting stare vars")
         for i in range(0, len(metadata["variables"])):
             #num_bits = ceil( ld( (max-min)/step_size ) )
-            num_bits = 1 + int(math.log(((metadata["max"][i] - metadata["min"][i]) / metadata["step_size"][i]), 2))
+            #print("Name: " + metadata["variables"][i])
+            #print("max: " + str(metadata["max"][i]))
+            #print("min: " + str(metadata["min"][i]))
+            #print("stepsize: " + str(metadata["step_size"][i]))
+            if metadata["max"][i] - metadata["min"][i] == 0:
+                num_bits = 0 # catch corner case of useless vars, e.g. in cruise
+            else:
+                num_bits = 1 + int(math.log(((metadata["max"][i] - metadata["min"][i]) / metadata["step_size"][i]), 2))
             for j in range(0, num_bits):
                 blasted_name = metadata["variables"][i] + f"_{j}"
                 self.bdd.declare(blasted_name)
@@ -152,6 +166,9 @@ class BDD(BenchmarkSuiteClassifier):
         min_val = metadata["min"][i]
         max_val = metadata["max"][i]
         step_size = metadata["step_size"][i]
+
+        if max_val - min_val == 0:
+            return self.bdd.true # catch corner case of useless vars, e.g. in cruise
         num_bits = 1 + int(math.log(((max_val-min_val) / step_size), 2))
         label = int(round((value - min_val) / step_size))
 
