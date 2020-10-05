@@ -49,7 +49,7 @@ class PrismDatasetLoader(DatasetLoader):
         x_metadata["categorical"] = []
         x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
         x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
-        x_metadata["step_size"] = None  # todo
+        x_metadata["step_size"] = [1 for _ in x[0]]
 
         index_to_actual = {i: i - 1 for i in y_variables.values()}
 
@@ -58,7 +58,7 @@ class PrismDatasetLoader(DatasetLoader):
         y_metadata["category_names"] = {0: [v.strip() for v in sorted(y_variables.keys(), key=y_variables.get)]}
         y_metadata["min"] = [min(index_to_actual.values())]
         y_metadata["max"] = [max(index_to_actual.values())]
-        y_metadata["step_size"] = None  # todo
+        y_metadata["step_size"] = [int((y_metadata["max"][0] - y_metadata["min"][0]) / (len(index_to_actual) - 1))]
 
         logging.debug(x_metadata)
         logging.debug(y_metadata)
