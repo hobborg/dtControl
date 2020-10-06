@@ -169,16 +169,10 @@ class BDD(BenchmarkSuiteClassifier):
         min_val = metadata["min"][i]
         max_val = metadata["max"][i]
         step_size = metadata["step_size"][i]
-<<<<<<< HEAD
 
         if max_val - min_val == 0:
             return self.bdd.true # catch corner case of useless vars, e.g. in cruise
         num_bits = 1 + int(math.log(((max_val-min_val) / step_size), 2))
-=======
-        if max_val == min_val:
-            return self.bdd.true
-        num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
->>>>>>> a99d313aa02bcacc6f3c79bc00bed96a4eaba3ea
         label = int(round((value - min_val) / step_size))
 
         # go over label in reverse order, set bits in BDD
