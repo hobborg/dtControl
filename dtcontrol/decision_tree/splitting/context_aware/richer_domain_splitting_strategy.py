@@ -10,14 +10,18 @@ from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import
 
 class RicherDomainSplittingStrategy(ContextAwareSplittingStrategy):
 
-    def __init__(self, user_given_splits=None, determinizer=LabelPowersetDeterminizer(), debug=False):
+    def __init__(self, user_given_splits="", determinizer=LabelPowersetDeterminizer(), debug=False):
 
         """
         :param user_given_splits: predicates/splits obtained by user to work with. Parsed by predicate_parser.py
         :param determinizer: determinizer
         """
         super().__init__()
-        self.user_given_splits = PredicateParser.parse_user_string(user_given_splits) if user_given_splits is not None else PredicateParser.get_predicate()
+        """
+        parses a huge string of predicates, if this string is provided. Otherwise PredicateParser.get_predicate() will go into 
+        dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt and parse the predicates from there.
+        """
+        self.user_given_splits = PredicateParser.parse_user_string(user_given_splits) if user_given_splits is not "" else PredicateParser.get_predicate()
         self.determinizer = determinizer
         self.first_run = True
 
