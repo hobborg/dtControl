@@ -87,6 +87,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
         logreg.priority = 1
 
+        # TODO P: might have to drop this when extending to other datasets
         # Linear Units (Only if there are units given)
         logreg_unit = LinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
         logreg_unit.priority = 1
@@ -98,7 +99,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         Function to setup a richer domain splitting strategy instance.
         """
 
-        tmp_richer_domain = RicherDomainSplittingStrategy(user_given_splits=[], debug=self.debug)
+        tmp_richer_domain = RicherDomainSplittingStrategy(user_given_splits=None, debug=self.debug)
         tmp_richer_domain.priority = 1
         tmp_richer_domain.optimized_tree_check_version = False
         tmp_richer_domain.curve_fitting_method = "optimized"

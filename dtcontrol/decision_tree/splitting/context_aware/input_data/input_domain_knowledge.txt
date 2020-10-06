@@ -1,1 +1,2 @@
 #UNITS Calories VitaminC Tasty GramProtein
+#x_0 < 100

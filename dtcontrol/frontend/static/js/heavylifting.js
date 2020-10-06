@@ -304,7 +304,7 @@ function constructTree() {
 
     diagonal = d3.svg.diagonal()
         .projection(function (d) {
-            return [d.y, d.x];
+            return [d.x, d.y];
         });   // Flip this to go horizontal layout
 
     svg = d3.select("#treeHere").append("svg")
@@ -412,8 +412,9 @@ function click(d) {
 }
 
 // Updates the svg generated according to changes in tree data
+// Inspired by https://bl.ocks.org/d3noob/8375092
 function update(source) {
-    console.log(source)
+    console.log(source);
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
@@ -421,8 +422,8 @@ function update(source) {
     // Normalize for fixed-depth.
     // Horizontal layout: drop d.x = d.x * 12
     nodes.forEach(function (d) {
-        d.y = d.depth * 150;
-        d.x = d.x * 2.5;
+        d.y = d.depth * 120;
+        d.x = d.x * 12;
     });
 
     // Update the nodes…
@@ -438,7 +439,7 @@ function update(source) {
             return (d.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.address;
         })
         .attr("transform", function (d) {
-            return "translate(" + source.y0 + "," + source.x0 + ")";
+            return "translate(" + source.x0 + "," + source.y0 + ")";
         })  // Horizontal layout: flip x, y
         .on("click", click);
 
@@ -468,7 +469,7 @@ function update(source) {
     var nodeUpdate = node.transition()
         .duration(duration)
         .attr("transform", function (d) {
-            return "translate(" + d.y + "," + d.x + ")";
+            return "translate(" + d.x + "," + d.y + ")";
         });  // Horizontal layout: flip x, y
 
     nodeUpdate.select("circle")
@@ -484,7 +485,7 @@ function update(source) {
     var nodeExit = node.exit().transition()
         .duration(duration)
         .attr("transform", function (d) {
-            return "translate(" + source.y + "," + source.x + ")";
+            return "translate(" + source.x + "," + source.y + ")";
         })  // Horizontal layout: flip x, y
         .remove();
 

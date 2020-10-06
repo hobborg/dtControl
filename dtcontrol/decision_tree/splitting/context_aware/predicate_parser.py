@@ -319,16 +319,16 @@ class PredicateParser:
 
         G = (V, Σ, P, predicate)
         V = {predicate, combination, interval, real_interval, bracket_left, bracket_right, number, finite_interval, number_finit, num}
-        Σ = { (, [, ), ], R, +oo, -oo, ,, ∪, -Inf, Inf, -INF, INF, -inf, inf, or, Or, OR, u}
+        Σ = { (, [, ), ], {, }, +oo, -oo, ,, ∪, -Inf, Inf, -INF, INF, -inf, inf, or, Or, OR, u}
         P:
         DEF                 -->     SET | SET ∪ SET
         SET                 -->     INFINITE_INTERVAL | FINITE_SET
         INFINITE_INTERVAL   -->     BRACKET_LEFT NUMBER_INFINITE , NUMBER_INFINITE BRACKET_RIGHT
         BRACKET_LEFT        -->     ( | [
         BRACKET_RIGHT       -->     ) | ]
-        NUMBER_INFINITE     -->     {x | x ∊ R} | +oo | -oo
+        NUMBER_INFINITE     -->     x ∊ R | +oo | -oo
         FINITE_SET          -->     {NUMBER_FINITE NUM}
-        NUMBER_FINITE       -->     {x | x ∊ R}
+        NUMBER_FINITE       -->     x ∊ R
         NUM                 -->     epsilon | ,NUMBER_FINITE | ,NUMBER_FINITE NUM
         """
 
@@ -342,11 +342,11 @@ class PredicateParser:
         if not user_input.strip():
             logger.root_logger.critical("Aborting: no interval found.")
             raise RicherDomainPredicateParserException()
-        elif user_input.strip()[0] is not "{" and user_input.strip()[0] is not "(" and user_input.strip()[0] is not "[":
+        elif user_input.strip()[0] != '{' and user_input.strip()[0] != '(' and user_input.strip()[0] != '[':
             logger.root_logger.critical("Aborting: interval starts with an invalid char. Invalid interval: {}".format(user_input))
             raise RicherDomainPredicateParserException()
-        elif user_input.strip()[-1] is not "}" and user_input.strip()[-1] is not ")" and user_input.strip()[
-            -1] is not "]":
+        elif user_input.strip()[-1] != '}' and user_input.strip()[-1] != ')' and user_input.strip()[
+            -1] != ']':
             logger.root_logger.critical("Aborting: interval ends with an invalid char. Invalid interval: {}".format(user_input))
             raise RicherDomainPredicateParserException()
 
