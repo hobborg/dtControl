@@ -385,15 +385,15 @@ class Node:
         return f'y <= {str(label)};'
 
     def to_json_dict(self, y_metadata, variables=None, category_names=None):
-        final_label = None
+        text_label = None
         if self.actual_label is not None:
             if isinstance(self.actual_label, list):
                 new_label = [self.print_single_actual_label(label, y_metadata) for label in self.actual_label]
-                final_label = util.split_into_lines(new_label)
+                text_label = util.split_into_lines(new_label)
             else:
-                final_label = self.print_single_actual_label(int(self.actual_label), y_metadata)
+                text_label = self.print_single_actual_label(self.actual_label, y_metadata)
         return {
-            "actual_label": str(final_label),
+            "actual_label": str(text_label),
             "children": [child.to_json_dict(y_metadata, variables=variables, category_names=category_names) for child in
                          self.children],
             "split": self.split.to_json_dict(variables=variables, category_names=category_names) if self.split else None
