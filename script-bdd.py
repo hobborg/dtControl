@@ -1,66 +1,100 @@
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-
 from dtcontrol.benchmark_suite import BenchmarkSuite
-from dtcontrol.decision_tree.decision_tree import DecisionTree
-from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
-from dtcontrol.decision_tree.impurity.entropy import Entropy
-from dtcontrol.decision_tree.pre_processing.norm_pre_processor import NormPreProcessor
-from dtcontrol.decision_tree.pre_processing.random_pre_processor import RandomPreProcessor
-from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
-from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
-from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
-from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.bdd import BDD
+from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
+from dtcontrol.pre_processing.maxfreq_pre_processor import MaxFreqPreProcessor
 
-suite = BenchmarkSuite(timeout=60 * 60 * 15,
+suite = BenchmarkSuite(timeout=900,
                        save_folder='saved_classifiers',
-                       benchmark_file='benchmark_new_asd2',
-                       rerun=True)
+                       benchmark_file='benchmark_file-BDD',
+                       rerun=False)
 
-suite.add_datasets(['examples', 'examples/prism'],
-                   include=[
-                       # "firewire_abst",
-                       # "wlan0",
-                       # "mer10"
-                       # "cartpole",
-                       # "tworooms-noneuler-latest",
-                       # "helicopter",
-                       # "cruise-latest",
-                       # "dcdc",
-                       # "10rooms",
-                       # "truck_trailer",
-                       # "traffic_1m",
-                       # "traffic_10m",
-                        "traffic_30m",
-                       # "vehicle",
-                       # "aircraft"
-                   ]
-                   )
+suite.add_datasets(['examples/storm', 'examples/cps'])
 
-aa = AxisAlignedSplittingStrategy()
-cat = CategoricalMultiSplittingStrategy()
-oc1 = OC1SplittingStrategy(num_restarts=10, num_jumps=5)
-logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none',
-                                           determinizer=MaxFreqDeterminizer())
-linsvc = LinearClassifierSplittingStrategy(LinearSVC, max_iter=5000, determinizer=MaxFreqDeterminizer())
-bdd_actOR = BDD(0)
-bdd_actOR_minnorm = BDD(0, label_pre_processor=NormPreProcessor(min))
-bdd_actUL = BDD(1)
-bdd_actUL_minnorm = BDD(1, label_pre_processor=NormPreProcessor(min))
-# TODO: Add parameter preprocessor to BDD
-# dataset = normprocessor.preprocess(dataset)
-# bdd_actUL = BDD(1, normpreprocessor)
+bdd_actOR_0 = BDD(0,name_suffix=0)
+bdd_actOR_1 = BDD(0,name_suffix=1)
+bdd_actOR_2 = BDD(0,name_suffix=2)
+bdd_actOR_3 = BDD(0,name_suffix=3)
+bdd_actOR_4 = BDD(0,name_suffix=4)
+bdd_actOR_5 = BDD(0,name_suffix=5)
+bdd_actOR_6 = BDD(0,name_suffix=6)
+bdd_actOR_7 = BDD(0,name_suffix=7)
+bdd_actOR_8 = BDD(0,name_suffix=8)
+bdd_actOR_9 = BDD(0,name_suffix=9)
+
+bdd_actUL_0 = BDD(1,name_suffix=0)
+bdd_actUL_1 = BDD(1,name_suffix=1)
+bdd_actUL_2 = BDD(1,name_suffix=2)
+bdd_actUL_3 = BDD(1,name_suffix=3)
+bdd_actUL_4 = BDD(1,name_suffix=4)
+bdd_actUL_5 = BDD(1,name_suffix=5)
+bdd_actUL_6 = BDD(1,name_suffix=6)
+bdd_actUL_7 = BDD(1,name_suffix=7)
+bdd_actUL_8 = BDD(1,name_suffix=8)
+bdd_actUL_9 = BDD(1,name_suffix=9)
+
+#When determinizing, actor or UL makes no difference as there is only 1 action
+bdd_minnorm_0 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=0)
+bdd_minnorm_1 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=1)
+bdd_minnorm_2 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=2)
+bdd_minnorm_3 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=3)
+bdd_minnorm_4 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=4)
+bdd_minnorm_5 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=5)
+bdd_minnorm_6 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=6)
+bdd_minnorm_7 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=7)
+bdd_minnorm_8 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=8)
+bdd_minnorm_9 = BDD(0, label_pre_processor=NormPreProcessor(min),name_suffix=9)
+bdd_maxfreq_0 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=10)
+bdd_maxfreq_1 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=11)
+bdd_maxfreq_2 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=12)
+bdd_maxfreq_3 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=13)
+bdd_maxfreq_4 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=14)
+bdd_maxfreq_5 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=15)
+bdd_maxfreq_6 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=16)
+bdd_maxfreq_7 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=17)
+bdd_maxfreq_8 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=18)
+bdd_maxfreq_9 = BDD(0, label_pre_processor=MaxFreqPreProcessor(),name_suffix=19)
+
 classifiers = [
-    #bdd_actOR,
-    bdd_actOR_minnorm,
-    #bdd_actUL,
-    #bdd_actUL_minnorm
-    #DecisionTree([aa], Entropy(), 'CART'),
-    #DecisionTree([aa], Entropy(), 'Min', label_pre_processor=NormPreProcessor(min)),
-    #DecisionTree([aa], Entropy(), 'Rand', label_pre_processor=RandomPreProcessor()),
-    #DecisionTree([aa], Entropy(MaxFreqDeterminizer()), 'MaxFreq', early_stopping=True),
-    #DecisionTree([aa], Entropy(MaxFreqDeterminizer(pre_determinize=False)), 'MaxFreq-post', early_stopping=True),
+    bdd_actOR_0,
+    bdd_actOR_1,
+    bdd_actOR_2,
+    bdd_actOR_3,
+    bdd_actOR_4,
+    bdd_actOR_5,
+    bdd_actOR_6,
+    bdd_actOR_7,
+    bdd_actOR_8,
+    bdd_actOR_9,
+    bdd_actUL_0,
+    bdd_actUL_1,
+    bdd_actUL_2,
+    bdd_actUL_3,
+    bdd_actUL_4,
+    bdd_actUL_5,
+    bdd_actUL_6,
+    bdd_actUL_7,
+    bdd_actUL_8,
+    bdd_actUL_9,
+    bdd_minnorm_0,
+    bdd_minnorm_1,
+    bdd_minnorm_2,
+    bdd_minnorm_3,
+    bdd_minnorm_4,
+    bdd_minnorm_5,
+    bdd_minnorm_6,
+    bdd_minnorm_7,
+    bdd_minnorm_8,
+    bdd_minnorm_9,
+#    bdd_maxfreq_0,
+#    bdd_maxfreq_1,
+#    bdd_maxfreq_2,
+#    bdd_maxfreq_3,
+#    bdd_maxfreq_4,
+#    bdd_maxfreq_5,
+#    bdd_maxfreq_6,
+#    bdd_maxfreq_7,
+#    bdd_maxfreq_8,
+#    bdd_maxfreq_9,
 ]
 suite.benchmark(classifiers)
-suite.display_html()
+#suite.display_html()

@@ -11,6 +11,10 @@ logging.getLogger("dd").setLevel(logging.CRITICAL)
 from tqdm import tqdm
 
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
+from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
+from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
+
+
 
 class BDD(BenchmarkSuiteClassifier):
     """
@@ -23,9 +27,11 @@ class BDD(BenchmarkSuiteClassifier):
     num_bits = ld((max-min)/step_size) ; used in generating the vars in the beginning of fit
     """
 
-    def __init__(self, all_or_unique_label, label_pre_processor=None):
-        self.name = f"BDD_{'actOR' if all_or_unique_label == 0 else 'UL'}" + (
-            "_prepro" if label_pre_processor != None else "")
+    # all_or_unique_label: 0 tries to or all the allowed actions, 1 gives a unique label to every combination and saves that
+    # label_pre_processor: determinizes the dataset before giving to BDD
+    # name_suffix: Appended to the name to make unique
+    def __init__(self, all_or_unique_label, label_pre_processor=None, name_suffix=None):
+        self.name = f"BDD_{'actOR' if all_or_unique_label == 0 else 'UL'}" + ("_prepro" if label_pre_processor != None else "") + (str(name_suffix) if name_suffix != None else "")
         self.bdd = _bdd.BDD()
         self.bdd.configure(reordering=False)
         self.name2node = dict()
