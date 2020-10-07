@@ -59,7 +59,7 @@ class BDD(BenchmarkSuiteClassifier):
         print("Blasted state vars")
 
         # Add blasted vars for actions; two cases: Or-ing all allowed actions (0) or unique labels (1)
-        # (Stuff like minnorm comes in case by modifying dataset before)
+        # (Stuff like minnorm comes by modifying dataset before)
         if self.all_or_unique_label == 0:
             self.act_metadata["variables"] = ["actOR"]
             self.act_metadata["max"] = [numpy.amax(dataset.get_single_labels())]
@@ -132,7 +132,7 @@ class BDD(BenchmarkSuiteClassifier):
     # generate blasted vars for vars, add them to BDD 
     # Usual means that we take num_bits = ceil( ld( (max-min)/step_size ) )
     def blast_vars(self, metadata):
-        print("Now blasting stare vars")
+        print("Blast-vars-helper running now")
         for i in range(0, len(metadata["variables"])):
             #num_bits = ceil( ld( (max-min)/step_size ) )
             #print("Name: " + metadata["variables"][i])
