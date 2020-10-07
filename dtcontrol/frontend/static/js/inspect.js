@@ -7,7 +7,7 @@ var currentSim;
 // List of all simulations
 var x_current = [];
 
-// List [lower_bound,upper_bound] elements for state varaibles
+// List [lower_bound,upper_bound] elements for state variables
 var x_bounds = [];
 
 // List of all decisions
@@ -20,7 +20,7 @@ var lastPath = [];
 var plpause;
 var timeOfSlider = 500;
 
-// Number of state varaibles and decision variables
+// Number of state variables and decision variables
 var numVars;
 var numResults;
 
@@ -34,7 +34,7 @@ var nextDisabled = false;
 // Tree animation button toggles this variable
 var treeAnimation = true;
 
-// Tree eidt button toggles this varaible
+// Tree eidt button toggles this variable
 var treeEdit = false;
 
 // Used as addressing for selected node in tree edit button
@@ -51,10 +51,11 @@ var isSimulator;
 // Edit Mode activated?
 var editMode = false;
 
-// GLobal variables that store tree data for rendering
+// Global variables that store tree data for rendering
 var treeData = "",
     tree = "",
-    diagonal = "",
+    nodeLayer = {},
+    linkLayer = {},
     controllerName = "",
     svg = "";
 
@@ -68,49 +69,51 @@ var margin = {top: 20, right: 120, bottom: 20, left: 120},
 
 // var width, height;
 
-function constructTree() {
-    // Generates the tree diagram
-
-    tree = d3.layout.tree()
-        .size([height, width]);
-
-    diagonal = d3.svg.diagonal()
-        .projection(function (d) {
-            return [d.x, d.y];
-        });   // Flip this to go horizontal layout
-
+function svgSetup() {
+    const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
+    console.log("treeHere bounding rect", parentBoundingRect);
     svg = d3.select("#treeHere").append("svg")
-        .attr("width", "100%")
-        .attr("height", "100%")
+        .attr("width", parentBoundingRect.width)
+        .attr("height", parentBoundingRect.height)
+        // .attr("viewBox", `0 0 300 600`)
         .attr("style", "overflow-x: auto; overflow-y: auto;")
-        .call(d3.zoom().on("zoom", function () {
-            svg.attr("transform", d3.event.transform)
+        .call(d3.zoom().on("zoom", ({transform}) => {
+            svg.attr("transform", transform)
         }))
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.right + ")");
 
-    root = treeData[0];
+    link_layer = d3.select("svg g").append("g");
+    node_layer = d3.select("svg g").append("g");
+}
+
+function constructTree(data) {
+    // Generates the tree diagram
+    const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
+    console.log("treeHere bounding rect", parentBoundingRect);
+    tree = d3.tree()
+        .size([parentBoundingRect.width, parentBoundingRect.height]);
+
+    root = d3.hierarchy(data);
+
+    root.descendants().forEach((d, i) => {
+        console.log(i);
+        d.id = i;
+        d._children = d.children;
+    });
+
     root.x0 = height / 2;
     root.y0 = 0;
 
+    tree(root);
     update(root);
-
-    d3.select(self.frameElement).style("height", "500px");
-
-}
-
-// Called by clicking a node when edit tree toggle is on
-function openThirdForm(address) {
-    $('#formThirdModal').modal('toggle');
-    console.log(address);
-    selectedNode = address;
 }
 
 // Toggle children on click.
 function click(d) {
     if (editMode){
         console.log(d);
-        // document.getElementById("nodeAt:" + d.address).firstChild.setAttribute("style", "fill: red");
+        // document.getElementById("nodeAt:" + d.data.address).firstChild.setAttribute("style", "fill: red");
         var pred = prompt("Please enter your predicate");
         $(location).attr('href', 'http://stackoverflow.com')
     }
@@ -121,12 +124,12 @@ function click(d) {
         d.coleur = "red";
         update(root);
 
-        selectedNode = d.address;
+        selectedNode = d.data.address;
         lastNode = d;
 
         $.ajax({
             data: JSON.stringify({
-                address: (d.address)
+                address: (d.data.address)
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
@@ -169,85 +172,74 @@ function click(d) {
                 document.getElementById("splitNodeButton").style.visibility = "visible";
             })
     } else if (treeEdit) {
-        openThirdForm(d.address);
+        openThirdForm(d.data.address);
     } else {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            d.children = d._children;
-            d._children = null;
-        }
+        d.children = d.children ? null : d._children;
         update(d);
-        update(root);
+        // Might need the below call
+        // update(root);
     }
 }
 
 // Updates the svg generated according to changes in tree data
-// Inspired by https://bl.ocks.org/d3noob/8375092
+// Inspired by https://bl.ocks.org/d3noob/8375092 and https://observablehq.com/@d3/collapsible-tree
 function update(source) {
-    console.log(source);
     // Compute the new tree layout.
-    var nodes = tree.nodes(root).reverse(),
-        links = tree.links(nodes);
+    var nodes = root.descendants().reverse();
+    var links = root.links();
+
+    var diagonal = d3.linkHorizontal().x(d => d.x).y(d => d.y)
 
     // Normalize for fixed-depth.
-    // Horizontal layout: drop d.x = d.x * 12
-    nodes.forEach(function (d) {
+    nodes.forEach(d => {
         d.y = d.depth * 120;
-        d.x = d.x * 12;
     });
 
     // Update the nodes…
-    var node = svg.selectAll("g.node")
-        .data(nodes, function (d) {
-            return d.id || (d.id = ++i);
-        });
+    var node = node_layer.selectAll("g.node")
+        .data(nodes, function(d) { return d.id; });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
         .attr("class", "node")
-        .attr("id", function (d) {
-            return (d.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.address;
+        .attr("id", d => {
+            return (d.data.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.data.address;
         })
-        .attr("transform", function (d) {
+        .attr("transform", d => {
             return "translate(" + source.x0 + "," + source.y0 + ")";
         })  // Horizontal layout: flip x, y
-        .on("click", click);
+        .on("click", (event, d) => { click(d); });
 
     nodeEnter.append("circle")
-        .attr("r", 1e-6)
-        .style("fill", function (d) {
-            return d._children ? "lightsteelblue" : d.coleur;
-        });
+        .attr("r", 1e-6);
 
     nodeEnter.append("text")
-        .attr("x", function (d) {
+        .attr("x", d => {
             return d.children || d._children ? -13 : 13;
         })
         .attr("dy", ".35em")
-        .attr("text-anchor", function (d) {
+        .attr("text-anchor", d => {
             return d.children || d._children ? "end" : "start";
         })
-        .attr("id", function (d) {
-            return "addr" + d.address.toString();
+        .attr("id", d => {
+            return "addr" + d.data.address.toString();
         })
-        .text(function (d) {
-            return d.name;
+        .text(d => {
+            return d.data.name;
         })
         .style("fill-opacity", 1e-6);
 
     // Transition nodes to their new position.
-    var nodeUpdate = node.transition()
+    var nodeUpdate = node.merge(nodeEnter).transition()
         .duration(duration)
-        .attr("transform", function (d) {
+        .attr("transform", d => {
             return "translate(" + d.x + "," + d.y + ")";
         });  // Horizontal layout: flip x, y
 
     nodeUpdate.select("circle")
         .attr("r", 10)
-        .style("fill", function (d) {
-            return d._children ? "lightsteelblue" : d.coleur;
+        .style("fill", d => {
+            return d.children || !d._children ? d.coleur : "lightsteelblue";
         });
 
     nodeUpdate.select("text")
@@ -256,7 +248,7 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", function (d) {
+        .attr("transform", d => {
             return "translate(" + source.x + "," + source.y + ")";
         })  // Horizontal layout: flip x, y
         .remove();
@@ -268,39 +260,39 @@ function update(source) {
         .style("fill-opacity", 1e-6);
 
     // Update the links…
-    var link = svg.selectAll("path.link")
-        .data(links, function (d) {
-            return d.target.id;
-        });
+    var link = link_layer.selectAll("path.link")
+        .data(links, d => { d.target.id });
 
     // Enter any new links at the parent's previous position.
-    link.enter().insert("path", "g")
+    const linkEnter = link.enter().insert("path", "g")
         .attr("class", "link")
-        .style("stroke-dasharray", function (d) {
-            var foo = d.target.address[d.target.address.length - 1];
+        .style("stroke-dasharray", d => {
+            var foo = d.target.data.address[d.target.data.address.length - 1];
             return (foo == 1) ? "10,10" : "1,0";
         })
-        .attr("d", function (d) {
-            var o = {x: source.x0, y: source.y0};
-            return diagonal({source: o, target: o});
+        .attr("d", d => {
+            const o = {x: source.x0, y: source.y0};
+            const p = diagonal({source: o, target: o});
+            return p;
         });
 
     // Transition links to their new position.
-    link.transition()
+    link.merge(linkEnter).transition()
         .duration(duration)
         .attr("d", diagonal);
 
     // Transition exiting nodes to the parent's new position.
     link.exit().transition()
         .duration(duration)
-        .attr("d", function (d) {
-            var o = {x: source.x, y: source.y};
-            return diagonal({source: o, target: o});
+        .attr("d", d => {
+            const o = {x: source.x, y: source.y};
+            const p = diagonal({source: o, target: o});
+            return p;
         })
         .remove();
 
     // Stash the old positions for transition.
-    nodes.forEach(function (d) {
+    nodes.forEach(d => {
         d.x0 = d.x;
         d.y0 = d.y;
     });
@@ -403,49 +395,25 @@ function getLeaves(depthNode) {
 }
 
 // Expands all tree nodes
-function expandAll(nd) {
-    if (nd == null) {
-        expandAll(root);
-        update(root);
-        return;
+function expandAll() {
+    function expandRecursive(node) {
+        node.descendants().forEach((d, i) => {
+            if (d._children && !d.children) {
+                d.children = d._children;
+                expandRecursive(d);
+            }
+        });
     }
-    if (!nd.children && !nd._children) {
-        return;
-    }
-    if (!nd.children) {
-        nd.children = nd._children;
-        nd._children = null;
-
-    }
-    var len = nd.children.length;
-    for (var it = 0; it < len; it++) {
-        expandAll(nd.children[it]);
-    }
-
+    expandRecursive(root);
+    update(root);
 }
 
 // Collapses all tree nodes
-function collapseAll(nd) {
-    if (nd == null) {
-        var len = root.children.length;
-        for (var it = 0; it < len; it++) {
-            collapseAll(root.children[it]);
-        }
-        update(root);
-        return;
-    }
-    if (!nd.children && !nd._children) {
-        return;
-    }
-    if (!nd._children) {
-        nd._children = nd.children;
-        nd.children = null;
-    }
-    var len = nd._children.length;
-    for (var it = 0; it < len; it++) {
-        collapseAll(nd._children[it]);
-    }
-
+function collapseAll() {
+    root.descendants().forEach((d, i) => {
+       d.children = null;
+    });
+    update(root);
 }
 
 // If cartpole model used, draws it
@@ -686,6 +654,14 @@ function scrollToEndOfTable() {
     elem.scrollTop = elem.scrollHeight;
 }
 
+// Called by clicking a node when edit tree toggle is on
+function openThirdForm(address) {
+    $('#formThirdModal').modal('toggle');
+    console.log(address);
+    selectedNode = address;
+}
+
+
 $(document).ready(function () {
     isSimulator = $('.simulator').length > 0;
     var numChanges = 0;
@@ -795,17 +771,18 @@ $(document).ready(function () {
             document.getElementById("mainRow1").style.visibility = "visible";
             // document.getElementById("editTreeDiv").style.visibility = "visible";
 
-            treeData = data.classi;
+            treeData = data.classifier;
+            console.log("Tree Data", treeData);
             numVars = data.numVars;
             numResults = data.numResults;
             controllerName = data.controllerName;
 
             console.log(treeData);
 
-            // height = 50 * getLeaves(treeData[0]);
-            height = 25 * getLeaves(treeData[0]);
+            // height = 50 * getLeaves(treeData);
+            height = 25 * getLeaves(treeData);
             // height = 650;
-            width = 200 * getDepth(treeData[0]);
+            width = 200 * getDepth(treeData);
 
             for (var i = 0; i < numVars; i++) {
                 x_current.push([]);
@@ -816,13 +793,11 @@ $(document).ready(function () {
                 u_current.push([]);
             }
 
-            if (numChanges == 0)
-                constructTree();
+            if (numChanges == 0) {
+                svgSetup();
+                constructTree(treeData);
+            }
             numChanges++;
-
-            root = treeData[0];
-            root.x0 = height / 2;
-            root.y0 = 0;
 
             update(root);
 
@@ -1293,54 +1268,54 @@ function addToDomainKnowledgeTable() {
     document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'hidden';
 }
 
-function closeInitialCustomTreeModal() {
-    $.ajax({
-        data: JSON.stringify({
-            domainKnowledge: (finalDomainKnowledge)
-        }),
-        type: 'POST',
-        contentType: "application/json; charset=utf-8",
-        url: '/featureLabelSpecifications'
-    })
-        .done(function (data) {
-            for (var i = 0; i < data.feature_specifications.length; i++) {
-                const dumrow = document.createElement('tr');
-
-                for (var j = 0; j < data.feature_specifications[i].length; j++) {
-                    const drc0 = document.createElement('td');
-                    drc0.textContent = data.feature_specifications[i][j];
-                    dumrow.appendChild(drc0);
-                }
-
-                document.getElementById("featureSpecificationTable").appendChild(dumrow);
-            }
-            for (var i = 0; i < data.label_specifications.length; i++) {
-                const dumrow = document.createElement('tr');
-
-                for (var j = 0; j < data.label_specifications[i].length; j++) {
-                    const drc0 = document.createElement('td');
-                    drc0.textContent = data.label_specifications[i][j];
-                    dumrow.appendChild(drc0);
-                }
-
-                document.getElementById("labelSpecificationTable").appendChild(dumrow);
-            }
-            $('#initialCustomTreeModal').modal('hide');
-
-            // Drawing out initial tree now
-            treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
-            height = 800;
-            width = 1000;
-
-            constructTree();
-
-            root = treeData[0];
-            root.x0 = height / 2;
-            root.y0 = 0;
-            update(root);
-            customBuild = true;
-        })
-}
+// function closeInitialCustomTreeModal() {
+//     $.ajax({
+//         data: JSON.stringify({
+//             domainKnowledge: (finalDomainKnowledge)
+//         }),
+//         type: 'POST',
+//         contentType: "application/json; charset=utf-8",
+//         url: '/featureLabelSpecifications'
+//     })
+//         .done(function (data) {
+//             for (var i = 0; i < data.feature_specifications.length; i++) {
+//                 const dumrow = document.createElement('tr');
+//
+//                 for (var j = 0; j < data.feature_specifications[i].length; j++) {
+//                     const drc0 = document.createElement('td');
+//                     drc0.textContent = data.feature_specifications[i][j];
+//                     dumrow.appendChild(drc0);
+//                 }
+//
+//                 document.getElementById("featureSpecificationTable").appendChild(dumrow);
+//             }
+//             for (var i = 0; i < data.label_specifications.length; i++) {
+//                 const dumrow = document.createElement('tr');
+//
+//                 for (var j = 0; j < data.label_specifications[i].length; j++) {
+//                     const drc0 = document.createElement('td');
+//                     drc0.textContent = data.label_specifications[i][j];
+//                     dumrow.appendChild(drc0);
+//                 }
+//
+//                 document.getElementById("labelSpecificationTable").appendChild(dumrow);
+//             }
+//             $('#initialCustomTreeModal').modal('hide');
+//
+//             // Drawing out initial tree now
+//             treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
+//             height = 800;
+//             width = 1000;
+//
+//             constructTree();
+//
+//             root = treeData;
+//             root.x0 = height / 2;
+//             root.y0 = 0;
+//             update(root);
+//             customBuild = true;
+//         })
+// }
 
 function splitNode() {
     var toSendPredicate = $('input[name="buildPredicate"]:checked').val();

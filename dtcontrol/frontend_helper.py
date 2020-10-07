@@ -247,7 +247,6 @@ def is_valid_file_or_folder(arg):
 def intoJSON(rt, parent, address):
     # returns a string (JSON format that we need)
     # address is an array of integers
-    rt_name = "sth"
     if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:

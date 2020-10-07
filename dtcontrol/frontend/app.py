@@ -6,7 +6,7 @@ import html
 
 import numpy as np
 import sympy as sp
-from flask import Flask, render_template, json, jsonify, request
+from flask import Flask, render_template, json, jsonify, request, send_from_directory
 from gevent.pywsgi import WSGIServer
 
 from dtcontrol import frontend_helper
@@ -116,6 +116,10 @@ def discretize(x):
 def index():
     return render_template("index.html")
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static/images'),
+                          'favicon-32.png', mimetype='image/png')
 
 @app.route('/experiments', methods=['GET', 'POST'])
 def experimentsRoute():
@@ -182,7 +186,7 @@ def construct():
         stepSize = classifier[1]["step_size"]
         run_time = round(classifier[4], 2)
 
-        computed_configs[id] = ([classifier[0]], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
+        computed_configs[id] = (classifier[0], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
         stats = classifier[3].get_stats()
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
         this_result = None
@@ -222,7 +226,7 @@ def simulator():
 def computed():
     global saved_tree, minBounds, maxBounds, stepSize, numVars, numResults
     json_tree, saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, controller_name = selected_computation_result
-    returnDict = {"classi": json_tree, "numVars": numVars, "numResults": numResults,
+    returnDict = {"classifier": json_tree, "numVars": numVars, "numResults": numResults,
                   "bound": [minBounds, maxBounds], "controllerName": controller_name}
     return jsonify(returnDict)
 
