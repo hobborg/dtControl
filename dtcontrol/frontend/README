@@ -8,7 +8,7 @@ CSS:
     sidenav-my.css -> Styling for side navigation menu
 
 JS:
-    heavylifting.js -> Does all the main js work
+    inspect.js -> Does all the main js work
 
 NOTE:
     Ctrl(Cmd)+Click for selecting multiple entries in Numeric-predicates and Categorical-predicates selection
