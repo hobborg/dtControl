@@ -67,3 +67,8 @@ i.fa {
     margin-top: 11px;
     margin-bottom: 11px;
 }
+
+#nodeSelectInfo {
+    padding-top: 10px;
+    padding-left: 10px;
+}

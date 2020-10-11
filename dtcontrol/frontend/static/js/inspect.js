@@ -36,9 +36,10 @@ var treeAnimation = true;
 
 // Tree eidt button toggles this variable
 var treeEdit = false;
+var nodeSelect = false;
 
 // Used as addressing for selected node in tree edit button
-var selectedNode = [];
+var selectedNode = null;
 var lastNode = null;
 
 // Used for toggling custom construction behaviour
@@ -56,7 +57,7 @@ var treeData = "",
     tree = "",
     nodeLayer = {},
     linkLayer = {},
-    controllerName = "",
+    controllerFile = "",
     svg = "";
 
 var i = 0,
@@ -105,8 +106,23 @@ function constructTree(data) {
     root.x0 = height / 2;
     root.y0 = 0;
 
-    tree(root);
     update(root);
+}
+
+function setSelectedNode(d) {
+    selectedNode = d;
+    document.getElementById("nodeSelectInfo").innerText = "Selected " + selectedNode.data.name;
+    document.getElementById("retrain-button").disabled = false;
+}
+
+function unsetSelectedNode() {
+    if (selectedNode) {
+        selectedNode.coleur = "";
+        update(selectedNode);
+        document.getElementById("retrain-button").disabled = true;
+    }
+    selectedNode = null;
+    document.getElementById("nodeSelectInfo").innerText = "";
 }
 
 // Toggle children on click.
@@ -173,6 +189,16 @@ function click(d) {
             })
     } else if (treeEdit) {
         openThirdForm(d.data.address);
+    } else if (nodeSelect) {
+        // If a node is already selected, reset its color
+        if (selectedNode) {
+            selectedNode.coleur = "#fff";
+            update(selectedNode);
+        }
+        // And then select the new node and change its color
+        d.coleur = "#e77943";
+        setSelectedNode(d);
+        update(d);
     } else {
         d.children = d.children ? null : d._children;
         update(d);
@@ -185,6 +211,8 @@ function click(d) {
 // Inspired by https://bl.ocks.org/d3noob/8375092 and https://observablehq.com/@d3/collapsible-tree
 function update(source) {
     // Compute the new tree layout.
+    tree(root);
+
     var nodes = root.descendants().reverse();
     var links = root.links();
 
@@ -243,6 +271,19 @@ function update(source) {
         });
 
     nodeUpdate.select("text")
+        .attr('x', function (d) {
+            return d.children || d._children ? -13 : 13;
+        })
+        .attr('dy', '.35em')
+        .attr('text-anchor', function (d) {
+            return d.children || d._children ? 'end' : 'start';
+        })
+        .attr("id", d => {
+            return "addr" + d.data.address.toString();
+        })
+        .text(function (d) {
+            return d.data.name;
+        })
         .style("fill-opacity", 1);
 
     // Transition exiting nodes to the parent's new position.
@@ -272,8 +313,7 @@ function update(source) {
         })
         .attr("d", d => {
             const o = {x: source.x0, y: source.y0};
-            const p = diagonal({source: o, target: o});
-            return p;
+            return diagonal({source: o, target: o});
         });
 
     // Transition links to their new position.
@@ -286,8 +326,7 @@ function update(source) {
         .duration(duration)
         .attr("d", d => {
             const o = {x: source.x, y: source.y};
-            const p = diagonal({source: o, target: o});
-            return p;
+            return diagonal({source: o, target: o});
         })
         .remove();
 
@@ -296,32 +335,6 @@ function update(source) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
-}
-
-// Not used anymore, useful when trying to preserve toggled state of nodes when refreshing the tree (might be useful in tree edit later)
-function foldIt(od, nw) {
-    if (!od.children || !nw.children)
-        return;
-
-    var len1 = od.children.length;
-    var len2 = nw.children.length;
-    var iter1 = 0;
-
-    for (var it = 0; it < len2; it++) {
-        if (iter1 == len1) {
-            break;
-        }
-        if (od.children[iter1].name === nw.children[it].name) {
-            if (od.children[iter1]._children) {
-                //if some folded children
-                nw.children[it]._children = nw.children[it].children;
-                nw.children[it].children = null;
-            } else {
-                foldIt(od.children[iter1], nw.children[it]);
-            }
-            iter1++;
-        }
-    }
 }
 
 // Makes nodes red along the path given as 'str'
@@ -416,9 +429,29 @@ function collapseAll() {
     update(root);
 }
 
+function toggleNodeSelect() {
+    var button = document.getElementById("selectRetrainNodeButton");
+    if (nodeSelect) {
+        unsetSelectedNode();
+        nodeSelect = false;
+        button.classList.remove("disabled");
+        button.classList.add("active");
+        button.setAttribute("aria-pressed", "true");
+        document.getElementById("nodeSelectInfo").innerText = "";
+    }
+    else {
+        unsetSelectedNode();
+        nodeSelect = true;
+        button.classList.remove("active");
+        button.classList.add("disabled");
+        button.setAttribute("aria-pressed", "false");
+        document.getElementById("nodeSelectInfo").innerText = "Click on a node to select.";
+    }
+}
+
 // If cartpole model used, draws it
 function drawCanvas() {
-    if (controllerName == "cartpole.scs") {
+    if (controllerFile == "cartpole.scs") {
         var lineLength = 100;
         var canvas = document.getElementById("cartCanvas");
         var c = canvas.getContext("2d");
@@ -638,7 +671,7 @@ async function oneStep() {
                     clearInterval(plpause);
                 }
 
-            });
+            });         ``
     } else {
         currentSim++;
         $("input[name=indexers][value=" + currentSim + "]").trigger('click');
@@ -661,6 +694,58 @@ function openThirdForm(address) {
     selectedNode = address;
 }
 
+function assignParentsDfs(node, parent) {
+    node.parent = parent;
+    if (node.children) {
+        node.children.forEach((child) => {
+            assignParentsDfs(child, node);
+        });
+    }
+}
+
+function replaceInTree(selected, replacementData) {
+    // Inspired by https://stackoverflow.com/a/43368677
+
+    //Creates a Node from newNode object using d3.hierarchy(.)
+    var newNode = d3.hierarchy(replacementData);
+    newNode.descendants().forEach((d, i) => {
+        d.id = 10 + i;
+        d.depth = selected.depth + d.depth;
+        d.height = selected.height - 1;
+        d._children = d.children;
+    });
+    // Assign parents properly, otherwise the update breaks the tree
+    assignParentsDfs(newNode, selected);
+    console.log("newNode", newNode);
+
+    //Selected is a node, to which we are adding the new node as a child
+    selected.children = newNode.children;
+    selected.data = newNode.data;
+    selected.children.forEach((child) => {child.parent = selected;});
+
+    // Render tree in the canvas properly
+    update(selected.parent);
+}
+
+function run_partial_construction(configuration) {
+    $.ajax({
+        data: JSON.stringify(configuration),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/construct-partial/from-preset',
+        beforeSend: () => {},
+    }).done(data => {
+        // Change existing tree data at the necessary position to data
+        console.log("Return from partial construct: ", data);
+
+        console.log("newData: ", data);
+        var pointer = root;
+        configuration.selected_node.forEach((pos) => {
+            pointer = pointer.children[pos]
+        });
+        replaceInTree(pointer, data);
+    });
+}
 
 $(document).ready(function () {
     isSimulator = $('.simulator').length > 0;
@@ -670,7 +755,8 @@ $(document).ready(function () {
         // If we are in simulator, there is no need for having the "load controller directory" etc available
         document.getElementById("controllerSearchDirectoryRow").remove();
         document.getElementById("controllerSelectRow").remove();
-        document.getElementById("add-experiments-button").innerText = "Select Retrain Node";
+        document.getElementById("add-experiments-button").remove();
+        document.getElementById("retrain-button").classList.remove("d-none");
     //
     //     // Add interactive mode to preset
     //     const option = document.createElement('option');
@@ -679,6 +765,39 @@ $(document).ready(function () {
     //     app.appendChild(option);
     //
     }
+
+    // Add from sidenav
+    $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
+        event.preventDefault();
+        var configuration = {};
+        configuration.id = idUnderInspection;
+        configuration.controller = controllerFile;
+        configuration.config = $('#config').val();
+        configuration.determinize = $('#determinize').val();
+        configuration.numeric_predicates = $('#numeric-predicates').val();
+        configuration.categorical_predicates = $('#categorical-predicates').val();
+        configuration.impurity = $('#impurity').val();
+        configuration.tolerance = $('#tolerance').val();
+        configuration.safe_pruning = $('#safe-pruning').val();
+        configuration.user_predicates = "";
+
+        if (configuration.config == "automatic") {
+            configuration.config += " (Fallback: " + $("#fallback").val() + ")";
+            configuration.numeric_predicates = [""];
+            configuration.categorical_predicates = [""];
+            configuration.user_predicates = $('#userPredicatesInput').val();
+        }
+
+        if (selectedNode) {
+            configuration.selected_node = selectedNode.data.address;
+            run_partial_construction(configuration);
+        }
+        else {
+            // Nothing to do if node is not selected
+            // Control must not come here
+            console.assert(selectedNode);
+        }
+     });
 
 
     $('button.hamburger').on('click', function (event) {
@@ -771,11 +890,12 @@ $(document).ready(function () {
             document.getElementById("mainRow1").style.visibility = "visible";
             // document.getElementById("editTreeDiv").style.visibility = "visible";
 
+            idUnderInspection = data.idUnderInspection
             treeData = data.classifier;
             console.log("Tree Data", treeData);
             numVars = data.numVars;
             numResults = data.numResults;
-            controllerName = data.controllerName;
+            controllerFile = data.controllerFile;
 
             console.log(treeData);
 
@@ -917,7 +1037,7 @@ $(document).ready(function () {
                 document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree
-                if (controllerName == "cartpole.scs") {
+                if (controllerFile == "cartpole.scs") {
                     document.getElementById("expandThisDiv").className = "col-lg-6";
                     document.getElementById("hideThisDiv").style.display = "block";
                 } else {
