@@ -7,6 +7,7 @@ from typing import Sequence
 import numpy as np
 
 import dtcontrol.util as util
+from dtcontrol.util import Caller
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.impurity.determinizing_impurity_measure import DeterminizingImpurityMeasure
@@ -62,7 +63,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
                 return False
         return True
 
-    def fit(self, dataset):
+    def fit(self, dataset, caller=Caller.PYTHON):
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
@@ -70,7 +71,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         for split_strat in self.splitting_strategies:
             if isinstance(split_strat, ContextAwareSplittingStrategy):
                 split_strat.set_root(self.root)
-        self.root.fit(dataset)
+        self.root.fit(dataset, caller=caller)
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
@@ -160,7 +161,7 @@ class Node:
         else:
             return [tuple_or_value.item()], decision_path
 
-    def fit(self, dataset):
+    def fit(self, dataset, **kwargs):
         if self.check_done(dataset):
             return
         pre_determinize = isinstance(self.impurity_measure, DeterminizingImpurityMeasure) and \
@@ -169,7 +170,7 @@ class Node:
             self.impurity_measure.determinizer.pre_determinized_labels = None
             determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
             self.impurity_measure.determinizer.pre_determinized_labels = determinized_labels
-        splits = [strategy.find_split(dataset, self.impurity_measure) for strategy in self.splitting_strategies]
+        splits = [strategy.find_split(dataset, self.impurity_measure, **kwargs) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
         if not splits:
             self.logger.warning("Aborting branch: no split possible.")

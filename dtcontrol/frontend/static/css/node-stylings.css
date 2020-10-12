@@ -19,7 +19,7 @@
 }
 
 #treeHere {
-    overflow: scroll;
+    overflow: hidden;
     height: 90%;
 }
 
@@ -28,7 +28,6 @@
 }
 
 .table-fixed {
-    height: 300px;
     overflow-y: scroll;
     width: 100%;
     display: block;
@@ -43,7 +42,6 @@
 }
 
 .card-body {
-    height: 625px;
     max-width: 100%;
     overflow: hidden;
 }

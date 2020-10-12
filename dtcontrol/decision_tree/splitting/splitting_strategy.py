@@ -6,8 +6,9 @@ class SplittingStrategy(ABC):
         self.priority = 1
 
     @abstractmethod
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         """
+        :param websocket: a websocket handle used in interacting with the Web UI
         :param dataset: the subset of data at the current split
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: a split object

@@ -483,7 +483,7 @@ class PredicateParser:
         logger = RicherDomainLogger("GetPredicate_Logger", False)
         logger.root_logger.info("Starting Predciate Parser.")
 
-        predicate_list = user_input.split("\n")
+        predicate_list = user_input.split("\n") if user_input else []
 
         # output list containing all parsed predicates
         output = []

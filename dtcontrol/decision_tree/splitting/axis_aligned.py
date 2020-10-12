@@ -3,7 +3,7 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 
 
 class AxisAlignedSplittingStrategy(SplittingStrategy):
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_numeric = dataset.get_numeric_x()
         splits = {}
         for feature in range(x_numeric.shape[1]):

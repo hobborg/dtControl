@@ -18,7 +18,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
         self.value_grouping = value_grouping
         self.tolerance = tolerance
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_categorical = dataset.get_categorical_x()
         splits = {}
         for feature in range(x_categorical.shape[1]):

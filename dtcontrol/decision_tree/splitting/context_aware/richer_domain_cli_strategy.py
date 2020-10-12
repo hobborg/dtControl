@@ -1,3 +1,5 @@
+import json
+
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
@@ -16,6 +18,9 @@ import re
 from dtcontrol.decision_tree.splitting.context_aware.linear_units_classifier import \
     LinearUnitsClassifier
 from tabulate import tabulate
+
+from dtcontrol.util import interactive_queue, error_wrapper, success_wrapper
+from dtcontrol.util import Caller
 
 
 class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
@@ -87,12 +92,13 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
         logreg.priority = 1
 
-        # TODO P: might have to drop this when extending to other datasets
+        # TODO: Enable this when we are more sure
         # Linear Units (Only if there are units given)
-        logreg_unit = LinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
-        logreg_unit.priority = 1
+        # logreg_unit = LinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
+        # logreg_unit.priority = 1
 
-        return [axis, logreg, logreg_unit] if self.dataset_units is not None else [axis, logreg]
+        # return [axis, logreg, logreg_unit] if self.dataset_units is not None else [axis, logreg]
+        return [axis, logreg]
 
     def setup_richer_domain_strat(self):
         """
@@ -128,11 +134,12 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         self.richer_domain_strat.user_given_splits = starting_predicates
         return self.richer_domain_strat.get_all_splits(dataset, impurity_measure)
 
-    def print_dataset_specs(self, dataset):
+    def print_dataset_specs(self, dataset, cli=True):
         """
         CAUTION!: It is not recommended to use this function alone. Use it via console_output()
 
         Function to print interesting specifications about the current dataset.
+        :param cli: whether called from command-line interface
         :param dataset: the subset of data at the current split
         :returns: None. --> Console output
         """
@@ -144,15 +151,17 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
 
         median = np.median(x_numeric, axis=0)
 
+        ret = {}
+
         # FEATURE INFORMATION
 
         if x_meta.get('variables') is not None and x_meta.get('step_size') is not None:
             # Detailed meta data available
-            table_feature = [["x_" + str(i), x_meta.get('variables')[i], np.min(x_numeric[:, i]),
-                              np.max(x_numeric[:, i]),
-                              (np.min(x_numeric[:, i]) + np.max(x_numeric[:, i])) / 2,
-                              median[i],
-                              x_meta.get('step_size')[i]] for i in range(x_numeric.shape[1])]
+            table_feature = [["x_" + str(i), x_meta.get('variables')[i], str(np.min(x_numeric[:, i])),
+                              str(np.max(x_numeric[:, i])),
+                              str((np.min(x_numeric[:, i]) + np.max(x_numeric[:, i])) / 2),
+                              str(median[i]),
+                              str(x_meta.get('step_size')[i])] for i in range(x_numeric.shape[1])]
 
             header_feature = ["COLUMN", "NAME", "MIN", "MAX", "AVG", "MEDIAN", "STEP SIZE"]
             # Add Units if available
@@ -161,16 +170,19 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                     table_feature[i].append(self.dataset_units[i])
                 header_feature.append("UNIT")
 
-            print("\n\t\t\t\t\t\t FEATURE INFORMATION\n" + tabulate(
-                table_feature,
-                header_feature,
-                tablefmt="psql"))
+            if cli:
+                print("\n\t\t\t\t\t\t FEATURE INFORMATION\n" + tabulate(
+                    table_feature,
+                    header_feature,
+                    tablefmt="psql"))
+            else:
+                ret.update({"feature_information": {"header": header_feature, "body": table_feature} })
         else:
             # Meta data not available
-            table_feature = [["x_" + str(i), np.min(x_numeric[:, i]),
-                              np.max(x_numeric[:, i]),
-                              (np.min(x_numeric[:, i]) + np.max(x_numeric[:, i])) / 2,
-                              median[i]] for i in range(x_numeric.shape[1])]
+            table_feature = [["x_" + str(i), str(np.min(x_numeric[:, i])),
+                              str(np.max(x_numeric[:, i])),
+                              str((np.min(x_numeric[:, i]) + np.max(x_numeric[:, i])) / 2),
+                              str(median[i])] for i in range(x_numeric.shape[1])]
 
             header_feature = ["COLUMN", "MIN", "MAX", "AVG", "MEDIAN"]
             # Add Units if available
@@ -179,10 +191,13 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                     table_feature[i].append(self.dataset_units[i])
                 header_feature.append("UNIT")
 
-            print("\n\t\t\t FEATURE SPECIFICATION\n" + tabulate(
-                table_feature,
-                header_feature,
-                tablefmt="psql"))
+            if cli:
+                print("\n\t\t\t FEATURE SPECIFICATION\n" + tabulate(
+                    table_feature,
+                    header_feature,
+                    tablefmt="psql"))
+            else:
+                ret.update({"feature_specification":  {"header": header_feature, "body": table_feature}})
 
         # LABEL INFORMATION
 
@@ -193,15 +208,24 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
             # Detailed meta data available
             table_label = [[y_meta.get('variables')[i], y_meta.get('min')[i], y_meta.get('max')[i],
                             y_meta.get('step_size')[i]] for i in range(len(y_meta.get('variables')))]
-            print("\n\t\t\t LABEL SPECIFICATION\n" + tabulate(
-                table_label,
-                ["NAME", "MIN", "MAX", "STEP SIZE"],
-                tablefmt="psql"))
+            header_label = ["NAME", "MIN", "MAX", "STEP SIZE"]
+            if cli:
+                print("\n\t\t\t LABEL SPECIFICATION\n" + tabulate(
+                    table_label,
+                    header_label,
+                    tablefmt="psql"))
+            else:
+                ret.update({"label_specification": {"header": header_label, "body": table_label }})
         else:
             # No meta data available
-            print("\nNo detailed label information available.")
+            if cli:
+                print("\nNo detailed label information available.")
+            else:
+                ret.update({"label_specification": None})
 
-    def print_standard_alt_predicates(self):
+        return ret
+
+    def print_standard_alt_predicates(self, cli=True):
         """
         CAUTION!: It is not recommended to use this function alone. Use it via console_output()
 
@@ -210,19 +234,26 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         :returns: None -> Console Output
         """
 
+        ret = {}
         if len(self.standard_alt_predicates_imp) > 0:
             table = [[self.standard_alt_predicates_imp.index(pred), round(pred[1], ndigits=3), pred[0].print_dot().replace("\\n", ""),
                       self.known_parent_id.index(pred[0].id) if isinstance(pred[0], RicherDomainSplit) else "Alternative Strategy"] for
                      pred in self.standard_alt_predicates_imp]
+            header = ["INDEX", "IMPURITY", "EXPRESSION", "PARENT ID"]
 
-            print("\n\t\t\t STANDARD AND ALTERNATIVE PREDICATES°\n" + tabulate(
-                table,
-                ["INDEX", "IMPURITY", "EXPRESSION", "PARENT ID"],
-                tablefmt="psql") + "\n(°) Contains predicates obtained by user at startup, as well as one alternative Axis Aligned predicate and one or two Linear.")
+            if cli:
+                print("\n\t\t\t STANDARD AND ALTERNATIVE PREDICATES°\n" + tabulate(
+                    table,
+                    header,
+                    tablefmt="psql") + "\n(°) Contains predicates obtained by user at startup, as well as one alternative Axis Aligned predicate and one or two Linear.")
+            else:
+                ret.update({"standard_alt_predicates": {"header": header, "body": table}})
         else:
             print("\nNo standard and alternative predicates.")
 
-    def print_recently_added_predicates(self):
+        return ret
+
+    def print_recently_added_predicates(self, cli=True):
         """
         CAUTION!: It is not recommended to use this function alone. Use it via console_output()
 
@@ -231,17 +262,24 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         :returns: None -> Console Output
         """
 
+        ret = {}
+
         if len(self.recently_added_predicates_imp) > 0:
             table = [[self.recently_added_predicates_imp.index(pred) + len(self.standard_alt_predicates_imp), round(pred[1], ndigits=3), pred[0].print_dot().replace("\\n", ""),
                       self.known_parent_id.index(pred[0].id)] for
                      pred in self.recently_added_predicates_imp]
-
-            print("\n\t\t\t RECENTLY ADDED PREDICATES\n" + tabulate(
-                table,
-                ["INDEX", "IMPURITY", "EXPRESSION", "PARENT ID"],
-                tablefmt="psql"))
+            header = ["INDEX", "IMPURITY", "EXPRESSION", "PARENT ID"]
+            if cli:
+                print("\n\t\t\t RECENTLY ADDED PREDICATES\n" + tabulate(
+                    table,
+                    header,
+                    tablefmt="psql"))
+            else:
+                ret.update({"recently_added_predicates": {"header": header, "body": [list(map(str, row)) for row in table]}})
         else:
             print("\nNo recently added predicates.")
+
+        return ret
 
     def user_input_handler(self, dataset, impurity_measure):
         """
@@ -391,6 +429,139 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
             else:
                 print("Unknown command. Type '/help' for help.")
 
+    def webui_input_handler(self, dataset, impurity_measure):
+        """
+        Function to handle interactions with the webui.
+        :param dataset: only used for console output (dataset infos) and to get all splits (via richer domain strat)
+        :param impurity_measure: only used to get all splits (via richer domain strat)
+        :returns: SplitObject
+
+        """
+
+        while True:
+            command = interactive_queue.get_from_front()
+            print(command)
+
+            if command["action"] == "use":
+                # select predicate at index to be returned. ('use and keep table')
+
+                index = int(command["body"])
+                # Index out of range check
+                if index < 0 or index >= (len(self.standard_alt_predicates_imp) + len(self.recently_added_predicates_imp)):
+                    interactive_queue(error_wrapper("Invalid index."))
+                else:
+                    users_choice = self.index_predicate_mapping(index)
+                    if users_choice[1] < np.inf:
+                        interactive_queue.send_to_front(success_wrapper("use succeeded."))
+                        return users_choice[0]
+                    else:
+                        interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "use_empty":
+                # select predicate at index to be returned. Works only on recently added table. ('use and empty table')
+                index = int(command["body"])
+                if index < len(self.standard_alt_predicates_imp):
+                    interactive_queue.send_to_front(error_wrapper("Invalid index. /use_empty is only available on recently_added_predicates."))
+                else:
+                    users_choice = self.index_predicate_mapping(index)
+                    if users_choice[1] < np.inf:
+                        self.recently_added_predicates = []
+                        self.recently_added_predicates_imp = []
+                        interactive_queue.send_to_front(success_wrapper("use_empty succeeded."))
+                        return users_choice[0]
+                    else:
+                        interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "add":
+                # add an expression (to recently added predicates table)
+                user_input = command["body"]
+                try:
+                    parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
+                except RicherDomainPredicateParserException:
+                    interactive_queue.send_to_front(error_wrapper("Invalid predicate entered. Please check logger or comments for more information."))
+                else:
+                    # Duplicate check
+                    for pred in self.recently_added_predicates:
+                        if pred.helper_equal(parsed_input):
+                            interactive_queue.send_to_front(error_wrapper("ADDING FAILED: duplicate found."))
+                            self.logger.root_logger.info("User tried to add a duplicate predicate to 'recently_added_predicates'.")
+                            break
+                    else:
+                        try:
+                            all_pred = self.get_all_richer_domain_splits([parsed_input], dataset, impurity_measure)
+                        except RicherDomainStrategyException:
+                            interactive_queue.send_to_front(error_wrapper("Invalid predicate parsed. Please check logger or comments for more information."))
+                        else:
+                            # store id
+                            self.known_parent_id.append(parsed_input.id)
+                            # add input to recently added predicates collection
+                            self.recently_added_predicates.append(parsed_input)
+
+                            # add all fitted instances to recently_added_predicates_imp
+                            self.recently_added_predicates_imp.extend(list(all_pred.items()))
+                            self.recently_added_predicates_imp.sort(key=lambda x: x[1])
+                            # refresh console output
+                            interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "add_standard":
+                # add an expression to standard and alternative predicates
+                user_input = command["body"]
+                try:
+                    parsed_input = PredicateParser.parse_single_predicate(user_input, self.logger, self.debug)
+                except RicherDomainPredicateParserException:
+                    interactive_queue.send_to_front(error_wrapper("Invalid predicate entered. Please check logger or comments for more information."))
+                else:
+                    # Duplicate check
+                    for pred in self.standard_predicates:
+                        if pred.helper_equal(parsed_input):
+                            interactive_queue.send_to_front(error_wrapper("ADDING FAILED: duplicate found."))
+                            self.logger.root_logger.info("User tried to add a duplicate predicate to 'standard_predicates'.")
+                            break
+                    else:
+                        try:
+                            all_pred = self.get_all_richer_domain_splits([parsed_input], dataset, impurity_measure)
+                        except RicherDomainStrategyException:
+                            interactive_queue.send_to_front(error_wrapper("Invalid predicate parsed. Please check logger or comments for more information."))
+                        else:
+                            # store id
+                            self.known_parent_id.append(parsed_input.id)
+                            # add input to standard predicates collection
+                            self.standard_predicates.append(parsed_input)
+
+                            # add all fitted instances to
+                            self.standard_alt_predicates_imp.extend(list(all_pred.items()))
+                            self.standard_alt_predicates_imp.sort(key=lambda x: x[1])
+                            # refresh console output
+                            interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "del_all_recent":
+                # clear recently_added_predicates list
+                self.recently_added_predicates = []
+                self.recently_added_predicates_imp = []
+                interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "del_all_standard":
+                # clear standard and alternative predicates list
+                self.standard_predicates = []
+                new_standard_alt_predicates_imp = []
+                for pred in self.standard_alt_predicates_imp:
+                    if not isinstance(pred[0], RicherDomainSplit):
+                        new_standard_alt_predicates_imp.append(pred)
+                self.standard_alt_predicates_imp = new_standard_alt_predicates_imp
+                interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "del":
+                # select predicate VIA ID to be deleted
+                del_id = int(command["body"])
+                if del_id < 0 or del_id >= len(self.known_parent_id) or len(self.known_parent_id) == 0:
+                    interactive_queue.send_to_front(error_wrapper("Aborting: Invalid Id."))
+                else:
+                    real_del_id = self.known_parent_id[del_id]
+                    self.delete_parent_id(real_del_id)
+                interactive_queue.send_to_front(self.webui_output(dataset))
+            elif command["action"] == "collection":
+                # display the collections of predicates
+                interactive_queue.send_to_front(self.print_predicate_collections(cli=False))
+            elif command["action"] == "refresh":
+                # refresh the console output --> prints everything again
+                interactive_queue.send_to_front(self.webui_output(dataset))
+            else:
+                interactive_queue.send_to_front(error_wrapper("Unknown command."))
+
     def delete_parent_id(self, parent_id):
         # check inside standard_predicates
         new_standard_predicates = []
@@ -417,24 +588,35 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                 new_recently_added_predicates_imp.append(pred)
         self.recently_added_predicates_imp = new_recently_added_predicates_imp
 
-    def print_predicate_collections(self):
+    def print_predicate_collections(self, cli=True):
         """
         Function to give a visual representation of the predicates collection.
         """
+
+        ret = {}
+
         header = ["ID", "TERM", "COLUMN INTERVAL", "COEF INTERVAL"]
 
         # Print standard and alternative collection
         table_standard = [[self.known_parent_id.index(pred.id), str(pred.term) + " " + pred.relation + " 0",
                            pred.column_interval, pred.coef_interval] for pred in
                           self.standard_predicates]
-        print("\n\t\t\t\tSTANDARD PREDICATES COLLECTION\n" + tabulate(table_standard, header, tablefmt="psql") + "\n")
+        if cli:
+            print("\n\t\t\t\tSTANDARD PREDICATES COLLECTION\n" + tabulate(table_standard, header, tablefmt="psql") + "\n")
+        else:
+            ret.update({"standard_predicates_collection": {"header": header, "body": table_standard}})
 
         # Print standard and alternative collection
         table_recently_added = [[self.known_parent_id.index(pred.id), str(pred.term) + " " + pred.relation + " 0",
-                                 pred.column_interval, pred.coef_interval] for pred in
+                                 str(pred.column_interval), str(pred.coef_interval)] for pred in
                                 self.recently_added_predicates]
         # Print recently added collection
-        print("\n\t\t\t\tRECENTLY ADDED PREDICATES COLLECTION\n" + tabulate(table_recently_added, header, tablefmt="psql") + "\n")
+        if cli:
+            print("\n\t\t\t\tRECENTLY ADDED PREDICATES COLLECTION\n" + tabulate(table_recently_added, header, tablefmt="psql") + "\n")
+        else:
+            ret.update({"recently_added_predicates_collection": {"header": header, "body": table_recently_added}})
+
+        return ret
 
     def user_double_check_del(self):
         """
@@ -533,9 +715,10 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         self.recently_added_predicates_imp = list(all_predicates.items())
         self.recently_added_predicates_imp.sort(key=lambda x: x[1])
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
 
         """
+        :param **kwargs:
         :param dataset: the subset of data at the current split
         :param impurity_measure: impurity measure to use
         :returns: split object
@@ -552,9 +735,18 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
 
         self.process_standard_alt_predicates(dataset, impurity_measure)
         self.process_recently_added_predicates(dataset, impurity_measure)
-        self.console_output(dataset)
-        # handle_user_input
-        return_split = self.user_input_handler(dataset, impurity_measure)
+
+        if kwargs["caller"] == Caller.WEBUI:
+            self.webui_output(dataset)
+
+            # handle_user_input
+            return_split = self.webui_input_handler(dataset, impurity_measure)
+        else:
+            self.console_output(dataset)
+
+            # handle_user_input
+            return_split = self.user_input_handler(dataset, impurity_measure)
+
 
         self.logger.root_logger.info("Returned split: {}".format(str(return_split)))
         return return_split
@@ -582,3 +774,11 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         self.print_standard_alt_predicates()
         self.print_recently_added_predicates()
         print("\nSTARTING INTERACTIVE SHELL. PLEASE ENTER YOUR COMMANDS. TYPE '/help' FOR HELP.\n")
+
+    def webui_output(self, dataset):
+        res = {}
+        res.update(self.print_dataset_specs(dataset, cli=False))
+        res.update(self.print_standard_alt_predicates(cli=False))
+        res.update(self.print_recently_added_predicates(cli=False))
+        res.update(self.print_predicate_collections(cli=False))
+        return json.dumps({"type": "update", "body": res})

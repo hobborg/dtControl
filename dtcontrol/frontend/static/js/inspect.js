@@ -113,6 +113,7 @@ function setSelectedNode(d) {
     selectedNode = d;
     document.getElementById("nodeSelectInfo").innerText = "Selected " + selectedNode.data.name;
     document.getElementById("retrain-button").disabled = false;
+    document.getElementById("interactive-button").disabled = false;
 }
 
 function unsetSelectedNode() {
@@ -120,6 +121,7 @@ function unsetSelectedNode() {
         selectedNode.coleur = "";
         update(selectedNode);
         document.getElementById("retrain-button").disabled = true;
+        document.getElementById("interactive-button").disabled = true;
     }
     selectedNode = null;
     document.getElementById("nodeSelectInfo").innerText = "";
@@ -172,7 +174,7 @@ function click(d) {
                     for (var j = 0; j < data.computed_predicates[i].length; j++) {
                         const drc0 = document.createElement('td');
                         drc0.textContent = data.computed_predicates[i][j];
-                        if (j == data.computed_predicates[i].length - 1) {
+                        if (j === data.computed_predicates[i].length - 1) {
                             drc0.id = "expression" + data.computed_predicates[i][0];
                         }
                         dumrow.appendChild(drc0);
@@ -241,6 +243,8 @@ function update(source) {
     nodeEnter.append("circle")
         .attr("r", 1e-6);
 
+    // TODO P: use https://bl.ocks.org/mbostock/1424037 instead of text to allow CSS features such as
+    // text-overflow and hover to expand.
     nodeEnter.append("text")
         .attr("x", d => {
             return d.children || d._children ? -13 : 13;
@@ -252,6 +256,7 @@ function update(source) {
         .attr("id", d => {
             return "addr" + d.data.address.toString();
         })
+        .attr("class", "node-text")
         .text(d => {
             return d.data.name;
         })
@@ -603,6 +608,7 @@ async function oneStep() {
 
         $.ajax({
             data: JSON.stringify({
+                id: idUnderInspection,
                 x_pass: x_toPass,
                 u_pass: u_toPass
             }),
@@ -747,6 +753,211 @@ function run_partial_construction(configuration) {
     });
 }
 
+function start_interactive_construction(configuration) {
+    $.ajax({
+        data: JSON.stringify(configuration),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/construct-partial/interactive',
+        beforeSend: () => {},
+    }).done(data => {
+        // Change existing tree data at the necessary position to data
+        console.log("Return from partial construct: ", data);
+
+        console.log("newData: ", data);
+        var pointer = root;
+        configuration.selected_node.forEach((pos) => {
+            pointer = pointer.children[pos]
+        });
+        replaceInTree(pointer, data);
+    });
+}
+
+function titleCase(str) {
+  return str.toLowerCase().split(' ').map(function(word) {
+    return word.replace(word[0], word[0].toUpperCase());
+  }).join(' ');
+}
+
+function generate_html_table(table_selector, body_index, header, body, add_radio=false, radio_name=null) {
+    /*
+    For certain tables, we have two tbodys. The body_index allows to choose which tbody to insert the data into.
+     */
+    let thead = table_selector.tHead;
+    thead.innerHTML = "";
+    let row = thead.insertRow();
+    if (add_radio) {
+        let th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        row.appendChild(th);
+    }
+    for (let key of header) {
+        let th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        let text = document.createTextNode(titleCase(key));
+        th.appendChild(text);
+        row.appendChild(th);
+    }
+
+    let tbody = table_selector.getElementsByTagName('tbody')[body_index];
+    tbody.innerHTML = "";
+    for (let index in body) {
+        let row = tbody.insertRow();
+
+        if (add_radio) {
+            let radio = document.createElement('td');
+            let radio_inp = document.createElement('input');
+
+            radio_inp.setAttribute('type', 'radio');
+            radio_inp.setAttribute('name', radio_name);
+            radio_inp.setAttribute('value', body[index][0]);
+            radio_inp.setAttribute('checked', 'checked');
+
+            radio.appendChild(radio_inp);
+            row.appendChild(radio);
+        }
+
+        for (let val of body[index]) {
+            let cell = row.insertCell();
+            let text = document.createTextNode(val);
+            cell.appendChild(text);
+        }
+    }
+}
+
+function process_interaction_response(data) {
+    if (data.type === "error") {
+        // Show error in a modal?
+    }
+    else if (data.type === "success") {
+        if (data.body.includes("use")) {
+            // Use succeeded
+            document.getElementById("mainRow1").scrollIntoView({ behavior: 'smooth', block: "start"});
+        }
+    }
+    else if (data.type === "update") {
+        if (data.body.feature_information || data.body.feature_specification) {
+            let feature_specification = data.body.feature_information ? data.body.feature_information : data.body.feature_specification;
+            generate_html_table(document.getElementById("feature-specification-table"),
+                0, feature_specification.header, feature_specification.body);
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("feature-specification-table").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.label_specification) {
+            let label_specification = data.body.label_specification;
+            generate_html_table(document.getElementById("label-specification-table"),
+                0, label_specification.header, label_specification.body);
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("label-specification-table").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.standard_alt_predicates) {
+            let standard_alt_predicates = data.body.standard_alt_predicates;
+            generate_html_table(document.getElementById("computed-predicates-table"),
+                0, standard_alt_predicates.header, standard_alt_predicates.body,
+                true, "instantiated-predicate");
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("computed-predicates-table").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.recently_added_predicates) {
+            let recently_added_predicates = data.body.recently_added_predicates;
+            generate_html_table(document.getElementById("computed-predicates-table"),
+                1, recently_added_predicates.header, recently_added_predicates.body,
+                true, "instantiated-predicate");
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
+            document.getElementById("computed-predicates-table").getElementsByTagName("tbody")[1].innerHTML = "";
+        }
+        if (data.body.standard_predicates_collection) {
+            let standard_predicates_collection = data.body.standard_predicates_collection;
+            generate_html_table(document.getElementById("standard-predicates-collection"),
+                0, standard_predicates_collection.header, standard_predicates_collection.body,
+                true, "abstract-predicate");
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.recently_added_predicates_collection) {
+            let recently_added_predicates_collection = data.body.recently_added_predicates_collection;
+            generate_html_table(document.getElementById("standard-predicates-collection"),
+                1, recently_added_predicates_collection.header, recently_added_predicates_collection.body,
+                true, "abstract-predicate");
+            console.log(recently_added_predicates_collection.length);
+            document.getElementById("delete-predicate-button").disabled = (recently_added_predicates_collection.length === 0);
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
+            document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[1].innerHTML = "";
+            document.getElementById("delete-predicate-button").disabled = true;
+        }
+    }
+    else if (data.type === "error") {
+        console.error(data.body);
+    }
+}
+
+function add_predicate()
+{
+    let predicate = window.prompt("Enter predicate", "x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60, 80}");
+    $.ajax({
+        data: JSON.stringify({"action": "add", "body": predicate}),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/interact',
+    }).done(data => {
+        console.log("Return from add");
+        console.log(data);
+        try {
+            let response = JSON.parse(data);
+            process_interaction_response(response);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
+
+function remove_predicate() {
+    let selected_predicate_id = +document.querySelector('input[name = "abstract-predicate"]:checked').value;
+    $.ajax({
+        data: JSON.stringify({"action": "del", "body": selected_predicate_id}),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/interact',
+    }).done(data => {
+        console.log("Return from del");
+        console.log(data);
+        try {
+            let response = JSON.parse(data);
+            process_interaction_response(response);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
+
+function use_predicate() {
+    let selected_predicate_id = +document.querySelector('input[name = "instantiated-predicate"]:checked').value;
+    $.ajax({
+        data: JSON.stringify({"action": "use", "body": selected_predicate_id}),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/interact',
+    }).done(data => {
+        console.log("Return from use");
+        console.log(data);
+        try {
+            let response = JSON.parse(data);
+            process_interaction_response(response);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
+
 $(document).ready(function () {
     isSimulator = $('.simulator').length > 0;
     var numChanges = 0;
@@ -757,6 +968,7 @@ $(document).ready(function () {
         document.getElementById("controllerSelectRow").remove();
         document.getElementById("add-experiments-button").remove();
         document.getElementById("retrain-button").classList.remove("d-none");
+        document.getElementById("interactive-button").classList.remove("d-none");
     //
     //     // Add interactive mode to preset
     //     const option = document.createElement('option');
@@ -766,10 +978,10 @@ $(document).ready(function () {
     //
     }
 
-    // Add from sidenav
+    // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
         event.preventDefault();
-        var configuration = {};
+        let configuration = {};
         configuration.id = idUnderInspection;
         configuration.controller = controllerFile;
         configuration.config = $('#config').val();
@@ -791,6 +1003,60 @@ $(document).ready(function () {
         if (selectedNode) {
             configuration.selected_node = selectedNode.data.address;
             run_partial_construction(configuration);
+        }
+        else {
+            // Nothing to do if node is not selected
+            // Control must not come here
+            console.assert(selectedNode);
+        }
+     });
+
+    // Retrain from sidenav
+    $("input[name='interact'], button[name='interact']").on('click', function (event) {
+        event.preventDefault();
+        var configuration = {};
+        configuration.id = idUnderInspection;
+        configuration.controller = controllerFile;
+
+        if (selectedNode) {
+            configuration.selected_node = selectedNode.data.address;
+
+            // Populate the tree builder cards
+
+            // The following call will trigger fit() in dtcontrol
+            // and also makes the backend connect to the websocket.
+            $.ajax({
+                data: JSON.stringify(configuration),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/construct-partial/interactive',
+            });
+
+            console.log("Started interactive mode");
+            // Send the refresh command to fetch the tables
+            $.ajax({
+                data: JSON.stringify({"action": "refresh"}),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/interact',
+            }).done(data => {
+                console.log("Return from refresh");
+                console.log(data);
+                // Unhide the cards related to interactive tree builder
+                document.getElementById("mainRow-interactive").classList.remove("d-none");
+                document.getElementById("")
+                try {
+                    let response = JSON.parse(data);
+                    process_interaction_response(response);
+                }
+                catch (error) {
+                    console.error(error);
+                }
+                // Scroll the interactive tree builder cards into view
+                document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
+            });
+
+            // Add button in recent predicates collection
         }
         else {
             // Nothing to do if node is not selected
@@ -827,13 +1093,13 @@ $(document).ready(function () {
         } else {
             $(this).removeClass("btn-secondary");
             $(this).addClass("btn-primary");
-            document.getElementById("mainRow2").style.visibility = "hidden";
-            document.getElementById("mainRow3").style.visibility = "hidden";
+            document.getElementById("mainRow2").classList.add("d-none");
+            document.getElementById("mainRow3").classList.add("d-none");
             //document.getElementById("expandThisDiv").style.height = "450px";
-            document.getElementById("playerDiv").style.visibility = "hidden";
-            document.getElementById("timeRangeContainer").style.visibility = "hidden";
-            document.getElementById("instep").style.visibility = "hidden";
-            document.getElementById("animationDiv").style.visibility = "hidden";
+            document.getElementById("playerDiv").classList.add("d-none");
+            document.getElementById("timeRangeContainer").classList.add("d-none");
+            document.getElementById("instep").classList.add("d-none");
+            document.getElementById("animationDiv").classList.add("d-none");
 
             $("#dynamics-body").show();
             $("#initial-values").hide();
@@ -1015,19 +1281,19 @@ $(document).ready(function () {
             x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
-            data: JSON.stringify({pass: x_toPass, dynamics: $("#dynamics-input").val()}),
+            data: JSON.stringify({id: idUnderInspection, pass: x_toPass, dynamics: $("#dynamics-input").val()}),
             contentType: "application/json; charset=utf-8",
             type: 'POST',
             url: '/initRoute'
         })
             .done(function (data) {
-                document.getElementById("mainRow2").style.visibility = "visible";
-                document.getElementById("mainRow3").style.visibility = "visible";
+                document.getElementById("mainRow2").classList.remove("d-none");
+                document.getElementById("mainRow3").classList.remove("d-none");
                 document.getElementById("expandThisDiv").style.height = "450px";
-                document.getElementById("playerDiv").style.visibility = "visible";
-                document.getElementById("timeRangeContainer").style.visibility = "visible";
-                document.getElementById("instep").style.visibility = "visible";
-                document.getElementById("animationDiv").style.visibility = "visible"; // TODO Animate button, enable this again
+                document.getElementById("playerDiv").classList.remove("d-none");
+                document.getElementById("timeRangeContainer").classList.remove("d-none");
+                document.getElementById("instep").classList.remove("d-none");
+                document.getElementById("animationDiv").classList.remove("d-none"); // TODO Animate button, enable this again
 
                 var mini = document.getElementsByClassName("card-body");
                 for (var i = 0; i < mini.length; i++) {
@@ -1196,10 +1462,10 @@ $(document).ready(function () {
             }
             $.ajax({
                 data: JSON.stringify({
+                    id: idUnderInspection,
                     steps: steps,
                     x_pass: (x_toPass),
                     u_pass: (u_toPass)
-
                 }),
                 type: 'POST',
                 contentType: "application/json; charset=utf-8",
@@ -1335,16 +1601,6 @@ if (slider) {
     }
 }
 
-
-// Christoph's additional functionality
-function customTree() {
-    closeNav();
-    document.getElementById("sideNavOpener").disabled = true;
-    document.getElementById("mainRow1").style.visibility = "visible";
-    document.getElementById("mainRow1.1").style.display = "flex";
-    document.getElementById("mainRow1.2").style.display = "flex";
-    $('#initialCustomTreeModal').modal('toggle');
-}
 
 var numDomainKnowledge = 0;
 

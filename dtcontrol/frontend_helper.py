@@ -41,6 +41,7 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy import RicherDomainCliStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
@@ -52,6 +53,8 @@ from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
 
 # Subset of cli.py with core_parser replaced with train
+from dtcontrol.util import Caller
+
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
                    name=None, user_predicates=None, fallback=None):
@@ -97,7 +100,6 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
         'richer-domain': lambda x, y: RicherDomainSplittingStrategy(user_given_splits=x, determinizer=y),
-
     }
     impurity_map = {
         'auroc': lambda x: AUROC(determinizer=x),
@@ -366,3 +368,57 @@ def train(args):
         "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
         "run_time": run_time
     }
+
+
+def interactive(args):
+    file = args["controller"]
+    is_valid_file_or_folder(file)
+
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    classifier = DecisionTree([RicherDomainCliStrategy()], Entropy(), 'Interactive-Entropy')
+
+    logging.info("Frontend: loading dataset...")
+    ds.load_if_necessary()
+
+    if "existing_tree" in args:
+        if args["base_node_address"]:
+            mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
+                                          dataset=ds)
+            ds = ds.from_mask(mask)
+            ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    start = time.time()
+    # benchmark does a lot of other stuff as well, we just need load if necessary from it
+
+    logging.info("Frontend: fitting dataset to tree...")
+    classifier.fit(ds, caller=Caller.WEBUI)
+    logging.info("Frontend: tree constructed.")
+    run_time = time.time() - start
+    # intoJSON takes the classifier root and returns a JSON in required format
+    classifier_as_json = intoJSON(classifier.root, "null", [])
+    return {
+        "classifier": classifier, "classifier_as_json": classifier_as_json,
+        "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
+        "run_time": run_time
+    }
+
+
+
+def start_websocket_with_frontend():
+    from websocket import create_connection
+    ws = create_connection("ws://127.0.0.1:8080")
+    print("Sending 'Hello, World'...")
+    while True:
+        result = ws.recv()
+        if result == "CLOSE":
+            break
+        print("Received '%s'" % result)
+        ws.send(f"Thanks for {result}")
+    ws.close()

@@ -33,7 +33,7 @@ class LinearUnitsClassifier(SplittingStrategy):
         # logger
         self.logger = RicherDomainLogger("LinearUnitsClassifier_logger", debug)
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return None
