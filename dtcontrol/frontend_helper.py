@@ -253,7 +253,12 @@ def intoJSON(rt, parent, address):
     if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:
-        rt_name = rt.print_c_label()
+        try:
+            rt_name = rt.print_c_label()
+        except ValueError:
+            # In interactive tree building, we often get trees that are incomplete
+            # for such trees, print_c_label() throws an exception.
+            rt_name = "Not yet homogeneous"
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
         strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i]))
@@ -262,10 +267,16 @@ def intoJSON(rt, parent, address):
 def get_mask_given_address(existing_tree=None, node_address=None, dataset=None):
     # Navigate to node_address in the saved_tree and call get_mask
     pointer: Node = existing_tree
-    for pos in node_address[:-1]:
+    mask = pointer.split.get_masks(dataset)[node_address[0]]
+    for pos in node_address:
+        mask = [a and b for a, b in zip(mask, pointer.split.get_masks(dataset)[pos])]
         pointer = pointer.children[pos]
     # Get the split masks (one for each child) from the parent and pick the correct child
-    return pointer.split.get_masks(dataset)[node_address[-1]]
+    # TODO P: we have to OR all the masks that lead up to this child node!
+    return mask
+
+def mask_as_int(mask):
+    return int("".join([str(e) for e in [1] + list(map(int, mask))]), 2)
 
 def train(args):
     # args will be passed as a dict to this function
@@ -290,6 +301,7 @@ def train(args):
     ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
 
     # Parse config files
+    default_config: OrderedDict = load_default_config()
     default_config: OrderedDict = load_default_config()
     user_config: Union[None, OrderedDict] = None
 
@@ -382,7 +394,7 @@ def interactive(args):
 
     ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
 
-    classifier = DecisionTree([RicherDomainCliStrategy()], Entropy(), 'Interactive-Entropy')
+    classifier = DecisionTree([RicherDomainCliStrategy()], Entropy(), 'Interactive-Entropy', early_stopping=True)
 
     logging.info("Frontend: loading dataset...")
     ds.load_if_necessary()
@@ -398,7 +410,7 @@ def interactive(args):
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
 
     logging.info("Frontend: fitting dataset to tree...")
-    classifier.fit(ds, caller=Caller.WEBUI)
+    classifier.fit(ds, caller=Caller.WEBUI, rounds=1)
     logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format

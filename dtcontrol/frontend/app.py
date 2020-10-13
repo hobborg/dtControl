@@ -326,7 +326,12 @@ def interactive_construct():
 
     # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
     try:
+        if not interactive_queue.get_ready():
+            interactive_queue.set_ready()
         classifier = frontend_helper.interactive(to_parse_dict)
+
+        interactive_queue.set_done()
+        interactive_queue.reset()
 
         # First edit the classifier object
         if node_address:
@@ -358,9 +363,13 @@ def interactive_construct():
 def interact_with_fit():
     command = request.get_json()
     print("Received command: ", command)
-    interactive_queue.send_to_back(command)
-    response = interactive_queue.get_from_back()
-    print("Received response: ", response)
+    if interactive_queue.get_ready():
+        interactive_queue.send_to_back(command)
+        response = interactive_queue.get_from_back()
+        print("Received response: ", response)
+    else:
+        print("Queue not ready, perhaps interactive mode has completed.")
+        response = {"type": "warning", "body": "Queue not ready. The interactive mode has perhaps completed."}
     return response
 
 

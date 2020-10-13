@@ -700,11 +700,12 @@ function openThirdForm(address) {
     selectedNode = address;
 }
 
-function assignParentsDfs(node, parent) {
+function assignParentsDfs(node, parent, address_prefix) {
     node.parent = parent;
+    node.data.address = address_prefix.concat(node.data.address);
     if (node.children) {
         node.children.forEach((child) => {
-            assignParentsDfs(child, node);
+            assignParentsDfs(child, node, address_prefix);
         });
     }
 }
@@ -720,17 +721,29 @@ function replaceInTree(selected, replacementData) {
         d.height = selected.height - 1;
         d._children = d.children;
     });
-    // Assign parents properly, otherwise the update breaks the tree
-    assignParentsDfs(newNode, selected);
+
+    let root_address = selected.data.address;
+    // Assign parents and address properly
+    // not updating parents breaks the tree on update
+    assignParentsDfs(newNode, selected, root_address);
     console.log("newNode", newNode);
 
     //Selected is a node, to which we are adding the new node as a child
     selected.children = newNode.children;
     selected.data = newNode.data;
-    selected.children.forEach((child) => {child.parent = selected;});
+    if (selected.children) {
+        selected.children.forEach((child) => {
+            child.parent = selected;
+        });
+    }
 
     // Render tree in the canvas properly
-    update(selected.parent);
+    console.log("Updating tree render...");
+    if (root_address.length > 0) {
+        update(selected.parent);
+    } else {
+        update(selected);
+    }
 }
 
 function run_partial_construction(configuration) {
@@ -762,9 +775,8 @@ function start_interactive_construction(configuration) {
         beforeSend: () => {},
     }).done(data => {
         // Change existing tree data at the necessary position to data
-        console.log("Return from partial construct: ", data);
+        console.log("Return from interactive construct: ", data);
 
-        console.log("newData: ", data);
         var pointer = root;
         configuration.selected_node.forEach((pos) => {
             pointer = pointer.children[pos]
@@ -940,14 +952,37 @@ function remove_predicate() {
 
 function use_predicate() {
     let selected_predicate_id = +document.querySelector('input[name = "instantiated-predicate"]:checked').value;
+    if (selectedNode) {
+        $.ajax({
+            data: JSON.stringify({"action": "use", "body": selected_predicate_id}),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/interact',
+        }).done(data => {
+            console.log("Return from use");
+            console.log(data);
+            try {
+                let response = JSON.parse(data);
+                process_interaction_response(response);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    }
+}
+
+function refresh_interactive_tables() {
     $.ajax({
-        data: JSON.stringify({"action": "use", "body": selected_predicate_id}),
+        data: JSON.stringify({"action": "refresh"}),
         type: 'POST',
         contentType: "application/json; charset=utf-8",
         url: '/interact',
     }).done(data => {
-        console.log("Return from use");
+        console.log("Return from refresh");
         console.log(data);
+        // Unhide the cards related to interactive tree builder
+        document.getElementById("mainRow-interactive").classList.remove("d-none");
+        document.getElementById("")
         try {
             let response = JSON.parse(data);
             process_interaction_response(response);
@@ -955,6 +990,8 @@ function use_predicate() {
         catch (error) {
             console.error(error);
         }
+        // Scroll the interactive tree builder cards into view
+        document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
     });
 }
 
@@ -1025,36 +1062,11 @@ $(document).ready(function () {
 
             // The following call will trigger fit() in dtcontrol
             // and also makes the backend connect to the websocket.
-            $.ajax({
-                data: JSON.stringify(configuration),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/construct-partial/interactive',
-            });
+            start_interactive_construction(configuration);
 
-            console.log("Started interactive mode");
+            console.log("Started interactive mode from " + selectedNode.data.address);
             // Send the refresh command to fetch the tables
-            $.ajax({
-                data: JSON.stringify({"action": "refresh"}),
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                url: '/interact',
-            }).done(data => {
-                console.log("Return from refresh");
-                console.log(data);
-                // Unhide the cards related to interactive tree builder
-                document.getElementById("mainRow-interactive").classList.remove("d-none");
-                document.getElementById("")
-                try {
-                    let response = JSON.parse(data);
-                    process_interaction_response(response);
-                }
-                catch (error) {
-                    console.error(error);
-                }
-                // Scroll the interactive tree builder cards into view
-                document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
-            });
+            refresh_interactive_tables();
 
             // Add button in recent predicates collection
         }

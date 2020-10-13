@@ -12,6 +12,19 @@ class InteractiveQueue:
     def __init__(self):
         self.backend_to_frontend = queue.Queue()
         self.frontend_to_backend = queue.Queue()
+        self.ready = False
+
+    def set_ready(self):
+        self.ready = True
+
+    def set_done(self):
+        self.ready = False
+
+    def get_ready(self):
+        return self.ready
+
+    def get_done(self):
+        return not self.ready
 
     def send_to_front(self, item):
         self.backend_to_frontend.put(item)
@@ -24,6 +37,13 @@ class InteractiveQueue:
 
     def get_from_back(self):
         return self.backend_to_frontend.get()
+
+    def reset(self):
+        for q in [self.backend_to_frontend, self.frontend_to_backend]:
+            for _ in range(q.qsize()):
+                q.get_nowait()
+                q.task_done()
+
 
 interactive_queue = InteractiveQueue()
 

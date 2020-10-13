@@ -63,7 +63,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
                 return False
         return True
 
-    def fit(self, dataset, caller=Caller.PYTHON):
+    def fit(self, dataset, **kwargs):
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
@@ -71,7 +71,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
         for split_strat in self.splitting_strategies:
             if isinstance(split_strat, ContextAwareSplittingStrategy):
                 split_strat.set_root(self.root)
-        self.root.fit(dataset, caller=caller)
+        self.root.fit(dataset, **kwargs)
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
@@ -164,6 +164,16 @@ class Node:
     def fit(self, dataset, **kwargs):
         if self.check_done(dataset):
             return
+
+        # Rounds are used to control how many levels of tree building is to be done
+        # before returning the tree (possibly incomplete). This is useful for the
+        # interactive tree building from the Web UI.
+        if "rounds" in kwargs:
+            if kwargs["rounds"] > 0:
+                kwargs["rounds"] = kwargs["rounds"] - 1
+            else:
+                return
+
         pre_determinize = isinstance(self.impurity_measure, DeterminizingImpurityMeasure) and \
                           self.impurity_measure.determinizer.is_pre_split()
         if pre_determinize:
@@ -216,6 +226,7 @@ class Node:
                                 "You might want to consider adding more splitting strategies.")
             return
         for subset in subsets:
+            # TODO P: Store address in the Node object if needed in frontend
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                         self.early_stopping_num_examples, self.early_stopping_optimized, self.depth + 1)
 
@@ -224,7 +235,7 @@ class Node:
                     split_strat.set_current_node(node)
 
             self.children.append(node)
-            node.fit(subset)
+            node.fit(subset, **kwargs)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
         self.num_inner_nodes = 1 + sum([c.num_inner_nodes for c in self.children])
 
