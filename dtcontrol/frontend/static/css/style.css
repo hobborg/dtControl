@@ -67,3 +67,28 @@ i.fa {
     margin-top: 11px;
     margin-bottom: 11px;
 }
+
+#nodeSelectInfo {
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+.node-text {
+    width: 10ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#mainRow-interactive td {
+    max-width: 25ch;
+    word-wrap: break-word;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+}
+
+.card-columns {
+    column-count: 2;
+}

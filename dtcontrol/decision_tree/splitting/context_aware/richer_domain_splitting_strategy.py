@@ -21,7 +21,7 @@ class RicherDomainSplittingStrategy(ContextAwareSplittingStrategy):
         parses a huge string of predicates, if this string is provided. Otherwise PredicateParser.get_predicate() will go into 
         dtcontrol/decision_tree/splitting/context_aware/input_data/input_predicates.txt and parse the predicates from there.
         """
-        self.user_given_splits = PredicateParser.parse_user_string(user_given_splits) if user_given_splits is not "" else PredicateParser.get_predicate()
+        self.user_given_splits = PredicateParser.parse_user_string(user_given_splits) if user_given_splits != "" else PredicateParser.get_predicate()
         self.determinizer = determinizer
         self.first_run = True
 
@@ -254,9 +254,10 @@ class RicherDomainSplittingStrategy(ContextAwareSplittingStrategy):
         # Returning dict containing all possible splits with their impurity
         return splits
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
 
         """
+        :param **kwargs:
         :param dataset: the subset of data at the current split
         :param impurity_measure: the impurity measure to determine the quality of a potential split
         :returns: split object with lowest impurity

@@ -24,7 +24,7 @@ from sklearn.svm import LinearSVC
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
-from dtcontrol.decision_tree.decision_tree import DecisionTree
+from dtcontrol.decision_tree.decision_tree import DecisionTree, Node
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 # Import determinizers
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
@@ -41,16 +41,20 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy import RicherDomainCliStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
+from dtcontrol.decision_tree.splitting.split import Split
 # Import preprocessing strategies
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
 
-# Subset of cli.py with core_parser replaced with main_parse
+# Subset of cli.py with core_parser replaced with train
+from dtcontrol.util import Caller
+
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
                    name=None, user_predicates=None, fallback=None):
@@ -96,7 +100,6 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
         'richer-domain': lambda x, y: RicherDomainSplittingStrategy(user_given_splits=x, determinizer=y),
-
     }
     impurity_map = {
         'auroc': lambda x: AUROC(determinizer=x),
@@ -247,7 +250,6 @@ def is_valid_file_or_folder(arg):
 def intoJSON(rt, parent, address):
     # returns a string (JSON format that we need)
     # address is an array of integers
-    rt_name = "sth"
     if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:
@@ -257,8 +259,15 @@ def intoJSON(rt, parent, address):
         strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i]))
     return strdummy
 
+def get_mask_given_address(existing_tree=None, node_address=None, dataset=None):
+    # Navigate to node_address in the saved_tree and call get_mask
+    pointer: Node = existing_tree
+    for pos in node_address[:-1]:
+        pointer = pointer.children[pos]
+    # Get the split masks (one for each child) from the parent and pick the correct child
+    return pointer.split.get_masks(dataset)[node_address[-1]]
 
-def main_parse(args):
+def train(args):
     # args will be passed as a dict to this function
     # works exactly like core_parser in cli.py
     # kwargs = dict()
@@ -286,6 +295,10 @@ def main_parse(args):
 
     fallback_numeric, fallback_categorical = None, None
     user_predicates = None
+
+    # if "partial" in args.keys():
+    #     if args["partial"]["address"]:
+    #         ds.from_mask()
 
     if "config" in args.keys():
         presets = args["config"]
@@ -333,6 +346,14 @@ def main_parse(args):
 
     logging.info("Frontend: loading dataset...")
     ds.load_if_necessary()
+
+    if "existing_tree" in args:
+        if args["base_node_address"]:
+            mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
+                                          dataset=ds)
+            ds = ds.from_mask(mask)
+            ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
     start = time.time()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
 
@@ -341,5 +362,63 @@ def main_parse(args):
     logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
-    retDict = intoJSON(classifier.root, "null", [])
-    return retDict, ds.x_metadata, ds.y_metadata, classifier, run_time
+    classifier_as_json = intoJSON(classifier.root, "null", [])
+    return {
+        "classifier": classifier, "classifier_as_json": classifier_as_json,
+        "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
+        "run_time": run_time
+    }
+
+
+def interactive(args):
+    file = args["controller"]
+    is_valid_file_or_folder(file)
+
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    classifier = DecisionTree([RicherDomainCliStrategy()], Entropy(), 'Interactive-Entropy')
+
+    logging.info("Frontend: loading dataset...")
+    ds.load_if_necessary()
+
+    if "existing_tree" in args:
+        if args["base_node_address"]:
+            mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
+                                          dataset=ds)
+            ds = ds.from_mask(mask)
+            ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    start = time.time()
+    # benchmark does a lot of other stuff as well, we just need load if necessary from it
+
+    logging.info("Frontend: fitting dataset to tree...")
+    classifier.fit(ds, caller=Caller.WEBUI)
+    logging.info("Frontend: tree constructed.")
+    run_time = time.time() - start
+    # intoJSON takes the classifier root and returns a JSON in required format
+    classifier_as_json = intoJSON(classifier.root, "null", [])
+    return {
+        "classifier": classifier, "classifier_as_json": classifier_as_json,
+        "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
+        "run_time": run_time
+    }
+
+
+
+def start_websocket_with_frontend():
+    from websocket import create_connection
+    ws = create_connection("ws://127.0.0.1:8080")
+    print("Sending 'Hello, World'...")
+    while True:
+        result = ws.recv()
+        if result == "CLOSE":
+            break
+        print("Received '%s'" % result)
+        ws.send(f"Thanks for {result}")
+    ws.close()

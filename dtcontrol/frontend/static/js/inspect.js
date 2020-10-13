@@ -7,7 +7,7 @@ var currentSim;
 // List of all simulations
 var x_current = [];
 
-// List [lower_bound,upper_bound] elements for state varaibles
+// List [lower_bound,upper_bound] elements for state variables
 var x_bounds = [];
 
 // List of all decisions
@@ -20,7 +20,7 @@ var lastPath = [];
 var plpause;
 var timeOfSlider = 500;
 
-// Number of state varaibles and decision variables
+// Number of state variables and decision variables
 var numVars;
 var numResults;
 
@@ -34,11 +34,12 @@ var nextDisabled = false;
 // Tree animation button toggles this variable
 var treeAnimation = true;
 
-// Tree eidt button toggles this varaible
+// Tree eidt button toggles this variable
 var treeEdit = false;
+var nodeSelect = false;
 
 // Used as addressing for selected node in tree edit button
-var selectedNode = [];
+var selectedNode = null;
 var lastNode = null;
 
 // Used for toggling custom construction behaviour
@@ -46,244 +47,17 @@ var customBuild = false;
 
 const simTableDiv = document.getElementById('tableHere');
 
-const app = document.getElementById('config');
-
-// All presets available for fallback
-const  fallback_app = document.getElementById("fallback");
-
 var isSimulator;
-
-// Stores default config in config.yml
-var defConf;
-
-// Union of all configs present in config.yml
-var allConfig = {};
 
 // Edit Mode activated?
 var editMode = false;
 
-// preset data json
-var preset_json;
-
-function fillYML(preset_json) {
-    // Uses DOM manipulation to populate required forms after reading config.yml
-
-    defConf = (preset_json.presets.default);
-    var iter = 0;
-    for (y in defConf) {
-        allConfig[y] = [];
-    }
-
-    for (x in preset_json.presets) {
-        //loop over preset names
-        for (y in defConf) {
-            //loop over properties
-            if (y in preset_json.presets[x]) {
-                //if that preset contains that property
-                var valu = preset_json.presets[x][y];
-                if (Array.isArray(valu)) {
-                    for (z in valu) {
-                        if (!allConfig[y].includes(valu[z])) {
-                            allConfig[y].push(valu[z]);
-                        }
-                    }
-                } else {
-                    if (!allConfig[y].includes(valu.toString())) {
-                        allConfig[y].push(valu);
-                    }
-                }
-
-            }
-        }
-        iter++;
-    }
-
-    var det = document.getElementById("determinize");
-    for (var i = 0; i < allConfig['determinize'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['determinize'][i];
-        opt.setAttribute('value', allConfig['determinize'][i]);
-        opt.setAttribute('id', allConfig['determinize'][i]);
-        det.appendChild(opt);
-    }
-    var det = document.getElementById("determinize_3");
-    if (det) {
-        for (var i = 0; i < allConfig['determinize'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['determinize'][i];
-            opt.setAttribute('value', allConfig['determinize'][i]);
-            opt.setAttribute('id', allConfig['determinize'][i] + "_3");
-            det.appendChild(opt);
-        }
-    }
-
-    var det = document.getElementById("numeric-predicates");
-    for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['numeric-predicates'][i];
-        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
-        opt.setAttribute('id', allConfig['numeric-predicates'][i] + "_3");
-        det.appendChild(opt);
-    }
-    var det = document.getElementById("numeric-predicates_3");
-    if (det) {
-        for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['numeric-predicates'][i];
-            opt.setAttribute('value', allConfig['numeric-predicates'][i]);
-            opt.setAttribute('id', allConfig['numeric-predicates'][i]);
-            det.appendChild(opt);
-        }
-    }
-
-    var det = document.getElementById("categorical-predicates");
-    for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['categorical-predicates'][i];
-        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
-        opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
-        det.appendChild(opt);
-    }
-
-    var det = document.getElementById("categorical-predicates_3");
-    if (det) {
-        for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['categorical-predicates'][i];
-            opt.setAttribute('value', allConfig['categorical-predicates'][i]);
-            opt.setAttribute('id', allConfig['categorical-predicates'][i]);
-            det.appendChild(opt);
-        }
-    }
-
-    var det = document.getElementById("impurity");
-    for (var i = 0; i < allConfig['impurity'].length; i++) {
-        var opt = document.createElement('option');
-        opt.textContent = allConfig['impurity'][i];
-        opt.setAttribute('value', allConfig['impurity'][i]);
-        opt.setAttribute('id', allConfig['impurity'][i]);
-        det.appendChild(opt);
-    }
-    var det = document.getElementById("impurity_3");
-    if (det) {
-        for (var i = 0; i < allConfig['impurity'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['impurity'][i];
-            opt.setAttribute('value', allConfig['impurity'][i]);
-            opt.setAttribute('id', allConfig['impurity'][i] + "_3");
-            det.appendChild(opt);
-        }
-    }
-
-    $("#config").trigger("change");
-
-}
-
-var xhr = new XMLHttpRequest();
-xhr.open('GET', '/yml', true);
-xhr.onload = function () {
-    if (isSimulator) return;
-    // Reads the config.yml file
-    preset_json = JSON.parse(this.response);
-    if (xhr.status >= 200 && xhr.status < 400) {
-        for (x in preset_json.presets) {
-            const option = document.createElement('option');
-            option.textContent = x;
-            option.setAttribute('value', x);
-            if (x === 'mlentropy') {
-                option.setAttribute('selected', 'selected');
-            }
-
-            app.appendChild(option);
-            const option_copy = option.cloneNode(true);
-            fallback_app.appendChild(option_copy);
-
-        }
-
-        // Add custom to preset
-        const option = document.createElement('option');
-        option.textContent = "custom";
-        option.setAttribute('value', "custom");
-        app.appendChild(option);
-
-        // Add interactive mode to preset
-        const option2 = document.createElement('option');
-        option2.textContent = "interactive";
-        option2.setAttribute('value', "interactive");
-        app.appendChild(option2);
-
-        // Add automatic mode to preset
-        const option3 = document.createElement('option');
-        option3.textContent = "automatic";
-        option3.setAttribute('value', "automatic");
-        app.appendChild(option3);
-
-        fillYML(preset_json);
-
-    } else {
-        console.log("YML not working");
-        const errorMessage = document.createElement('marquee');
-        errorMessage.textContent = `Gah, it's not working!`;
-        app.appendChild(errorMessage);
-    }
-}
-xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
-xhr.setRequestHeader('cache-control', 'max-age=0');
-xhr.setRequestHeader('expires', '0');
-xhr.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
-xhr.setRequestHeader('pragma', 'no-cache');
-xhr.send();
-
-function loadControllers(path) {
-    console.log(path);
-
-    var http = new XMLHttpRequest();
-    var url = '/examples';
-    var params = 'location=' + encodeURIComponent(path);
-    http.open('POST', url, true);
-
-    //Send the proper header information along with the request
-    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-    http.onreadystatechange = function () {//Call a function when the state changes.
-        if (http.readyState == 4 && http.status == 200) {
-            data1 = JSON.parse(http.responseText);
-            if (data1["status"] == 1) {
-                select_menu = document.getElementById("controller");
-                select_menu.innerHTML = "";
-                files = data1["files"];
-                for (var i = 0; i < files.length; i++) {
-                    const option = document.createElement('option');
-                    controller_name = files[i].replace(path, "");
-                    if (controller_name.startsWith("/")) {
-                        controller_name = controller_name.substr(1);
-                    }
-                    option.textContent = controller_name;
-                    option.setAttribute('value', files[i]);
-                    if (files[i] === '10rooms.scs') {
-                        option.setAttribute('selected', 'selected');
-                    }
-                    select_menu.appendChild(option);
-                }
-            } else {
-                console.log("Folder doesn't exist");
-                const option = document.createElement("option");
-                option.textContent = "Enter valid controller directory";
-                option.setAttribute('selected', 'selected');
-                select_menu = document.getElementById("controller");
-                select_menu.innerHTML = "";
-                select_menu.appendChild(option);
-            }
-        }
-    }
-    http.send(params);
-}
-
-// GLobal variables that store tree data for rendering
+// Global variables that store tree data for rendering
 var treeData = "",
     tree = "",
-    diagonal = "",
-    controllerName = "",
+    nodeLayer = {},
+    linkLayer = {},
+    controllerFile = "",
     svg = "";
 
 var i = 0,
@@ -296,49 +70,68 @@ var margin = {top: 20, right: 120, bottom: 20, left: 120},
 
 // var width, height;
 
-function constructTree() {
-    // Generates the tree diagram
-
-    tree = d3.layout.tree()
-        .size([height, width]);
-
-    diagonal = d3.svg.diagonal()
-        .projection(function (d) {
-            return [d.x, d.y];
-        });   // Flip this to go horizontal layout
-
+function svgSetup() {
+    const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
+    console.log("treeHere bounding rect", parentBoundingRect);
     svg = d3.select("#treeHere").append("svg")
-        .attr("width", "100%")
-        .attr("height", "100%")
+        .attr("width", parentBoundingRect.width)
+        .attr("height", parentBoundingRect.height)
+        // .attr("viewBox", `0 0 300 600`)
         .attr("style", "overflow-x: auto; overflow-y: auto;")
-        .call(d3.zoom().on("zoom", function () {
-            svg.attr("transform", d3.event.transform)
+        .call(d3.zoom().on("zoom", ({transform}) => {
+            svg.attr("transform", transform)
         }))
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.right + ")");
 
-    root = treeData[0];
+    link_layer = d3.select("svg g").append("g");
+    node_layer = d3.select("svg g").append("g");
+}
+
+function constructTree(data) {
+    // Generates the tree diagram
+    const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
+    console.log("treeHere bounding rect", parentBoundingRect);
+    tree = d3.tree()
+        .size([parentBoundingRect.width, parentBoundingRect.height]);
+
+    root = d3.hierarchy(data);
+
+    root.descendants().forEach((d, i) => {
+        console.log(i);
+        d.id = i;
+        d._children = d.children;
+    });
+
     root.x0 = height / 2;
     root.y0 = 0;
 
     update(root);
-
-    d3.select(self.frameElement).style("height", "500px");
-
 }
 
-// Called by clicking a node when edit tree toggle is on
-function openThirdForm(address) {
-    $('#formThirdModal').modal('toggle');
-    console.log(address);
-    selectedNode = address;
+function setSelectedNode(d) {
+    selectedNode = d;
+    document.getElementById("nodeSelectInfo").innerText = "Selected " + selectedNode.data.name;
+    document.getElementById("retrain-button").disabled = false;
+    document.getElementById("interactive-button").disabled = false;
+}
+
+function unsetSelectedNode() {
+    if (selectedNode) {
+        selectedNode.coleur = "";
+        update(selectedNode);
+        document.getElementById("retrain-button").disabled = true;
+        document.getElementById("interactive-button").disabled = true;
+    }
+    selectedNode = null;
+    document.getElementById("nodeSelectInfo").innerText = "";
 }
 
 // Toggle children on click.
 function click(d) {
     if (editMode){
         console.log(d);
-        // document.getElementById("nodeAt:" + d.address).firstChild.setAttribute("style", "fill: red");
+        // document.getElementById("nodeAt:" + d.data.address).firstChild.setAttribute("style", "fill: red");
         var pred = prompt("Please enter your predicate");
         $(location).attr('href', 'http://stackoverflow.com')
     }
@@ -349,12 +142,12 @@ function click(d) {
         d.coleur = "red";
         update(root);
 
-        selectedNode = d.address;
+        selectedNode = d.data.address;
         lastNode = d;
 
         $.ajax({
             data: JSON.stringify({
-                address: (d.address)
+                address: (d.data.address)
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
@@ -381,7 +174,7 @@ function click(d) {
                     for (var j = 0; j < data.computed_predicates[i].length; j++) {
                         const drc0 = document.createElement('td');
                         drc0.textContent = data.computed_predicates[i][j];
-                        if (j == data.computed_predicates[i].length - 1) {
+                        if (j === data.computed_predicates[i].length - 1) {
                             drc0.id = "expression" + data.computed_predicates[i][0];
                         }
                         dumrow.appendChild(drc0);
@@ -397,94 +190,111 @@ function click(d) {
                 document.getElementById("splitNodeButton").style.visibility = "visible";
             })
     } else if (treeEdit) {
-        openThirdForm(d.address);
-    } else {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            d.children = d._children;
-            d._children = null;
+        openThirdForm(d.data.address);
+    } else if (nodeSelect) {
+        // If a node is already selected, reset its color
+        if (selectedNode) {
+            selectedNode.coleur = "#fff";
+            update(selectedNode);
         }
+        // And then select the new node and change its color
+        d.coleur = "#e77943";
+        setSelectedNode(d);
         update(d);
-        update(root);
+    } else {
+        d.children = d.children ? null : d._children;
+        update(d);
+        // Might need the below call
+        // update(root);
     }
 }
 
 // Updates the svg generated according to changes in tree data
-// Inspired by https://bl.ocks.org/d3noob/8375092
+// Inspired by https://bl.ocks.org/d3noob/8375092 and https://observablehq.com/@d3/collapsible-tree
 function update(source) {
-    console.log(source);
     // Compute the new tree layout.
-    var nodes = tree.nodes(root).reverse(),
-        links = tree.links(nodes);
+    tree(root);
+
+    var nodes = root.descendants().reverse();
+    var links = root.links();
+
+    var diagonal = d3.linkHorizontal().x(d => d.x).y(d => d.y)
 
     // Normalize for fixed-depth.
-    // Horizontal layout: drop d.x = d.x * 12
-    nodes.forEach(function (d) {
+    nodes.forEach(d => {
         d.y = d.depth * 120;
-        d.x = d.x * 12;
     });
 
     // Update the nodes…
-    var node = svg.selectAll("g.node")
-        .data(nodes, function (d) {
-            return d.id || (d.id = ++i);
-        });
+    var node = node_layer.selectAll("g.node")
+        .data(nodes, function(d) { return d.id; });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
         .attr("class", "node")
-        .attr("id", function (d) {
-            return (d.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.address;
+        .attr("id", d => {
+            return (d.data.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.data.address;
         })
-        .attr("transform", function (d) {
+        .attr("transform", d => {
             return "translate(" + source.x0 + "," + source.y0 + ")";
         })  // Horizontal layout: flip x, y
-        .on("click", click);
+        .on("click", (event, d) => { click(d); });
 
     nodeEnter.append("circle")
-        .attr("r", 1e-6)
-        .style("fill", function (d) {
-            return d._children ? "lightsteelblue" : d.coleur;
-        });
+        .attr("r", 1e-6);
 
+    // TODO P: use https://bl.ocks.org/mbostock/1424037 instead of text to allow CSS features such as
+    // text-overflow and hover to expand.
     nodeEnter.append("text")
-        .attr("x", function (d) {
+        .attr("x", d => {
             return d.children || d._children ? -13 : 13;
         })
         .attr("dy", ".35em")
-        .attr("text-anchor", function (d) {
+        .attr("text-anchor", d => {
             return d.children || d._children ? "end" : "start";
         })
-        .attr("id", function (d) {
-            return "addr" + d.address.toString();
+        .attr("id", d => {
+            return "addr" + d.data.address.toString();
         })
-        .text(function (d) {
-            return d.name;
+        .attr("class", "node-text")
+        .text(d => {
+            return d.data.name;
         })
         .style("fill-opacity", 1e-6);
 
     // Transition nodes to their new position.
-    var nodeUpdate = node.transition()
+    var nodeUpdate = node.merge(nodeEnter).transition()
         .duration(duration)
-        .attr("transform", function (d) {
+        .attr("transform", d => {
             return "translate(" + d.x + "," + d.y + ")";
         });  // Horizontal layout: flip x, y
 
     nodeUpdate.select("circle")
         .attr("r", 10)
-        .style("fill", function (d) {
-            return d._children ? "lightsteelblue" : d.coleur;
+        .style("fill", d => {
+            return d.children || !d._children ? d.coleur : "lightsteelblue";
         });
 
     nodeUpdate.select("text")
+        .attr('x', function (d) {
+            return d.children || d._children ? -13 : 13;
+        })
+        .attr('dy', '.35em')
+        .attr('text-anchor', function (d) {
+            return d.children || d._children ? 'end' : 'start';
+        })
+        .attr("id", d => {
+            return "addr" + d.data.address.toString();
+        })
+        .text(function (d) {
+            return d.data.name;
+        })
         .style("fill-opacity", 1);
 
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", function (d) {
+        .attr("transform", d => {
             return "translate(" + source.x + "," + source.y + ")";
         })  // Horizontal layout: flip x, y
         .remove();
@@ -496,68 +306,40 @@ function update(source) {
         .style("fill-opacity", 1e-6);
 
     // Update the links…
-    var link = svg.selectAll("path.link")
-        .data(links, function (d) {
-            return d.target.id;
-        });
+    var link = link_layer.selectAll("path.link")
+        .data(links, d => { d.target.id });
 
     // Enter any new links at the parent's previous position.
-    link.enter().insert("path", "g")
+    const linkEnter = link.enter().insert("path", "g")
         .attr("class", "link")
-        .style("stroke-dasharray", function (d) {
-            var foo = d.target.address[d.target.address.length - 1];
+        .style("stroke-dasharray", d => {
+            var foo = d.target.data.address[d.target.data.address.length - 1];
             return (foo == 1) ? "10,10" : "1,0";
         })
-        .attr("d", function (d) {
-            var o = {x: source.x0, y: source.y0};
+        .attr("d", d => {
+            const o = {x: source.x0, y: source.y0};
             return diagonal({source: o, target: o});
         });
 
     // Transition links to their new position.
-    link.transition()
+    link.merge(linkEnter).transition()
         .duration(duration)
         .attr("d", diagonal);
 
     // Transition exiting nodes to the parent's new position.
     link.exit().transition()
         .duration(duration)
-        .attr("d", function (d) {
-            var o = {x: source.x, y: source.y};
+        .attr("d", d => {
+            const o = {x: source.x, y: source.y};
             return diagonal({source: o, target: o});
         })
         .remove();
 
     // Stash the old positions for transition.
-    nodes.forEach(function (d) {
+    nodes.forEach(d => {
         d.x0 = d.x;
         d.y0 = d.y;
     });
-}
-
-// Not used anymore, useful when trying to preserve toggled state of nodes when refreshing the tree (might be useful in tree edit later)
-function foldIt(od, nw) {
-    if (!od.children || !nw.children)
-        return;
-
-    var len1 = od.children.length;
-    var len2 = nw.children.length;
-    var iter1 = 0;
-
-    for (var it = 0; it < len2; it++) {
-        if (iter1 == len1) {
-            break;
-        }
-        if (od.children[iter1].name === nw.children[it].name) {
-            if (od.children[iter1]._children) {
-                //if some folded children
-                nw.children[it]._children = nw.children[it].children;
-                nw.children[it].children = null;
-            } else {
-                foldIt(od.children[iter1], nw.children[it]);
-            }
-            iter1++;
-        }
-    }
 }
 
 // Makes nodes red along the path given as 'str'
@@ -631,54 +413,50 @@ function getLeaves(depthNode) {
 }
 
 // Expands all tree nodes
-function expandAll(nd) {
-    if (nd == null) {
-        expandAll(root);
-        update(root);
-        return;
+function expandAll() {
+    function expandRecursive(node) {
+        node.descendants().forEach((d, i) => {
+            if (d._children && !d.children) {
+                d.children = d._children;
+                expandRecursive(d);
+            }
+        });
     }
-    if (!nd.children && !nd._children) {
-        return;
-    }
-    if (!nd.children) {
-        nd.children = nd._children;
-        nd._children = null;
-
-    }
-    var len = nd.children.length;
-    for (var it = 0; it < len; it++) {
-        expandAll(nd.children[it]);
-    }
-
+    expandRecursive(root);
+    update(root);
 }
 
 // Collapses all tree nodes
-function collapseAll(nd) {
-    if (nd == null) {
-        var len = root.children.length;
-        for (var it = 0; it < len; it++) {
-            collapseAll(root.children[it]);
-        }
-        update(root);
-        return;
-    }
-    if (!nd.children && !nd._children) {
-        return;
-    }
-    if (!nd._children) {
-        nd._children = nd.children;
-        nd.children = null;
-    }
-    var len = nd._children.length;
-    for (var it = 0; it < len; it++) {
-        collapseAll(nd._children[it]);
-    }
+function collapseAll() {
+    root.descendants().forEach((d, i) => {
+       d.children = null;
+    });
+    update(root);
+}
 
+function toggleNodeSelect() {
+    var button = document.getElementById("selectRetrainNodeButton");
+    if (nodeSelect) {
+        unsetSelectedNode();
+        nodeSelect = false;
+        button.classList.remove("disabled");
+        button.classList.add("active");
+        button.setAttribute("aria-pressed", "true");
+        document.getElementById("nodeSelectInfo").innerText = "";
+    }
+    else {
+        unsetSelectedNode();
+        nodeSelect = true;
+        button.classList.remove("active");
+        button.classList.add("disabled");
+        button.setAttribute("aria-pressed", "false");
+        document.getElementById("nodeSelectInfo").innerText = "Click on a node to select.";
+    }
 }
 
 // If cartpole model used, draws it
 function drawCanvas() {
-    if (controllerName == "cartpole.scs") {
+    if (controllerFile == "cartpole.scs") {
         var lineLength = 100;
         var canvas = document.getElementById("cartCanvas");
         var c = canvas.getContext("2d");
@@ -830,6 +608,7 @@ async function oneStep() {
 
         $.ajax({
             data: JSON.stringify({
+                id: idUnderInspection,
                 x_pass: x_toPass,
                 u_pass: u_toPass
             }),
@@ -898,7 +677,7 @@ async function oneStep() {
                     clearInterval(plpause);
                 }
 
-            });
+            });         ``
     } else {
         currentSim++;
         $("input[name=indexers][value=" + currentSim + "]").trigger('click');
@@ -909,75 +688,287 @@ async function oneStep() {
 
 }
 
-function openNav() {
-    // if (isSimulator) return;
-    document.getElementById("mySidenav").style.width = "310px";
-    document.getElementById("main").style.paddingLeft = "310px";
-}
-
-/* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
-function closeNav() {
-    // if (isSimulator) return;
-    document.getElementById("mySidenav").style.width = "0";
-    document.getElementById("main").style.paddingLeft = "0";
-}
-
 function scrollToEndOfTable() {
     var elem = document.querySelector("#simTable");
     elem.scrollTop = elem.scrollHeight;
+}
+
+// Called by clicking a node when edit tree toggle is on
+function openThirdForm(address) {
+    $('#formThirdModal').modal('toggle');
+    console.log(address);
+    selectedNode = address;
+}
+
+function assignParentsDfs(node, parent) {
+    node.parent = parent;
+    if (node.children) {
+        node.children.forEach((child) => {
+            assignParentsDfs(child, node);
+        });
+    }
+}
+
+function replaceInTree(selected, replacementData) {
+    // Inspired by https://stackoverflow.com/a/43368677
+
+    //Creates a Node from newNode object using d3.hierarchy(.)
+    var newNode = d3.hierarchy(replacementData);
+    newNode.descendants().forEach((d, i) => {
+        d.id = 10 + i;
+        d.depth = selected.depth + d.depth;
+        d.height = selected.height - 1;
+        d._children = d.children;
+    });
+    // Assign parents properly, otherwise the update breaks the tree
+    assignParentsDfs(newNode, selected);
+    console.log("newNode", newNode);
+
+    //Selected is a node, to which we are adding the new node as a child
+    selected.children = newNode.children;
+    selected.data = newNode.data;
+    selected.children.forEach((child) => {child.parent = selected;});
+
+    // Render tree in the canvas properly
+    update(selected.parent);
+}
+
+function run_partial_construction(configuration) {
+    $.ajax({
+        data: JSON.stringify(configuration),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/construct-partial/from-preset',
+        beforeSend: () => {},
+    }).done(data => {
+        // Change existing tree data at the necessary position to data
+        console.log("Return from partial construct: ", data);
+
+        console.log("newData: ", data);
+        var pointer = root;
+        configuration.selected_node.forEach((pos) => {
+            pointer = pointer.children[pos]
+        });
+        replaceInTree(pointer, data);
+    });
+}
+
+function start_interactive_construction(configuration) {
+    $.ajax({
+        data: JSON.stringify(configuration),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/construct-partial/interactive',
+        beforeSend: () => {},
+    }).done(data => {
+        // Change existing tree data at the necessary position to data
+        console.log("Return from partial construct: ", data);
+
+        console.log("newData: ", data);
+        var pointer = root;
+        configuration.selected_node.forEach((pos) => {
+            pointer = pointer.children[pos]
+        });
+        replaceInTree(pointer, data);
+    });
+}
+
+function titleCase(str) {
+  return str.toLowerCase().split(' ').map(function(word) {
+    return word.replace(word[0], word[0].toUpperCase());
+  }).join(' ');
+}
+
+function generate_html_table(table_selector, body_index, header, body, add_radio=false, radio_name=null) {
+    /*
+    For certain tables, we have two tbodys. The body_index allows to choose which tbody to insert the data into.
+     */
+    let thead = table_selector.tHead;
+    thead.innerHTML = "";
+    let row = thead.insertRow();
+    if (add_radio) {
+        let th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        row.appendChild(th);
+    }
+    for (let key of header) {
+        let th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        let text = document.createTextNode(titleCase(key));
+        th.appendChild(text);
+        row.appendChild(th);
+    }
+
+    let tbody = table_selector.getElementsByTagName('tbody')[body_index];
+    tbody.innerHTML = "";
+    for (let index in body) {
+        let row = tbody.insertRow();
+
+        if (add_radio) {
+            let radio = document.createElement('td');
+            let radio_inp = document.createElement('input');
+
+            radio_inp.setAttribute('type', 'radio');
+            radio_inp.setAttribute('name', radio_name);
+            radio_inp.setAttribute('value', body[index][0]);
+            radio_inp.setAttribute('checked', 'checked');
+
+            radio.appendChild(radio_inp);
+            row.appendChild(radio);
+        }
+
+        for (let val of body[index]) {
+            let cell = row.insertCell();
+            let text = document.createTextNode(val);
+            cell.appendChild(text);
+        }
+    }
+}
+
+function process_interaction_response(data) {
+    if (data.type === "error") {
+        // Show error in a modal?
+    }
+    else if (data.type === "success") {
+        if (data.body.includes("use")) {
+            // Use succeeded
+            document.getElementById("mainRow1").scrollIntoView({ behavior: 'smooth', block: "start"});
+        }
+    }
+    else if (data.type === "update") {
+        if (data.body.feature_information || data.body.feature_specification) {
+            let feature_specification = data.body.feature_information ? data.body.feature_information : data.body.feature_specification;
+            generate_html_table(document.getElementById("feature-specification-table"),
+                0, feature_specification.header, feature_specification.body);
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("feature-specification-table").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.label_specification) {
+            let label_specification = data.body.label_specification;
+            generate_html_table(document.getElementById("label-specification-table"),
+                0, label_specification.header, label_specification.body);
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("label-specification-table").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.standard_alt_predicates) {
+            let standard_alt_predicates = data.body.standard_alt_predicates;
+            generate_html_table(document.getElementById("computed-predicates-table"),
+                0, standard_alt_predicates.header, standard_alt_predicates.body,
+                true, "instantiated-predicate");
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("computed-predicates-table").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.recently_added_predicates) {
+            let recently_added_predicates = data.body.recently_added_predicates;
+            generate_html_table(document.getElementById("computed-predicates-table"),
+                1, recently_added_predicates.header, recently_added_predicates.body,
+                true, "instantiated-predicate");
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
+            document.getElementById("computed-predicates-table").getElementsByTagName("tbody")[1].innerHTML = "";
+        }
+        if (data.body.standard_predicates_collection) {
+            let standard_predicates_collection = data.body.standard_predicates_collection;
+            generate_html_table(document.getElementById("standard-predicates-collection"),
+                0, standard_predicates_collection.header, standard_predicates_collection.body,
+                true, "abstract-predicate");
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (1st tbody)
+            document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[0].innerHTML = "";
+        }
+        if (data.body.recently_added_predicates_collection) {
+            let recently_added_predicates_collection = data.body.recently_added_predicates_collection;
+            generate_html_table(document.getElementById("standard-predicates-collection"),
+                1, recently_added_predicates_collection.header, recently_added_predicates_collection.body,
+                true, "abstract-predicate");
+            console.log(recently_added_predicates_collection.length);
+            document.getElementById("delete-predicate-button").disabled = (recently_added_predicates_collection.length === 0);
+        } else {
+            // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
+            document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[1].innerHTML = "";
+            document.getElementById("delete-predicate-button").disabled = true;
+        }
+    }
+    else if (data.type === "error") {
+        console.error(data.body);
+    }
+}
+
+function add_predicate()
+{
+    let predicate = window.prompt("Enter predicate", "x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60, 80}");
+    $.ajax({
+        data: JSON.stringify({"action": "add", "body": predicate}),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/interact',
+    }).done(data => {
+        console.log("Return from add");
+        console.log(data);
+        try {
+            let response = JSON.parse(data);
+            process_interaction_response(response);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
+
+function remove_predicate() {
+    let selected_predicate_id = +document.querySelector('input[name = "abstract-predicate"]:checked').value;
+    $.ajax({
+        data: JSON.stringify({"action": "del", "body": selected_predicate_id}),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/interact',
+    }).done(data => {
+        console.log("Return from del");
+        console.log(data);
+        try {
+            let response = JSON.parse(data);
+            process_interaction_response(response);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
+
+function use_predicate() {
+    let selected_predicate_id = +document.querySelector('input[name = "instantiated-predicate"]:checked').value;
+    $.ajax({
+        data: JSON.stringify({"action": "use", "body": selected_predicate_id}),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/interact',
+    }).done(data => {
+        console.log("Return from use");
+        console.log(data);
+        try {
+            let response = JSON.parse(data);
+            process_interaction_response(response);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
 }
 
 $(document).ready(function () {
     isSimulator = $('.simulator').length > 0;
     var numChanges = 0;
 
-    openNav();
-    document.getElementById("navbar-hamburger").className += " is-active";
-
-    if (!isSimulator) {
-        // Disable Add-Button until controller directory is loaded
-        document.getElementById("add-experiments-button").disabled = true;
-        $(".runall").hide();
-
-        //MJ load data and init listeners
-        $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
-        $.get('/results', results => {
-            results.forEach(e => addToResultsTable(e));
-            if (results.some(r => r[3] === 'Running...')) {
-                startPolling();
-            }
-        });
-
-        // Load Button pressed
-        $("#controller-directory-load").click(function () {
-            // Reactive Add-Button
-            document.getElementById("add-experiments-button").disabled = false;
-            loadControllers($("#controller-search-directory").val());
-        });
-
-        function startPolling() {
-            console.log('start interval');
-            const interval = setInterval(() => {
-                $.get('/results', results => {
-                    console.log(results);
-                    results.filter(r => r[3] === 'Completed').forEach(r => {
-                        const row = getResultsTableRow(r[0]);
-                        if (row.children[3].innerHTML === 'Running...') {
-                            addToResultsTable(r);
-                        }
-                    });
-                    if (results.every(r => r[3] === 'Completed')) {
-                        clearInterval(interval);
-                    }
-                })
-            }, 5000);
-        }
-    }
-    else if (isSimulator) {
+    if (isSimulator) {
         // If we are in simulator, there is no need for having the "load controller directory" etc available
         document.getElementById("controllerSearchDirectoryRow").remove();
         document.getElementById("controllerSelectRow").remove();
-        document.getElementById("add-experiments-button").innerText = "Select Retrain Node";
+        document.getElementById("add-experiments-button").remove();
+        document.getElementById("retrain-button").classList.remove("d-none");
+        document.getElementById("interactive-button").classList.remove("d-none");
     //
     //     // Add interactive mode to preset
     //     const option = document.createElement('option');
@@ -985,7 +976,94 @@ $(document).ready(function () {
     //     option.setAttribute('value', "interactive mode");
     //     app.appendChild(option);
     //
-     }
+    }
+
+    // Retrain from sidenav
+    $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
+        event.preventDefault();
+        let configuration = {};
+        configuration.id = idUnderInspection;
+        configuration.controller = controllerFile;
+        configuration.config = $('#config').val();
+        configuration.determinize = $('#determinize').val();
+        configuration.numeric_predicates = $('#numeric-predicates').val();
+        configuration.categorical_predicates = $('#categorical-predicates').val();
+        configuration.impurity = $('#impurity').val();
+        configuration.tolerance = $('#tolerance').val();
+        configuration.safe_pruning = $('#safe-pruning').val();
+        configuration.user_predicates = "";
+
+        if (configuration.config == "automatic") {
+            configuration.config += " (Fallback: " + $("#fallback").val() + ")";
+            configuration.numeric_predicates = [""];
+            configuration.categorical_predicates = [""];
+            configuration.user_predicates = $('#userPredicatesInput').val();
+        }
+
+        if (selectedNode) {
+            configuration.selected_node = selectedNode.data.address;
+            run_partial_construction(configuration);
+        }
+        else {
+            // Nothing to do if node is not selected
+            // Control must not come here
+            console.assert(selectedNode);
+        }
+     });
+
+    // Retrain from sidenav
+    $("input[name='interact'], button[name='interact']").on('click', function (event) {
+        event.preventDefault();
+        var configuration = {};
+        configuration.id = idUnderInspection;
+        configuration.controller = controllerFile;
+
+        if (selectedNode) {
+            configuration.selected_node = selectedNode.data.address;
+
+            // Populate the tree builder cards
+
+            // The following call will trigger fit() in dtcontrol
+            // and also makes the backend connect to the websocket.
+            $.ajax({
+                data: JSON.stringify(configuration),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/construct-partial/interactive',
+            });
+
+            console.log("Started interactive mode");
+            // Send the refresh command to fetch the tables
+            $.ajax({
+                data: JSON.stringify({"action": "refresh"}),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/interact',
+            }).done(data => {
+                console.log("Return from refresh");
+                console.log(data);
+                // Unhide the cards related to interactive tree builder
+                document.getElementById("mainRow-interactive").classList.remove("d-none");
+                document.getElementById("")
+                try {
+                    let response = JSON.parse(data);
+                    process_interaction_response(response);
+                }
+                catch (error) {
+                    console.error(error);
+                }
+                // Scroll the interactive tree builder cards into view
+                document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
+            });
+
+            // Add button in recent predicates collection
+        }
+        else {
+            // Nothing to do if node is not selected
+            // Control must not come here
+            console.assert(selectedNode);
+        }
+     });
 
 
     $('button.hamburger').on('click', function (event) {
@@ -1015,13 +1093,13 @@ $(document).ready(function () {
         } else {
             $(this).removeClass("btn-secondary");
             $(this).addClass("btn-primary");
-            document.getElementById("mainRow2").style.visibility = "hidden";
-            document.getElementById("mainRow3").style.visibility = "hidden";
+            document.getElementById("mainRow2").classList.add("d-none");
+            document.getElementById("mainRow3").classList.add("d-none");
             //document.getElementById("expandThisDiv").style.height = "450px";
-            document.getElementById("playerDiv").style.visibility = "hidden";
-            document.getElementById("timeRangeContainer").style.visibility = "hidden";
-            document.getElementById("instep").style.visibility = "hidden";
-            document.getElementById("animationDiv").style.visibility = "hidden";
+            document.getElementById("playerDiv").classList.add("d-none");
+            document.getElementById("timeRangeContainer").classList.add("d-none");
+            document.getElementById("instep").classList.add("d-none");
+            document.getElementById("animationDiv").classList.add("d-none");
 
             $("#dynamics-body").show();
             $("#initial-values").hide();
@@ -1078,17 +1156,19 @@ $(document).ready(function () {
             document.getElementById("mainRow1").style.visibility = "visible";
             // document.getElementById("editTreeDiv").style.visibility = "visible";
 
-            treeData = data.classi;
+            idUnderInspection = data.idUnderInspection
+            treeData = data.classifier;
+            console.log("Tree Data", treeData);
             numVars = data.numVars;
             numResults = data.numResults;
-            controllerName = data.controllerName;
+            controllerFile = data.controllerFile;
 
             console.log(treeData);
 
-            // height = 50 * getLeaves(treeData[0]);
-            height = 25 * getLeaves(treeData[0]);
+            // height = 50 * getLeaves(treeData);
+            height = 25 * getLeaves(treeData);
             // height = 650;
-            width = 200 * getDepth(treeData[0]);
+            width = 200 * getDepth(treeData);
 
             for (var i = 0; i < numVars; i++) {
                 x_current.push([]);
@@ -1099,13 +1179,11 @@ $(document).ready(function () {
                 u_current.push([]);
             }
 
-            if (numChanges == 0)
-                constructTree();
+            if (numChanges == 0) {
+                svgSetup();
+                constructTree(treeData);
+            }
             numChanges++;
-
-            root = treeData[0];
-            root.x0 = height / 2;
-            root.y0 = 0;
 
             update(root);
 
@@ -1195,263 +1273,6 @@ $(document).ready(function () {
         });
     }
 
-    // Add from sidenav
-    $("input[name='add'], button[name='add']").on('click', function (event) {
-        event.preventDefault();
-        var controller = $("#controller").val();
-        var nice_name = $("#controller").val().replace($("#controller-search-directory").val(), "");
-        if (nice_name.startsWith("/")) {
-            nice_name = nice_name.substr(1);
-        }
-        var config = $('#config').val();
-        var determinize = $('#determinize').val();
-        var numeric_predicates = $('#numeric-predicates').val();
-        var categorical_predicates = $('#categorical-predicates').val();
-        var impurity = $('#impurity').val();
-        var tolerance = $('#tolerance').val();
-        var safe_pruning = $('#safe-pruning').val();
-        var user_predicates = "";
-
-        if (config == "automatic"){
-             config += " (Fallback: " + $("#fallback").val() + ")";
-             numeric_predicates = [""];
-             categorical_predicates = [""];
-             user_predicates = $('#userPredicatesInput').val();
-        }
-
-        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning, user_predicates];
-
-
-
-        $.ajax('/experiments', {
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(row_contents),
-            success: () => addToExperimentsTable(row_contents)
-        });
-    });
-
-    function addToExperimentsTable(row_contents) {
-        $("#experiments-table tr.special").hide();
-        $(".runall").show();
-
-        var table = document.getElementById("experiments-table").getElementsByTagName('tbody')[0];
-
-        // Create an empty <tr> element and add it to the 1st position of the table:
-        var row = table.insertRow(-1);
-        var firstCell = row.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
-
-        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        for (let j = 0; j < 10; j++) {
-            var c = row.insertCell(-1);
-            if (j == 0 || j == 9) {
-                c.style = "display: none";
-            }
-            c.innerHTML = row_contents[j];
-        }
-
-        var icon = row.insertCell(-1);
-        icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
-    }
-
-    Number.prototype.milliSecondsToHHMMSS = function () {
-        var sec_num = this;
-        var hours = Math.floor(sec_num / 3600);
-        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-        var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-        if (hours < 10) {
-            hours = "0" + hours;
-        }
-        if (minutes < 10) {
-            minutes = "0" + minutes;
-        }
-        if (seconds < 10) {
-            seconds = "0" + seconds;
-        }
-        return hours + ':' + minutes + ':' + seconds;
-    }
-
-    function run_single_benchmark(config) {
-        console.log(config);
-        $.ajax({
-            data: JSON.stringify({
-                id: config[0],
-                controller: config[1],
-                nice_name: config[2],
-                config: config[3],
-                determinize: config[4],
-                numeric_predicates: config[5],
-                categorical_predicates: config[6],
-                impurity: config[7],
-                tolerance: config[8],
-                safe_pruning: config[9],
-                user_predicates: config[10]
-            }),
-            type: 'POST',
-            contentType: "application/json; charset=utf-8",
-            url: '/construct',
-            beforeSend: addToResultsTable(config)
-        }).done(data => addToResultsTable(data));
-    }
-
-    function getResultsTableRow(id) {
-        let rows = $("#results-table tbody tr");
-        for (let j = 0; j < rows.length; j++) {
-            const experiment_id = rows[j].children[0].innerHTML;
-            if (parseInt(experiment_id, 10) === id) {
-                return rows[j];
-            }
-        }
-    }
-
-    function addToResultsTable(row_contents) {
-        // This function is called both when
-        // 1. a new experiment is started
-        // 2. to populate the results table when results arrive from polling
-        // 3. to populate the results table when the page is refreshed
-
-        $("#results-table tr.special").hide();
-        var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
-
-        if (row_contents[4] == "Completed") {
-            let experimentRow = getResultsTableRow(row_contents[0]);
-            if (experimentRow) {
-                for (let j = 4; j <= 7; j++) {
-                    experimentRow.children[j].innerHTML = row_contents[j];
-                }
-                experimentRow.children[7].innerHTML = row_contents[7].milliSecondsToHHMMSS();
-            }
-            else {
-                experimentRow = table.insertRow(-1);
-                var firstCell = experimentRow.insertCell(-1);
-                firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-                for (let j = 1; j <= 7; j++) {
-                    const cell = experimentRow.insertCell(-1);
-                    if (j == 1) {
-                        cell.style = "display: none";
-                    }
-                    if (j <= 6) {
-                        cell.innerHTML = row_contents[j];
-                    }
-                    if (j == 7) {
-                        cell.innerHTML = row_contents[j].milliSecondsToHHMMSS();
-                    }
-                }
-            }
-            if (experimentRow.children.length < 9) {
-                let lastCell = experimentRow.insertCell(-1);
-                lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
-                $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
-                    $.post('/select', {runConfigIndex: row_contents[0]}, () => {
-                        window.location.href = 'simulator'
-                    });
-                });
-            }
-        }
-        else if (row_contents[4].startsWith("Error")) {
-            let experimentRow = getResultsTableRow(row_contents[0]);
-            if (experimentRow) {
-                experimentRow.children[4].innerHTML = row_contents[4];
-            }
-            else {
-                experimentRow = table.insertRow(-1);
-                firstCell = experimentRow.insertCell(-1);
-                firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-                for (let j = 1; j <= 7; j++) {
-                    const cell = experimentRow.insertCell(-1);
-                    if (j === 1) {
-                        cell.style = "display: none";
-                    }
-                    if (j <= 3) {
-                        cell.innerHTML = row_contents[j];
-                    }
-                    if (j === 4) {
-                        cell.innerHTML = row_contents[j];
-                    }
-                }
-            }
-        }
-        else { // This is the case where a new controller is added
-            /*
-                id: row_contents[0],
-                controller: row_contents[1],
-                nice_name: row_contents[2],
-                config: row_contents[3],
-                determinize: row_contents[4],
-                numeric_predicates: row_contents[5],
-                categorical_predicates: row_contents[6],
-                impurity: row_contents[7],
-                tolerance: row_contents[8],
-                safe_pruning: row_contents[9]
-             */
-            // Create an empty <tr> element and add it to the 1st position of the table:
-            var row = table.insertRow(-1);
-            var firstCell = row.insertCell(-1);
-            firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-            for (let j = 1; j <= 7; j++) {
-                const cell = row.insertCell(-1);
-                if (j == 1) {
-                    cell.style = "display: none";
-                }
-                if (j <= 3) {
-                    cell.innerHTML = row_contents[j];
-                }
-                if (j == 4) {
-                    cell.innerHTML = "Running...";
-                }
-            }
-        }
-    }
-
-    function initTableListeners() {
-        $("table").on("click", "i.fa-trash", function () {
-            const row = $(this).parent().parent();
-            const index = parseInt(row.find('th').textContent, 10) - 1;
-
-            var row_items = $(this).parent().parent().find('th,td');
-            var row_content = [];
-            row_items.each(function (k, v) {
-                row_content.push(v.innerHTML);
-            });
-            row_content = row_content.slice(1,-1); // Drop the index and the actions
-            row_content[4] = row_content[4].split(","); // Numerical
-            row_content[5] = row_content[5].split(","); // and categorical predicates as arrays
-
-            $.ajax('/experiments/delete', {
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(row_content),
-                success: () => {
-                    row.remove();
-                    if (document.getElementById("experiments-table").getElementsByTagName('tbody')[0].children.length == 2) {
-                        $(".runall").hide();
-                        $("#experiments-table tr.special").show();
-                    }
-                }
-            });
-        });
-
-        $("table").on("click", "i.fa-play", function (event) {
-            if ($(this).id === 'runall-icon') return;
-            var row_items = $(this).parent().parent().find('th,td');
-            var row_content = []
-            row_items.each(function (k, v) {
-                row_content.push(v.innerHTML);
-            });
-            run_single_benchmark(row_content.slice(0, -1));
-        });
-
-        $('#runall').on('click', event => {
-            $("table i.fa-play").each((_, btn) => {
-                if (btn.id === 'runall-icon') return;
-                console.log(btn);
-                btn.click();
-            });
-        })
-    }
-
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {
         console.log('form is submitted');
@@ -1460,19 +1281,19 @@ $(document).ready(function () {
             x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
-            data: JSON.stringify({pass: x_toPass, dynamics: $("#dynamics-input").val()}),
+            data: JSON.stringify({id: idUnderInspection, pass: x_toPass, dynamics: $("#dynamics-input").val()}),
             contentType: "application/json; charset=utf-8",
             type: 'POST',
             url: '/initRoute'
         })
             .done(function (data) {
-                document.getElementById("mainRow2").style.visibility = "visible";
-                document.getElementById("mainRow3").style.visibility = "visible";
+                document.getElementById("mainRow2").classList.remove("d-none");
+                document.getElementById("mainRow3").classList.remove("d-none");
                 document.getElementById("expandThisDiv").style.height = "450px";
-                document.getElementById("playerDiv").style.visibility = "visible";
-                document.getElementById("timeRangeContainer").style.visibility = "visible";
-                document.getElementById("instep").style.visibility = "visible";
-                document.getElementById("animationDiv").style.visibility = "visible"; // TODO Animate button, enable this again
+                document.getElementById("playerDiv").classList.remove("d-none");
+                document.getElementById("timeRangeContainer").classList.remove("d-none");
+                document.getElementById("instep").classList.remove("d-none");
+                document.getElementById("animationDiv").classList.remove("d-none"); // TODO Animate button, enable this again
 
                 var mini = document.getElementsByClassName("card-body");
                 for (var i = 0; i < mini.length; i++) {
@@ -1482,7 +1303,7 @@ $(document).ready(function () {
                 document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree
-                if (controllerName == "cartpole.scs") {
+                if (controllerFile == "cartpole.scs") {
                     document.getElementById("expandThisDiv").className = "col-lg-6";
                     document.getElementById("hideThisDiv").style.display = "block";
                 } else {
@@ -1641,10 +1462,10 @@ $(document).ready(function () {
             }
             $.ajax({
                 data: JSON.stringify({
+                    id: idUnderInspection,
                     steps: steps,
                     x_pass: (x_toPass),
                     u_pass: (u_toPass)
-
                 }),
                 type: 'POST',
                 contentType: "application/json; charset=utf-8",
@@ -1748,84 +1569,7 @@ $(document).ready(function () {
 
     });
 
-    // Handles changing of form selections when different configs are changed
-    $("#config").change(function () {
-        if ($(this).val() != "custom" && $(this).val() != "interactive" && $(this).val() != "automatic") {
-            // clearCheckBoxes();
-            for (x in preset_json.presets) {
-                //x is  preset names
-                if ($(this).val() == x) {
-                    //x is now selected preset
-                    for (y in defConf) {
-                        //y is  property names
-                        if (y in preset_json.presets[x]) {
-                            if (y == "tolerance") {
-                                document.getElementById("tolerance").value = preset_json.presets[x][y];
-                            } else if (y == "safe-pruning") {
-                                if (preset_json.presets[x]["safe-pruning"]) {
-                                    $('#safe-pruning').val("true");
-                                } else {
-                                    $('#safe-pruning').val("false");
-                                }
-                            } else {
-                                $("#" + y).val(preset_json.presets[x][y]);
-                            }
-                        } else {
-                            if (y == "tolerance") {
-                                document.getElementById("tolerance").value = defConf[y];
-                            } else if (y == "safe-pruning") {
-                                if (preset_json.presets["default"]["safe-pruning"]) {
-                                    $('#safe-pruning').val("true");
-                                } else {
-                                    $('#safe-pruning').val("false");
-                                }
-                            } else {
-                                $("#" + y).val(preset_json.presets["default"][y]);
-                            }
-                        }
-                    }
-
-                    break;
-
-                }
-            }
-        }
-        else if ($(this).val() == "custom"){
-            // In case custom is selected
-            $('#accordionButton').click();
-        }
-        else if ($(this).val() == "interactive"){
-            // In case interactive mode is selected
-        }
-        else if ($(this).val() == "automatic"){
-
-
-            document.getElementById("userPredicatesInputRow").classList.remove("collapse");
-            document.getElementById("fallbackSelectRow").classList.remove("collapse");
-
-            document.getElementById("numericPredicatesSelectRow").classList.add("collapse");
-            document.getElementById("categoricalPredicatesSelectRow").classList.add("collapse");
-            document.getElementById("tolerance").value = 0.00001;
-        }
-
-
-    });
-
-    // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls
-    $(".propList").change(function () {
-        document.getElementById("config").value = "custom";
-    });
-    $(".propList_3").change(function () {
-        document.getElementById("config_3").value = "custom";
-    });
-    $("#tolerance").on("input", function () {
-        document.getElementById("config").value = "custom";
-    });
-    $("#tolerance_3").on("input", function () {
-        document.getElementById("config_3").value = "custom";
-    });
     // Simple .change() does not work here because it is dynamically added
-
     $('#dynamics-file').on('change', function () {
         //get the file name
         var fileName = $(this).val().replace('C:\\fakepath\\', "");
@@ -1857,16 +1601,6 @@ if (slider) {
     }
 }
 
-
-// Christoph's additional functionality
-function customTree() {
-    closeNav();
-    document.getElementById("sideNavOpener").disabled = true;
-    document.getElementById("mainRow1").style.visibility = "visible";
-    document.getElementById("mainRow1.1").style.display = "flex";
-    document.getElementById("mainRow1.2").style.display = "flex";
-    $('#initialCustomTreeModal').modal('toggle');
-}
 
 var numDomainKnowledge = 0;
 
@@ -1910,54 +1644,54 @@ function addToDomainKnowledgeTable() {
     document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'hidden';
 }
 
-function closeInitialCustomTreeModal() {
-    $.ajax({
-        data: JSON.stringify({
-            domainKnowledge: (finalDomainKnowledge)
-        }),
-        type: 'POST',
-        contentType: "application/json; charset=utf-8",
-        url: '/featureLabelSpecifications'
-    })
-        .done(function (data) {
-            for (var i = 0; i < data.feature_specifications.length; i++) {
-                const dumrow = document.createElement('tr');
-
-                for (var j = 0; j < data.feature_specifications[i].length; j++) {
-                    const drc0 = document.createElement('td');
-                    drc0.textContent = data.feature_specifications[i][j];
-                    dumrow.appendChild(drc0);
-                }
-
-                document.getElementById("featureSpecificationTable").appendChild(dumrow);
-            }
-            for (var i = 0; i < data.label_specifications.length; i++) {
-                const dumrow = document.createElement('tr');
-
-                for (var j = 0; j < data.label_specifications[i].length; j++) {
-                    const drc0 = document.createElement('td');
-                    drc0.textContent = data.label_specifications[i][j];
-                    dumrow.appendChild(drc0);
-                }
-
-                document.getElementById("labelSpecificationTable").appendChild(dumrow);
-            }
-            $('#initialCustomTreeModal').modal('hide');
-
-            // Drawing out initial tree now
-            treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
-            height = 800;
-            width = 1000;
-
-            constructTree();
-
-            root = treeData[0];
-            root.x0 = height / 2;
-            root.y0 = 0;
-            update(root);
-            customBuild = true;
-        })
-}
+// function closeInitialCustomTreeModal() {
+//     $.ajax({
+//         data: JSON.stringify({
+//             domainKnowledge: (finalDomainKnowledge)
+//         }),
+//         type: 'POST',
+//         contentType: "application/json; charset=utf-8",
+//         url: '/featureLabelSpecifications'
+//     })
+//         .done(function (data) {
+//             for (var i = 0; i < data.feature_specifications.length; i++) {
+//                 const dumrow = document.createElement('tr');
+//
+//                 for (var j = 0; j < data.feature_specifications[i].length; j++) {
+//                     const drc0 = document.createElement('td');
+//                     drc0.textContent = data.feature_specifications[i][j];
+//                     dumrow.appendChild(drc0);
+//                 }
+//
+//                 document.getElementById("featureSpecificationTable").appendChild(dumrow);
+//             }
+//             for (var i = 0; i < data.label_specifications.length; i++) {
+//                 const dumrow = document.createElement('tr');
+//
+//                 for (var j = 0; j < data.label_specifications[i].length; j++) {
+//                     const drc0 = document.createElement('td');
+//                     drc0.textContent = data.label_specifications[i][j];
+//                     dumrow.appendChild(drc0);
+//                 }
+//
+//                 document.getElementById("labelSpecificationTable").appendChild(dumrow);
+//             }
+//             $('#initialCustomTreeModal').modal('hide');
+//
+//             // Drawing out initial tree now
+//             treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
+//             height = 800;
+//             width = 1000;
+//
+//             constructTree();
+//
+//             root = treeData;
+//             root.x0 = height / 2;
+//             root.y0 = 0;
+//             update(root);
+//             customBuild = true;
+//         })
+// }
 
 function splitNode() {
     var toSendPredicate = $('input[name="buildPredicate"]:checked').val();

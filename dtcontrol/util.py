@@ -1,7 +1,42 @@
+import json
 import logging
+import queue
+from enum import Enum
 from os.path import basename, splitext
 
 import numpy as np
+
+
+# Queue for use in interactive tree building between web ui and backend
+class InteractiveQueue:
+    def __init__(self):
+        self.backend_to_frontend = queue.Queue()
+        self.frontend_to_backend = queue.Queue()
+
+    def send_to_front(self, item):
+        self.backend_to_frontend.put(item)
+
+    def send_to_back(self, item):
+        self.frontend_to_backend.put(item)
+
+    def get_from_front(self):
+        return self.frontend_to_backend.get()
+
+    def get_from_back(self):
+        return self.backend_to_frontend.get()
+
+interactive_queue = InteractiveQueue()
+
+
+class Caller(Enum):
+    # Indicates that dtControl is run using Python code
+    PYTHON = 1
+
+    # Indicates that dtControl is run from the CLI
+    CLI = 2
+
+    # Indicates that dtControl is run from the Web UI
+    WEBUI = 3
 
 
 def ignore_convergence_warnings():
@@ -10,6 +45,7 @@ def ignore_convergence_warnings():
     handler = logging.StreamHandler()
     logger.addHandler(handler)
     logger.addFilter(lambda record: "ConvergenceWarning" not in record.getMessage())
+
 
 def format_seconds(sec):
     m, s = divmod(sec, 60)
@@ -20,14 +56,17 @@ def format_seconds(sec):
         return pattern % (h, m, s)
     return ('%d days, ' + pattern) % (d, h, m, s)
 
+
 def split_relevant_extension(filename):
     if filename.endswith('.storm.json'):
         return filename.split('.storm.json')[0], '.storm.json'
     return splitext(filename)
 
+
 def get_filename_and_relevant_extension(filename):
     path, ext = split_relevant_extension(filename)
     return basename(path), ext
+
 
 def make_set(v):
     if v is None:
@@ -39,6 +78,7 @@ def make_set(v):
     except TypeError:
         return {v}
 
+
 def objround(obj, precision):
     if isinstance(obj, list) or isinstance(obj, np.ndarray):
         return [objround(o, precision) for o in obj]
@@ -47,14 +87,18 @@ def objround(obj, precision):
     # if just a float
     return round(obj, precision)
 
+
 def print_tuple(t):
     return f'({", ".join([str(e) for e in t])})'
+
 
 def print_list(l):
     return f'[{", ".join([str(e) for e in l])}]'
 
+
 def print_set(s):
     return f'{{{", ".join([str(e) for e in s])}}}'
+
 
 def split_into_lines(l):
     if not isinstance(l, list) or len(l) < 5:
@@ -66,17 +110,20 @@ def split_into_lines(l):
         i += 5
     return '[' + '\\n'.join(l2) + ']'
 
+
 def peek_line(file):
     pos = file.tell()
     line = file.readline()
     file.seek(pos)
     return line
 
+
 def log_without_newline(msg):
     old_terminator = logging.StreamHandler.terminator
     logging.StreamHandler.terminator = ""
     logging.info(msg)
     logging.StreamHandler.terminator = old_terminator
+
 
 def is_int(s):
     try:
@@ -85,3 +132,12 @@ def is_int(s):
     except ValueError:
         return False
 
+
+def error_wrapper(msg):
+    ret = {"type": "error", "body": msg}
+    return json.dumps(ret)
+
+
+def success_wrapper(msg):
+    ret = {"type": "success", "body": msg}
+    return json.dumps(ret)
