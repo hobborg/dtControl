@@ -26,7 +26,7 @@ function loadPresets() {
     // All presets available for fallback
     const  fallback_app = document.getElementById("fallback");
 
-    var xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open('GET', '/yml', true);
     xhr.onload = function () {
         // Reads the config.yml file

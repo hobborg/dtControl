@@ -66,8 +66,6 @@ $(document).ready(function () {
     document.getElementById("add-experiments-button").disabled = true;
     $(".runall").hide();
 
-    loadPresets();
-
     //MJ load data and init listeners
     $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
     $.get('/results', results => {
