@@ -129,13 +129,7 @@ function unsetSelectedNode() {
 
 // Toggle children on click.
 function click(d) {
-    if (editMode){
-        console.log(d);
-        // document.getElementById("nodeAt:" + d.data.address).firstChild.setAttribute("style", "fill: red");
-        var pred = prompt("Please enter your predicate");
-        $(location).attr('href', 'http://stackoverflow.com')
-    }
-    else if (customBuild) {
+    if (customBuild) {
         if (lastNode != null)
             lastNode.coleur = "white";
 
@@ -434,24 +428,16 @@ function collapseAll() {
     update(root);
 }
 
-function toggleNodeSelect() {
-    var button = document.getElementById("selectRetrainNodeButton");
-    if (nodeSelect) {
-        unsetSelectedNode();
-        nodeSelect = false;
-        button.classList.remove("disabled");
-        button.classList.add("active");
-        button.setAttribute("aria-pressed", "true");
-        document.getElementById("nodeSelectInfo").innerText = "";
-    }
-    else {
-        unsetSelectedNode();
-        nodeSelect = true;
-        button.classList.remove("active");
-        button.classList.add("disabled");
-        button.setAttribute("aria-pressed", "false");
-        document.getElementById("nodeSelectInfo").innerText = "Click on a node to select.";
-    }
+function enableNodeSelect() {
+    unsetSelectedNode();
+    nodeSelect = true;
+    document.getElementById("nodeSelectInfo").innerText = "Click on a node to select.";
+}
+
+function disableNodeSelect() {
+    unsetSelectedNode();
+    nodeSelect = false;
+    document.getElementById("nodeSelectInfo").innerText = "";
 }
 
 // If cartpole model used, draws it
@@ -864,6 +850,11 @@ function process_interaction_response(data) {
             // If return object doesn't contain this key-value pair, remove from table (1st tbody)
             document.getElementById("label-specification-table").getElementsByTagName("tbody")[0].innerHTML = "";
         }
+        if (data.body.label_statistics) {
+            let label_statistics = data.body.label_statistics;
+            generate_html_table(document.getElementById("label-statistics-table"),
+                0, label_statistics.header, label_statistics.body);
+        }
         if (data.body.standard_alt_predicates) {
             let standard_alt_predicates = data.body.standard_alt_predicates;
             generate_html_table(document.getElementById("computed-predicates-table"),
@@ -1096,15 +1087,8 @@ $(document).ready(function () {
     });
 
     // Simulate Button
-    $("#openSecondFormButton").on("click", function (event) {
-        if ($(this).hasClass("btn-primary")) {
-            $(this).removeClass("btn-primary");
-            $(this).addClass("btn-secondary");
-            triggerDynamicsInput();
-            $(this).html("Simulate off");
-        } else {
-            $(this).removeClass("btn-secondary");
-            $(this).addClass("btn-primary");
+    $("#operation-selector").on("click", function (event) {
+        function deactivateSimulator() {
             document.getElementById("mainRow2").classList.add("d-none");
             document.getElementById("mainRow3").classList.add("d-none");
             //document.getElementById("expandThisDiv").style.height = "450px";
@@ -1120,51 +1104,51 @@ $(document).ready(function () {
             $("#formSecond-submit-button").hide();
             $("#exampleModalLongTitle").html("Enter system dynamics");
 
-            document.getElementById("hideThisDiv").style.display = "block";
-            // TODO: Reset tree colors
-            $(this).html("Simulate");
+            // document.getElementById("hideThisDiv").style.display = "block";
         }
 
-    });
-
-    // Edit Button pressed
-    $("#openThirdFormButton").on("click", function (event) {
-        // Activate Edit Mode
-        if ($(this).hasClass("btn-primary")) {
-            $(this).removeClass("btn-primary");
-            $(this).addClass("btn-secondary");
-            $(this).html("Edit off");
-            document.getElementById("saveEditButton").style.visibility = "visible";
-            document.getElementById("cancelEditButton").style.visibility = "visible";
-            document.getElementById("expandAllButton").disabled = "true";
-            document.getElementById("collapseAllButton").disabled = "true";
-
-            editMode = true;
-            update(root);
-
-
-        } else {
-            //Deactivate Edit Mode
-            $(this).removeClass("btn-secondary");
-            $(this).addClass("btn-primary");
-            $(this).html("Edit");
-            document.getElementById("saveEditButton").style.visibility = "hidden";
-            document.getElementById("cancelEditButton").style.visibility = "hidden";
+        function deactivateEdit()
+        {
             document.getElementById("expandAllButton").removeAttribute("disabled");
             document.getElementById("collapseAllButton").removeAttribute("disabled");
 
-            editMode = false;
-            update(root);
+            // editMode = false;
+            disableNodeSelect();
+            // update(root);
         }
 
+        function deactivateInspect()
+        {
+            // Nothing here
+        }
+
+        let option = $("#operation-selector input:checked")[0].id;
+        if (option === "option-simulate") {
+            deactivateInspect();
+            deactivateEdit();
+            triggerDynamicsInput();
+        }
+        else if (option === "option-edit") {
+            deactivateSimulator();
+            deactivateInspect();
+            // Activate Edit Mode
+            document.getElementById("expandAllButton").disabled = "true";
+            document.getElementById("collapseAllButton").disabled = "true";
+
+            // editMode = true;
+            enableNodeSelect();
+            // update(root);
+        }
+        else {
+            // Inspect
+            deactivateSimulator();
+            deactivateEdit();
+        }
 
     });
 
-
     if (isSimulator) {
         $.get('/computed', (data) => {
-            document.getElementById("openSecondFormButton").style.visibility = "visible";
-            document.getElementById("openThirdFormButton").style.visibility = "visible";
             document.getElementById("mainRow1").style.visibility = "visible";
             // document.getElementById("editTreeDiv").style.visibility = "visible";
 

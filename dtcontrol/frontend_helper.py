@@ -247,21 +247,22 @@ def is_valid_file_or_folder(arg):
         return arg
 
 
-def intoJSON(rt, parent, address):
+def intoJSON(rt, parent, address, y_metadata):
     # returns a string (JSON format that we need)
     # address is an array of integers
     if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:
         try:
-            rt_name = rt.print_c_label()
+            # rt_name = rt.print_c_label()
+            rt_name = rt.print_dot_label(y_metadata)
         except ValueError:
             # In interactive tree building, we often get trees that are incomplete
             # for such trees, print_c_label() throws an exception.
             rt_name = "Not yet homogeneous"
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i]))
+        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i], y_metadata))
     return strdummy
 
 def get_mask_given_address(existing_tree=None, node_address=None, dataset=None):
@@ -374,7 +375,7 @@ def train(args):
     logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
-    classifier_as_json = intoJSON(classifier.root, "null", [])
+    classifier_as_json = intoJSON(classifier.root, "null", [], ds.y_metadata)
     return {
         "classifier": classifier, "classifier_as_json": classifier_as_json,
         "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
@@ -414,7 +415,7 @@ def interactive(args):
     logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
-    classifier_as_json = intoJSON(classifier.root, "null", [])
+    classifier_as_json = intoJSON(classifier.root, "null", [], ds.y_metadata)
     return {
         "classifier": classifier, "classifier_as_json": classifier_as_json,
         "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,

@@ -1,5 +1,7 @@
 import json
 
+from dtcontrol.decision_tree.decision_tree import Node
+from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
     ContextAwareSplittingStrategy
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
@@ -222,6 +224,17 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                 print("\nNo detailed label information available.")
             else:
                 ret.update({"label_specification": None})
+
+        try:
+            label_counts = MaxFreqDeterminizer.get_label_counts(dataset.get_single_labels())
+            label_stats = []
+            header_stats = [y_meta.get('variables')[i] for i in range(len(y_meta.get('variables')))] + ["frequency"]
+            for (k, v) in enumerate(label_counts):
+                if v > 0:
+                    label_stats.append(list(map(str, list(map(dataset.index_label_to_actual, dataset.tuple_id_to_tuple[k])) + [v])))
+            ret.update({"label_statistics": {"header": header_stats, "body": label_stats}})
+        except:
+            ret.update({"label_statistics": None})
 
         return ret
 

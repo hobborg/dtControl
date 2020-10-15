@@ -98,12 +98,24 @@
         <div class="col-lg-12">
             <div id="controls" class="row ml-2 mb-2">
 
-                <button id="openSecondFormButton" class="btn btn-primary" type="button">Simulate
-                </button>
+<!--                <button id="openSecondFormButton" class="btn btn-primary" type="button">Simulate-->
+<!--                </button>-->
 
-                <button id="openThirdFormButton" class="btn btn-primary" type="button"
-                        style="visibility: hidden;" onclick="expandAll(null);expandAll(null);collapseAll(null)">Edit
-                </button>
+<!--                <button id="openThirdFormButton" class="btn btn-primary" type="button"-->
+<!--                        style="visibility: hidden;" onclick="expandAll(null);expandAll(null);collapseAll(null)">Edit-->
+<!--                </button>-->
+
+                <div id="operation-selector" class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary active">
+                        <input type="radio" name="options" id="option-inspect" autocomplete="off" checked>Inspect
+                    </label>
+                    <label class="btn btn-outline-primary">
+                        <input type="radio" name="options" id="option-edit" autocomplete="off">Edit
+                    </label>
+                    <label class="btn btn-outline-primary">
+                        <input type="radio" name="options" id="option-simulate" autocomplete="off">Simulate
+                    </label>
+                </div>
 
                 <!-- The four player buttons -->
                 <div class="btn-group btn-group-toggle ml-2 d-none" data-toggle="buttons" id="playerDiv"
@@ -158,17 +170,13 @@
                                 <button id="expandAllButton" type="button" class="btn btn-dark mr-2"
                                         onclick="expandAll();">Expand all
                                 </button>
-                                <button id="collapseAllButton" type="button" class="btn btn-dark" onclick="collapseAll()">Collapse
+                                <button id="collapseAllButton" type="button" class="btn btn-dark mr-2" onclick="collapseAll()">Collapse
                                     all
                                 </button>
-                                <button id="selectRetrainNodeButton" type="button" class="btn btn-dark mr-2 active" data-toggle="button" aria-pressed="true" autocomplete="off"
-                                        onclick="toggleNodeSelect();">Select Retrain Node
-                                </button>
+<!--                                <button id="selectRetrainNodeButton" type="button" class="btn btn-dark mr-2 active d-none" data-toggle="button" aria-pressed="true" autocomplete="off"-->
+<!--                                        onclick="toggleNodeSelect();">Select Retrain Node-->
+<!--                                </button>-->
                                 <div id="nodeSelectInfo"></div>
-                                <button id="saveEditButton" type="button" class="btn btn-dark mr-2" style="visibility: hidden;">Save
-                                </button>
-                                <button id="cancelEditButton" type="button" class="btn btn-dark" style="visibility: hidden;">Cancel
-                                </button>
                             </div>
                             <!-- Tree in this div -->
                             <div class="row" id="treeHere">
@@ -196,8 +204,7 @@
         </div>
 
         <div id="mainRow-interactive" class="row ml-2 d-none">
-            <div class="card-columns col-lg-12">
-
+            <div class="col-lg-6">
                 <div class="card shadow mb-4">
                     <div class="card-body h-100">
                         <h4 class="card-title">Feature Specifications</h4>
@@ -220,17 +227,18 @@
                     </div>
                 </div>
 
-<!--                <div class="card shadow mb-4">-->
-<!--                    <div class="card-body h-100">-->
-<!--                        <h4 class="card-title">Domain Knowledge</h4>-->
-<!--                        <table id="domain-knowledge-table" class="table rounded">-->
-<!--                            <thead class="thead-light">-->
-<!--                            </thead>-->
-<!--                            <tbody></tbody>-->
-<!--                        </table>-->
-<!--                    </div>-->
-<!--                </div>-->
-
+                <div class="card shadow mb-4">
+                    <div class="card-body h-100">
+                        <h4 class="card-title">Node Statistics</h4>
+                        <table id="label-statistics-table" class="table rounded">
+                            <thead class="thead-light">
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
                 <div class="card shadow mb-4">
                     <div class="card-body h-100">
                         <h4 class="card-title">Predicate Collection</h4>
