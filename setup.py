@@ -48,12 +48,11 @@ setuptools.setup(
                             'dtcontrol-frontend=dtcontrol.frontend.app:start_web_frontend'],
     },
     classifiers=[
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         'License :: OSI Approved :: MIT License'
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7.9',
     install_requires=[
         'dd==0.5.5',
         'Jinja2==2.10.3',
@@ -65,7 +64,7 @@ setuptools.setup(
         'tabulate==0.8.6',
         'tqdm==4.42.0',
         'flask==1.1.2',
-        'gevent==20.6.2',
+        'gevent==20.9.0',
         'sympy==1.6.1'
     ],
     package_data={

@@ -562,7 +562,7 @@ def recursive_scan(baseDir):
     for entry in os.scandir(baseDir):
         if entry.is_file():
             if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(".prism") or entry.name.endswith(
-                    ".csv")) and (
+                    ".csv") or entry.name.endswith(".dump")) and (
                     not entry.name.startswith(".")):
                 yield os.path.join(baseDir, entry.name)
         else:
