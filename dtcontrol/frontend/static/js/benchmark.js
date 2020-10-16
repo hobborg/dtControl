@@ -82,11 +82,59 @@ $(document).ready(function () {
         loadControllers($("#controller-search-directory").val());
     });
 
+    $('#controller-file').on('change', function () {
+        //get the file name
+        let fileName = $(this).val().replace('C:\\fakepath\\', "");
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+        $('#controller-file-upload-progress').attr({
+            'aria-valuenow': 0
+        })
+            .width("0%");
+        let formData = new FormData();
+        formData.append("file", document.getElementById("controller-file").files[0]);
+        $.ajax({
+            // From https://stackoverflow.com/a/8758614
+            // Your server script to process the upload
+            url: '/upload',
+            type: 'POST',
+
+            // Form data
+            data: formData,
+
+            // Tell jQuery not to process data or worry about content-type
+            // You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('.progress').removeClass('invisible');
+                            $('#controller-file-upload-progress').attr({
+                                'aria-valuenow': e.loaded
+                            })
+                                .width(e.loaded+"%");
+                        }
+                    }, false);
+                }
+                return myXhr;
+            }
+        }).done(() => {
+            document.getElementById("add-experiments-button").disabled = false;
+        });
+    });
+
     // Add from sidenav
     $("input[name='add'], button[name='add']").on('click', function (event) {
         event.preventDefault();
-        var controller = $("#controller").val();
-        var nice_name = $("#controller").val().replace($("#controller-search-directory").val(), "");
+        var controller = $("#controller-file").val().replace('C:\\fakepath\\', "");
+        var nice_name = controller;
         if (nice_name.startsWith("/")) {
             nice_name = nice_name.substr(1);
         }
@@ -107,7 +155,6 @@ $(document).ready(function () {
         }
 
         var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning, user_predicates];
-
 
         $.ajax('/experiments', {
             type: 'POST',

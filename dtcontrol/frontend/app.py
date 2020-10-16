@@ -6,7 +6,8 @@ import html
 
 import numpy as np
 import sympy as sp
-from flask import Flask, render_template, json, jsonify, request, send_from_directory
+from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for
+from werkzeug.utils import secure_filename
 from gevent.pywsgi import WSGIServer
 
 from dtcontrol import frontend_helper
@@ -15,7 +16,11 @@ from traceback import print_exc
 
 from dtcontrol.util import interactive_queue
 
+UPLOAD_FOLDER = '/tmp'
+ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 logging.basicConfig(format="%(threadName)s: %(message)s")
 
@@ -42,7 +47,6 @@ tau = 0
 
 # Saved domain knowledge predicates
 pred = []
-
 
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
@@ -121,7 +125,7 @@ def index():
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static/images'),
-                          'favicon-32.png', mimetype='image/png')
+                               'favicon-32.png', mimetype='image/png')
 
 @app.route('/experiments', methods=['GET', 'POST'])
 def experimentsRoute():
@@ -158,7 +162,7 @@ def construct():
     data = request.get_json()
     logging.info("Request: \n", data)
     id = int(data['id'])
-    cont = data['controller']
+    cont = os.path.join(UPLOAD_FOLDER, data['controller'])
     nice_name = data['nice_name']
     config = data['config']
     results.append([id, cont, nice_name, config, 'Running...', None, None, None])
@@ -243,7 +247,7 @@ def partial_construct():
     global completed_experiements
     data = request.get_json()
     id = int(data['id'])
-    controller_file = data['controller']
+    controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
     config = data['config']
 
     # TODO P Should we change what we have in results or should we create a new global var to store it?
@@ -307,7 +311,7 @@ def interactive_construct():
     global completed_experiements
     data = request.get_json()
     id = int(data['id'])
-    controller_file = data['controller']
+    controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
 
     # TODO P Should we change what we have in results or should we create a new global var to store it?
     # results.append([id, controller_file, nice_name, config, 'Running...', None, None, None])
@@ -586,6 +590,29 @@ def yamlread():
     data = frontend_helper.load_default_config()
     return json.dumps(data)
 
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        print('No file part')
+        return "No file part"
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        print('No selected file')
+        return "No selected file"
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        print("Successfully saved file", filename)
+        return "Successfully saved file " + filename
+    return "Invalid request"
 
 global http_server
 

@@ -26,9 +26,8 @@
                                         <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
                                     </div>
                                     <div class="custom-file">
-                                        <input id="dynamics-file" type="file" name="file" class="custom-file-input" id="inputGroupFile01"
-                                               aria-describedby="inputGroupFileAddon01">
-                                        <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                                        <input id="dynamics-file" type="file" name="file" class="custom-file-input">
+                                        <label class="custom-file-label" for="dynamics-file">Choose file</label>
                                     </div>
                                 </div>
                             </div>
@@ -48,45 +47,6 @@
                         <button type="submit" id="formSecond-submit-button" value="Submit" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal that comes on clicking 'Custom Tree' -->
-    <div class="modal fade" id="initialCustomTreeModal" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Input domain knowledge:</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <!-- evaluatePredicateImpurityForm: Selects domain knowledge -->
-                <form id="evaluatePredicateImpurityForm">
-                    <div class="modal-body" id="formSecondBody">
-                        <div>
-                            <label for="init_domain_knowledge">Input predicate:</label>
-                            <div class="search_categories">
-                                <input type="text" id="init_domain_knowledge" name="init_domain_knowledge"><br><br>
-                            </div>
-                            <div>Computed Impurity: <span id="computedImpurity"></span></div>
-
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="addToDomainKnowledgeTableButton" style="visibility: hidden;" type="button"
-                                onclick="addToDomainKnowledgeTable()" class="btn btn-primary">Add
-                        </button>
-                        <button id="evaluatePredicateImpurityFormButton" type="submit" value="Send" class="btn btn-primary">
-                            Evaluate
-                        </button>
-                        <button type="button" onclick="closeInitialCustomTreeModal()" class="btn btn-primary">Done</button>
-                    </div>
-
-                </form>
-
             </div>
         </div>
     </div>
@@ -204,6 +164,7 @@
         </div>
 
         <div id="mainRow-interactive" class="row ml-2 d-none">
+
             <div class="col-lg-6">
                 <div class="card shadow mb-4">
                     <div class="card-body h-100">
@@ -272,6 +233,8 @@
                         </div>
                     </div>
                 </div>
+
+
             </div>
         </div>
 

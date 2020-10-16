@@ -992,8 +992,7 @@ $(document).ready(function () {
 
     if (isSimulator) {
         // If we are in simulator, there is no need for having the "load controller directory" etc available
-        document.getElementById("controllerSearchDirectoryRow").remove();
-        document.getElementById("controllerSelectRow").remove();
+        document.getElementById("controller-upload-row").remove();
         document.getElementById("add-experiments-button").remove();
         document.getElementById("retrain-button").classList.remove("d-none");
         document.getElementById("interactive-button").classList.remove("d-none");
@@ -1639,55 +1638,6 @@ function addToDomainKnowledgeTable() {
     document.getElementById('init_domain_knowledge').value = "";
     document.getElementById('addToDomainKnowledgeTableButton').style.visibility = 'hidden';
 }
-
-// function closeInitialCustomTreeModal() {
-//     $.ajax({
-//         data: JSON.stringify({
-//             domainKnowledge: (finalDomainKnowledge)
-//         }),
-//         type: 'POST',
-//         contentType: "application/json; charset=utf-8",
-//         url: '/featureLabelSpecifications'
-//     })
-//         .done(function (data) {
-//             for (var i = 0; i < data.feature_specifications.length; i++) {
-//                 const dumrow = document.createElement('tr');
-//
-//                 for (var j = 0; j < data.feature_specifications[i].length; j++) {
-//                     const drc0 = document.createElement('td');
-//                     drc0.textContent = data.feature_specifications[i][j];
-//                     dumrow.appendChild(drc0);
-//                 }
-//
-//                 document.getElementById("featureSpecificationTable").appendChild(dumrow);
-//             }
-//             for (var i = 0; i < data.label_specifications.length; i++) {
-//                 const dumrow = document.createElement('tr');
-//
-//                 for (var j = 0; j < data.label_specifications[i].length; j++) {
-//                     const drc0 = document.createElement('td');
-//                     drc0.textContent = data.label_specifications[i][j];
-//                     dumrow.appendChild(drc0);
-//                 }
-//
-//                 document.getElementById("labelSpecificationTable").appendChild(dumrow);
-//             }
-//             $('#initialCustomTreeModal').modal('hide');
-//
-//             // Drawing out initial tree now
-//             treeData = [{"name": "Build", "parent": null, "coleur": "white", "children": [], "address": []}]
-//             height = 800;
-//             width = 1000;
-//
-//             constructTree();
-//
-//             root = treeData;
-//             root.x0 = height / 2;
-//             root.y0 = 0;
-//             update(root);
-//             customBuild = true;
-//         })
-// }
 
 function splitNode() {
     var toSendPredicate = $('input[name="buildPredicate"]:checked').val();
