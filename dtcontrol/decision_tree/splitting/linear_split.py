@@ -62,7 +62,7 @@ class LinearSplit(Split, ABC):
         hyperplane = joiner.join(line) + " <= 0"
         return hyperplane.replace('+-', '-')
 
-    def to_json_dict(self, rounded=False, variables=None):
+    def to_json_dict(self, rounded=False, variables=None, **kwargs):
         lhs = []
         for i in range(len(self.real_coefficients)):
             if self.real_coefficients[i] == 0:

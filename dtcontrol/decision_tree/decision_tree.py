@@ -422,5 +422,5 @@ class Node:
         return {
             "actual_label": None,
             "children": children,
-            "split": self.split.to_json_dict(variables=variables)
+            "split": self.split.to_json_dict(variables=variables, category_names=category_names)
         }
