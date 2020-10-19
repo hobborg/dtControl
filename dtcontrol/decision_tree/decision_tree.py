@@ -385,16 +385,42 @@ class Node:
         return f'y <= {str(label)};'
 
     def to_json_dict(self, y_metadata, variables=None, category_names=None):
-        text_label = None
-        if self.actual_label is not None:
-            if isinstance(self.actual_label, list):
-                new_label = [self.print_single_actual_label(label, y_metadata) for label in self.actual_label]
-                text_label = util.split_into_lines(new_label)
-            else:
-                text_label = self.print_single_actual_label(self.actual_label, y_metadata)
+        if self.is_leaf():
+            text_label = None
+            if self.actual_label is not None:
+                if isinstance(self.actual_label, list):
+                    text_label = [str(self.print_single_actual_label(label, y_metadata)) for label in self.actual_label]
+                else:
+                    text_label = [str(self.print_single_actual_label(self.actual_label, y_metadata))]
+            return {
+                "actual_label": text_label,
+                "children": [],
+                "split": None
+            }
+
+        if isinstance(self.split, CategoricalMultiSplit):
+            names = None
+            if category_names and self.split.feature in category_names:
+                names = category_names[self.split.feature]
+            labels = []
+            for group in self.split.value_groups:
+                if len(group) == 1:
+                    label = group[0] if not names else names[group[0]]
+                    labels.append([label])
+                else:
+                    str_group = group if not names else [names[v] for v in group]
+                    labels.append(str_group)
+        else:
+            labels = ['true', 'false']
+
+        children = []
+        for i, child in enumerate(self.children):
+            child_json = child.to_json_dict(y_metadata, variables=variables, category_names=category_names)
+            child_json.update({"edge_label": labels[i]})
+            children.append(child_json)
+
         return {
-            "actual_label": str(text_label),
-            "children": [child.to_json_dict(y_metadata, variables=variables, category_names=category_names) for child in
-                         self.children],
-            "split": self.split.to_json_dict(variables=variables, category_names=category_names) if self.split else None
+            "actual_label": None,
+            "children": children,
+            "split": self.split.to_json_dict(variables=variables)
         }
