@@ -87,7 +87,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
     def toJSON(self, x_metadata, y_metadata):
         variables = x_metadata.get('variables')
         category_names = x_metadata.get('category_names')
-        return json.dumps(self.root.to_json_dict(y_metadata, variables=variables, category_names=category_names), indent=4)
+        return json.dumps(self.root.to_json_dict(y_metadata, variables=variables, category_names=category_names), indent=4, default=util.convert)
 
     # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in
     # the "entity" block

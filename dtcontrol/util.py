@@ -11,6 +11,7 @@ def ignore_convergence_warnings():
     logger.addHandler(handler)
     logger.addFilter(lambda record: "ConvergenceWarning" not in record.getMessage())
 
+
 def format_seconds(sec):
     m, s = divmod(sec, 60)
     h, m = divmod(m, 60)
@@ -20,14 +21,17 @@ def format_seconds(sec):
         return pattern % (h, m, s)
     return ('%d days, ' + pattern) % (d, h, m, s)
 
+
 def split_relevant_extension(filename):
     if filename.endswith('.storm.json'):
         return filename.split('.storm.json')[0], '.storm.json'
     return splitext(filename)
 
+
 def get_filename_and_relevant_extension(filename):
     path, ext = split_relevant_extension(filename)
     return basename(path), ext
+
 
 def make_set(v):
     if v is None:
@@ -39,6 +43,7 @@ def make_set(v):
     except TypeError:
         return {v}
 
+
 def objround(obj, precision):
     if isinstance(obj, list) or isinstance(obj, np.ndarray):
         return [objround(o, precision) for o in obj]
@@ -47,14 +52,18 @@ def objround(obj, precision):
     # if just a float
     return round(obj, precision)
 
+
 def print_tuple(t):
     return f'({", ".join([str(e) for e in t])})'
+
 
 def print_list(l):
     return f'[{", ".join([str(e) for e in l])}]'
 
+
 def print_set(s):
     return f'{{{", ".join([str(e) for e in s])}}}'
+
 
 def split_into_lines(l):
     if not isinstance(l, list) or len(l) < 5:
@@ -66,17 +75,20 @@ def split_into_lines(l):
         i += 5
     return '[' + '\\n'.join(l2) + ']'
 
+
 def peek_line(file):
     pos = file.tell()
     line = file.readline()
     file.seek(pos)
     return line
 
+
 def log_without_newline(msg):
     old_terminator = logging.StreamHandler.terminator
     logging.StreamHandler.terminator = ""
     logging.info(msg)
     logging.StreamHandler.terminator = old_terminator
+
 
 def is_int(s):
     try:
@@ -85,3 +97,8 @@ def is_int(s):
     except ValueError:
         return False
 
+
+def convert(o):
+    if isinstance(o, np.int64):
+        return int(o)
+    raise TypeError
