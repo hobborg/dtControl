@@ -220,7 +220,6 @@ $(document).ready(function () {
                     // For handling the progress of the upload
                     myXhr.upload.addEventListener('progress', function (e) {
                         if (e.lengthComputable) {
-                            $('.progress').removeClass('invisible');
                             $('#controller-file-upload-progress').attr({
                                 'aria-valuenow': e.loaded
                             })
@@ -232,6 +231,51 @@ $(document).ready(function () {
             }
         }).done(() => {
             document.getElementById("add-experiments-button").disabled = false;
+        });
+    });
+
+    $('#metadata-file').on('change', function () {
+        //get the file name
+        let fileName = $(this).val().replace('C:\\fakepath\\', "");
+        if (!fileName.endsWith(".json")) {
+            alert("Invalid metadata file. Expected a JSON file.");
+            return ;
+        }
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+        let formData = new FormData();
+        formData.append("file", document.getElementById("metadata-file").files[0]);
+        $.ajax({
+            // From https://stackoverflow.com/a/8758614
+            // Your server script to process the upload
+            url: '/upload',
+            type: 'POST',
+
+            // Form data
+            data: formData,
+
+            // Tell jQuery not to process data or worry about content-type
+            // You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('#metadata-file-upload-progress').attr({
+                                'aria-valuenow': e.loaded
+                            })
+                                .width(e.loaded+"%");
+                        }
+                    }, false);
+                }
+                return myXhr;
+            }
         });
     });
 

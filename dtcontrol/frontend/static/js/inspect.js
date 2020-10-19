@@ -993,9 +993,8 @@ $(document).ready(function () {
     if (isSimulator) {
         // If we are in simulator, there is no need for having the "load controller directory" etc available
         document.getElementById("controller-upload-row").remove();
+        document.getElementById("metadata-upload-row").remove();
         document.getElementById("add-experiments-button").remove();
-        document.getElementById("retrain-button").classList.remove("d-none");
-        document.getElementById("interactive-button").classList.remove("d-none");
     //
     //     // Add interactive mode to preset
     //     const option = document.createElement('option');
@@ -1020,7 +1019,7 @@ $(document).ready(function () {
         configuration.safe_pruning = $('#safe-pruning').val();
         configuration.user_predicates = "";
 
-        if (configuration.config == "automatic") {
+        if (configuration.config == "algebraic") {
             configuration.config += " (Fallback: " + $("#fallback").val() + ")";
             configuration.numeric_predicates = [""];
             configuration.categorical_predicates = [""];
@@ -1111,6 +1110,9 @@ $(document).ready(function () {
             document.getElementById("expandAllButton").removeAttribute("disabled");
             document.getElementById("collapseAllButton").removeAttribute("disabled");
 
+            document.getElementById("retrain-button").classList.add("d-none");
+            document.getElementById("interactive-button").classList.add("d-none");
+
             // editMode = false;
             disableNodeSelect();
             // update(root);
@@ -1131,6 +1133,9 @@ $(document).ready(function () {
             deactivateSimulator();
             deactivateInspect();
             // Activate Edit Mode
+            document.getElementById("retrain-button").classList.remove("d-none");
+            document.getElementById("interactive-button").classList.remove("d-none");
+
             document.getElementById("expandAllButton").disabled = "true";
             document.getElementById("collapseAllButton").disabled = "true";
 
