@@ -30,7 +30,7 @@ experiments = []
 results = {}
 
 # computed configurations from the benchmark view
-completed_experiements = {}
+completed_experiments = {}
 selected_computation_id = None
 
 # contains (variable_name, value) pairs obtained from dynamics.txt file present in examples folder
@@ -91,14 +91,14 @@ def discretize(x):
     diff = []
 
     # step size (used in discretisation) for each of the state variables
-    stepSize = completed_experiements[selected_computation_id]["step_size"]
+    stepSize = completed_experiments[selected_computation_id]["step_size"]
 
     # iterate over each state variables (x's)
-    numVars = completed_experiements[selected_computation_id]["num_vars"]
+    numVars = completed_experiments[selected_computation_id]["num_vars"]
 
     # list of lower and upper bounds for each of the state variables
-    minBounds = completed_experiements[selected_computation_id]["min_bounds"]
-    maxBounds = completed_experiements[selected_computation_id]["max_bounds"]
+    minBounds = completed_experiments[selected_computation_id]["min_bounds"]
+    maxBounds = completed_experiments[selected_computation_id]["max_bounds"]
 
     for i in range(numVars):
         # SCOTS picks the closest grid point
@@ -158,7 +158,7 @@ def resultsRoute():
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
 def construct():
-    global completed_experiements
+    global completed_experiments
     data = request.get_json()
     logging.info("Request: \n", data)
     id = int(data['id'])
@@ -195,8 +195,8 @@ def construct():
         stepSize = classifier["x_metadata"]["step_size"]
         run_time = round(classifier["run_time"], 2)
 
-        # completed_experiements[id] = (classifier["classifier_as_json"], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
-        completed_experiements[id] = {
+        # completed_experiments[id] = (classifier["classifier_as_json"], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
+        completed_experiments[id] = {
             "classifier_as_json": classifier["classifier_as_json"],
             "saved_tree": saved_tree,
             "min_bounds": minBounds,
@@ -242,7 +242,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 
 @app.route("/construct-partial/from-preset", methods=['POST'])
 def partial_construct():
-    global completed_experiements, results
+    global completed_experiments, results
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -268,7 +268,7 @@ def partial_construct():
     saved_tree = None
     try:
         node_address = data["selected_node"]
-        saved_tree = completed_experiements[id]["saved_tree"]
+        saved_tree = completed_experiments[id]["saved_tree"]
         to_parse_dict["existing_tree"] = saved_tree
         to_parse_dict["base_node_address"] = node_address
     except KeyError:
@@ -285,7 +285,7 @@ def partial_construct():
             updated_tree = classifier["classifier"].root
 
         # Then re-generate the json
-        saved_json = completed_experiements[id]["classifier_as_json"]
+        saved_json = completed_experiments[id]["classifier_as_json"]
         if node_address:
             updated_json = insert_into_json_tree(node_address, saved_json, classifier["classifier_as_json"])
         else:
@@ -293,7 +293,7 @@ def partial_construct():
 
         partial_json = classifier["classifier_as_json"]
 
-        completed_experiements[id].update({
+        completed_experiments[id].update({
             "classifier_as_json": updated_json,
             "saved_tree": updated_tree
         })
@@ -308,7 +308,7 @@ def partial_construct():
 
 @app.route("/construct-partial/interactive", methods=['POST'])
 def interactive_construct():
-    global completed_experiements
+    global completed_experiments, results
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -322,7 +322,7 @@ def interactive_construct():
     saved_tree = None
     try:
         node_address = data["selected_node"]
-        saved_tree = completed_experiements[id]["saved_tree"]
+        saved_tree = completed_experiments[id]["saved_tree"]
         to_parse_dict["existing_tree"] = saved_tree
         to_parse_dict["base_node_address"] = node_address
     except KeyError:
@@ -344,7 +344,7 @@ def interactive_construct():
             updated_tree = classifier["classifier"].root
 
         # Then re-generate the json
-        saved_json = completed_experiements[id]["classifier_as_json"]
+        saved_json = completed_experiments[id]["classifier_as_json"]
         if node_address:
             updated_json = insert_into_json_tree(node_address, saved_json, classifier["classifier_as_json"])
         else:
@@ -352,10 +352,12 @@ def interactive_construct():
 
         partial_json = classifier["classifier_as_json"]
 
-        completed_experiements[id].update({
+        completed_experiments[id].update({
             "classifier_as_json": updated_json,
             "saved_tree": updated_tree
         })
+
+        results[id]["status"] = "Edited"
 
     except Exception as e:
         print_exc()
@@ -395,7 +397,7 @@ def simulator():
 @app.route("/computed")
 def computed():
     global selected_computation_id
-    selected_experiment = completed_experiements[selected_computation_id]
+    selected_experiment = completed_experiments[selected_computation_id]
     returnDict = {
         "idUnderInspection": selected_computation_id,
         "classifier": selected_experiment["classifier_as_json"],
@@ -415,7 +417,7 @@ def initroute():
     x = data['pass']
     dynamics_text = data['dynamics'].split('\n')
 
-    saved_tree = completed_experiements[id]["saved_tree"]
+    saved_tree = completed_experiments[id]["saved_tree"]
 
     # Predict_one_step returns the decision taken as well as the path (list of ints) to reach that decision
     initDecision = saved_tree.predict_one_step(np.array([discretize(x)]))
@@ -461,7 +463,7 @@ def stepRoute():
     x = data['x_pass']
     u = data['u_pass']
 
-    saved_tree = completed_experiements[id]["saved_tree"]
+    saved_tree = completed_experiments[id]["saved_tree"]
     # Returns updated states variables
     x_new_non_classify = runge_kutta(list(x), u)
     newu_path = saved_tree.predict_one_step(np.array([discretize(list(x_new_non_classify))]))
@@ -478,7 +480,7 @@ def inStepRoute():
     x = data['x_pass']
     u = data['u_pass']
 
-    saved_tree = completed_experiements[id]["saved_tree"]
+    saved_tree = completed_experiments[id]["saved_tree"]
     x_new = []
     dummy = [x, u, "", False]
     for i in range(int(steps)):
