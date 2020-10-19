@@ -27,7 +27,7 @@ logging.basicConfig(format="%(threadName)s: %(message)s")
 # stored experiments
 experiments = []
 # stored results
-results = []
+results = {}
 
 # computed configurations from the benchmark view
 completed_experiements = {}
@@ -165,16 +165,18 @@ def construct():
     cont = os.path.join(UPLOAD_FOLDER, data['controller'])
     nice_name = data['nice_name']
     config = data['config']
-    results.append([id, cont, nice_name, config, 'Running...', None, None, None])
+    # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
+    results[id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
+                   "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
         to_parse_dict = {"controller": cont, "determinize": data['determinize'],
                          "numeric-predicates": data['numeric_predicates'],
                          "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
-    elif config.startswith("automatic"):
-        # automatic strategy with user predicates
-        to_parse_dict = {"controller": cont, "config": "automatic", "fallback": config.split("Fallback: ")[1][:-1],
+    elif config.startswith("algebraic"):
+        # algebraic strategy with user predicates
+        to_parse_dict = {"controller": cont, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
                          "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
                          "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
@@ -206,22 +208,18 @@ def construct():
         }
         stats = classifier["classifier"].get_stats()
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
-        this_result = None
-        for result in results:
-            if result[0] == id:
-                this_result = result
-                result[4] = 'Completed'
-                result[5] = new_stats[0]
-                result[6] = new_stats[1]
-                result[7] = new_stats[2]
+        # this_result = results[id]
+        results[id]["status"] = "Completed"
+        results[id]["inner_nodes"] = new_stats[0]
+        results[id]["leaf_nodes"] = new_stats[1]
+        results[id]["construction_time"] = new_stats[2]
+
+
     except Exception as e:
         print_exc()
-        for result in results:
-            if result[0] == id:
-                this_result = result
-                result[4] = 'Error / ' + type(e).__name__
+        results[id]["status"] = "Error / " + type(e).__name__
 
-    return jsonify(this_result)
+    return jsonify(results[id])
 
 
 # First call that receives controller and config and returns constructed tree
@@ -244,7 +242,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 
 @app.route("/construct-partial/from-preset", methods=['POST'])
 def partial_construct():
-    global completed_experiements
+    global completed_experiements, results
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -258,9 +256,9 @@ def partial_construct():
                          "numeric-predicates": data['numeric_predicates'],
                          "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
-    elif config.startswith("automatic"):
-        # automatic strategy with user predicates
-        to_parse_dict = {"controller": controller_file, "config": "automatic", "fallback": config.split("Fallback: ")[1][:-1],
+    elif config.startswith("algebraic"):
+        # algebraic strategy with user predicates
+        to_parse_dict = {"controller": controller_file, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
                          "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
                          "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
@@ -299,6 +297,8 @@ def partial_construct():
             "classifier_as_json": updated_json,
             "saved_tree": updated_tree
         })
+
+        results[id]["status"] = "Edited"
 
     except Exception as e:
         print_exc()
@@ -394,6 +394,7 @@ def simulator():
 # returns the computed tree
 @app.route("/computed")
 def computed():
+    global selected_computation_id
     selected_experiment = completed_experiements[selected_computation_id]
     returnDict = {
         "idUnderInspection": selected_computation_id,

@@ -52,17 +52,11 @@ function loadPresets() {
             option.setAttribute('value', "custom");
             app.appendChild(option);
 
-            // Add interactive mode to preset
+            // Add algebraic/user-defined mode to preset
             const option2 = document.createElement('option');
-            option2.textContent = "interactive";
-            option2.setAttribute('value', "interactive");
+            option2.textContent = "algebraic / user-defined";
+            option2.setAttribute('value', "algebraic");
             app.appendChild(option2);
-
-            // Add automatic mode to preset
-            const option3 = document.createElement('option');
-            option3.textContent = "automatic";
-            option3.setAttribute('value', "automatic");
-            app.appendChild(option3);
 
             fillYML(preset_json);
 
@@ -202,7 +196,7 @@ $(document).ready(function () {
 
     // Handles changing of form selections when different configs are changed
     $("#config").change(function () {
-        if ($(this).val() != "custom" && $(this).val() != "interactive" && $(this).val() != "automatic") {
+        if ($(this).val() != "custom" && $(this).val() != "algebraic") {
             // clearCheckBoxes();
             for (x in preset_json.presets) {
                 //x is  preset names
@@ -242,16 +236,11 @@ $(document).ready(function () {
                 }
             }
         }
-        else if ($(this).val() == "custom"){
+        else if ($(this).val() == "custom") {
             // In case custom is selected
             $('#accordionButton').click();
         }
-        else if ($(this).val() == "interactive"){
-            // In case interactive mode is selected
-        }
-        else if ($(this).val() == "automatic"){
-
-
+        else if ($(this).val() == "algebraic") {
             document.getElementById("userPredicatesInputRow").classList.remove("collapse");
             document.getElementById("fallbackSelectRow").classList.remove("collapse");
 
@@ -259,8 +248,6 @@ $(document).ready(function () {
             document.getElementById("categoricalPredicatesSelectRow").classList.add("collapse");
             document.getElementById("tolerance").value = 0.00001;
         }
-
-
     });
 
     // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls

@@ -43,17 +43,120 @@ function loadControllers(path) {
     http.send(params);
 }
 
+function getResultsTableRow(id) {
+    let rows = $("#results-table tbody tr");
+    for (let j = 0; j < rows.length; j++) {
+        const experiment_id = rows[j].children[0].innerHTML;
+        if (experiment_id == id) {
+            return rows[j];
+        }
+    }
+}
+
+function addToResultsTable(id, result) {
+    // This function is called both when
+    // 1. a new experiment is started
+    // 2. to populate the results table when results arrive from polling
+    // 3. to populate the results table when the page is refreshed
+
+    // Table columns
+    // 0: id
+    // 1: controller
+    // 2: nice_name
+    // 3: preset
+    // 4: status
+    // 5: inner_nodes
+    // 6: leaf_nodes
+    // 7: construction_time
+    function createRow(table_selector, id, row_data) {
+        let experimentRow = table_selector.insertRow(-1);
+        let firstCell = experimentRow.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(id) + "</th>";
+        for (let j = 1; j <= 7; j++) {
+            const cell = experimentRow.insertCell(-1);
+            switch (j) {
+                case 1:
+                    cell.style = "display: none";
+                    cell.innerHTML = row_data.controller;
+                    break;
+                case 2:
+                    cell.innerHTML = row_data.nice_name;
+                    break;
+                case 3:
+                    cell.innerHTML = row_data.preset;
+                    break;
+                case 4:
+                    cell.innerHTML = row_data.status;
+                    break;
+                case 5:
+                    cell.innerHTML = row_data.inner_nodes;
+                    break;
+                case 6:
+                    cell.innerHTML = row_data.leaf_nodes;
+                    break;
+                case 7:
+                    cell.innerHTML = row_data.construction_time.milliSecondsToHHMMSS();
+                    break;
+                default:
+                    break;
+            }
+        }
+        return experimentRow;
+    }
+
+    $("#results-table tr.special").hide();
+    var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+
+    if (result.status === "Completed" || result.status === "Edited") {
+        let experimentRow = getResultsTableRow(id);
+        if (!experimentRow) {
+            experimentRow = createRow(table, id, result);
+        }
+
+        experimentRow.children[4].innerHTML = result.status;
+        if (result.status === "Completed") {
+            experimentRow.children[5].innerHTML = result.inner_nodes;
+            experimentRow.children[6].innerHTML = result.leaf_nodes;
+            experimentRow.children[7].innerHTML = result.construction_time.milliSecondsToHHMMSS();
+        }
+        else {
+            experimentRow.children[5].innerHTML = "";
+            experimentRow.children[6].innerHTML = "";
+            experimentRow.children[7].innerHTML = "";
+        }
+
+        if (experimentRow.children.length < 9) {
+            let lastCell = experimentRow.insertCell(-1);
+            lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
+            $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
+                $.post('/select', {runConfigIndex: id}, () => {
+                    window.location.href = 'simulator'
+                });
+            });
+        }
+    }
+    else if (result.status.startsWith("Error")) {
+        let experimentRow = getResultsTableRow(id);
+        if (experimentRow) {
+            experimentRow.children[4].innerHTML = result.status;
+        } else {
+            experimentRow = createRow(table, id, result);
+        }
+    }
+}
+
 function startPolling() {
         console.log('start interval');
         const interval = setInterval(() => {
             $.get('/results', results => {
                 console.log(results);
-                results.filter(r => r[3] === 'Completed').forEach(r => {
-                    const row = getResultsTableRow(r[0]);
+                let filtered = Object.fromEntries(Object.entries(results).filter(([k, v]) => v.status === "Completed"));
+                for (const [id, result] of Object.entries(filtered)) {
+                    const row = getResultsTableRow(id);
                     if (row.children[3].innerHTML === 'Running...') {
-                        addToResultsTable(r);
+                        addToResultsTable(result);
                     }
-                });
+                }
                 if (results.every(r => r[3] === 'Completed')) {
                     clearInterval(interval);
                 }
@@ -69,9 +172,11 @@ $(document).ready(function () {
     //MJ load data and init listeners
     $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
     $.get('/results', results => {
-        results.forEach(e => addToResultsTable(e));
-        if (results.some(r => r[3] === 'Running...')) {
-            startPolling();
+        for (const [id, result] of Object.entries(results)) {
+            addToResultsTable(id, result);
+            if (result.status === "Running...") {
+                startPolling();
+            }
         }
     });
 
@@ -147,7 +252,7 @@ $(document).ready(function () {
         var safe_pruning = $('#safe-pruning').val();
         var user_predicates = "";
 
-        if (config == "automatic") {
+        if (config == "algebraic") {
             config += " (Fallback: " + $("#fallback").val() + ")";
             numeric_predicates = [""];
             categorical_predicates = [""];
@@ -225,85 +330,12 @@ $(document).ready(function () {
             type: 'POST',
             contentType: "application/json; charset=utf-8",
             url: '/construct',
-            beforeSend: addToResultsTable(config)
-        }).done(data => addToResultsTable(data));
+            beforeSend: initializeInResultsTable(config)
+        }).done(data => addToResultsTable(config[0], data));
     }
 
-    function getResultsTableRow(id) {
-        let rows = $("#results-table tbody tr");
-        for (let j = 0; j < rows.length; j++) {
-            const experiment_id = rows[j].children[0].innerHTML;
-            if (parseInt(experiment_id, 10) === id) {
-                return rows[j];
-            }
-        }
-    }
-
-    function addToResultsTable(row_contents) {
-        // This function is called both when
-        // 1. a new experiment is started
-        // 2. to populate the results table when results arrive from polling
-        // 3. to populate the results table when the page is refreshed
-
-        $("#results-table tr.special").hide();
-        var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
-
-        if (row_contents[4] == "Completed") {
-            let experimentRow = getResultsTableRow(row_contents[0]);
-            if (experimentRow) {
-                for (let j = 4; j <= 7; j++) {
-                    experimentRow.children[j].innerHTML = row_contents[j];
-                }
-                experimentRow.children[7].innerHTML = row_contents[7].milliSecondsToHHMMSS();
-            } else {
-                experimentRow = table.insertRow(-1);
-                var firstCell = experimentRow.insertCell(-1);
-                firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-                for (let j = 1; j <= 7; j++) {
-                    const cell = experimentRow.insertCell(-1);
-                    if (j == 1) {
-                        cell.style = "display: none";
-                    }
-                    if (j <= 6) {
-                        cell.innerHTML = row_contents[j];
-                    }
-                    if (j == 7) {
-                        cell.innerHTML = row_contents[j].milliSecondsToHHMMSS();
-                    }
-                }
-            }
-            if (experimentRow.children.length < 9) {
-                let lastCell = experimentRow.insertCell(-1);
-                lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
-                $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
-                    $.post('/select', {runConfigIndex: row_contents[0]}, () => {
-                        window.location.href = 'simulator'
-                    });
-                });
-            }
-        } else if (row_contents[4].startsWith("Error")) {
-            let experimentRow = getResultsTableRow(row_contents[0]);
-            if (experimentRow) {
-                experimentRow.children[4].innerHTML = row_contents[4];
-            } else {
-                experimentRow = table.insertRow(-1);
-                firstCell = experimentRow.insertCell(-1);
-                firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-                for (let j = 1; j <= 7; j++) {
-                    const cell = experimentRow.insertCell(-1);
-                    if (j === 1) {
-                        cell.style = "display: none";
-                    }
-                    if (j <= 3) {
-                        cell.innerHTML = row_contents[j];
-                    }
-                    if (j === 4) {
-                        cell.innerHTML = row_contents[j];
-                    }
-                }
-            }
-        } else { // This is the case where a new controller is added
-            /*
+    function initializeInResultsTable(row_contents) {
+        /*
                 id: row_contents[0],
                 controller: row_contents[1],
                 nice_name: row_contents[2],
@@ -315,21 +347,22 @@ $(document).ready(function () {
                 tolerance: row_contents[8],
                 safe_pruning: row_contents[9]
              */
-            // Create an empty <tr> element and add it to the 1st position of the table:
-            var row = table.insertRow(-1);
-            var firstCell = row.insertCell(-1);
-            firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
-            for (let j = 1; j <= 7; j++) {
-                const cell = row.insertCell(-1);
-                if (j == 1) {
-                    cell.style = "display: none";
-                }
-                if (j <= 3) {
-                    cell.innerHTML = row_contents[j];
-                }
-                if (j == 4) {
-                    cell.innerHTML = "Running...";
-                }
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        $("#results-table tr.special").hide();
+        let table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+        let row = table.insertRow(-1);
+        let firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+        for (let j = 1; j <= 7; j++) {
+            const cell = row.insertCell(-1);
+            if (j === 1) {
+                cell.style = "display: none";
+            }
+            if (j <= 3) {
+                cell.innerHTML = row_contents[j];
+            }
+            if (j === 4) {
+                cell.innerHTML = "Running...";
             }
         }
     }
