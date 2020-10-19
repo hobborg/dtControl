@@ -6,6 +6,7 @@ import numpy as np
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
+
 class CategoricalMultiSplittingStrategy(SplittingStrategy):
     def __init__(self, value_grouping=False, tolerance=1e-5):
         """
@@ -65,6 +66,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
                         best_new_value_groups = new_groups
         return value_groups, impurity
 
+
 class CategoricalMultiSplit(Split):
     def __init__(self, feature, value_groups=None):
         self.feature = feature
@@ -100,3 +102,10 @@ class CategoricalMultiSplit(Split):
 
     def print_vhdl(self):
         return f'x{self.feature}]'
+
+    def to_json_dict(self, variables=None, **kwargs):
+        return {
+            "lhs":
+                {"coeff": 1, "var": variables[self.feature] if variables else self.feature},
+            "op": "multi",
+            "rhs": ""}

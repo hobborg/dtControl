@@ -10,6 +10,7 @@ from os.path import join, exists, isfile
 
 import numpy as np
 from jinja2 import FileSystemLoader, Environment
+import json
 
 import dtcontrol
 from dtcontrol import util
@@ -155,7 +156,7 @@ class BenchmarkSuite:
             else:
                 stats = classifier.get_stats()
                 cell = {'stats': stats, 'time': format_seconds(run_time)}
-                self.save_dot_and_c(classifier, dataset)
+                self.save_dot_c_json(classifier, dataset)
                 # if not isinstance(classifier, OC1Wrapper):
                 #     vhdl_filename = self.get_filename(self.output_folder, dataset, classifier, '.vhdl')
                 #     classifier.print_vhdl(len(dataset.x_metadata["variables"]), vhdl_filename)
@@ -167,7 +168,7 @@ class BenchmarkSuite:
             cell = 'timeout'
         return cell
 
-    def save_dot_and_c(self, classifier, dataset):
+    def save_dot_c_json(self, classifier, dataset):
         # TODO: as seen with the BDDs, this should probably be abstracted. For instance, the classifier itself could
         # provide a list of file formats that it can print to and the benchmark suite would then simply call the
         # corresponding methods
@@ -187,6 +188,10 @@ class BenchmarkSuite:
         c_filename = self.get_filename(self.output_folder, dataset, classifier, '.c')
         with open(c_filename, 'w+') as outfile:
             outfile.write(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
+
+        json_filename = self.get_filename(self.output_folder, dataset, classifier, '.json')
+        with open(json_filename, 'w+') as outfile:
+            outfile.write(classifier.toJSON(dataset.x_metadata, dataset.y_metadata))
 
     @staticmethod
     def get_filename(folder, dataset, classifier, extension, unique=False):

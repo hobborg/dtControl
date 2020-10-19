@@ -4,6 +4,7 @@ import numpy as np
 
 from dtcontrol.decision_tree.splitting.split import Split
 
+
 class LinearSplit(Split, ABC):
     """
     Represents a linear split of the form wTx + b <= 0.
@@ -60,3 +61,16 @@ class LinearSplit(Split, ABC):
         joiner = "\\n+" if newlines else "+"
         hyperplane = joiner.join(line) + " <= 0"
         return hyperplane.replace('+-', '-')
+
+    def to_json_dict(self, rounded=False, variables=None, **kwargs):
+        lhs = []
+        for i in range(len(self.real_coefficients)):
+            if self.real_coefficients[i] == 0:
+                continue
+            coefficient = round(self.real_coefficients[i], 6) if rounded else self.real_coefficients[i]
+            lhs.append({"coeff": coefficient, "var": variables[i] if variables else i})
+        lhs.append({"intercept": round(self.intercept, 6) if rounded else self.intercept})
+        return {
+            "lhs": lhs,
+            "op": "<=",
+            "rhs": 0}

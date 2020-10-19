@@ -1,6 +1,7 @@
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 
+
 class AxisAlignedSplittingStrategy(SplittingStrategy):
     def find_split(self, dataset, impurity_measure):
         x_numeric = dataset.get_numeric_x()
@@ -15,6 +16,7 @@ class AxisAlignedSplittingStrategy(SplittingStrategy):
         if not splits:
             return None
         return min(splits.keys(), key=splits.get)
+
 
 class AxisAlignedSplit(Split):
     """
@@ -42,3 +44,10 @@ class AxisAlignedSplit(Split):
 
     def print_vhdl(self):
         return f'x{self.feature} <= {round(self.threshold, 6)}'
+
+    def to_json_dict(self, rounded=False, variables=None, **kwargs):
+        return {
+            "lhs":
+                {"coeff": 1, "var": variables[self.feature] if variables else self.feature},
+            "op": "<=",
+            "rhs": str(round(self.threshold, 6)) if rounded else str(self.threshold)}
