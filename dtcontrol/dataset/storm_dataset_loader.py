@@ -85,8 +85,8 @@ class StormDatasetLoader(DatasetLoader):
         x_metadata = dict()
         x_metadata["variables"] = x_variables
         x_metadata["categorical"] = []
-        x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
-        x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
+        x_metadata["min_inner"] = x_metadata["min_outer"] = [float(i) for i in np.amin(x, axis=0)]
+        x_metadata["max_inner"] = x_metadata["max_outer"] = [float(i) for i in np.amax(x, axis=0)]
         x_metadata["step_size"] = [1 for _ in x[0]]
 
         index_to_actual = {i+1: i for i in index_to_choice.keys()}

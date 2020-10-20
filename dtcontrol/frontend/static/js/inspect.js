@@ -5,13 +5,14 @@ var totalSims;
 var currentSim;
 
 // List of all simulations
-var x_current = [];
+var xCurrent = [];
 
 // List [lower_bound,upper_bound] elements for state variables
-var x_bounds = [];
+var xBoundsOuter = [];
+var xBoundsInner = [];
 
 // List of all decisions
-var u_current = [];
+var uCurrent = [];
 
 // Last path in tree for colouring (list of integers)
 var lastPath = [];
@@ -458,7 +459,7 @@ function drawCanvas() {
         c.moveTo(225, 160);
         c.lineWidth = 7;
         c.strokeStyle = "#802b00";
-        let currentAngle = parseFloat(x_current[0][currentSim]);
+        let currentAngle = parseFloat(xCurrent[0][currentSim]);
         c.lineTo(225 + lineLength * Math.cos(currentAngle - (Math.PI / 2)), 160 - lineLength * Math.sin(currentAngle - (Math.PI / 2)));
         c.stroke();
     }
@@ -469,7 +470,9 @@ function drawCanvas() {
 // Checks if state variables go out of bounds at any point
 function checkBounds() {
     for (let i = 0; i < numVars; i++) {
-        if (x_current[i][currentSim] < x_bounds[i][0] || x_current[i][currentSim] > x_bounds[i][1]) {
+        console.log("Current bounds: ", xCurrent[i][currentSim]);
+        console.log("Outer bounds: ", xBoundsOuter[i][0], ", ", xBoundsOuter[i][0]);
+        if (xCurrent[i][currentSim] < xBoundsOuter[i][0] || xCurrent[i][currentSim] > xBoundsOuter[i][1]) {
             return false;
         }
     }
@@ -574,7 +577,7 @@ function renderChart(id, data, labels, ub, lb) {
 
 // Called every time when 'Next' or 'Play' button is used
 async function oneStep() {
-    console.log('oneStep is called');
+    console.log((currentSim+1) + ': oneStep is called');
     recolourPath();
 
     if (currentSim == totalSims) {
@@ -586,11 +589,11 @@ async function oneStep() {
 
         let x_toPass = [];
         for (let i = 0; i < numVars; i++) {
-            x_toPass.push(x_current[i][currentSim]);
+            x_toPass.push(xCurrent[i][currentSim]);
         }
         let u_toPass = [];
         for (let i = 0; i < numResults; i++) {
-            u_toPass.push(u_current[i][currentSim]);
+            u_toPass.push(uCurrent[i][currentSim]);
         }
 
         $.ajax({
@@ -640,10 +643,10 @@ async function oneStep() {
                 colourPath(data.x_new[2]);
 
                 for (let i = 0; i < numVars; i++) {
-                    x_current[i].push(data.x_new[0][i]);
+                    xCurrent[i].push(data.x_new[0][i]);
                 }
                 for (let i = 0; i < numResults; i++) {
-                    u_current[i].push(data.x_new[1][i]);
+                    uCurrent[i].push(data.x_new[1][i]);
                 }
 
                 lastPath.push(data.x_new[2]);
@@ -653,13 +656,13 @@ async function oneStep() {
 
                 for (let i = 0; i < numVars; i++) {
                     chart[i].data.labels.push(totalSims);
-                    chart[i].data.datasets[1].data.push(x_bounds[i][1]);
-                    chart[i].data.datasets[2].data.push(x_bounds[i][0]);
+                    chart[i].data.datasets[1].data.push(xBoundsOuter[i][1]);
+                    chart[i].data.datasets[2].data.push(xBoundsOuter[i][0]);
                     chart[i].update();
                 }
 
                 if (!checkBounds()) {
-                    console.log("disabling now");
+                    console.log("Simulation trace out of bounds, disabling further steps.");
                     nextDisabled = true;
                     clearInterval(plpause);
                 }
@@ -1172,12 +1175,12 @@ $(document).ready(function () {
             width = 200 * getDepth(treeData);
 
             for (let i = 0; i < numVars; i++) {
-                x_current.push([]);
+                xCurrent.push([]);
                 chart.push([]);
                 chartConfig.push([]);
             }
             for (let i = 0; i < numResults; i++) {
-                u_current.push([]);
+                uCurrent.push([]);
             }
 
             if (numChanges == 0) {
@@ -1269,7 +1272,10 @@ $(document).ready(function () {
 
                 opt.appendChild(dumDiv);
 
-                x_bounds.push([data.bound[0][i], data.bound[1][i]]);
+                console.log(i + ": pushing outer bounds " + [data.boundOuter[0][i], data.boundOuter[1][i]]);
+                console.log(i + ": pushing inner bounds " + [data.boundInner[0][i], data.boundInner[1][i]]);
+                xBoundsOuter.push([data.boundOuter[0][i], data.boundOuter[1][i]]);
+                xBoundsInner.push([data.boundInner[0][i], data.boundInner[1][i]])
             }
         });
     }
@@ -1343,10 +1349,10 @@ $(document).ready(function () {
                 colourPath(data.path);
 
                 for (let i = 0; i < numVars; i++) {
-                    x_current[i].push(parseFloat($('#x' + i).val()));
+                    xCurrent[i].push(parseFloat($('#x' + i).val()));
                 }
                 for (let i = 0; i < numResults; i++) {
-                    u_current[i].push(data.decision[i]);
+                    uCurrent[i].push(data.decision[i]);
                 }
 
                 lastPath.push(data.path);
@@ -1354,12 +1360,12 @@ $(document).ready(function () {
                 currentSim = 0;
 
                 if (!checkBounds()) {
-                    console.log("disabling now");
+                    console.log("Simulation trace out of bounds, disabling further steps.");
                     nextDisabled = true;
                 }
 
                 for (let i = 0; i < numVars; i++) {
-                    renderChart(i, x_current[i], [...Array(currentSim + 1).keys()], [x_bounds[i][1]], [x_bounds[i][0]]);
+                    renderChart(i, xCurrent[i], [...Array(currentSim + 1).keys()], [xBoundsOuter[i][1]], [xBoundsOuter[i][0]]);
                 }
 
                 drawCanvas();
@@ -1450,11 +1456,11 @@ $(document).ready(function () {
             recolourPath();
             let x_toPass = [];
             for (let i = 0; i < numVars; i++) {
-                x_toPass.push(x_current[i][currentSim]);
+                x_toPass.push(xCurrent[i][currentSim]);
             }
             let u_toPass = [];
             for (let i = 0; i < numResults; i++) {
-                u_toPass.push(u_current[i][currentSim]);
+                u_toPass.push(uCurrent[i][currentSim]);
             }
             let steps = $('#steps').val();
             if (steps === "") {
@@ -1502,10 +1508,10 @@ $(document).ready(function () {
                         scrollToEndOfTable();
 
                         for (let j = 0; j < numVars; j++) {
-                            x_current[j].push(data.x_new[i][0][j]);
+                            xCurrent[j].push(data.x_new[i][0][j]);
                         }
                         for (let j = 0; j < numResults; j++) {
-                            u_current[j].push(data.x_new[i][1][j]);
+                            uCurrent[j].push(data.x_new[i][1][j]);
                         }
 
                         lastPath.push(data.x_new[i][2]);
@@ -1514,12 +1520,12 @@ $(document).ready(function () {
 
                         for (let j = 0; j < numVars; j++) {
                             chart[j].data.labels.push(totalSims);
-                            chart[j].data.datasets[1].data.push(x_bounds[j][1]);
-                            chart[j].data.datasets[2].data.push(x_bounds[j][0]);
+                            chart[j].data.datasets[1].data.push(xBoundsOuter[j][1]);
+                            chart[j].data.datasets[2].data.push(xBoundsOuter[j][0]);
                         }
 
                         if (!checkBounds()) {
-                            console.log("disabling now");
+                            console.log("Simulation trace out of bounds, disabling further steps.");
                             nextDisabled = true;
                             clearInterval(plpause);
                             break;
@@ -1682,8 +1688,8 @@ function splitNode() {
 // Randomize button in Modal for selecting initial values of state variables
 function randomizeInputs() {
     for (let i = 0; i < numVars; i++) {
-        let range = x_bounds[i][1] - x_bounds[i][0];
-        document.getElementById('x' + i).value = x_bounds[i][0] + (Math.random() * range);
+        let range = xBoundsInner[i][1] - xBoundsInner[i][0];
+        document.getElementById('x' + i).value = xBoundsInner[i][0] + (Math.random() * range);
     }
 }
 

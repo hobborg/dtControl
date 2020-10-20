@@ -49,8 +49,8 @@ class CSVDatasetLoader(DatasetLoader):
             x_metadata = dict()
             x_metadata["variables"] = [f"x_{i}" for i in range(state_dim)]
             x_metadata["categorical"] = []
-            x_metadata["min"] = [int(i) for i in np.amin(x, axis=0)]
-            x_metadata["max"] = [int(i) for i in np.amax(x, axis=0)]
+            x_metadata["min_inner"] = x_metadata["min_outer"] = [float(i) for i in np.amin(x, axis=0)]
+            x_metadata["max_inner"] = x_metadata["max_outer"] = [float(i) for i in np.amax(x, axis=0)]
             x_metadata["step_size"] = None  # todo
 
             y_metadata = dict()

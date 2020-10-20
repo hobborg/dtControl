@@ -91,30 +91,29 @@ def discretize(x):
     diff = []
 
     # step size (used in discretisation) for each of the state variables
-    stepSize = completed_experiments[selected_computation_id]["step_size"]
+    step_size = completed_experiments[selected_computation_id]["step_size"]
 
     # iterate over each state variables (x's)
-    numVars = completed_experiments[selected_computation_id]["num_vars"]
+    num_vars = completed_experiments[selected_computation_id]["num_vars"]
 
     # list of lower and upper bounds for each of the state variables
-    minBounds = completed_experiments[selected_computation_id]["min_bounds"]
-    maxBounds = completed_experiments[selected_computation_id]["max_bounds"]
+    min_bounds_outer = completed_experiments[selected_computation_id]["min_bounds_outer"]
 
-    for i in range(numVars):
+    for i in range(num_vars):
         # SCOTS picks the closest grid point
-        # for xx in np.arange(minBounds[i], maxBounds[i]+stepSize[i], stepSize[i]):
+        # for xx in np.arange(min_bounds_outer[i], maxBounds[i]+step_size[i], step_size[i]):
         #     if round(xx, 6) > round(x[i], 6):  # TODO Fix this mess
-        #         if xx - x[i] > x[i] - xx - stepSize[i]:
-        #             diff.append(xx - stepSize[i])
+        #         if xx - x[i] > x[i] - xx - step_size[i]:
+        #             diff.append(xx - step_size[i])
         #         else:
         #             diff.append(xx)
-        #         # print(x[i], xx, minBounds[i] + stepSize[i] * (1 + int((x[i] - minBounds[i]) / stepSize[i])),
-        #         #       minBounds[i] + stepSize[i] * math.ceil((x[i] - minBounds[i]) / stepSize[i]))
+        #         # print(x[i], xx, min_bounds_outer[i] + step_size[i] * (1 + int((x[i] - min_bounds_outer[i]) / step_size[i])),
+        #         #       min_bounds_outer[i] + step_size[i] * math.ceil((x[i] - min_bounds_outer[i]) / step_size[i]))
         #         break
 
         # Reference: https://gitlab.lrz.de/matthias/SCOTSv0.2/-/blob/master/src/UniformGrid.hh#L234
-        halfStepSize = (stepSize[i] / 2.0)
-        diff.append((((x[i] - minBounds[i]) + halfStepSize) // stepSize[i]) * stepSize[i] + minBounds[i])
+        half_step_size = (step_size[i] / 2.0)
+        diff.append((((x[i] - min_bounds_outer[i]) + half_step_size) // step_size[i]) * step_size[i] + min_bounds_outer[i])
     return diff
 
 
@@ -188,22 +187,26 @@ def construct():
         # root is saved in a global variable for use later
         saved_tree = classifier["classifier"].root
 
-        numVars = len(classifier["x_metadata"]["min"])
-        numResults = len(classifier["y_metadata"]["variables"]) if "variables" in classifier["y_metadata"] else 0
-        minBounds = classifier["x_metadata"]["min"]
-        maxBounds = classifier["x_metadata"]["max"]
-        stepSize = classifier["x_metadata"]["step_size"]
+        num_vars = len(classifier["x_metadata"]["min_inner"])
+        num_results = len(classifier["y_metadata"]["variables"]) if "variables" in classifier["y_metadata"] else 0
+        min_bounds_inner = classifier["x_metadata"]["min_inner"]
+        max_bounds_inner = classifier["x_metadata"]["max_inner"]
+        min_bounds_outer = classifier["x_metadata"]["min_outer"]
+        max_bounds_outer = classifier["x_metadata"]["max_outer"]
+        step_size = classifier["x_metadata"]["step_size"]
         run_time = round(classifier["run_time"], 2)
 
-        # completed_experiments[id] = (classifier["classifier_as_json"], saved_tree, minBounds, maxBounds, stepSize, numVars, numResults, cont)
+        # completed_experiments[id] = (classifier["classifier_as_json"], saved_tree, min_bounds_inner, max_bounds_inner, step_size, num_vars, num_results, cont)
         completed_experiments[id] = {
             "classifier_as_json": classifier["classifier_as_json"],
             "saved_tree": saved_tree,
-            "min_bounds": minBounds,
-            "max_bounds": maxBounds,
-            "step_size": stepSize,
-            "num_vars": numVars,
-            "num_results": numResults,
+            "min_bounds_inner": min_bounds_inner,
+            "max_bounds_inner": max_bounds_inner,
+            "min_bounds_outer": min_bounds_outer,
+            "max_bounds_outer": max_bounds_outer,
+            "step_size": step_size,
+            "num_vars": num_vars,
+            "num_results": num_results,
             "controller": cont
         }
         stats = classifier["classifier"].get_stats()
@@ -403,7 +406,8 @@ def computed():
         "classifier": selected_experiment["classifier_as_json"],
         "numVars": selected_experiment["num_vars"],
         "numResults": selected_experiment["num_results"],
-        "bound": [selected_experiment["min_bounds"], selected_experiment["max_bounds"]],
+        "boundInner": [selected_experiment["min_bounds_inner"], selected_experiment["max_bounds_inner"]],
+        "boundOuter": [selected_experiment["min_bounds_outer"], selected_experiment["max_bounds_outer"]],
         "controllerFile": selected_experiment["controller"]
     }
     return jsonify(returnDict)

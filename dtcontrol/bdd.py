@@ -220,8 +220,8 @@ class BDD(BenchmarkSuiteClassifier):
         # bit_values for the state vars
         for i in range(0, len(row)):
             varname = self.x_metadata["variables"][i]
-            min_val = self.x_metadata["min"][i]
-            max_val = self.x_metadata["max"][i]
+            min_val = self.x_metadata["min_outer"][i]
+            max_val = self.x_metadata["max_outer"][i]
             step_size = self.x_metadata["step_size"][i]
             num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
             label = int(round((row[i] - min_val) / step_size))

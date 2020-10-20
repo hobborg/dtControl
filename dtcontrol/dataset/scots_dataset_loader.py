@@ -160,14 +160,22 @@ class ScotsDatasetLoader(DatasetLoader):
             # construct metadata
             x_metadata = dict()
             x_metadata["categorical"] = []
-            x_metadata["min"] = state_lb
-            x_metadata["max"] = state_ub
+
+            # The safe set
+            x_metadata["min_outer"] = state_lb
+            x_metadata["max_outer"] = state_ub
+
+            # Compute the invariant set (which is the domain of the controller)
+            x_metadata["min_inner"] = [float(i) for i in np.amin(x, axis=0)]
+            x_metadata["max_inner"] = [float(i) for i in np.amax(x, axis=0)]
             x_metadata["step_size"] = state_eta
 
             y_metadata = dict()
             y_metadata["variables"] = [f"u_{i}" for i in range(len(input_lb))]
-            y_metadata["min"] = input_lb
-            y_metadata["max"] = input_ub
+            # y_metadata["min"] = input_lb
+            # y_metadata["max"] = input_ub
+            y_metadata["min"] = [min(unique_label_to_float.values())]
+            y_metadata["max"] = [max(unique_label_to_float.values())]
             y_metadata["step_size"] = input_eta
 
             return (x, x_metadata, y, y_metadata, unique_label_to_float)
