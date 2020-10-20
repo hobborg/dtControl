@@ -34,7 +34,7 @@ var nextDisabled = false;
 // Tree animation button toggles this variable
 var treeAnimation = true;
 
-// Tree eidt button toggles this variable
+// Tree edit button toggles this variable
 var treeEdit = false;
 var nodeSelect = false;
 
@@ -48,6 +48,8 @@ var customBuild = false;
 const simTableDiv = document.getElementById('tableHere');
 
 var isSimulator;
+
+var idUnderInspection;
 
 // Edit Mode activated?
 var editMode = false;
@@ -150,7 +152,7 @@ function click(d) {
             .done(function (data) {
                 // TODO see what all to refresh here
                 $("#computedPredicatesTableFull > tbody").html("");
-                for (var i = 0; i < data.computed_predicates.length; i++) {
+                for (let i = 0; i < data.computed_predicates.length; i++) {
                     const dumrow = document.createElement('tr');
 
                     const drc_inp = document.createElement('td');
@@ -165,7 +167,7 @@ function click(d) {
                     drc_inp.appendChild(drc0_inp);
                     dumrow.appendChild(drc_inp);
 
-                    for (var j = 0; j < data.computed_predicates[i].length; j++) {
+                    for (let j = 0; j < data.computed_predicates[i].length; j++) {
                         const drc0 = document.createElement('td');
                         drc0.textContent = data.computed_predicates[i][j];
                         if (j === data.computed_predicates[i].length - 1) {
@@ -177,7 +179,7 @@ function click(d) {
                     document.getElementById("computedPredicatesTable").appendChild(dumrow);
                 }
 
-                for (var i = 0; i < data.updated_impurities.length; i++) {
+                for (let i = 0; i < data.updated_impurities.length; i++) {
                     document.getElementById('domainImpurity' + i).textContent = data.updated_impurities[i];
                 }
 
@@ -209,10 +211,10 @@ function update(source) {
     // Compute the new tree layout.
     tree(root);
 
-    var nodes = root.descendants().reverse();
-    var links = root.links();
+    let nodes = root.descendants().reverse();
+    let links = root.links();
 
-    var diagonal = d3.linkHorizontal().x(d => d.x).y(d => d.y)
+    let diagonal = d3.linkHorizontal().x(d => d.x).y(d => d.y)
 
     // Normalize for fixed-depth.
     nodes.forEach(d => {
@@ -220,11 +222,11 @@ function update(source) {
     });
 
     // Update the nodes…
-    var node = node_layer.selectAll("g.node")
+    let node = node_layer.selectAll("g.node")
         .data(nodes, function(d) { return d.id; });
 
     // Enter any new nodes at the parent's previous position.
-    var nodeEnter = node.enter().append("g")
+    let nodeEnter = node.enter().append("g")
         .attr("class", "node")
         .attr("id", d => {
             return (d.data.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.data.address;
@@ -257,7 +259,7 @@ function update(source) {
         .style("fill-opacity", 1e-6);
 
     // Transition nodes to their new position.
-    var nodeUpdate = node.merge(nodeEnter).transition()
+    let nodeUpdate = node.merge(nodeEnter).transition()
         .duration(duration)
         .attr("transform", d => {
             return "translate(" + d.x + "," + d.y + ")";
@@ -286,7 +288,7 @@ function update(source) {
         .style("fill-opacity", 1);
 
     // Transition exiting nodes to the parent's new position.
-    var nodeExit = node.exit().transition()
+    let nodeExit = node.exit().transition()
         .duration(duration)
         .attr("transform", d => {
             return "translate(" + source.x + "," + source.y + ")";
@@ -300,14 +302,14 @@ function update(source) {
         .style("fill-opacity", 1e-6);
 
     // Update the links…
-    var link = link_layer.selectAll("path.link")
+    let link = link_layer.selectAll("path.link")
         .data(links, d => { d.target.id });
 
     // Enter any new links at the parent's previous position.
     const linkEnter = link.enter().insert("path", "g")
         .attr("class", "link")
         .style("stroke-dasharray", d => {
-            var foo = d.target.data.address[d.target.data.address.length - 1];
+            let foo = d.target.data.address[d.target.data.address.length - 1];
             return (foo == 1) ? "10,10" : "1,0";
         })
         .attr("d", d => {
@@ -340,8 +342,8 @@ function update(source) {
 function colourPath(str) {
     if (treeAnimation) {
         root.coleur = "red";
-        var dummy = root;
-        for (var i = 0; i < str.length; i++) {
+        let dummy = root;
+        for (let i = 0; i < str.length; i++) {
             if (dummy.children) {
                 //hidden
                 dummy.children[str[i]].coleur = "red";
@@ -360,8 +362,8 @@ function colourPath(str) {
 function recolourPath() {
     if (treeAnimation) {
         root.coleur = "white";
-        var dummy = root;
-        for (var i = 0; i < lastPath[currentSim].length; i++) {
+        let dummy = root;
+        for (let i = 0; i < lastPath[currentSim].length; i++) {
             if (dummy.children) {
                 //hidden
                 dummy.children[lastPath[currentSim][i]].coleur = "white";
@@ -379,8 +381,8 @@ function recolourPath() {
 // Returns height of tree
 function getDepth(depthNode) {
     if (depthNode.children) {
-        var ans = 0;
-        for (var i = 0; i < depthNode.children.length; i++) {
+        let ans = 0;
+        for (let i = 0; i < depthNode.children.length; i++) {
             ans = Math.max(ans, getDepth(depthNode.children[i]));
         }
         return ans + 1;
@@ -396,8 +398,8 @@ function getLeaves(depthNode) {
         if (depthNode.children.length == 0) {
             return 1;
         }
-        var ans = 0;
-        for (var i = 0; i < depthNode.children.length; i++) {
+        let ans = 0;
+        for (let i = 0; i < depthNode.children.length; i++) {
             ans += getLeaves(depthNode.children[i]);
         }
         return ans;
@@ -443,9 +445,9 @@ function disableNodeSelect() {
 // If cartpole model used, draws it
 function drawCanvas() {
     if (controllerFile == "cartpole.scs") {
-        var lineLength = 100;
-        var canvas = document.getElementById("cartCanvas");
-        var c = canvas.getContext("2d");
+        let lineLength = 100;
+        let canvas = document.getElementById("cartCanvas");
+        let c = canvas.getContext("2d");
 
         c.clearRect(0, 0, 450, 250);
 
@@ -456,7 +458,7 @@ function drawCanvas() {
         c.moveTo(225, 160);
         c.lineWidth = 7;
         c.strokeStyle = "#802b00";
-        var currentAngle = parseFloat(x_current[0][currentSim]);
+        let currentAngle = parseFloat(x_current[0][currentSim]);
         c.lineTo(225 + lineLength * Math.cos(currentAngle - (Math.PI / 2)), 160 - lineLength * Math.sin(currentAngle - (Math.PI / 2)));
         c.stroke();
     }
@@ -466,7 +468,7 @@ function drawCanvas() {
 
 // Checks if state variables go out of bounds at any point
 function checkBounds() {
-    for (var i = 0; i < numVars; i++) {
+    for (let i = 0; i < numVars; i++) {
         if (x_current[i][currentSim] < x_bounds[i][0] || x_current[i][currentSim] > x_bounds[i][1]) {
             return false;
         }
@@ -476,10 +478,9 @@ function checkBounds() {
 
 // Renders all the charts using Chart.js
 function renderChart(id, data, labels, ub, lb) {
-    var chartIndex = parseInt(id);
+    let chartIndex = parseInt(id);
 
-    const canvas = document.getElementById('chartContainer' + chartIndex);
-    var ctx = document.getElementById('chartContainer' + id).getContext('2d');
+    let ctx = document.getElementById('chartContainer' + id).getContext('2d');
     chartConfig[chartIndex] = {
         type: 'line',
         data: {
@@ -583,12 +584,12 @@ async function oneStep() {
             return;
         }
 
-        var x_toPass = [];
-        for (var i = 0; i < numVars; i++) {
+        let x_toPass = [];
+        for (let i = 0; i < numVars; i++) {
             x_toPass.push(x_current[i][currentSim]);
         }
-        var u_toPass = [];
-        for (var i = 0; i < numResults; i++) {
+        let u_toPass = [];
+        for (let i = 0; i < numResults; i++) {
             u_toPass.push(u_current[i][currentSim]);
         }
 
@@ -620,13 +621,13 @@ async function oneStep() {
                 drc0.appendChild(drc0_inp);
                 dumrow.appendChild(drc0);
 
-                for (var i = 0; i < numVars; i++) {
+                for (let i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('td');
                     drc1.textContent = data.x_new[0][i];
                     dumrow.appendChild(drc1);
                 }
 
-                for (var i = 0; i < numResults; i++) {
+                for (let i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('td');
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
@@ -638,10 +639,10 @@ async function oneStep() {
 
                 colourPath(data.x_new[2]);
 
-                for (var i = 0; i < numVars; i++) {
+                for (let i = 0; i < numVars; i++) {
                     x_current[i].push(data.x_new[0][i]);
                 }
-                for (var i = 0; i < numResults; i++) {
+                for (let i = 0; i < numResults; i++) {
                     u_current[i].push(data.x_new[1][i]);
                 }
 
@@ -650,7 +651,7 @@ async function oneStep() {
                 currentSim = totalSims;
                 console.log("update complete");
 
-                for (var i = 0; i < numVars; i++) {
+                for (let i = 0; i < numVars; i++) {
                     chart[i].data.labels.push(totalSims);
                     chart[i].data.datasets[1].data.push(x_bounds[i][1]);
                     chart[i].data.datasets[2].data.push(x_bounds[i][0]);
@@ -675,7 +676,7 @@ async function oneStep() {
 }
 
 function scrollToEndOfTable() {
-    var elem = document.querySelector("#simTable");
+    let elem = document.querySelector("#simTable");
     elem.scrollTop = elem.scrollHeight;
 }
 
@@ -700,7 +701,7 @@ function replaceInTree(selected, replacementData) {
     // Inspired by https://stackoverflow.com/a/43368677
 
     //Creates a Node from newNode object using d3.hierarchy(.)
-    var newNode = d3.hierarchy(replacementData);
+    let newNode = d3.hierarchy(replacementData);
     newNode.descendants().forEach((d, i) => {
         d.id = 10 + i;
         d.depth = selected.depth + d.depth;
@@ -744,7 +745,7 @@ function run_partial_construction(configuration) {
         console.log("Return from partial construct: ", data);
 
         console.log("newData: ", data);
-        var pointer = root;
+        let pointer = root;
         configuration.selected_node.forEach((pos) => {
             pointer = pointer.children[pos]
         });
@@ -763,7 +764,7 @@ function start_interactive_construction(configuration) {
         // Change existing tree data at the necessary position to data
         console.log("Return from interactive construct: ", data);
 
-        var pointer = root;
+        let pointer = root;
         configuration.selected_node.forEach((pos) => {
             pointer = pointer.children[pos]
         });
@@ -988,7 +989,7 @@ function refresh_interactive_tables() {
 
 $(document).ready(function () {
     isSimulator = $('.simulator').length > 0;
-    var numChanges = 0;
+    let numChanges = 0;
 
     if (isSimulator) {
         // If we are in simulator, there is no need for having the "load controller directory" etc available
@@ -1040,7 +1041,7 @@ $(document).ready(function () {
     // Retrain from sidenav
     $("input[name='interact'], button[name='interact']").on('click', function (event) {
         event.preventDefault();
-        var configuration = {};
+        let configuration = {};
         configuration.id = idUnderInspection;
         configuration.controller = controllerFile;
 
@@ -1170,12 +1171,12 @@ $(document).ready(function () {
             // height = 650;
             width = 200 * getDepth(treeData);
 
-            for (var i = 0; i < numVars; i++) {
+            for (let i = 0; i < numVars; i++) {
                 x_current.push([]);
                 chart.push([]);
                 chartConfig.push([]);
             }
-            for (var i = 0; i < numResults; i++) {
+            for (let i = 0; i < numResults; i++) {
                 u_current.push([]);
             }
 
@@ -1199,7 +1200,7 @@ $(document).ready(function () {
             const chartsDiv0 = document.getElementById('chartsHere0');
             const chartsDiv1 = document.getElementById('chartsHere1');
 
-            for (var i = 0; i < numVars; i++) {
+            for (let i = 0; i < numVars; i++) {
                 const drc1 = document.createElement('th');
                 drc1.setAttribute("scope", "col");
                 drc1.textContent = "x" + i;
@@ -1225,7 +1226,7 @@ $(document).ready(function () {
                 heir2.appendChild(someChartDiv);
                 heir1.appendChild(heir2);
                 heir0.appendChild(heir1);
-                if (i % 2 == 0) {
+                if (i % 2 === 0) {
                     chartsDiv0.appendChild(heir0);
                 } else {
                     chartsDiv1.appendChild(heir0);
@@ -1239,7 +1240,7 @@ $(document).ready(function () {
                 drc2.textContent = "u";
                 dumrow.appendChild(drc2);
             } else {
-                for (var i = 0; i < numResults; i++) {
+                for (let i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('th');
                     drc2.setAttribute("scope", "col");
                     drc2.textContent = "u" + i;
@@ -1251,7 +1252,7 @@ $(document).ready(function () {
             simTableDiv.appendChild(tab);
 
             const opt = document.getElementById("formSecondBody");
-            for (var i = 0; i < numVars; i++) {
+            for (let i = 0; i < numVars; i++) {
                 const dumDiv = document.createElement('div');
 
                 const dumLabel = document.createElement('label');
@@ -1276,8 +1277,8 @@ $(document).ready(function () {
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {
         console.log('form is submitted');
-        var x_toPass = [];
-        for (var i = 0; i < numVars; i++) {
+        let x_toPass = [];
+        for (let i = 0; i < numVars; i++) {
             x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
@@ -1295,8 +1296,8 @@ $(document).ready(function () {
                 document.getElementById("instep").classList.remove("d-none");
                 document.getElementById("animationDiv").classList.remove("d-none"); // TODO Animate button, enable this again
 
-                var mini = document.getElementsByClassName("card-body");
-                for (var i = 0; i < mini.length; i++) {
+                let mini = document.getElementsByClassName("card-body");
+                for (let i = 0; i < mini.length; i++) {
                     mini[i].style.height = "425px";
                 }
                 document.getElementById("treeHere").style.height = "85%";
@@ -1326,12 +1327,12 @@ $(document).ready(function () {
                 drc0.appendChild(drc0_inp);
                 dumrow.appendChild(drc0);
 
-                for (var i = 0; i < numVars; i++) {
+                for (let i = 0; i < numVars; i++) {
                     const drc1 = document.createElement('td');
                     drc1.textContent = $('#x' + i).val();
                     dumrow.appendChild(drc1)
                 }
-                for (var i = 0; i < numResults; i++) {
+                for (let i = 0; i < numResults; i++) {
                     const drc2 = document.createElement('td');
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
@@ -1341,10 +1342,10 @@ $(document).ready(function () {
                 scrollToEndOfTable();
                 colourPath(data.path);
 
-                for (var i = 0; i < numVars; i++) {
+                for (let i = 0; i < numVars; i++) {
                     x_current[i].push(parseFloat($('#x' + i).val()));
                 }
-                for (var i = 0; i < numResults; i++) {
+                for (let i = 0; i < numResults; i++) {
                     u_current[i].push(data.decision[i]);
                 }
 
@@ -1357,7 +1358,7 @@ $(document).ready(function () {
                     nextDisabled = true;
                 }
 
-                for (var i = 0; i < numVars; i++) {
+                for (let i = 0; i < numVars; i++) {
                     renderChart(i, x_current[i], [...Array(currentSim + 1).keys()], [x_bounds[i][1]], [x_bounds[i][0]]);
                 }
 
@@ -1447,15 +1448,15 @@ $(document).ready(function () {
 
         if (!nextDisabled) {
             recolourPath();
-            var x_toPass = [];
-            for (var i = 0; i < numVars; i++) {
+            let x_toPass = [];
+            for (let i = 0; i < numVars; i++) {
                 x_toPass.push(x_current[i][currentSim]);
             }
-            var u_toPass = [];
-            for (var i = 0; i < numResults; i++) {
+            let u_toPass = [];
+            for (let i = 0; i < numResults; i++) {
                 u_toPass.push(u_current[i][currentSim]);
             }
-            var steps = $('#steps').val();
+            let steps = $('#steps').val();
             if (steps === "") {
                 $('#steps').val("1");
                 steps = 1;
@@ -1474,7 +1475,7 @@ $(document).ready(function () {
                 .done(function (data) {
                     const tab = document.getElementById('simTable');
 
-                    for (var i = 0; i < steps; i++) {
+                    for (let i = 0; i < steps; i++) {
                         const dumrow = document.createElement('tr');
                         const drc0 = document.createElement('td');
                         const drc0_inp = document.createElement('input');
@@ -1486,12 +1487,12 @@ $(document).ready(function () {
                         drc0.appendChild(drc0_inp);
                         dumrow.appendChild(drc0);
 
-                        for (var j = 0; j < numVars; j++) {
+                        for (let j = 0; j < numVars; j++) {
                             const drc1 = document.createElement('td');
                             drc1.textContent = data.x_new[i][0][j];
                             dumrow.appendChild(drc1);
                         }
-                        for (var j = 0; j < numResults; j++) {
+                        for (let j = 0; j < numResults; j++) {
                             const drc2 = document.createElement('td');
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
@@ -1500,10 +1501,10 @@ $(document).ready(function () {
                         $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
                         scrollToEndOfTable();
 
-                        for (var j = 0; j < numVars; j++) {
+                        for (let j = 0; j < numVars; j++) {
                             x_current[j].push(data.x_new[i][0][j]);
                         }
-                        for (var j = 0; j < numResults; j++) {
+                        for (let j = 0; j < numResults; j++) {
                             u_current[j].push(data.x_new[i][1][j]);
                         }
 
@@ -1511,7 +1512,7 @@ $(document).ready(function () {
                         totalSims++;
                         currentSim = totalSims;
 
-                        for (var j = 0; j < numVars; j++) {
+                        for (let j = 0; j < numVars; j++) {
                             chart[j].data.labels.push(totalSims);
                             chart[j].data.datasets[1].data.push(x_bounds[j][1]);
                             chart[j].data.datasets[2].data.push(x_bounds[j][0]);
@@ -1525,7 +1526,7 @@ $(document).ready(function () {
                         }
                     }
 
-                    for (var i = 0; i < numVars; i++) {
+                    for (let i = 0; i < numVars; i++) {
                         chart[i].update();
                     }
                     colourPath(lastPath[totalSims]);
@@ -1540,15 +1541,15 @@ $(document).ready(function () {
 
     // Handles the player inputs
     $(document).on("click", "input[name=player]", function (event) {
-        var option = parseInt($("input[name=player]:checked").val());
+        let option = parseInt($("input[name=player]:checked").val());
         //play pause next back
-        if (option == 0) {
+        if (option === 0) {
             plpause = setInterval(oneStep, timeOfSlider);
-        } else if (option == 1) {
+        } else if (option === 1) {
             clearInterval(plpause);
-        } else if (option == 2) {
+        } else if (option === 2) {
             oneStep();
-        } else if (option == 3) {
+        } else if (option === 3) {
             if (currentSim > 0) {
                 recolourPath();
                 currentSim--;
@@ -1561,7 +1562,7 @@ $(document).ready(function () {
 
     // Handles selection of different rows in simulation table
     $(document).on("change", "input[name=indexers]", function () {
-        var ind = parseInt($("input[name='indexers']:checked").val());
+        let ind = parseInt($("input[name='indexers']:checked").val());
         recolourPath();
         currentSim = ind;
         colourPath(lastPath[ind]);
@@ -1572,10 +1573,10 @@ $(document).ready(function () {
     // Simple .change() does not work here because it is dynamically added
     $('#dynamics-file').on('change', function () {
         //get the file name
-        var fileName = $(this).val().replace('C:\\fakepath\\', "");
+        let fileName = $(this).val().replace('C:\\fakepath\\', "");
         //replace the "Choose a file" label
         $(this).next('.custom-file-label').html(fileName);
-        var file = document.getElementById("dynamics-file").files[0];
+        let file = document.getElementById("dynamics-file").files[0];
         const reader = new FileReader();
         reader.onload = function (e) {
             // The file's text will be printed here
@@ -1586,7 +1587,7 @@ $(document).ready(function () {
 });
 
 // Handles play speed slider
-var slider = document.getElementById("timeRange");
+let slider = document.getElementById("timeRange");
 if (slider) {
     slider.oninput = function () {
         // 1x = 500ms
@@ -1645,7 +1646,7 @@ function addToDomainKnowledgeTable() {
 }
 
 function splitNode() {
-    var toSendPredicate = $('input[name="buildPredicate"]:checked').val();
+    let toSendPredicate = $('input[name="buildPredicate"]:checked').val();
     console.log(toSendPredicate);
     $.ajax({
         data: JSON.stringify({
@@ -1658,9 +1659,9 @@ function splitNode() {
     })
         .done(function (data) {
             // returns number of splits only
-            var numSplits = data.number_splits;
+            let numSplits = data.number_splits;
             lastNode.children = [];
-            for (var i = 0; i < numSplits; i++) {
+            for (let i = 0; i < numSplits; i++) {
                 lastNode.children.push({
                     "name": "Build",
                     "parent": lastNode.name,
@@ -1678,10 +1679,10 @@ function splitNode() {
         })
 }
 
-// Randomize button in Modal for selecting inital values of state variables
+// Randomize button in Modal for selecting initial values of state variables
 function randomizeInputs() {
-    for (var i = 0; i < numVars; i++) {
-        var range = x_bounds[i][1] - x_bounds[i][0];
+    for (let i = 0; i < numVars; i++) {
+        let range = x_bounds[i][1] - x_bounds[i][0];
         document.getElementById('x' + i).value = x_bounds[i][0] + (Math.random() * range);
     }
 }
@@ -1695,11 +1696,11 @@ function triggerDynamicsInput() {
 // Handles colouring of table rows when clicked
 $(document).on("click", "#simTable tbody tr", function () {
     $(this).addClass('selected').siblings().removeClass('selected');
-    var value = $(this).find('td:first').children()[0].getAttribute("value")
+    let value = $(this).find('td:first').children()[0].getAttribute("value")
     console.log(value);
     $(this).find('td input[type=radio]').prop('checked', true);
-    // var ind = parseInt($("input[name='indexers']:checked").val());
-    var ind = parseInt(value);
+    // let ind = parseInt($("input[name='indexers']:checked").val());
+    let ind = parseInt(value);
     recolourPath();
     currentSim = ind;
     colourPath(lastPath[ind]);
@@ -1708,8 +1709,7 @@ $(document).on("click", "#simTable tbody tr", function () {
 
 if (isSimulator) {
     document.getElementById("simTable").addEventListener("scroll", function () {
-        var translate = "translate(0," + this.scrollTop + "px)";
-        this.querySelector("thead").style.transform = translate;
+        this.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
     });
 }
 
