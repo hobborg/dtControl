@@ -248,7 +248,7 @@ class BenchmarkSuite:
 
     def save_to_disk(self):
         with open(self.json_file, 'w+') as outfile:
-            json.dump(self.results, outfile, indent=2)
+            json.dump(self.results, outfile, indent=2, default=util.convert)
 
     @staticmethod
     def is_multiout(filename, ext):

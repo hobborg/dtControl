@@ -101,4 +101,6 @@ def is_int(s):
 def convert(o):
     if isinstance(o, np.int64):
         return int(o)
+    if isinstance(o, np.float32):
+        return float(o)
     raise TypeError
