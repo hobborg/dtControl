@@ -1,5 +1,5 @@
 ---
-permalink: "/artifacts/tacas2021"
+permalink: "/artifacts/tacas2021.html"
 
 layout: artifacts
 
@@ -12,9 +12,9 @@ summary: Represent controllers as decision trees. Improve memory footprint, boos
 toc: true
 ---
 
-# Artifact Evaluation Instructions: TACAS 2021 submission "dtControl 2.0: Explainable Strategy Representation via Decision Tree Learning Steered by Experts"
+# Artifact Evaluation Instructions: TACAS 2021 submission 
 
-Here we explain how to reproduce the results of the QEST 2020 submission **Compact and explainable strategy representations using dtControl**.
+Here we explain how to reproduce the results of the TACAS 2021 submission **dtControl 2.0: Explainable Strategy Representation via Decision Tree Learning Steered by Experts**.
 More concretely, we show how to 
 1. Install all requirements
 2. Install dtControl
