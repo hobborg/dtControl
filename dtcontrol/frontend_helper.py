@@ -316,7 +316,7 @@ def train(args):
     if "config" in args.keys():
         presets = args["config"]
 
-        if "automatic" in presets:
+        if "algebraic" in presets:
             presets = args["config"]
             numeric_split = ["richer-domain"]
             categorical_split = []
