@@ -93,6 +93,7 @@ class Dataset(ABC):
     def copy_from_other_dataset(self, ds):
         self.x = ds.x
         self.numeric_x = None
+        self.numeric_columns = None
         self.categorical_x = None
         self.x_metadata = ds.x_metadata
         self.y = ds.y
