@@ -749,7 +749,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         self.process_standard_alt_predicates(dataset, impurity_measure)
         self.process_recently_added_predicates(dataset, impurity_measure)
 
-        if kwargs["caller"] == Caller.WEBUI:
+        if "caller" in kwargs and kwargs["caller"] == Caller.WEBUI:
             self.webui_output(dataset)
 
             # handle_user_input
