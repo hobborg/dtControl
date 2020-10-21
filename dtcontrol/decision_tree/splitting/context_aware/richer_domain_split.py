@@ -383,8 +383,9 @@ class RicherDomainSplit(Split):
         return out + " \\n" + self.relation + " 0"
 
     def print_c(self):
-        # TODO
-        return self.print_dot()
+        subs_list = self.coef_assignment if self.coef_assignment else []
+        evaluated_predicate = self.term.subs(subs_list).evalf(5)
+        return str(sp.ccode(evaluated_predicate)) + " " + self.relation + " 0"
 
     def print_vhdl(self):
         # TODO

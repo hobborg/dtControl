@@ -12,6 +12,10 @@
     font: 12px sans-serif;
 }
 
+.node text:hover {
+    cursor: help;
+}
+
 .link {
     fill: none;
     stroke: #ccc;
