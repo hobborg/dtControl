@@ -242,6 +242,7 @@ function update(source) {
 
     // TODO P: use https://bl.ocks.org/mbostock/1424037 instead of text to allow CSS features such as
     // text-overflow and hover to expand.
+    // Link C: https://medium.com/@musturi.rakesh/truncate-text-based-on-character-length-and-display-tooltip-40fe6e60824a
     nodeEnter.append("text")
         .attr("x", d => {
             return d.children || d._children ? -13 : 13;
@@ -258,6 +259,8 @@ function update(source) {
             return d.data.name;
         })
         .style("fill-opacity", 1e-6);
+
+    nodeEnter.append("title");
 
     // Transition nodes to their new position.
     let nodeUpdate = node.merge(nodeEnter).transition()
@@ -284,9 +287,36 @@ function update(source) {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
-            return d.data.name;
+            let predicate = d.data.name;
+            if (predicate.length > 30) {
+                let sliced_pred, rel;
+
+                if (predicate.includes("<=")){
+                    sliced_pred = predicate.split("<=");
+                    rel = "<=";
+                }else if (predicate.includes(">=")){
+                    sliced_pred = predicate.split(">=");
+                    rel = ">=";
+                }else if (predicate.includes(">")){
+                    sliced_pred = predicate.split(">");
+                    rel = ">";
+                }else if (predicate.includes("<")){
+                    sliced_pred = predicate.split("<");
+                    rel = "<";
+                }else if (predicate.includes("=")){
+                    sliced_pred = predicate.split("=");
+                    rel = "=";
+                }
+                predicate = sliced_pred[0].substring(0, predicate.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+                }
+            return predicate;
         })
         .style("fill-opacity", 1);
+
+    nodeUpdate.select("title")
+        .text(function (d) {
+            return d.data.name;
+        });
 
     // Transition exiting nodes to the parent's new position.
     let nodeExit = node.exit().transition()
