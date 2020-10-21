@@ -268,7 +268,7 @@ class RicherDomainSplittingStrategy(ContextAwareSplittingStrategy):
             2. Split with lowest impurity gets returned.
         """
 
-        splits = self.get_all_splits(dataset, impurity_measure)
+        splits = self.get_all_splits(dataset, impurity_measure, **kwargs)
 
         # Returning split with lowest impurity
         output_split = min(splits.keys(), key=splits.get) if splits else None

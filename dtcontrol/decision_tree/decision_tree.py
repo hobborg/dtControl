@@ -7,6 +7,7 @@ from typing import Sequence
 import numpy as np
 
 import dtcontrol.util as util
+from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 from dtcontrol.util import Caller
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
@@ -55,6 +56,13 @@ class DecisionTree(BenchmarkSuiteClassifier):
             raise ValueError('Determinization during tree construction '
                              'can only be used if early stopping is enabled without parameters.')
 
+    def check_categorical(self, dataset):
+        supports_categorical = any((isinstance(strategy, CategoricalMultiSplittingStrategy) or
+                                    isinstance(strategy, CategoricalSingleSplittingStrategy))
+                                   for strategy in self.splitting_strategies)
+        if not supports_categorical:
+            dataset.set_treat_categorical_as_numeric()
+
     def is_applicable(self, dataset):
         if dataset.is_deterministic:
             if isinstance(self.impurity_measure, MultiLabelImpurityMeasure):
@@ -66,6 +74,7 @@ class DecisionTree(BenchmarkSuiteClassifier):
     def fit(self, dataset, **kwargs):
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
+        self.check_categorical(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                          self.early_stopping_num_examples, self.early_stopping_optimized)
         for split_strat in self.splitting_strategies:
