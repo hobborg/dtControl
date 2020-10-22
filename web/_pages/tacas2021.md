@@ -186,11 +186,12 @@ You can explore DTs in the GUI and try to get better understanding, or see wheth
 
 
 TODO: 
-Complete table about scripts, using the new dtControl for FTF fix; for dt-cps-all, only run the additional case studies.
+Complete the table about scripts (at least the subset ones).
 Verify that the prism thing in frontend is working, actually recreate screenshot.
-Write scripts to read the results.
-Fix layout issues (code being displayed nicely, links, etc.)
-We wanted to ahve a look at the documentation.
+Write scripts to read the results (read script draft included in results folder, can be simpler, as it just has to find minimum); alternatively, just tell people to look at html and find the minimum node number among those with BDD/dtcontrol1/dtcontrol2 in their name.
+Fix layout issues of the webpage (code being displayed nicely, links, etc.)
+We wanted to have a look at the documentation.
+Submit to easychar: Do we have to export the readme? I.e. this webpage?
 
 == For reference: If installation doesn't work, this might help ==
 First install pip3 (I think it is actually there). Go to the packages folder of our zip, then run 
