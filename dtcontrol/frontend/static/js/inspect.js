@@ -228,7 +228,10 @@ function update(source) {
 
     // Enter any new nodes at the parent's previous position.
     let nodeEnter = node.enter().append("g")
-        .attr("class", "node")
+        .attr("class", d => {
+            // questionmark cursor appears when hovering over too large predicates
+            return (d.data.name.length > 30) ? "node scaled" : "node";
+        })
         .attr("id", d => {
             return (d.data.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.data.address;
         })
@@ -241,8 +244,6 @@ function update(source) {
         .attr("r", 1e-6);
 
     // TODO P: use https://bl.ocks.org/mbostock/1424037 instead of text to allow CSS features such as
-    // text-overflow and hover to expand.
-    // Link C: https://medium.com/@musturi.rakesh/truncate-text-based-on-character-length-and-display-tooltip-40fe6e60824a
     nodeEnter.append("text")
         .attr("x", d => {
             return d.children || d._children ? -13 : 13;
@@ -260,6 +261,7 @@ function update(source) {
         })
         .style("fill-opacity", 1e-6);
 
+    // title element contains whole predicate (uncut)
     nodeEnter.append("title");
 
     // Transition nodes to their new position.
@@ -287,6 +289,7 @@ function update(source) {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
+            // scales predicate down, if too large
             let predicate = d.data.name;
             if (predicate.length > 30) {
                 let sliced_pred, rel;
@@ -313,6 +316,7 @@ function update(source) {
         })
         .style("fill-opacity", 1);
 
+    // title containing the whole predicate which can be shown by hovering over the element
     nodeUpdate.select("title")
         .text(function (d) {
             return d.data.name;
