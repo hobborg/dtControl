@@ -93,10 +93,10 @@ function svgSetup() {
 
 function constructTree(data) {
     // Generates the tree diagram
-    const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
-    console.log("treeHere bounding rect", parentBoundingRect);
+    // const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
+    // console.log("treeHere bounding rect", parentBoundingRect);
     tree = d3.tree()
-        .size([parentBoundingRect.width, parentBoundingRect.height]);
+        .size([height, width]);
 
     root = d3.hierarchy(data);
 
@@ -106,7 +106,7 @@ function constructTree(data) {
         d._children = d.children;
     });
 
-    root.x0 = height / 2;
+    root.x0 = 0;
     root.y0 = 0;
 
     update(root);
@@ -219,7 +219,8 @@ function update(source) {
 
     // Normalize for fixed-depth.
     nodes.forEach(d => {
-        d.y = d.depth * 120;
+        d.y = d.depth * 400;
+        d.x = d.x * 10;
     });
 
     // Update the nodes…
@@ -230,7 +231,7 @@ function update(source) {
     let nodeEnter = node.enter().append("g")
         .attr("class", d => {
             // questionmark cursor appears when hovering over too large predicates
-            return (d.data.name.length > 30) ? "node scaled" : "node";
+            return (d.data.name.length > 20) ? "node scaled" : "node";
         })
         .attr("id", d => {
             return (d.data.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.data.address;
@@ -245,13 +246,9 @@ function update(source) {
 
     // TODO P: use https://bl.ocks.org/mbostock/1424037 instead of text to allow CSS features such as
     nodeEnter.append("text")
-        .attr("x", d => {
-            return d.children || d._children ? -13 : 13;
-        })
+        .attr("x", "-13")
         .attr("dy", ".35em")
-        .attr("text-anchor", d => {
-            return d.children || d._children ? "end" : "start";
-        })
+        .attr("text-anchor", "end")
         .attr("id", d => {
             return "addr" + d.data.address.toString();
         })
@@ -278,20 +275,16 @@ function update(source) {
         });
 
     nodeUpdate.select("text")
-        .attr('x', function (d) {
-            return d.children || d._children ? -13 : 13;
-        })
+        .attr("x", "-13")
         .attr('dy', '.35em')
-        .attr('text-anchor', function (d) {
-            return d.children || d._children ? 'end' : 'start';
-        })
+        .attr("text-anchor", "end")
         .attr("id", d => {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
             // scales predicate down, if too large
             let predicate = d.data.name;
-            if (predicate.length > 30) {
+            if (predicate.length > 20) {
                 let sliced_pred, rel;
 
                 if (predicate.includes("<=")){
@@ -371,6 +364,12 @@ function update(source) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
+
+    // set focus on root element
+    // console.log(root);
+    // let g = d3.select("svg g").call(d3.zoom().on("zoom", ({transform}) => {
+    //         g.attr("transform", "translate(" + root.x0 + "," + root.y0 + ")")}));
+    // d3.select("#nodeAt:Root").focus();
 }
 
 // Makes nodes red along the path given as 'str'
