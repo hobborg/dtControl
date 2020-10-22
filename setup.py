@@ -57,7 +57,7 @@ setuptools.setup(
         'dd==0.5.5',
         'Jinja2==2.10.3',
         'pandas==0.25.2',
-        'psutil==5.6.7',
+        'psutil>=5.6.7',
         'pydot==1.4.1',
         'ruamel.yaml==0.16.10',
         'scikit-learn==0.22',

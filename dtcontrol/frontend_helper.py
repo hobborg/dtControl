@@ -303,7 +303,6 @@ def train(args):
 
     # Parse config files
     default_config: OrderedDict = load_default_config()
-    default_config: OrderedDict = load_default_config()
     user_config: Union[None, OrderedDict] = None
 
     fallback_numeric, fallback_categorical = None, None

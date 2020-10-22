@@ -22,8 +22,8 @@ var plpause;
 var timeOfSlider = 500;
 
 // Number of state variables and decision variables
-var numVars;
-var numResults;
+var stateDimension;
+var actionDimension;
 
 // Stores all created chart variables
 var chart = [];
@@ -313,8 +313,11 @@ function update(source) {
                     sliced_pred = predicate.split("=");
                     rel = "=";
                 }
-                predicate = sliced_pred[0].substring(0, predicate.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+                else {
+                    console.log("Could not process predicate " + predicate);
                 }
+                predicate = sliced_pred[0].substring(0, predicate.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+            }
             return predicate;
         })
         .style("fill-opacity", 1);
@@ -552,9 +555,9 @@ function drawCanvas() {
 
 // Checks if state variables go out of bounds at any point
 function checkBounds() {
-    for (let i = 0; i < numVars; i++) {
+    for (let i = 0; i < stateDimension; i++) {
         console.log("Current bounds: ", xCurrent[i][currentSim]);
-        console.log("Outer bounds: ", xBoundsOuter[i][0], ", ", xBoundsOuter[i][0]);
+        console.log("Outer bounds: ", xBoundsOuter[i][0], ", ", xBoundsOuter[i][1]);
         if (xCurrent[i][currentSim] < xBoundsOuter[i][0] || xCurrent[i][currentSim] > xBoundsOuter[i][1]) {
             return false;
         }
@@ -671,11 +674,11 @@ async function oneStep() {
         }
 
         let x_toPass = [];
-        for (let i = 0; i < numVars; i++) {
+        for (let i = 0; i < stateDimension; i++) {
             x_toPass.push(xCurrent[i][currentSim]);
         }
         let u_toPass = [];
-        for (let i = 0; i < numResults; i++) {
+        for (let i = 0; i < actionDimension; i++) {
             u_toPass.push(uCurrent[i][currentSim]);
         }
 
@@ -707,13 +710,13 @@ async function oneStep() {
                 drc0.appendChild(drc0_inp);
                 dumrow.appendChild(drc0);
 
-                for (let i = 0; i < numVars; i++) {
+                for (let i = 0; i < stateDimension; i++) {
                     const drc1 = document.createElement('td');
                     drc1.textContent = data.x_new[0][i];
                     dumrow.appendChild(drc1);
                 }
 
-                for (let i = 0; i < numResults; i++) {
+                for (let i = 0; i < actionDimension; i++) {
                     const drc2 = document.createElement('td');
                     drc2.textContent = data.x_new[1][i];
                     dumrow.appendChild(drc2);
@@ -725,10 +728,11 @@ async function oneStep() {
 
                 colourPath(data.x_new[2]);
 
-                for (let i = 0; i < numVars; i++) {
+                for (let i = 0; i < stateDimension; i++) {
                     xCurrent[i].push(data.x_new[0][i]);
                 }
-                for (let i = 0; i < numResults; i++) {
+                for (let i = 0; i < actionDimension; i++) {
+                    console.log(`Pushing ${data.x_new[1][i]} to uCurrent[${i}]`);
                     uCurrent[i].push(data.x_new[1][i]);
                 }
 
@@ -737,7 +741,7 @@ async function oneStep() {
                 currentSim = totalSims;
                 console.log("update complete");
 
-                for (let i = 0; i < numVars; i++) {
+                for (let i = 0; i < stateDimension; i++) {
                     chart[i].data.labels.push(totalSims);
                     chart[i].data.datasets[1].data.push(xBoundsOuter[i][1]);
                     chart[i].data.datasets[2].data.push(xBoundsOuter[i][0]);
@@ -1246,8 +1250,8 @@ $(document).ready(function () {
             idUnderInspection = data.idUnderInspection
             treeData = data.classifier;
             console.log("Tree Data", treeData);
-            numVars = data.numVars;
-            numResults = data.numResults;
+            stateDimension = data.numVars;
+            actionDimension = data.numResults;
             controllerFile = data.controllerFile;
 
             console.log(treeData);
@@ -1257,12 +1261,13 @@ $(document).ready(function () {
             // height = 650;
             width = 200 * getDepth(treeData);
 
-            for (let i = 0; i < numVars; i++) {
+            for (let i = 0; i < stateDimension; i++) {
                 xCurrent.push([]);
                 chart.push([]);
                 chartConfig.push([]);
             }
-            for (let i = 0; i < numResults; i++) {
+            for (let i = 0; i < actionDimension; i++) {
+                console.log(`Pushing [] to uCurrent`);
                 uCurrent.push([]);
             }
 
@@ -1286,7 +1291,7 @@ $(document).ready(function () {
             const chartsDiv0 = document.getElementById('chartsHere0');
             const chartsDiv1 = document.getElementById('chartsHere1');
 
-            for (let i = 0; i < numVars; i++) {
+            for (let i = 0; i < stateDimension; i++) {
                 const drc1 = document.createElement('th');
                 drc1.setAttribute("scope", "col");
                 drc1.textContent = "x" + i;
@@ -1320,13 +1325,13 @@ $(document).ready(function () {
 
             }
 
-            if (numResults == 1) {
+            if (actionDimension == 1) {
                 const drc2 = document.createElement('th');
                 drc2.setAttribute("scope", "col");
                 drc2.textContent = "u";
                 dumrow.appendChild(drc2);
             } else {
-                for (let i = 0; i < numResults; i++) {
+                for (let i = 0; i < actionDimension; i++) {
                     const drc2 = document.createElement('th');
                     drc2.setAttribute("scope", "col");
                     drc2.textContent = "u" + i;
@@ -1338,7 +1343,7 @@ $(document).ready(function () {
             simTableDiv.appendChild(tab);
 
             const opt = document.getElementById("formSecondBody");
-            for (let i = 0; i < numVars; i++) {
+            for (let i = 0; i < stateDimension; i++) {
                 const dumDiv = document.createElement('div');
 
                 const dumLabel = document.createElement('label');
@@ -1367,7 +1372,7 @@ $(document).ready(function () {
     $('#formSecond').on('submit', function (event) {
         console.log('form is submitted');
         let x_toPass = [];
-        for (let i = 0; i < numVars; i++) {
+        for (let i = 0; i < stateDimension; i++) {
             x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
         }
         $.ajax({
@@ -1416,12 +1421,12 @@ $(document).ready(function () {
                 drc0.appendChild(drc0_inp);
                 dumrow.appendChild(drc0);
 
-                for (let i = 0; i < numVars; i++) {
+                for (let i = 0; i < stateDimension; i++) {
                     const drc1 = document.createElement('td');
                     drc1.textContent = $('#x' + i).val();
                     dumrow.appendChild(drc1)
                 }
-                for (let i = 0; i < numResults; i++) {
+                for (let i = 0; i < actionDimension; i++) {
                     const drc2 = document.createElement('td');
                     drc2.textContent = data.decision[i];
                     dumrow.appendChild(drc2);
@@ -1431,10 +1436,10 @@ $(document).ready(function () {
                 scrollToEndOfTable();
                 colourPath(data.path);
 
-                for (let i = 0; i < numVars; i++) {
+                for (let i = 0; i < stateDimension; i++) {
                     xCurrent[i].push(parseFloat($('#x' + i).val()));
                 }
-                for (let i = 0; i < numResults; i++) {
+                for (let i = 0; i < actionDimension; i++) {
                     uCurrent[i].push(data.decision[i]);
                 }
 
@@ -1447,7 +1452,7 @@ $(document).ready(function () {
                     nextDisabled = true;
                 }
 
-                for (let i = 0; i < numVars; i++) {
+                for (let i = 0; i < stateDimension; i++) {
                     renderChart(i, xCurrent[i], [...Array(currentSim + 1).keys()], [xBoundsOuter[i][1]], [xBoundsOuter[i][0]]);
                 }
 
@@ -1538,11 +1543,11 @@ $(document).ready(function () {
         if (!nextDisabled) {
             recolourPath();
             let x_toPass = [];
-            for (let i = 0; i < numVars; i++) {
+            for (let i = 0; i < stateDimension; i++) {
                 x_toPass.push(xCurrent[i][currentSim]);
             }
             let u_toPass = [];
-            for (let i = 0; i < numResults; i++) {
+            for (let i = 0; i < actionDimension; i++) {
                 u_toPass.push(uCurrent[i][currentSim]);
             }
             let steps = $('#steps').val();
@@ -1576,12 +1581,12 @@ $(document).ready(function () {
                         drc0.appendChild(drc0_inp);
                         dumrow.appendChild(drc0);
 
-                        for (let j = 0; j < numVars; j++) {
+                        for (let j = 0; j < stateDimension; j++) {
                             const drc1 = document.createElement('td');
                             drc1.textContent = data.x_new[i][0][j];
                             dumrow.appendChild(drc1);
                         }
-                        for (let j = 0; j < numResults; j++) {
+                        for (let j = 0; j < actionDimension; j++) {
                             const drc2 = document.createElement('td');
                             drc2.textContent = data.x_new[i][1][j];
                             dumrow.appendChild(drc2);
@@ -1590,10 +1595,10 @@ $(document).ready(function () {
                         $("#simTable tbody tr:last-child").addClass('selected').siblings().removeClass('selected');
                         scrollToEndOfTable();
 
-                        for (let j = 0; j < numVars; j++) {
+                        for (let j = 0; j < stateDimension; j++) {
                             xCurrent[j].push(data.x_new[i][0][j]);
                         }
-                        for (let j = 0; j < numResults; j++) {
+                        for (let j = 0; j < actionDimension; j++) {
                             uCurrent[j].push(data.x_new[i][1][j]);
                         }
 
@@ -1601,7 +1606,7 @@ $(document).ready(function () {
                         totalSims++;
                         currentSim = totalSims;
 
-                        for (let j = 0; j < numVars; j++) {
+                        for (let j = 0; j < stateDimension; j++) {
                             chart[j].data.labels.push(totalSims);
                             chart[j].data.datasets[1].data.push(xBoundsOuter[j][1]);
                             chart[j].data.datasets[2].data.push(xBoundsOuter[j][0]);
@@ -1615,7 +1620,7 @@ $(document).ready(function () {
                         }
                     }
 
-                    for (let i = 0; i < numVars; i++) {
+                    for (let i = 0; i < stateDimension; i++) {
                         chart[i].update();
                     }
                     colourPath(lastPath[totalSims]);
@@ -1770,10 +1775,21 @@ function splitNode() {
 
 // Randomize button in Modal for selecting initial values of state variables
 function randomizeInputs() {
-    for (let i = 0; i < numVars; i++) {
-        let range = xBoundsInner[i][1] - xBoundsInner[i][0];
-        document.getElementById('x' + i).value = xBoundsInner[i][0] + (Math.random() * range);
-    }
+    console.log(idUnderInspection);
+    $.ajax({
+        data: JSON.stringify({
+            id: idUnderInspection
+        }),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/random'
+    })
+        .done(function (data) {
+            console.log("Received random point " + data);
+            for (let i = 0; i < stateDimension; i++) {
+                document.getElementById('x' + i).value = data[i];
+            }
+        });
 }
 
 // Opens second form (for initial state variable selection)
