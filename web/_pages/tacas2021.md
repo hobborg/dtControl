@@ -189,4 +189,14 @@ TODO:
 Complete table about scripts, using the new dtControl for FTF fix; for dt-cps-all, only run the additional case studies.
 Verify that the prism thing in frontend is working, actually recreate screenshot.
 Write scripts to read the results.
-Push and fix layout issues (look up how Pranav made code nice and do the same).
+Fix layout issues (code being displayed nicely, links, etc.)
+We wanted to ahve a look at the documentation.
+
+== For reference: If installation doesn't work, this might help ==
+First install pip3 (I think it is actually there). Go to the packages folder of our zip, then run 
+'''
+sudo dpkg -i python3-pip_20.0.2-5ubuntu1.1_all.deb
+'''
+TODO: libblas3, liblapack3
+Or maybe: libopenblas-dev
+sudo apt-get install gfortran libopenblas-dev 
