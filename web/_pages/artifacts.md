@@ -24,9 +24,9 @@ Here we give the resources for all artifact evaluation or repeatability evaluati
 
 
 
-[1]:{{ site.url }}/artifacts/hscc2020.html
-[2]:{{ site.url }}/artifacts/qest2020.html
-[3]:{{ site.url }}/artifacts/tacas2021.html
+[1]:{{ site.url }}/artifacts/hscc2020/
+[2]:{{ site.url }}/artifacts/qest2020/
+[3]:{{ site.url }}/artifacts/tacas2021/
 
 
 
