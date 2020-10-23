@@ -11,6 +11,10 @@ logging.getLogger("dd").setLevel(logging.CRITICAL)
 from tqdm import tqdm
 
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
+from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
+from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
+
+
 
 class BDD(BenchmarkSuiteClassifier):
     """
@@ -23,9 +27,11 @@ class BDD(BenchmarkSuiteClassifier):
     num_bits = ld((max-min)/step_size) ; used in generating the vars in the beginning of fit
     """
 
-    def __init__(self, all_or_unique_label, label_pre_processor=None):
-        self.name = f"BDD_{'actOR' if all_or_unique_label == 0 else 'UL'}" + (
-            "_prepro" if label_pre_processor != None else "")
+    # all_or_unique_label: 0 tries to or all the allowed actions, 1 gives a unique label to every combination and saves that
+    # label_pre_processor: determinizes the dataset before giving to BDD
+    # name_suffix: Appended to the name to make unique
+    def __init__(self, all_or_unique_label, label_pre_processor=None, name_suffix=None):
+        self.name = f"BDD_{'actOR' if all_or_unique_label == 0 else 'UL'}" + ("_prepro" if label_pre_processor != None else "") + (str(name_suffix) if name_suffix != None else "")
         self.bdd = _bdd.BDD()
         self.bdd.configure(reordering=False)
         self.name2node = dict()
@@ -50,9 +56,10 @@ class BDD(BenchmarkSuiteClassifier):
             self.x_metadata["variables"] = [f"x{i}" for i in range(0, len(dataset.x[0]))]
         # generate blasted vars for state vars, add them to BDD 
         self.blast_vars(self.x_metadata)
+        print("Blasted state vars")
 
         # Add blasted vars for actions; two cases: Or-ing all allowed actions (0) or unique labels (1)
-        # (Stuff like minnorm comes in case by modifying dataset before)
+        # (Stuff like minnorm comes by modifying dataset before)
         if self.all_or_unique_label == 0:
             self.act_metadata["variables"] = ["actOR"]
             self.act_metadata["max"] = [numpy.amax(dataset.get_single_labels())]
@@ -68,8 +75,13 @@ class BDD(BenchmarkSuiteClassifier):
             sys.exit()
         self.blast_vars(self.act_metadata)
 
+        print("Blasted act vars")
+
+
         # Random starting order
         self.reorder_randomly()
+
+        print("Reordered")
 
         # Finally construct the BDD
         row_num = -1
@@ -120,10 +132,15 @@ class BDD(BenchmarkSuiteClassifier):
     # generate blasted vars for vars, add them to BDD 
     # Usual means that we take num_bits = ceil( ld( (max-min)/step_size ) )
     def blast_vars(self, metadata):
+        print("Blast-vars-helper running now")
         for i in range(0, len(metadata["variables"])):
-            # num_bits = ceil( ld( (max-min)/step_size ) )
-            if metadata["max"][i] == metadata["min"][i]:
-                num_bits = 0  # catch corner case of useless vars, e.g. in cruise
+            #num_bits = ceil( ld( (max-min)/step_size ) )
+            #print("Name: " + metadata["variables"][i])
+            #print("max: " + str(metadata["max"][i]))
+            #print("min: " + str(metadata["min"][i]))
+            #print("stepsize: " + str(metadata["step_size"][i]))
+            if metadata["max"][i] - metadata["min"][i] == 0:
+                num_bits = 0 # catch corner case of useless vars, e.g. in cruise
             else:
                 num_bits = 1 + int(math.log(((metadata["max"][i] - metadata["min"][i]) / metadata["step_size"][i]), 2))
             for j in range(0, num_bits):
@@ -158,9 +175,10 @@ class BDD(BenchmarkSuiteClassifier):
         min_val = metadata["min"][i]
         max_val = metadata["max"][i]
         step_size = metadata["step_size"][i]
-        if max_val == min_val:
-            return self.bdd.true
-        num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
+
+        if max_val - min_val == 0:
+            return self.bdd.true # catch corner case of useless vars, e.g. in cruise
+        num_bits = 1 + int(math.log(((max_val-min_val) / step_size), 2))
         label = int(round((value - min_val) / step_size))
 
         # go over label in reverse order, set bits in BDD

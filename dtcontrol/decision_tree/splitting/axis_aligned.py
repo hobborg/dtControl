@@ -46,3 +46,10 @@ class AxisAlignedSplit(Split):
 
     def print_vhdl(self):
         return f'x{self.feature} <= {round(self.threshold, 6)}'
+
+    def to_json_dict(self, rounded=False, variables=None, **kwargs):
+        return {
+            "lhs":
+                {"coeff": 1, "var": variables[self.feature] if variables else self.feature},
+            "op": "<=",
+            "rhs": str(round(self.threshold, 6)) if rounded else str(self.threshold)}
