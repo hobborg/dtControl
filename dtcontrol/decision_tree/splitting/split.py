@@ -40,3 +40,7 @@ class Split(ABC):
     @abstractmethod
     def print_vhdl(self):
         pass
+
+    @abstractmethod
+    def to_json_dict(self, **kwargs):
+        pass

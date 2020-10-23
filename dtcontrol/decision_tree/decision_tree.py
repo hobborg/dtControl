@@ -1,3 +1,4 @@
+import json
 import logging
 import pickle
 from collections.abc import Iterable
@@ -98,6 +99,11 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def print_c(self):
         return self.root.print_c()
+
+    def toJSON(self, x_metadata, y_metadata):
+        variables = x_metadata.get('variables')
+        category_names = x_metadata.get('category_names')
+        return json.dumps(self.root.to_json_dict(y_metadata, variables=variables, category_names=category_names), indent=4, default=util.convert)
 
     # Needs to know the number of inputs, because it has to define how many inputs the hardware component has in
     # the "entity" block
@@ -466,3 +472,44 @@ class Node:
                 i += 1
             return result
         return f'y <= {str(label)};'
+
+    def to_json_dict(self, y_metadata, variables=None, category_names=None):
+        if self.is_leaf():
+            text_label = None
+            if self.actual_label is not None:
+                if isinstance(self.actual_label, list):
+                    text_label = [str(self.print_single_actual_label(label, y_metadata)) for label in self.actual_label]
+                else:
+                    text_label = [str(self.print_single_actual_label(self.actual_label, y_metadata))]
+            return {
+                "actual_label": text_label,
+                "children": [],
+                "split": None
+            }
+
+        if isinstance(self.split, CategoricalMultiSplit):
+            names = None
+            if category_names and self.split.feature in category_names:
+                names = category_names[self.split.feature]
+            labels = []
+            for group in self.split.value_groups:
+                if len(group) == 1:
+                    label = group[0] if not names else names[group[0]]
+                    labels.append([label])
+                else:
+                    str_group = group if not names else [names[v] for v in group]
+                    labels.append(str_group)
+        else:
+            labels = ['true', 'false']
+
+        children = []
+        for i, child in enumerate(self.children):
+            child_json = child.to_json_dict(y_metadata, variables=variables, category_names=category_names)
+            child_json.update({"edge_label": labels[i]})
+            children.append(child_json)
+
+        return {
+            "actual_label": None,
+            "children": children,
+            "split": self.split.to_json_dict(variables=variables, category_names=category_names)
+        }

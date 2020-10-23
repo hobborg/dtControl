@@ -5,12 +5,12 @@ logo: /assets/images/logo.png
 
 title: dtControl
 
-summary: Represent CPS controllers as decision trees. Improve memory footprint, boost explainability while preserving guarantees.
+summary: Represent controllers as decision trees. Improve memory footprint, boost explainability while preserving guarantees.
 
 ---
 
-**dtControl** is a tool for compressing memoryless controllers arising out of automatic controller synthesis of 
-cyber-physical systems (CPS). dtControl takes as input a controller synthesised by various formal verification 
+**dtControl** is a tool for compressing memoryless controllers, e.g. arising out of automatic controller synthesis of 
+cyber-physical systems (CPS) or probabilistic model checking. dtControl takes as input a controller synthesised by various formal verification 
 tools and represents them in the form of decision trees. An example is shown below:
 
 {::options parse_block_html="true" /}
@@ -71,6 +71,10 @@ The above command, if executed successfully, will generate a files `benchmark.ht
 
 Our complete documentation including user and developer manuals are available at [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io). Please ensure that you are referring to the correct version of the documentation.
 
+## Artifact evaluation
+
+dtControl has undergone several artifact evaluation processes. All the resources for that are available [here][1].
+
 ## Contact
 
 For questions, suggestions and comments, you may contact [Mathias](mailto:jackerme@in.tum.de), [Pranav](ashok@in.tum.de), [Maxi](maxi.weininger@tum.de) or [Jan](jan.kretinsky@tum.de). We would also be glad to help you incorporate dtControl into your controller synthesis/usage workflow. Other feature requests are also welcome.
@@ -106,3 +110,5 @@ Other closely related publications include:
 *CAV 2015*
 <br />
 [view](https://doi.org/10.1007/978-3-319-21690-4_10) / [bibtex](https://dblp.org/rec/bibtex/conf/cav/BrazdilCCFK15) / [pre-print](https://arxiv.org/abs/1502.02834)
+
+[1]:{{ site.url }}/artifacts

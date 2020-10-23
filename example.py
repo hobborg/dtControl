@@ -15,7 +15,7 @@ suite = BenchmarkSuite(timeout=3600,
                        benchmark_file='benchmark',
                        rerun=True)
 
-suite.add_datasets(['examples', 'examples/prism', 'examples/storm', 'examples/eval'], include=['cartpole'])
+suite.add_datasets(['examples', 'examples/prism', 'examples/storm', 'examples/cps'], include=['cartpole'])
 
 logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
 logreg.priority = 1
