@@ -92,3 +92,17 @@ i.fa {
 .card-columns {
     column-count: 2;
 }
+
+#simTable {
+    height: 100%;
+}
+
+#tableHere {
+    height: 95%;
+}
+
+.table-fixed {
+    overflow-y: scroll;
+    width: 100%;
+    display: block;
+}

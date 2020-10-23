@@ -96,7 +96,7 @@
 
                 <!-- Range slider for speed of simulation -->
                 <div id="timeRangeContainer" class="d-none">
-                    <label id="timeRangeLabel" class="ml-4 float-left" for="timeRange">Animation Speed</label>
+                    <label id="timeRangeLabel" class="ml-4 float-left" for="timeRange">Simulation Speed</label>
                     <input type="range" min="0.25" max="2" value="1" step="0.05" class="slider float-left" id="timeRange">
                     <div id="timeRate" class="ml-1 mr-4 float-left">1x</div>
                 </div>
@@ -154,7 +154,7 @@
             </div>
 
             <!-- Column for model visualisation -->
-            <div class="col-lg-6" id="hideThisDiv" style="display:none">
+            <div class="col-lg-6 d-none" id="hideThisDiv">
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div style="text-align:center;">
@@ -244,10 +244,9 @@
         <div id="mainRow2" class="row ml-2 d-none">
             <div class="col-lg-12">
                 <div class="card shadow mb-4">
-                    <div class="card-body">
-                        <div class="table-responsive">
+                    <div class="card-body overflow-auto">
+                        <div id="tableHere">
                             <!-- Table in this div -->
-                            <div id="tableHere">
                                 <table id="simTable" class="table table-fixed rounded">
                                     <thead class="custom-thead">
 
@@ -258,17 +257,14 @@
                                     </tr>
                                     </tbody>
                                 </table>
-                            </div>
-
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Row for charts with two columns -->
-        <div id="mainRow3" class="row ml-2 d-none" style="display: none;">
+        <div id="mainRow3" class="row ml-2 d-none">
             <div class="col-lg-6" id="chartsHere0">
 
             </div>

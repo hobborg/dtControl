@@ -453,7 +453,7 @@ function colourPath(str) {
 
 // Returns all nodes in tree to white colour
 function recolourPath() {
-    if (treeAnimation) {
+    if (treeAnimation && lastPath && currentSim >= 0) {
         root.coleur = "white";
         let dummy = root;
         for (let i = 0; i < lastPath[currentSim].length; i++) {
@@ -571,6 +571,10 @@ function checkBounds() {
     return true;
 }
 
+function tableScroller () {
+    tab.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
+}
+
 function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
     // TODO P: Find all the global variables used here and allow to reset them
     for (let i = 0; i < stateDimension; i++) {
@@ -584,9 +588,7 @@ function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
     }
     const tab = document.getElementById('simTable');
 
-    tab.addEventListener("scroll", function () {
-        this.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
-    });
+    tab.addEventListener("scroll", tableScroller);
 
     // Header row
     const dumrow = document.createElement('tr');
@@ -647,7 +649,25 @@ function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
     }
     tab.deleteRow(-1);
     tab.tHead.appendChild(dumrow);
-    simTableDiv.appendChild(tab);
+    // simTableDiv.appendChild(tab);
+}
+
+function destroySimulatorTablesAndCharts() {
+    xCurrent = [];
+    chart = [];
+    chartConfig = [];
+    uCurrent = [];
+    nextDisabled = false;
+
+    const tab = document.getElementById('simTable');
+    tab.removeEventListener("scroll", tableScroller);
+
+    // Empty table
+    $("#simTable tr").remove();
+
+    // Empty charts
+    document.getElementById("chartsHere0").innerHTML = "";
+    document.getElementById("chartsHere1").innerHTML = "";
 }
 
 // Renders all the charts using Chart.js
@@ -754,6 +774,7 @@ async function oneStep() {
     if (currentSim == totalSims) {
 
         if (nextDisabled) {
+            popupModal("Error", "Simulation trace out of bounds. Refresh page and try different initial values.");
             clearInterval(plpause);
             return;
         }
@@ -1172,6 +1193,47 @@ function refresh_interactive_tables() {
     });
 }
 
+function deactivateSimulator() {
+    // Return node colors to white
+    recolourPath();
+    destroySimulatorTablesAndCharts();
+    isSimulator = false;
+    document.getElementById("mainRow2").classList.add("d-none");
+    document.getElementById("mainRow3").classList.add("d-none");
+    //document.getElementById("expandThisDiv").style.height = "450px";
+    document.getElementById("playerDiv").classList.add("d-none");
+    document.getElementById("timeRangeContainer").classList.add("d-none");
+    document.getElementById("instep").classList.add("d-none");
+    document.getElementById("animationDiv").classList.add("d-none");
+
+    $("#dynamics-body").show();
+    $("#initial-values").hide();
+    $("#formSecond-next-button").show();
+    $("#formSecond-randomize-button").hide();
+    $("#formSecond-submit-button").hide();
+    $("#exampleModalLongTitle").html("Enter system dynamics");
+
+    // document.getElementById("hideThisDiv").style.display = "block";
+}
+
+function deactivateEdit()
+{
+    document.getElementById("expandAllButton").removeAttribute("disabled");
+    document.getElementById("collapseAllButton").removeAttribute("disabled");
+
+    document.getElementById("retrain-button").classList.add("d-none");
+    document.getElementById("interactive-button").classList.add("d-none");
+
+    // editMode = false;
+    disableNodeSelect();
+    // update(root);
+}
+
+function deactivateInspect()
+{
+    // Nothing here
+}
+
 $(document).ready(function () {
     let numChanges = 0;
 
@@ -1261,52 +1323,22 @@ $(document).ready(function () {
     });
 
     // Simulate Button
-    $("#operation-selector").on("click", function (event) {
-        function deactivateSimulator() {
-            isSimulator = false;
-            document.getElementById("mainRow2").classList.add("d-none");
-            document.getElementById("mainRow3").classList.add("d-none");
-            //document.getElementById("expandThisDiv").style.height = "450px";
-            document.getElementById("playerDiv").classList.add("d-none");
-            document.getElementById("timeRangeContainer").classList.add("d-none");
-            document.getElementById("instep").classList.add("d-none");
-            document.getElementById("animationDiv").classList.add("d-none");
-
-            $("#dynamics-body").show();
-            $("#initial-values").hide();
-            $("#formSecond-next-button").show();
-            $("#formSecond-randomize-button").hide();
-            $("#formSecond-submit-button").hide();
-            $("#exampleModalLongTitle").html("Enter system dynamics");
-
-            // document.getElementById("hideThisDiv").style.display = "block";
-        }
-
-        function deactivateEdit()
-        {
-            document.getElementById("expandAllButton").removeAttribute("disabled");
-            document.getElementById("collapseAllButton").removeAttribute("disabled");
-
-            document.getElementById("retrain-button").classList.add("d-none");
-            document.getElementById("interactive-button").classList.add("d-none");
-
-            // editMode = false;
-            disableNodeSelect();
-            // update(root);
-        }
-
-        function deactivateInspect()
-        {
-            // Nothing here
-        }
-
+    $("#operation-selector input").on("click", function (event) {
         let option = $("#operation-selector input:checked")[0].id;
+        console.log("Selected " + option);
         if (option === "option-simulate") {
             isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
             deactivateEdit();
             triggerDynamicsInput();
+            document.getElementById("mainRow2").classList.remove("d-none");
+            document.getElementById("mainRow3").classList.remove("d-none");
+            //document.getElementById("expandThisDiv").style.height = "450px";
+            document.getElementById("playerDiv").classList.remove("d-none");
+            document.getElementById("timeRangeContainer").classList.remove("d-none");
+            document.getElementById("instep").classList.remove("d-none");
+            // document.getElementById("animationDiv").classList.remove("d-none");
         }
         else if (option === "option-edit") {
             deactivateSimulator();
@@ -1413,12 +1445,12 @@ $(document).ready(function () {
                 document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree
-                if (controllerFile == "cartpole.scs") {
-                    document.getElementById("expandThisDiv").className = "col-lg-6";
-                    document.getElementById("hideThisDiv").style.display = "block";
-                } else {
-                    document.getElementById("hideThisDiv").remove();
-                }
+                // if (controllerFile == "cartpole.scs") {
+                //     document.getElementById("expandThisDiv").className = "col-lg-6";
+                //     document.getElementById("hideThisDiv").classList.remove("d-none");
+                // } else {
+                //     document.getElementById("hideThisDiv").classList.add("d-none");
+                // }
 
                 //data .decision changed to array
                 const tab = document.getElementById('simTable');
@@ -1645,6 +1677,8 @@ $(document).ready(function () {
                     drawCanvas();
 
                 });
+        } else {
+            popupModal("Error", "Simulation trace out of bounds. Refresh page and try different initial values.");
         }
         event.preventDefault();
     });
@@ -1703,11 +1737,11 @@ if (slider) {
     slider.oninput = function () {
         // 1x = 500ms
         if (parseInt($("input[name=player]:checked").val()) == 0) {
-            timeOfSlider = 500 * this.value;
+            timeOfSlider = 500 / this.value;
             clearInterval(plpause);
             plpause = setInterval(oneStep, timeOfSlider);
         } else {
-            timeOfSlider = 500 * this.value;
+            timeOfSlider = 500 / this.value;
         }
         document.getElementById("timeRate").innerText = parseFloat(this.value).toFixed(2) + "x";
     }
