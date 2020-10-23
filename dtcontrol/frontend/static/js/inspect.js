@@ -908,7 +908,11 @@ function run_partial_construction(configuration) {
         type: 'POST',
         contentType: "application/json; charset=utf-8",
         url: '/construct-partial/from-preset',
-        beforeSend: () => {},
+        beforeSend: () => {
+            $("body").css("cursor", "progress");
+            document.getElementById("retrain-button").disabled = "true";
+            document.getElementById("interactive-button").disabled = "true";
+        },
     }).done(data => {
         // Change existing tree data at the necessary position to data
         console.log("Return from partial construct: ", data);
@@ -919,6 +923,11 @@ function run_partial_construction(configuration) {
             pointer = pointer.children[pos]
         });
         replaceInTree(pointer, data);
+        $("body").css("cursor", "default");
+
+        document.getElementById("retrain-button").removeAttribute("disabled");
+        document.getElementById("interactive-button").removeAttribute("disabled");
+
     });
 }
 
@@ -928,7 +937,10 @@ function start_interactive_construction(configuration) {
         type: 'POST',
         contentType: "application/json; charset=utf-8",
         url: '/construct-partial/interactive',
-        beforeSend: () => {},
+        beforeSend: () => {
+            $("body").css("cursor", "progress");
+            document.getElementById("retrain-button").disabled = "true";
+            document.getElementById("interactive-button").disabled = "true";},
     }).done(data => {
         // Change existing tree data at the necessary position to data
         console.log("Return from interactive construct: ", data);
@@ -938,6 +950,10 @@ function start_interactive_construction(configuration) {
             pointer = pointer.children[pos]
         });
         replaceInTree(pointer, data);
+        $("body").css("cursor", "default");
+
+        document.getElementById("retrain-button").removeAttribute("disabled");
+        document.getElementById("interactive-button").removeAttribute("disabled");
     });
 }
 
