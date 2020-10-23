@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 
 from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiLabelImpurityMeasure
@@ -5,7 +7,7 @@ from dtcontrol.decision_tree.impurity.multi_label_impurity_measure import MultiL
 class MultiLabelTwoingRule(MultiLabelImpurityMeasure):
     def calculate_impurity(self, dataset, split):
         if len(split.get_masks(dataset)) == 1:
-            return np.inf
+            return sys.maxsize
         assert len(split.get_masks(dataset)) == 2
         y = dataset.get_single_labels()
 
@@ -17,7 +19,7 @@ class MultiLabelTwoingRule(MultiLabelImpurityMeasure):
         right_flat = right.flatten()
         right_flat = right_flat[right_flat != -1]
         if len(left) == 0 or len(right) == 0:
-            return np.inf
+            return sys.maxsize
         num_labels = len(y)
         twoing_value = (len(left) / num_labels) * (len(right) / num_labels)
 
@@ -43,5 +45,5 @@ class MultiLabelTwoingRule(MultiLabelImpurityMeasure):
             s += abs(num_left / len(left) - num_right / len(right))
         twoing_value *= s * s
         if twoing_value == 0:
-            return np.inf
+            return sys.maxsize
         return 1 / twoing_value

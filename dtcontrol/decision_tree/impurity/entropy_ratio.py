@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 
 from dtcontrol.decision_tree.impurity.determinizing_impurity_measure import DeterminizingImpurityMeasure
@@ -6,7 +8,7 @@ class EntropyRatio(DeterminizingImpurityMeasure):
     def calculate_impurity(self, dataset, split):
         if any(np.all(mask == False) for mask in split.get_masks(dataset)) or \
                 len(split.get_masks(dataset)) == 1:
-            return np.inf
+            return sys.maxsize
 
         split_entropy = self.calculate_split_entropy(dataset, split)
         split_info = self.calculate_split_info(dataset, split)
