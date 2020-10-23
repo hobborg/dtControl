@@ -66,7 +66,7 @@ class IntegrationTest(unittest.TestCase):
                 'OC1': 4639
             },
             'firewire_abst': {
-                'CategoricalCART': 13,
+                'CategoricalCART': 10,
                 'AVG': 6
             },
             'wlan0': {
@@ -143,7 +143,7 @@ class IntegrationTest(unittest.TestCase):
                 self.assertFalse('accuracy' in stats, 'Accuracy not 1.0')
                 actual_paths = stats['paths']
                 tol = (tol_percent / 100) * expected_paths
-                tol = max(tol, 5)  # fix for small trees
+                tol = max(tol, 10)  # fix for small trees
                 self.assertTrue(expected_paths - tol <= actual_paths <= expected_paths + tol,
                                 f'Expected: [{expected_paths - tol}, {expected_paths + tol}], Actual: {actual_paths}'
                                 f' with {classifier} on {ds}')

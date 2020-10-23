@@ -17,6 +17,7 @@ class LinearSplit(Split, ABC):
         :param real_coefficients: the coefficients with respect to all columns
         :param numeric_columns: a list of integers defining the numeric columns
         """
+        super().__init__()
         self.coefficients = coefficients
         self.intercept = intercept
         self.real_coefficients = real_coefficients

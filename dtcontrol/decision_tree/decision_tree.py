@@ -8,6 +8,8 @@ from typing import Sequence
 import numpy as np
 
 import dtcontrol.util as util
+from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
+from dtcontrol.util import Caller
 from dtcontrol.benchmark_suite_classifier import BenchmarkSuiteClassifier
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.impurity.determinizing_impurity_measure import DeterminizingImpurityMeasure
@@ -16,6 +18,9 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplit, CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.util import print_tuple
+from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
+    ContextAwareSplittingStrategy
+
 
 
 class DecisionTree(BenchmarkSuiteClassifier):
@@ -52,6 +57,13 @@ class DecisionTree(BenchmarkSuiteClassifier):
             raise ValueError('Determinization during tree construction '
                              'can only be used if early stopping is enabled without parameters.')
 
+    def check_categorical(self, dataset):
+        supports_categorical = any((isinstance(strategy, CategoricalMultiSplittingStrategy) or
+                                    isinstance(strategy, CategoricalSingleSplittingStrategy))
+                                   for strategy in self.splitting_strategies)
+        if not supports_categorical:
+            dataset.set_treat_categorical_as_numeric()
+
     def is_applicable(self, dataset):
         if dataset.is_deterministic:
             if isinstance(self.impurity_measure, MultiLabelImpurityMeasure):
@@ -60,12 +72,16 @@ class DecisionTree(BenchmarkSuiteClassifier):
                 return False
         return True
 
-    def fit(self, dataset):
+    def fit(self, dataset, **kwargs):
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
+        self.check_categorical(dataset)
         self.root = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                          self.early_stopping_num_examples, self.early_stopping_optimized)
-        self.root.fit(dataset)
+        for split_strat in self.splitting_strategies:
+            if isinstance(split_strat, ContextAwareSplittingStrategy):
+                split_strat.set_root(self.root)
+        self.root.fit(dataset, **kwargs)
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
@@ -160,23 +176,61 @@ class Node:
         else:
             return [tuple_or_value.item()], decision_path
 
-    def fit(self, dataset):
+    def fit(self, dataset, **kwargs):
         if self.check_done(dataset):
             return
+
+        # Rounds are used to control how many levels of tree building is to be done
+        # before returning the tree (possibly incomplete). This is useful for the
+        # interactive tree building from the Web UI.
+        if "rounds" in kwargs:
+            if kwargs["rounds"] > 0:
+                kwargs["rounds"] = kwargs["rounds"] - 1
+            else:
+                return
+
         pre_determinize = isinstance(self.impurity_measure, DeterminizingImpurityMeasure) and \
                           self.impurity_measure.determinizer.is_pre_split()
         if pre_determinize:
             self.impurity_measure.determinizer.pre_determinized_labels = None
             determinized_labels = self.impurity_measure.determinizer.determinize(dataset)
             self.impurity_measure.determinizer.pre_determinized_labels = determinized_labels
-        splits = [strategy.find_split(dataset, self.impurity_measure) for strategy in self.splitting_strategies]
+        splits = [strategy.find_split(dataset, self.impurity_measure, **kwargs) for strategy in self.splitting_strategies]
         splits = [s for s in splits if s is not None]
         if not splits:
             self.logger.warning("Aborting branch: no split possible.")
             if pre_determinize:
                 self.impurity_measure.determinizer.pre_determinized_labels = None
             return
-        self.split = min(splits, key=lambda s: self.impurity_measure.calculate_impurity(dataset, s))
+
+        fallback_dict = {}
+        split_dict = {}
+
+        for split in splits:
+            impurity = self.impurity_measure.calculate_impurity(dataset, split)
+            if impurity < 9223372036854775807:
+                if split.priority == 0:
+                    fallback_dict[split] = impurity
+                elif split.priority <= 1 or split.priority > 0:
+                    split_dict[split] = impurity / split.priority
+                else:
+                    # One split appeared with split.priority > 1 or split.priority < 0:
+                    self.logger.warning("Aborting: only splitting strategy priorities between 0 and 1 allowed.")
+                    return
+
+        # Choosing the right split for self.split
+        if split_dict:
+            # Using the best split from split_dict
+            self.split = min(split_dict.keys(), key=split_dict.get)
+        elif fallback_dict:
+            # Using the best fallback split
+            self.split = min(fallback_dict.keys(), key=fallback_dict.get)
+        else:
+            self.logger.warning("Aborting branch: no split possible.")
+            if pre_determinize:
+                self.impurity_measure.determinizer.pre_determinized_labels = None
+            return
+
         if pre_determinize:
             self.impurity_measure.determinizer.pre_determinized_labels = None
 
@@ -187,10 +241,16 @@ class Node:
                                 "You might want to consider adding more splitting strategies.")
             return
         for subset in subsets:
+            # TODO P: Store address in the Node object if needed in frontend
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
                         self.early_stopping_num_examples, self.early_stopping_optimized, self.depth + 1)
-            node.fit(subset)
+
+            for split_strat in self.splitting_strategies:
+                if isinstance(split_strat, ContextAwareSplittingStrategy):
+                    split_strat.set_current_node(node)
+
             self.children.append(node)
+            node.fit(subset, **kwargs)
         self.num_nodes = 1 + sum([c.num_nodes for c in self.children])
         self.num_inner_nodes = 1 + sum([c.num_inner_nodes for c in self.children])
 

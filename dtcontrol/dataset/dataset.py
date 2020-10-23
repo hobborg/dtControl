@@ -69,6 +69,11 @@ class Dataset(ABC):
         self.x = None
         self.numeric_x = None
         self.categorical_x = None
+
+        # In case all splitting strategies are numeric, this variable is set to true so that
+        # numeric splitting strategies can work on the categorical variables
+        self.treat_categorical_as_numeric = False
+
         self.x_metadata = {"variables": None, "categorical": None, "category_names": None,
                            "min": None, "max": None, "step_size": None}
         self.y = None
@@ -88,6 +93,7 @@ class Dataset(ABC):
     def copy_from_other_dataset(self, ds):
         self.x = ds.x
         self.numeric_x = None
+        self.numeric_columns = None
         self.categorical_x = None
         self.x_metadata = ds.x_metadata
         self.y = ds.y
@@ -96,6 +102,7 @@ class Dataset(ABC):
         self.numeric_feature_mapping = ds.numeric_feature_mapping
         self.categorical_feature_mapping = ds.categorical_feature_mapping
         self.is_deterministic = ds.is_deterministic
+        self.treat_categorical_as_numeric = ds.treat_categorical_as_numeric
 
     def load_if_necessary(self):
         if self.x is None:
@@ -116,7 +123,10 @@ class Dataset(ABC):
 
     def get_numeric_x(self):
         if self.numeric_x is None:
-            self.numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
+            if self.treat_categorical_as_numeric:
+                self.numeric_columns = set(range(self.x.shape[1]))
+            else:
+                self.numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
             self.numeric_columns = sorted(list(self.numeric_columns))
             self.numeric_feature_mapping = {i: self.numeric_columns[i] for i in range(len(self.numeric_columns))}
             self.numeric_x = self.x[:, self.numeric_columns]
@@ -129,6 +139,9 @@ class Dataset(ABC):
                                                 range(len(self.categorical_columns))}
             self.categorical_x = self.x[:, self.categorical_columns]
         return self.categorical_x
+
+    def set_treat_categorical_as_numeric(self):
+        self.treat_categorical_as_numeric = True
 
     def map_numeric_feature_back(self, feature):
         return self.numeric_feature_mapping[feature]

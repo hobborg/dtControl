@@ -1,7 +1,62 @@
+import json
 import logging
+import queue
+from enum import Enum
 from os.path import basename, splitext
 
 import numpy as np
+
+
+# Queue for use in interactive tree building between web ui and backend
+class InteractiveQueue:
+    def __init__(self):
+        self.backend_to_frontend = queue.Queue()
+        self.frontend_to_backend = queue.Queue()
+        self.ready = False
+
+    def set_ready(self):
+        self.ready = True
+
+    def set_done(self):
+        self.ready = False
+
+    def get_ready(self):
+        return self.ready
+
+    def get_done(self):
+        return not self.ready
+
+    def send_to_front(self, item):
+        self.backend_to_frontend.put(item)
+
+    def send_to_back(self, item):
+        self.frontend_to_backend.put(item)
+
+    def get_from_front(self):
+        return self.frontend_to_backend.get()
+
+    def get_from_back(self):
+        return self.backend_to_frontend.get()
+
+    def reset(self):
+        for q in [self.backend_to_frontend, self.frontend_to_backend]:
+            for _ in range(q.qsize()):
+                q.get_nowait()
+                q.task_done()
+
+
+interactive_queue = InteractiveQueue()
+
+
+class Caller(Enum):
+    # Indicates that dtControl is run using Python code
+    PYTHON = 1
+
+    # Indicates that dtControl is run from the CLI
+    CLI = 2
+
+    # Indicates that dtControl is run from the Web UI
+    WEBUI = 3
 
 
 def ignore_convergence_warnings():
@@ -104,3 +159,13 @@ def convert(o):
     if isinstance(o, np.float32):
         return float(o)
     raise TypeError
+
+
+def error_wrapper(msg):
+    ret = {"type": "error", "body": msg}
+    return json.dumps(ret)
+
+
+def success_wrapper(msg):
+    ret = {"type": "success", "body": msg}
+    return json.dumps(ret)

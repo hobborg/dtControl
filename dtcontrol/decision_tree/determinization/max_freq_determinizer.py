@@ -17,11 +17,16 @@ class MaxFreqDeterminizer(Determinizer):
         return self.get_max_freq_labels(dataset.get_single_labels())
 
     @staticmethod
-    def get_max_freq_labels(labels):
+    def get_label_counts(labels):
         flattened_labels = labels.flatten()
         # remove -1 as we use it only as a filler
         flattened_labels = flattened_labels[flattened_labels != -1]
         label_counts = np.bincount(flattened_labels)
+        return label_counts
+
+    @staticmethod
+    def get_max_freq_labels(labels):
+        label_counts = MaxFreqDeterminizer.get_label_counts(labels)
         new_labels = []
         for i in range(len(labels)):
             current = labels[i]

@@ -12,6 +12,10 @@
     font: 12px sans-serif;
 }
 
+.scaled:hover {
+    cursor: help;
+}
+
 .link {
     fill: none;
     stroke: #ccc;
@@ -19,19 +23,8 @@
 }
 
 #treeHere {
-    overflow: scroll;
+    overflow: hidden;
     height: 90%;
-}
-
-#tableHere {
-    overflow: scroll;
-}
-
-.table-fixed {
-    height: 300px;
-    overflow-y: scroll;
-    width: 100%;
-    display: block;
 }
 
 #expandThisDiv {
@@ -43,7 +36,6 @@
 }
 
 .card-body {
-    height: 625px;
     max-width: 100%;
     overflow: hidden;
 }

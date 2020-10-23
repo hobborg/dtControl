@@ -38,6 +38,7 @@ setuptools.setup(
               'dtcontrol.decision_tree.determinization',
               'dtcontrol.decision_tree.impurity',
               'dtcontrol.decision_tree.splitting',
+              'dtcontrol.decision_tree.splitting.context_aware',
               'dtcontrol.decision_tree.OC1_source',
               'dtcontrol.frontend',
               'dtcontrol.post_processing',
@@ -49,24 +50,23 @@ setuptools.setup(
                             'dtcontrol-frontend=dtcontrol.frontend.app:start_web_frontend'],
     },
     classifiers=[
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         'License :: OSI Approved :: MIT License'
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7.9',
     install_requires=[
         'dd==0.5.5',
         'Jinja2==2.10.3',
         'pandas==0.25.2',
-        'psutil==5.6.7',
+        'psutil>=5.6.7',
         'pydot==1.4.1',
         'ruamel.yaml==0.16.10',
         'scikit-learn==0.22',
         'tabulate==0.8.6',
         'tqdm==4.42.0',
         'flask==1.1.2',
-        'gevent==20.6.2',
+        'gevent==20.9.0',
         'sympy==1.6.1'
     ],
     package_data={

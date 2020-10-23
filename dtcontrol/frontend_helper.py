@@ -7,6 +7,7 @@ Run dtcontrol --help to see usage.
 """
 
 import logging
+import random
 import sys
 import time
 from collections import namedtuple, OrderedDict
@@ -24,7 +25,7 @@ from sklearn.svm import LinearSVC
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
-from dtcontrol.decision_tree.decision_tree import DecisionTree
+from dtcontrol.decision_tree.decision_tree import DecisionTree, Node
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 # Import determinizers
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
@@ -41,18 +42,23 @@ from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy import RicherDomainCliStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
+from dtcontrol.decision_tree.splitting.split import Split
 # Import preprocessing strategies
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
 
 
-# Subset of cli.py with core_parser replaced with main_parse
+# Subset of cli.py with core_parser replaced with train
+from dtcontrol.util import Caller
+
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
-                   name=None):
+                   name=None, user_predicates=None, fallback=None):
     """
     Creates classifier objects for each method
 
@@ -94,6 +100,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
+        'richer-domain': lambda x, y: RicherDomainSplittingStrategy(user_given_splits=x, determinizer=y),
     }
     impurity_map = {
         'auroc': lambda x: AUROC(determinizer=x),
@@ -145,6 +152,19 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     for sp in combined_split:
         if sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
             splitting_strategy.append(splitting_map[sp](determinization_map[determinize](None)))
+        elif sp in ['richer-domain']:
+            splitting_strategy.append(splitting_map[sp](user_predicates, determinization_map[determinize](None)))
+            if fallback:
+                # add fallbacks to strategy
+                for fallback_sp in fallback[0]+fallback[1]:
+                    if fallback_sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
+                        f_sp = splitting_map[fallback_sp](determinization_map[determinize](None))
+                        f_sp.priority = 0
+                        splitting_strategy.append(f_sp)
+                    else:
+                        f_sp = splitting_map[fallback_sp](None)
+                        f_sp.priority = 0
+                        splitting_strategy.append(f_sp)
         else:
             splitting_strategy.append(splitting_map[sp](None))
 
@@ -228,21 +248,39 @@ def is_valid_file_or_folder(arg):
         return arg
 
 
-def intoJSON(rt, parent, address):
+def intoJSON(rt, parent, address, y_metadata):
     # returns a string (JSON format that we need)
     # address is an array of integers
-    rt_name = "sth"
     if len(rt.children) > 0:
         rt_name = rt.split.print_c()
     else:
-        rt_name = rt.print_c_label()
+        try:
+            # rt_name = rt.print_c_label()
+            rt_name = rt.print_dot_label(y_metadata)
+        except ValueError:
+            # In interactive tree building, we often get trees that are incomplete
+            # for such trees, print_c_label() throws an exception.
+            rt_name = "Not yet homogeneous"
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
     for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i]))
+        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i], y_metadata))
     return strdummy
 
+def get_mask_given_address(existing_tree=None, node_address=None, dataset=None):
+    # Navigate to node_address in the saved_tree and call get_mask
+    pointer: Node = existing_tree
+    mask = pointer.split.get_masks(dataset)[node_address[0]]
+    for pos in node_address:
+        mask = [a and b for a, b in zip(mask, pointer.split.get_masks(dataset)[pos])]
+        pointer = pointer.children[pos]
+    # Get the split masks (one for each child) from the parent and pick the correct child
+    # TODO P: we have to OR all the masks that lead up to this child node!
+    return mask
 
-def main_parse(args):
+def mask_as_int(mask):
+    return int("".join([str(e) for e in [1] + list(map(int, mask))]), 2)
+
+def train(args):
     # args will be passed as a dict to this function
     # works exactly like core_parser in cli.py
     # kwargs = dict()
@@ -268,16 +306,31 @@ def main_parse(args):
     default_config: OrderedDict = load_default_config()
     user_config: Union[None, OrderedDict] = None
 
-    run_config_table = []
-    Row = namedtuple('Row',
-                     ['Name', 'NumericPredicate', 'CategoricalPredicate', 'Determinize', 'Impurity', 'Tolerance',
-                      'SafePruning'])
+    fallback_numeric, fallback_categorical = None, None
+    user_predicates = None
+
+    # if "partial" in args.keys():
+    #     if args["partial"]["address"]:
+    #         ds.from_mask()
 
     if "config" in args.keys():
         presets = args["config"]
-        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
-                                                                                                      user_config,
-                                                                                                      default_config)
+
+        if "algebraic" in presets:
+            presets = args["config"]
+            numeric_split = ["richer-domain"]
+            categorical_split = []
+            determinize = args["determinize"]
+            impurity = args["impurity"]
+            tolerance = float(args["tolerance"])
+            safe_pruning = (args["safe-pruning"] == "true")
+            fallback_numeric = get_preset(args["fallback"], user_config, default_config)[0]
+            fallback_categorical = get_preset(args["fallback"], user_config, default_config)[1]
+            user_predicates = args["user_predicates"]
+        else:
+            numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
+                                                                                                          user_config,
+                                                                                                          default_config)
     else:
         presets = "default"
         numeric_split = args["numeric-predicates"]
@@ -291,17 +344,13 @@ def main_parse(args):
     try:
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
                                     tolerance=tolerance,
-                                    safe_pruning=safe_pruning, name=presets)
+                                    safe_pruning=safe_pruning, name=presets, user_predicates=user_predicates,
+                                    fallback=(fallback_numeric, fallback_categorical))
     except EnvironmentError:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. This could be "
                         f"because the preset '{presets}' is not supported on this platform. Skipping...\n")
     except Exception:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. Skipping...\n")
-
-    run_config_table.append(
-        Row(Name=presets, NumericPredicate=numeric_split, CategoricalPredicate=categorical_split,
-            Determinize=determinize, Impurity=impurity, Tolerance=tolerance,
-            SafePruning=safe_pruning))
 
     if not classifier:
         logging.warning(
@@ -310,6 +359,14 @@ def main_parse(args):
 
     logging.info("Frontend: loading dataset...")
     ds.load_if_necessary()
+
+    if "existing_tree" in args:
+        if args["base_node_address"]:
+            mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
+                                          dataset=ds)
+            ds = ds.from_mask(mask)
+            ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
     start = time.time()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
 
@@ -318,5 +375,81 @@ def main_parse(args):
     logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
-    retDict = intoJSON(classifier.root, "null", [])
-    return retDict, ds.x_metadata, ds.y_metadata, classifier, run_time
+    try:
+        address = args["base_node_address"]
+    except KeyError:
+        address = []
+    classifier_as_json = intoJSON(classifier.root, "null", address, ds.y_metadata)
+    return {
+        "classifier": classifier, "classifier_as_json": classifier_as_json,
+        "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
+        "run_time": run_time
+    }
+
+
+def interactive(args):
+    file = args["controller"]
+    is_valid_file_or_folder(file)
+
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    classifier = DecisionTree([RicherDomainCliStrategy()], Entropy(), 'Interactive-Entropy', early_stopping=True)
+
+    logging.info("Frontend: loading dataset...")
+    ds.load_if_necessary()
+
+    if "existing_tree" in args:
+        if args["base_node_address"]:
+            mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
+                                          dataset=ds)
+            ds = ds.from_mask(mask)
+            ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    start = time.time()
+    # benchmark does a lot of other stuff as well, we just need load if necessary from it
+
+    logging.info("Frontend: fitting dataset to tree...")
+    classifier.fit(ds, caller=Caller.WEBUI, rounds=1)
+    logging.info("Frontend: tree constructed.")
+    run_time = time.time() - start
+    # intoJSON takes the classifier root and returns a JSON in required format
+    try:
+        address = args["base_node_address"]
+    except KeyError:
+        address = []
+    classifier_as_json = intoJSON(classifier.root, "null", address, ds.y_metadata)
+    return {
+        "classifier": classifier, "classifier_as_json": classifier_as_json,
+        "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
+        "run_time": run_time
+    }
+
+def get_random_point_from_dataset(controller_file):
+    is_valid_file_or_folder(controller_file)
+    ext = controller_file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(controller_file, ext):
+        ds = MultiOutputDataset(controller_file)
+    else:
+        ds = SingleOutputDataset(controller_file)
+    ds.load_if_necessary()
+    discrete_point = random.choice(ds.x)
+    return discrete_point
+
+
+def start_websocket_with_frontend():
+    from websocket import create_connection
+    ws = create_connection("ws://127.0.0.1:8080")
+    print("Sending 'Hello, World'...")
+    while True:
+        result = ws.recv()
+        if result == "CLOSE":
+            break
+        print("Received '%s'" % result)
+        ws.send(f"Thanks for {result}")
+    ws.close()

@@ -1,154 +1,8 @@
 {% extends 'base.html' %}
 
-{% block hamburger %}
-    <!--Add is-active to class to change it-->
-    <button id="navbar-hamburger" class="hamburger hamburger--spin" type="button" onClick="openNav()">
-      <span class="hamburger-box">
-        <span class="hamburger-inner"></span>
-      </span>
-    </button>
-{% endblock %}
 
 {% block content %}
-<!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->
-<div id="mySidenav" class="sidenav">
-    <form id="formFirst">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <label for="controller-search-directory">Controller Directory</label>
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" id="controller-search-directory" placeholder="Path to controller files"/>
-                        <div class="input-group-append">
-                            <button id="controller-directory-load" class="btn btn-secondary" style="height:calc(1.5em + .6rem + 2px);" type="button">Load</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <label for="controller">Controller</label>
-                    <div class="select">
-                        <select class="custom-select" id="controller" name="controller">
-                            <option selected>Enter controller directory first</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <label for="config">Preset</label>
-                    <div class="search_categories">
-                        <div class="select">
-                            <select class="custom-select" id="config" name="config">
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Divider -->
-
-            <div class="row mt-3">
-                <div id="accordion">
-                    <button id="accordionButton" type="button" class="btn btn-link collapsed" data-toggle="collapse"
-                            data-target="#advancedOptions">
-                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-right-fill"
-                             fill="currentColor"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12.14 8.753l-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"></path>
-                        </svg>
-{#                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-down-fill hidden"#}
-{#                             fill="currentColor" xmlns="http://www.w3.org/2000/svg">#}
-{#                            <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"></path>#}
-{#                        </svg>#}
-                        <span>Show advanced options</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="advancedOptions" class="collapse" data-parent="#accordion">
-                <div class="row">
-                    <div class="col-12">
-                        <label for="determinize">Determinize</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="determinize" name="determinize">
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="numeric-predicates">Numeric Predicates</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="numeric-predicates" name="numeric-predicates"
-                                        multiple>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="categorical-predicates">Categorical Predicates</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="categorical-predicates"
-                                        name="categorical-predicates" multiple>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="impurity">Impurity</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" id="impurity" name="impurity">
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="tolerance">Tolerance</label>
-                        <div>
-                            <input class="input-group-text" type="text" id="tolerance" name="tolerance">
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <label for="safe-pruning">Safe-pruning</label>
-                        <div class="search_categories">
-                            <div class="select">
-                                <select class="propList custom-select" name="safe-pruning" id="safe-pruning">
-                                    <option value="true">True</option>
-                                    <option value="false">False</option>
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button class="btn btn-primary btn-lg btn-block" type="submit" name="add" style="margin-top: 1.25rem;">Add
-            </button>
-        </div>
-
-    </form>
-
-
-</div>
 
 <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
 <div id="main" class="container-fluid">
@@ -171,6 +25,7 @@
                         <th scope="col">Tolerance</th>
                         <th scope="col">Safe Pruning</th>
                         <th scope="col">Actions</th>
+                        <th scope="col" class="collapse">User predicates</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -215,6 +70,7 @@
             </div>
         </div>
     </div>
-
 </div>
+
+<script src="{{ url_for( 'static', filename='js/benchmark.js' ) }}"></script>
 {% endblock %}

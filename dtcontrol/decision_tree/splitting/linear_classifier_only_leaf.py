@@ -7,11 +7,12 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 
 class LinearClassifierOnlyLeafSplittingStrategy(SplittingStrategy):
     def __init__(self, classifier_class, determinizer=LabelPowersetDeterminizer(), **kwargs):
+        super().__init__()
         self.determinizer = determinizer
         self.classifier_class = classifier_class
         self.kwargs = kwargs
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return None

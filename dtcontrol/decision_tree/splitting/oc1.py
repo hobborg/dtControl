@@ -17,6 +17,7 @@ from dtcontrol.util import log_without_newline
 
 class OC1SplittingStrategy(SplittingStrategy):
     def __init__(self, determinizer=LabelPowersetDeterminizer(), num_restarts=10, num_jumps=5, delete_tmp=True):
+        super().__init__()
         self.determinizer = determinizer
         self.oc1_path = 'decision_tree/OC1_source/mktree'
         self.header_file = 'decision_tree/OC1_source/oc1.h'
@@ -49,7 +50,7 @@ class OC1SplittingStrategy(SplittingStrategy):
             else:
                 raise EnvironmentError("Could not find OC1 files")
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_numeric = dataset.get_numeric_x()
         if x_numeric.shape[1] == 0:
             return None

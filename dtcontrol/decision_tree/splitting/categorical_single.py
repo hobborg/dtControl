@@ -3,7 +3,7 @@ from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrate
 
 
 class CategoricalSingleSplittingStrategy(SplittingStrategy):
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_categorical = dataset.get_categorical_x()
         splits = {}
         for feature in range(x_categorical.shape[1]):
@@ -23,6 +23,7 @@ class CategoricalSingleSplit(Split):
     """
 
     def __init__(self, feature, value):
+        super().__init__()
         self.feature = feature
         self.value = value
 

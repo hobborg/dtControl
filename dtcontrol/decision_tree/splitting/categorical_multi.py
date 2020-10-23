@@ -15,10 +15,11 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
         :param tolerance: the absolute increase in impurity measure a value grouping may produce in order to still be
         considered a better candidate than the original (non-grouped) split
         """
+        super().__init__()
         self.value_grouping = value_grouping
         self.tolerance = tolerance
 
-    def find_split(self, dataset, impurity_measure):
+    def find_split(self, dataset, impurity_measure, **kwargs):
         x_categorical = dataset.get_categorical_x()
         splits = {}
         for feature in range(x_categorical.shape[1]):
@@ -69,6 +70,7 @@ class CategoricalMultiSplittingStrategy(SplittingStrategy):
 
 class CategoricalMultiSplit(Split):
     def __init__(self, feature, value_groups=None):
+        super().__init__()
         self.feature = feature
         self.value_groups = value_groups
         if not self.value_groups:

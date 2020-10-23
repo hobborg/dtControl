@@ -106,18 +106,18 @@ class BDD(BenchmarkSuiteClassifier):
                 sys.exit()
 
             row_result = self.bdd.apply('and', row_result, act_result)
-            # Add row_result to whole result (OR)
+            # Add row_result to whole offset (OR)
             self.result = row_result if row_num == 0 else self.bdd.apply('or', self.result, row_result)
 
         # collect garbage and reorder heuristics
-        # print("Before collecting garbage: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        # print("Before collecting garbage: offset %s, BDD %s" % (len(self.offset), len(self.bdd)))
         self.bdd.collect_garbage()
-        # print("After: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        # print("After: offset %s, BDD %s" % (len(self.offset), len(self.bdd)))
 
         # reorder with dd until convergence
         i = 0
         while True:
-            # print(str(i) + ": result %s, BDD %s" % (len(self.result), len(self.bdd)))
+            # print(str(i) + ": offset %s, BDD %s" % (len(self.offset), len(self.bdd)))
             i += 1
             bdd_size = len(self.bdd)
             _bdd.reorder(self.bdd)
@@ -125,7 +125,7 @@ class BDD(BenchmarkSuiteClassifier):
                 # print("Reordering did not change size, local optimum BDD computed.")
                 break
 
-        # print("Final: result %s, BDD %s" % (len(self.result), len(self.bdd)))
+        # print("Final: offset %s, BDD %s" % (len(self.offset), len(self.bdd)))
 
     ################### Helper methods for fit #####################
 
@@ -207,7 +207,7 @@ class BDD(BenchmarkSuiteClassifier):
         if self.label_pre_processor is not None:
             dataset = self.label_pre_processor.preprocess(dataset)
         row_num = -1
-        sols = [x for x in self.bdd.pick_iter(self.result)]
+        sols = [x for x in self.bdd.pick_iter(self.offset)]
 
         # We can check containment of dataset in sols; other way round is more difficult, so additionally we check that they have same number of solutions
         num_dataset_sols = len(dataset.x) if self.all_or_unique_label == 1 else sum(
@@ -238,13 +238,13 @@ class BDD(BenchmarkSuiteClassifier):
         # bit_values for the state vars
         for i in range(0, len(row)):
             varname = self.x_metadata["variables"][i]
-            min_val = self.x_metadata["min"][i]
-            max_val = self.x_metadata["max"][i]
+            min_val = self.x_metadata["min_outer"][i]
+            max_val = self.x_metadata["max_outer"][i]
             step_size = self.x_metadata["step_size"][i]
             num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
             label = int(round((row[i] - min_val) / step_size))
 
-            # go over label in reverse order, set bits in result table
+            # go over label in reverse order, set bits in offset table
             for i in reversed(range(0, num_bits)):
                 bit_varname = varname + f"_{i}"
                 if label - pow(2, i) >= 0:
@@ -264,7 +264,7 @@ class BDD(BenchmarkSuiteClassifier):
         num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
         label = int(round((act - min_val) / step_size))
 
-        # go over label in reverse order, set bits in result table
+        # go over label in reverse order, set bits in offset table
         for i in reversed(range(0, num_bits)):
             bit_varname = varname + f"_{i}"
             if label - pow(2, i) >= 0:

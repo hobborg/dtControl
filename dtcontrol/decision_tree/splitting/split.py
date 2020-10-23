@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 
 class Split(ABC):
+    def __init__(self):
+        self.priority = 1
+
     @abstractmethod
     def predict(self, features):
         """
@@ -21,7 +24,7 @@ class Split(ABC):
     @abstractmethod
     def get_masks(self, dataset):
         """
-        Returns the masks specifying this split.
+        Returns the masks specifying this split on the passed dataset.
         :param dataset: the dataset to be split
         :return: a list of the masks corresponding to each subset after the split
         """
