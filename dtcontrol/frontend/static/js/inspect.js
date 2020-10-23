@@ -112,7 +112,6 @@ function constructTree(data) {
 
     root.x0 = 0;
     root.y0 = 0;
-
 }
 
 function setSelectedNode(d) {
