@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import random
 from signal import signal, SIGINT
 import html
 
@@ -425,6 +426,8 @@ def initroute():
 
     # Predict_one_step returns the decision taken as well as the path (list of ints) to reach that decision
     initDecision = saved_tree.predict_one_step(np.array([discretize(x)]))
+    # print("row::" + str(list(map(lambda x: round(x, 6), discretize(x) + initDecision[0]))))
+
     returnDict = {"decision": initDecision[0], "path": initDecision[1], "dynamics": True}
 
     is_dynamics = False
@@ -471,6 +474,7 @@ def stepRoute():
     # Returns updated states variables
     x_new_non_classify = runge_kutta(list(x), u)
     newu_path = saved_tree.predict_one_step(np.array([discretize(list(x_new_non_classify))]))
+    print("row::" + str(list(map(lambda x: round(x, 6), discretize(list(x_new_non_classify)) + newu_path[0]))))
     returnDict = {"x_new": (x_new_non_classify,) + newu_path}
     return jsonify(returnDict)
 
@@ -563,6 +567,27 @@ def splitNode():
     returnDict = {"number_splits": 3}
     return jsonify(returnDict)
 
+
+@app.route("/random", methods=['POST'])
+def pick_random_point():
+    data = request.get_json()
+    id = data['id']
+    if selected_computation_id == id:
+        controller_file = completed_experiments[id]["controller"]
+        point = frontend_helper.get_random_point_from_dataset(controller_file)
+
+        # # Perturbed point randomly
+        # step_size = completed_experiments[selected_computation_id]["step_size"]
+        # state_dimension = completed_experiments[selected_computation_id]["num_vars"]
+        #
+        # for i in range(state_dimension):
+        #     # Add a number between [-eta, eta]
+        #     point[i] += (random.random()-0.5) * step_size[i]
+        #     point[i] = round(point[i], 6)
+
+        return jsonify(point.tolist())
+    else:
+        return jsonify(None)
 
 @app.route("/sample-websocket")
 def start_websocket():

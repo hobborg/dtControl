@@ -7,6 +7,7 @@ Run dtcontrol --help to see usage.
 """
 
 import logging
+import random
 import sys
 import time
 from collections import namedtuple, OrderedDict
@@ -421,6 +422,16 @@ def interactive(args):
         "run_time": run_time
     }
 
+def get_random_point_from_dataset(controller_file):
+    is_valid_file_or_folder(controller_file)
+    ext = controller_file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(controller_file, ext):
+        ds = MultiOutputDataset(controller_file)
+    else:
+        ds = SingleOutputDataset(controller_file)
+    ds.load_if_necessary()
+    discrete_point = random.choice(ds.x)
+    return discrete_point
 
 
 def start_websocket_with_frontend():
