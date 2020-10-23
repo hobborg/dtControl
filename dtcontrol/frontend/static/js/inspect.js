@@ -965,7 +965,24 @@ function run_partial_construction(configuration) {
         });
 
         treeData = data["full_json"];
+        height = 25 * getLeaves(treeData);
+        width = 200 * getDepth(treeData);
+
         replaceInTree(pointer, data["partial_json"]);
+
+        constructTree(treeData);
+        update(root);
+
+        console.log(configuration.selected_node.toString());
+
+        let adr = configuration.selected_node.toString();
+        if (adr == "") {
+                timedResetFocus("root");
+            } else {
+                timedResetFocus(adr);
+            }
+
+        console.log(treeData);
 
         $("body").css("cursor", "default");
 
