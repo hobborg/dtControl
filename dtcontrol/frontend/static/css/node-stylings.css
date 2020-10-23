@@ -27,16 +27,6 @@
     height: 90%;
 }
 
-#tableHere {
-    overflow: scroll;
-}
-
-.table-fixed {
-    overflow-y: scroll;
-    width: 100%;
-    display: block;
-}
-
 #expandThisDiv {
     height: 750px;
 }

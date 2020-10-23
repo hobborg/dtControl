@@ -7,6 +7,12 @@ var allConfig = {};
 // preset data json
 var preset_json;
 
+function popupModal(title, msg) {
+    $("#messageModal h5.modal-title").text(title);
+    $("#messageModal div.modal-body").text(msg);
+    $("#messageModal").modal({"show": true});
+}
+
 function openNav() {
     // if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "310px";
