@@ -113,7 +113,6 @@ function constructTree(data) {
     root.x0 = 0;
     root.y0 = 0;
 
-    update(root);
 }
 
 function setSelectedNode(d) {
@@ -203,6 +202,17 @@ function click(d) {
     } else {
         d.children = d.children ? null : d._children;
         update(d);
+
+        if (d._children) {
+            // zoom onto node after collapsing its children
+            let adr = d.data.address.toString();
+            if (adr == "") {
+                timedResetFocus("root");
+            } else {
+                timedResetFocus(adr);
+            }
+        }
+
         // Might need the below call
         // update(root);
     }
@@ -386,14 +396,24 @@ function update(source) {
 
 }
 
-function resetFocus() {
+function timedResetFocus(idDestination){
+    setTimeout(function () {
+                resetFocus(idDestination);
+            }, 100);
+}
 
-    let foo = d3.select("#node-at-root").attr("transform");
+function resetFocus(idDestination) {
+
+    let foo = document.getElementById("node-at-" + idDestination).attributes.transform.value;
+    let cWidth = document.getElementById("treeHere").clientWidth;
+    let cHeight = document.getElementById("treeHere").clientHeight;
+
     if (foo){
         let xVal = getTransformation(foo).translateX;
+        let yVal = getTransformation(foo).translateY;
         svg.transition()
             .duration(750)
-            .call(zoom.transform, d3.zoomIdentity.translate((xVal - 1000)*(-1), 50));
+            .call(zoom.transform, d3.zoomIdentity.translate((xVal - cWidth*0.5)*(-1), (yVal - cHeight*0.5)*(-1)));
     }
 }
 
@@ -1172,7 +1192,6 @@ function refresh_interactive_tables() {
 }
 
 $(document).ready(function () {
-    let numChanges = 0;
 
     // If we are in the inspect/edit/simulate screen, there is no need for having the "load controller directory" etc available
     document.getElementById("controller-upload-row").remove();
@@ -1348,13 +1367,11 @@ $(document).ready(function () {
         // height = 650;
         width = 200 * getDepth(treeData);
 
-        if (numChanges === 0) {
-            svgSetup();
-            constructTree(treeData);
-        }
-        numChanges++;
-
+        svgSetup();
+        constructTree(treeData);
         update(root);
+
+        timedResetFocus("root");
 
         const opt = document.getElementById("formSecondBody");
         for (let i = 0; i < stateDimension; i++) {
