@@ -69,23 +69,29 @@ var i = 0,
 
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
     width = 1560 - margin.right - margin.left,
-    height = 800 - margin.top - margin.bottom;
+    height = 800 - margin.top - margin.bottom,
+    zoom = "",
+    dTcontainer;
 
 // var width, height;
 
 function svgSetup() {
+    zoom = d3.zoom()
+        .on("zoom", ({transform}) => {
+            dTcontainer.attr("transform", transform);
+        });
+
     const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
-    console.log("treeHere bounding rect", parentBoundingRect);
     svg = d3.select("#treeHere").append("svg")
         .attr("width", parentBoundingRect.width)
         .attr("height", parentBoundingRect.height)
         // .attr("viewBox", `0 0 300 600`)
-        .attr("style", "overflow-x: auto; overflow-y: auto;")
-        .call(d3.zoom().on("zoom", ({transform}) => {
-            svg.attr("transform", transform)
-        }))
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.right + ")");
+        .attr("style", "overflow-x: auto; overflow-y: auto;");
+
+
+    dTcontainer = svg.append("g")
+        .attr("id", "mainDtContainer");
+    svg.call(zoom);
 
     link_layer = d3.select("svg g").append("g");
     node_layer = d3.select("svg g").append("g");
@@ -215,11 +221,12 @@ function update(source) {
     let nodes = root.descendants().reverse();
     let links = root.links();
 
-    let diagonal = d3.linkHorizontal().x(d => d.x).y(d => d.y)
+    let diagonal = d3.linkVertical().x(d => d.x).y(d => d.y);
+    // let diagonal = (d) => {console.log(d)};
 
     // Normalize for fixed-depth.
     nodes.forEach(d => {
-        d.y = d.depth * 400;
+        d.y = d.depth * 200;
         d.x = d.x * 10;
     });
 
@@ -234,12 +241,15 @@ function update(source) {
             return (d.data.name.length > 20) ? "node scaled" : "node";
         })
         .attr("id", d => {
-            return (d.data.address.length == 0) ? "nodeAt:Root" : "nodeAt:" + d.data.address;
+            return (d.data.address.length == 0) ? "node-at-root" : "node-at-" + d.data.address;
         })
+        // .attr("transform", d => {
+        //     return "translate(" + source.x0 + "," + source.y0 + ")";
+        // })  // Horizontal layout: flip x, y
+        .on("click", (event, d) => { click(d); })
         .attr("transform", d => {
-            return "translate(" + source.x0 + "," + source.y0 + ")";
-        })  // Horizontal layout: flip x, y
-        .on("click", (event, d) => { click(d); });
+            return (d.data.address.length == 0) ? "translate(0,0)" : "";
+        });
 
     nodeEnter.append("circle")
         .attr("r", 1e-6);
@@ -282,33 +292,43 @@ function update(source) {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
+            let nodeText = d.data.name;
+
             // scales predicate down, if too large
-            let predicate = d.data.name;
-            if (predicate.length > 20 && d.data.children === []) {
+            if (nodeText.length > 20 && (d.data.children.length != 0 || d.data._children)) {
+                // nodeText is a predicate with children which is too long
                 let sliced_pred, rel;
 
-                if (predicate.includes("<=")){
-                    sliced_pred = predicate.split("<=");
+                if (nodeText.includes("<=")){
+                    sliced_pred = nodeText.split("<=");
                     rel = "<=";
-                }else if (predicate.includes(">=")){
-                    sliced_pred = predicate.split(">=");
+                }else if (nodeText.includes(">=")){
+                    sliced_pred = nodeText.split(">=");
                     rel = ">=";
-                }else if (predicate.includes(">")){
-                    sliced_pred = predicate.split(">");
+                }else if (nodeText.includes(">")){
+                    sliced_pred = nodeText.split(">");
                     rel = ">";
-                }else if (predicate.includes("<")){
-                    sliced_pred = predicate.split("<");
+                }else if (nodeText.includes("<")){
+                    sliced_pred = nodeText.split("<");
                     rel = "<";
-                }else if (predicate.includes("=")){
-                    sliced_pred = predicate.split("=");
+                }else if (nodeText.includes("=")){
+                    sliced_pred = nodeText.split("=");
                     rel = "=";
                 }
                 else {
-                    console.log("Could not process predicate " + predicate);
+                    // Edge Case: No valid relation found within predicate
+                    console.log("Could not reduce size of predicate " + nodeText);
+                    return nodeText;
                 }
-                predicate = sliced_pred[0].substring(0, predicate.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+                nodeText = sliced_pred[0].substring(0, nodeText.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+
+            }else if (nodeText.length > 20) {
+                // nodeText is a leaf node without children
+                let sliced_leaf = nodeText.split(", ");
+                nodeText = sliced_leaf[0] + ", ... ," + sliced_leaf[sliced_leaf.length - 1];
             }
-            return predicate;
+
+            return nodeText;
         })
         .style("fill-opacity", 1);
 
@@ -368,11 +388,51 @@ function update(source) {
         d.y0 = d.y;
     });
 
-    // set focus on root element
-    // console.log(root);
-    // let g = d3.select("svg g").call(d3.zoom().on("zoom", ({transform}) => {
-    //         g.attr("transform", "translate(" + root.x0 + "," + root.y0 + ")")}));
-    // d3.select("#nodeAt:Root").focus();
+}
+
+function resetFocus() {
+
+    let foo = d3.select("#node-at-root").attr("transform");
+    if (foo){
+        let xVal = getTransformation(foo).translateX;
+        svg.transition()
+            .duration(750)
+            .call(zoom.transform, d3.zoomIdentity.translate((xVal - 1000)*(-1), 50));
+    }
+}
+
+// extracted from https://stackoverflow.com/questions/38224875/replacing-d3-transform-in-d3-v4
+function getTransformation(transform) {
+    // Create a dummy g for calculation purposes only. This will never
+    // be appended to the DOM and will be discarded once this function
+    // returns.
+    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+    // Set the transform attribute to the provided string value.
+    g.setAttributeNS(null, "transform", transform);
+
+    // consolidate the SVGTransformList containing all transformations
+    // to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
+    // its SVGMatrix.
+    var matrix = g.transform.baseVal.consolidate().matrix;
+
+    // Below calculations are taken and adapted from the private function
+    // transform/decompose.js of D3's module d3-interpolate.
+    var {a, b, c, d, e, f} = matrix;   // ES6, if this doesn't work, use below assignment
+    // var a=matrix.a, b=matrix.b, c=matrix.c, d=matrix.d, e=matrix.e, f=matrix.f; // ES5
+    var scaleX, scaleY, skewX;
+    if (scaleX = Math.sqrt(a * a + b * b)) a /= scaleX, b /= scaleX;
+    if (skewX = a * c + b * d) c -= a * skewX, d -= b * skewX;
+    if (scaleY = Math.sqrt(c * c + d * d)) c /= scaleY, d /= scaleY, skewX /= scaleY;
+    if (a * d < b * c) a = -a, b = -b, skewX = -skewX, scaleX = -scaleX;
+    return {
+        translateX: e,
+        translateY: f,
+        rotate: Math.atan2(b, a) * 180 / Math.PI,
+        skewX: Math.atan(skewX) * 180 / Math.PI,
+        scaleX: scaleX,
+        scaleY: scaleY
+    };
 }
 
 // Makes nodes red along the path given as 'str'
