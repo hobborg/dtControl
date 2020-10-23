@@ -35,8 +35,6 @@ var nextDisabled = false;
 // Tree animation button toggles this variable
 var treeAnimation = true;
 
-// Tree edit button toggles this variable
-var treeEdit = false;
 var nodeSelect = false;
 
 // Used as addressing for selected node in tree edit button
@@ -192,8 +190,6 @@ function click(d) {
 
                 document.getElementById("splitNodeButton").style.visibility = "visible";
             })
-    } else if (treeEdit) {
-        openThirdForm(d.data.address);
     } else if (nodeSelect) {
         // If a node is already selected, reset its color
         if (selectedNode) {
@@ -575,6 +571,85 @@ function checkBounds() {
     return true;
 }
 
+function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
+    // TODO P: Find all the global variables used here and allow to reset them
+    for (let i = 0; i < stateDimension; i++) {
+        xCurrent.push([]);
+        chart.push([]);
+        chartConfig.push([]);
+    }
+    for (let i = 0; i < actionDimension; i++) {
+        console.log(`Pushing [] to uCurrent`);
+        uCurrent.push([]);
+    }
+    const tab = document.getElementById('simTable');
+
+    tab.addEventListener("scroll", function () {
+        this.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
+    });
+
+    // Header row
+    const dumrow = document.createElement('tr');
+    const drc0 = document.createElement('th');
+    drc0.setAttribute("scope", "col");
+    drc0.textContent = "Index";
+    dumrow.appendChild(drc0);
+
+    const chartsDiv0 = document.getElementById('chartsHere0');
+    const chartsDiv1 = document.getElementById('chartsHere1');
+
+    for (let i = 0; i < stateDimension; i++) {
+        const drc1 = document.createElement('th');
+        drc1.setAttribute("scope", "col");
+        drc1.textContent = "x" + i;
+        dumrow.appendChild(drc1);
+
+        const someChartDiv = document.createElement('div');
+        someChartDiv.style.width = "100%";
+        someChartDiv.style.float = 'left';
+        someChartDiv.style.height = someChartDiv.style.width;
+        const someChart = document.createElement('canvas');
+        someChart.setAttribute('id', 'chartContainer' + i.toString());
+        someChartDiv.appendChild(someChart);
+
+        const heir0 = document.createElement('div');
+        heir0.setAttribute('class', "card shadow mb-4");
+
+        const heir1 = document.createElement('div');
+        heir1.setAttribute('class', "card-body");
+
+        const heir2 = document.createElement('div');
+        heir2.setAttribute('style', "text-align:center;");
+
+        heir2.appendChild(someChartDiv);
+        heir1.appendChild(heir2);
+        heir0.appendChild(heir1);
+        if (i % 2 === 0) {
+            chartsDiv0.appendChild(heir0);
+        } else {
+            chartsDiv1.appendChild(heir0);
+        }
+
+    }
+
+    if (actionDimension === 1) {
+        const drc2 = document.createElement('th');
+        drc2.setAttribute("scope", "col");
+        drc2.textContent = "u";
+        dumrow.appendChild(drc2);
+    } else {
+        for (let i = 0; i < actionDimension; i++) {
+            const drc2 = document.createElement('th');
+            drc2.setAttribute("scope", "col");
+            drc2.textContent = "u" + i;
+            dumrow.appendChild(drc2);
+        }
+    }
+    tab.deleteRow(-1);
+    tab.tHead.appendChild(dumrow);
+    simTableDiv.appendChild(tab);
+}
+
 // Renders all the charts using Chart.js
 function renderChart(id, data, labels, ub, lb) {
     let chartIndex = parseInt(id);
@@ -778,13 +853,6 @@ async function oneStep() {
 function scrollToEndOfTable() {
     let elem = document.querySelector("#simTable");
     elem.scrollTop = elem.scrollHeight;
-}
-
-// Called by clicking a node when edit tree toggle is on
-function openThirdForm(address) {
-    $('#formThirdModal').modal('toggle');
-    console.log(address);
-    selectedNode = address;
 }
 
 function assignParentsDfs(node, parent, address_prefix) {
@@ -1104,22 +1172,12 @@ function refresh_interactive_tables() {
 }
 
 $(document).ready(function () {
-    isSimulator = $('.simulator').length > 0;
     let numChanges = 0;
 
-    if (isSimulator) {
-        // If we are in simulator, there is no need for having the "load controller directory" etc available
-        document.getElementById("controller-upload-row").remove();
-        document.getElementById("metadata-upload-row").remove();
-        document.getElementById("add-experiments-button").remove();
-    //
-    //     // Add interactive mode to preset
-    //     const option = document.createElement('option');
-    //     option.textContent = "custom";
-    //     option.setAttribute('value', "interactive mode");
-    //     app.appendChild(option);
-    //
-    }
+    // If we are in the inspect/edit/simulate screen, there is no need for having the "load controller directory" etc available
+    document.getElementById("controller-upload-row").remove();
+    document.getElementById("metadata-upload-row").remove();
+    document.getElementById("add-experiments-button").remove();
 
     // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
@@ -1136,7 +1194,7 @@ $(document).ready(function () {
         configuration.safe_pruning = $('#safe-pruning').val();
         configuration.user_predicates = "";
 
-        if (configuration.config == "algebraic") {
+        if (configuration.config === "algebraic") {
             configuration.config += " (Fallback: " + $("#fallback").val() + ")";
             configuration.numeric_predicates = [""];
             configuration.categorical_predicates = [""];
@@ -1204,6 +1262,7 @@ $(document).ready(function () {
     // Simulate Button
     $("#operation-selector").on("click", function (event) {
         function deactivateSimulator() {
+            isSimulator = false;
             document.getElementById("mainRow2").classList.add("d-none");
             document.getElementById("mainRow3").classList.add("d-none");
             //document.getElementById("expandThisDiv").style.height = "450px";
@@ -1242,6 +1301,8 @@ $(document).ready(function () {
 
         let option = $("#operation-selector input:checked")[0].id;
         if (option === "option-simulate") {
+            isSimulator = true;
+            initializeSimulatorTablesAndCharts();
             deactivateInspect();
             deactivateEdit();
             triggerDynamicsInput();
@@ -1268,135 +1329,62 @@ $(document).ready(function () {
 
     });
 
-    if (isSimulator) {
-        $.get('/computed', (data) => {
-            document.getElementById("mainRow1").style.visibility = "visible";
-            // document.getElementById("editTreeDiv").style.visibility = "visible";
+    $.get('/computed', (data) => {
+        document.getElementById("mainRow1").style.visibility = "visible";
+        // document.getElementById("editTreeDiv").style.visibility = "visible";
 
-            idUnderInspection = data.idUnderInspection
-            treeData = data.classifier;
-            console.log("Tree Data", treeData);
-            stateDimension = data.numVars;
-            actionDimension = data.numResults;
-            controllerFile = data.controllerFile;
+        idUnderInspection = data.idUnderInspection
+        treeData = data.classifier;
+        console.log("Tree Data", treeData);
+        stateDimension = data.numVars;
+        actionDimension = data.numResults;
+        controllerFile = data.controllerFile;
 
-            console.log(treeData);
+        console.log(treeData);
 
-            // height = 50 * getLeaves(treeData);
-            height = 25 * getLeaves(treeData);
-            // height = 650;
-            width = 200 * getDepth(treeData);
+        // TODO C: Check if these two lines affect the tree layout (see the svgSetup() and constructTree() below)
+        // height = 50 * getLeaves(treeData);
+        height = 25 * getLeaves(treeData);
+        // height = 650;
+        width = 200 * getDepth(treeData);
 
-            for (let i = 0; i < stateDimension; i++) {
-                xCurrent.push([]);
-                chart.push([]);
-                chartConfig.push([]);
-            }
-            for (let i = 0; i < actionDimension; i++) {
-                console.log(`Pushing [] to uCurrent`);
-                uCurrent.push([]);
-            }
+        if (numChanges === 0) {
+            svgSetup();
+            constructTree(treeData);
+        }
+        numChanges++;
 
-            if (numChanges == 0) {
-                svgSetup();
-                constructTree(treeData);
-            }
-            numChanges++;
+        update(root);
 
-            update(root);
+        const opt = document.getElementById("formSecondBody");
+        for (let i = 0; i < stateDimension; i++) {
+            const dumDiv = document.createElement('div');
 
-            const tab = document.getElementById('simTable');
+            const dumLabel = document.createElement('label');
+            dumLabel.setAttribute('for', 'x' + i);
+            dumLabel.textContent = "Choose an x" + i + ":";
 
-            // Header row
-            const dumrow = document.createElement('tr');
-            const drc0 = document.createElement('th');
-            drc0.setAttribute("scope", "col");
-            drc0.textContent = "Index";
-            dumrow.appendChild(drc0);
+            const dumInput = document.createElement('input');
+            dumInput.setAttribute('type', 'text');
+            dumInput.setAttribute('id', 'x' + i);
+            dumInput.setAttribute('name', 'x' + i);
 
-            const chartsDiv0 = document.getElementById('chartsHere0');
-            const chartsDiv1 = document.getElementById('chartsHere1');
+            dumDiv.appendChild(dumLabel);
+            dumDiv.appendChild(dumInput);
 
-            for (let i = 0; i < stateDimension; i++) {
-                const drc1 = document.createElement('th');
-                drc1.setAttribute("scope", "col");
-                drc1.textContent = "x" + i;
-                dumrow.appendChild(drc1);
+            opt.appendChild(dumDiv);
 
-                const someChartDiv = document.createElement('div');
-                someChartDiv.style.width = "100%";
-                someChartDiv.style.float = 'left';
-                someChartDiv.style.height = someChartDiv.style.width;
-                const someChart = document.createElement('canvas');
-                someChart.setAttribute('id', 'chartContainer' + i.toString());
-                someChartDiv.appendChild(someChart);
-
-                const heir0 = document.createElement('div');
-                heir0.setAttribute('class', "card shadow mb-4");
-
-                const heir1 = document.createElement('div');
-                heir1.setAttribute('class', "card-body");
-
-                const heir2 = document.createElement('div');
-                heir2.setAttribute('style', "text-align:center;");
-
-                heir2.appendChild(someChartDiv);
-                heir1.appendChild(heir2);
-                heir0.appendChild(heir1);
-                if (i % 2 === 0) {
-                    chartsDiv0.appendChild(heir0);
-                } else {
-                    chartsDiv1.appendChild(heir0);
-                }
-
-            }
-
-            if (actionDimension == 1) {
-                const drc2 = document.createElement('th');
-                drc2.setAttribute("scope", "col");
-                drc2.textContent = "u";
-                dumrow.appendChild(drc2);
-            } else {
-                for (let i = 0; i < actionDimension; i++) {
-                    const drc2 = document.createElement('th');
-                    drc2.setAttribute("scope", "col");
-                    drc2.textContent = "u" + i;
-                    dumrow.appendChild(drc2);
-                }
-            }
-            tab.deleteRow(-1);
-            tab.tHead.appendChild(dumrow);
-            simTableDiv.appendChild(tab);
-
-            const opt = document.getElementById("formSecondBody");
-            for (let i = 0; i < stateDimension; i++) {
-                const dumDiv = document.createElement('div');
-
-                const dumLabel = document.createElement('label');
-                dumLabel.setAttribute('for', 'x' + i);
-                dumLabel.textContent = "Choose an x" + i + ":";
-
-                const dumInput = document.createElement('input');
-                dumInput.setAttribute('type', 'text');
-                dumInput.setAttribute('id', 'x' + i);
-                dumInput.setAttribute('name', 'x' + i);
-
-                dumDiv.appendChild(dumLabel);
-                dumDiv.appendChild(dumInput);
-
-                opt.appendChild(dumDiv);
-
-                console.log(i + ": pushing outer bounds " + [data.boundOuter[0][i], data.boundOuter[1][i]]);
-                console.log(i + ": pushing inner bounds " + [data.boundInner[0][i], data.boundInner[1][i]]);
-                xBoundsOuter.push([data.boundOuter[0][i], data.boundOuter[1][i]]);
-                xBoundsInner.push([data.boundInner[0][i], data.boundInner[1][i]])
-            }
-        });
-    }
+            console.log(i + ": pushing outer bounds " + [data.boundOuter[0][i], data.boundOuter[1][i]]);
+            console.log(i + ": pushing inner bounds " + [data.boundInner[0][i], data.boundInner[1][i]]);
+            xBoundsOuter.push([data.boundOuter[0][i], data.boundOuter[1][i]]);
+            xBoundsInner.push([data.boundInner[0][i], data.boundInner[1][i]])
+        }
+    });
 
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {
         console.log('form is submitted');
+        initializeSimulatorTablesAndCharts(stateDimension, actionDimension)
         let x_toPass = [];
         for (let i = 0; i < stateDimension; i++) {
             x_toPass.push(parseFloat($('#x' + i).val())); // TODO generalize this - x all the time might not work
@@ -1838,19 +1826,9 @@ $(document).on("click", "#simTable tbody tr", function () {
     drawCanvas();
 });
 
-if (isSimulator) {
-    document.getElementById("simTable").addEventListener("scroll", function () {
-        this.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
-    });
-}
-
 // 'Animate tree' button and 'Edit tree' button
 
 $(document).on("change", "#animateTree", function () {
     treeAnimation = !treeAnimation;
     console.log(treeAnimation);
-});
-$(document).on("change", "#editTree", function () {
-    treeEdit = !treeEdit;
-    console.log(treeEdit);
 });
