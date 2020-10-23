@@ -336,7 +336,9 @@ def interactive_construct():
     try:
         if not interactive_queue.get_ready():
             interactive_queue.set_ready()
+        print("Starting interactive mode...")
         classifier = frontend_helper.interactive(to_parse_dict)
+        print("Obtained a completed tree from interactive mode.")
 
         interactive_queue.set_done()
         interactive_queue.reset()
@@ -366,7 +368,7 @@ def interactive_construct():
     except Exception as e:
         print_exc()
 
-    return jsonify(partial_json)
+    return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
 
 @app.route("/interact", methods=['POST'])

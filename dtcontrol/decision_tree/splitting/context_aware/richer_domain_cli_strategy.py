@@ -1,5 +1,6 @@
 import json
 
+from dtcontrol import util
 from dtcontrol.decision_tree.decision_tree import Node
 from dtcontrol.decision_tree.determinization.max_freq_determinizer import MaxFreqDeterminizer
 from dtcontrol.decision_tree.splitting.context_aware.context_aware_splitting_strategy import \
@@ -205,11 +206,12 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
 
         if y_meta.get('variables') is not None and \
                 y_meta.get('min') is not None and \
-                y_meta.get('max') is not None and \
-                y_meta.get('step_size') is not None:
+                y_meta.get('max') is not None:
             # Detailed meta data available
-            table_label = [[y_meta.get('variables')[i], y_meta.get('min')[i], y_meta.get('max')[i],
-                            y_meta.get('step_size')[i]] for i in range(len(y_meta.get('variables')))]
+            # TODO P: min and max should be first fixed in dataset loader, the issue is that currently ...
+            # TODO P: ... we maintain a global min and max for all the datasets.
+            table_label = [[y_meta.get('variables')[i], y_meta.get('min')[0], y_meta.get('max')[0],
+                            y_meta.get('step_size')[i] if y_meta.get('step_size') is not None else "-"] for i in range(len(y_meta.get('variables')))]
             header_label = ["NAME", "MIN", "MAX", "STEP SIZE"]
             if cli:
                 print("\n\t\t\t LABEL SPECIFICATION\n" + tabulate(
@@ -233,7 +235,8 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                 if v > 0:
                     label_stats.append(list(map(str, list(map(dataset.index_label_to_actual, dataset.tuple_id_to_tuple[k])) + [v])))
             ret.update({"label_statistics": {"header": header_stats, "body": label_stats}})
-        except:
+        except Exception as e:
+            print(e)
             ret.update({"label_statistics": None})
 
         return ret
@@ -794,4 +797,4 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         res.update(self.print_standard_alt_predicates(cli=False))
         res.update(self.print_recently_added_predicates(cli=False))
         res.update(self.print_predicate_collections(cli=False))
-        return json.dumps({"type": "update", "body": res})
+        return json.dumps({"type": "update", "body": res}, default=util.convert)

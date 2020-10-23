@@ -325,7 +325,11 @@ function update(source) {
                     console.log("Could not reduce size of predicate " + nodeText);
                     return nodeText;
                 }
-                nodeText = sliced_pred[0].substring(0, nodeText.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+                if (nodeText.substring(0, 10).lastIndexOf(" ") === -1) {
+                    nodeText = sliced_pred[0].substring(0, 10) + " ... " + rel + sliced_pred[1];
+                } else {
+                    nodeText = sliced_pred[0].substring(0, nodeText.substring(0, 10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+                }
 
             }else if (nodeText.length > 20) {
                 // nodeText is a leaf node without children
@@ -967,7 +971,8 @@ function run_partial_construction(configuration) {
         height = 25 * getLeaves(treeData);
         width = 200 * getDepth(treeData);
 
-        replaceInTree(pointer, data["partial_json"]);
+        // TODO: In place replacement
+        // replaceInTree(pointer, data["partial_json"]);
 
         constructTree(treeData);
         update(root);
@@ -975,11 +980,11 @@ function run_partial_construction(configuration) {
         console.log(configuration.selected_node.toString());
 
         let adr = configuration.selected_node.toString();
-        if (adr == "") {
-                timedResetFocus("root");
-            } else {
-                timedResetFocus(adr);
-            }
+        if (adr === "") {
+            timedResetFocus("root");
+        } else {
+            timedResetFocus(adr);
+        }
 
         console.log(treeData);
 
@@ -998,7 +1003,6 @@ function start_interactive_construction(configuration) {
         contentType: "application/json; charset=utf-8",
         url: '/construct-partial/interactive',
         beforeSend: () => {
-            $("body").css("cursor", "progress");
             document.getElementById("retrain-button").disabled = "true";
             document.getElementById("interactive-button").disabled = "true";},
     }).done(data => {
@@ -1009,7 +1013,26 @@ function start_interactive_construction(configuration) {
         configuration.selected_node.forEach((pos) => {
             pointer = pointer.children[pos]
         });
-        replaceInTree(pointer, data);
+
+        treeData = data["full_json"];
+        height = 25 * getLeaves(treeData);
+        width = 200 * getDepth(treeData);
+
+        // TODO: In place replacement
+        // replaceInTree(pointer, data["partial_json"]);
+
+        constructTree(treeData);
+        update(root);
+
+        console.log(configuration.selected_node.toString());
+
+        let adr = configuration.selected_node.toString();
+        if (adr === "") {
+            timedResetFocus("root");
+        } else {
+            timedResetFocus(adr);
+        }
+
         $("body").css("cursor", "default");
 
         document.getElementById("retrain-button").removeAttribute("disabled");
@@ -1144,6 +1167,7 @@ function process_interaction_response(data) {
     else if (data.type === "error") {
         console.error(data.body);
     }
+    $("body").css("cursor", "default");
 }
 
 function add_predicate()
@@ -1154,6 +1178,9 @@ function add_predicate()
         type: 'POST',
         contentType: "application/json; charset=utf-8",
         url: '/interact',
+        beforeSend: () => {
+            $("body").css("cursor", "progress")
+        },
     }).done(data => {
         console.log("Return from add");
         console.log(data);
@@ -1174,6 +1201,9 @@ function remove_predicate() {
         type: 'POST',
         contentType: "application/json; charset=utf-8",
         url: '/interact',
+        beforeSend: () => {
+            $("body").css("cursor", "progress")
+        },
     }).done(data => {
         console.log("Return from del");
         console.log(data);
@@ -1195,6 +1225,9 @@ function use_predicate() {
             type: 'POST',
             contentType: "application/json; charset=utf-8",
             url: '/interact',
+            beforeSend: () => {
+                $("body").css("cursor", "progress")
+            },
         }).done(data => {
             console.log("Return from use");
             console.log(data);
@@ -1214,6 +1247,9 @@ function refresh_interactive_tables() {
         type: 'POST',
         contentType: "application/json; charset=utf-8",
         url: '/interact',
+        beforeSend: () => {
+            $("body").css("cursor", "progress")
+        },
     }).done(data => {
         console.log("Return from refresh");
         console.log(data);
@@ -1331,7 +1367,7 @@ $(document).ready(function () {
 
             console.log("Started interactive mode from " + selectedNode.data.address);
             // Send the refresh command to fetch the tables
-            refresh_interactive_tables();
+            setTimeout(refresh_interactive_tables, 2000);
 
             // Add button in recent predicates collection
         }

@@ -153,6 +153,14 @@ def is_int(s):
         return False
 
 
+def convert(o):
+    if isinstance(o, np.int64):
+        return int(o)
+    if isinstance(o, np.float32):
+        return float(o)
+    raise TypeError
+
+
 def error_wrapper(msg):
     ret = {"type": "error", "body": msg}
     return json.dumps(ret)

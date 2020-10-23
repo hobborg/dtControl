@@ -375,7 +375,11 @@ def train(args):
     logging.info("Frontend: tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
-    classifier_as_json = intoJSON(classifier.root, "null", [], ds.y_metadata)
+    try:
+        address = args["base_node_address"]
+    except KeyError:
+        address = []
+    classifier_as_json = intoJSON(classifier.root, "null", address, ds.y_metadata)
     return {
         "classifier": classifier, "classifier_as_json": classifier_as_json,
         "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
