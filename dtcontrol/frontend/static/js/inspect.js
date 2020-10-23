@@ -292,33 +292,43 @@ function update(source) {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
+            let nodeText = d.data.name;
+
             // scales predicate down, if too large
-            let predicate = d.data.name;
-            if (predicate.length > 20 && d.data.children == [] && d.data._children == []) {
+            if (nodeText.length > 20 && (d.data.children.length != 0 || d.data._children)) {
+                // nodeText is a predicate with children which is too long
                 let sliced_pred, rel;
 
-                if (predicate.includes("<=")){
-                    sliced_pred = predicate.split("<=");
+                if (nodeText.includes("<=")){
+                    sliced_pred = nodeText.split("<=");
                     rel = "<=";
-                }else if (predicate.includes(">=")){
-                    sliced_pred = predicate.split(">=");
+                }else if (nodeText.includes(">=")){
+                    sliced_pred = nodeText.split(">=");
                     rel = ">=";
-                }else if (predicate.includes(">")){
-                    sliced_pred = predicate.split(">");
+                }else if (nodeText.includes(">")){
+                    sliced_pred = nodeText.split(">");
                     rel = ">";
-                }else if (predicate.includes("<")){
-                    sliced_pred = predicate.split("<");
+                }else if (nodeText.includes("<")){
+                    sliced_pred = nodeText.split("<");
                     rel = "<";
-                }else if (predicate.includes("=")){
-                    sliced_pred = predicate.split("=");
+                }else if (nodeText.includes("=")){
+                    sliced_pred = nodeText.split("=");
                     rel = "=";
                 }
                 else {
-                    console.log("Could not process predicate " + predicate);
+                    // Edge Case: No valid relation found within predicate
+                    console.log("Could not reduce size of predicate " + nodeText);
+                    return nodeText;
                 }
-                predicate = sliced_pred[0].substring(0, predicate.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+                nodeText = sliced_pred[0].substring(0, nodeText.substring(0,10).lastIndexOf(" ")) + " ... " + rel + sliced_pred[1];
+
+            }else if (nodeText.length > 20) {
+                // nodeText is a leaf node without children
+                let sliced_leaf = nodeText.split(", ");
+                nodeText = sliced_leaf[0] + ", ... ," + sliced_leaf[sliced_leaf.length - 1];
             }
-            return predicate;
+
+            return nodeText;
         })
         .style("fill-opacity", 1);
 
