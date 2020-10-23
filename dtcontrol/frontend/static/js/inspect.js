@@ -835,6 +835,7 @@ async function oneStep() {
 
                 if (!checkBounds()) {
                     console.log("Simulation trace out of bounds, disabling further steps.");
+                    popupModal("Error", "Simulation trace out of bounds, disabling further steps. Refresh page and try different initial values.");
                     nextDisabled = true;
                     clearInterval(plpause);
                 }
@@ -1447,6 +1448,7 @@ $(document).ready(function () {
 
                 if (!checkBounds()) {
                     console.log("Simulation trace out of bounds, disabling further steps.");
+                    popupModal("Error", "Simulation trace out of bounds, disabling further steps. Refresh page and try different initial values.");
                     nextDisabled = true;
                 }
 
@@ -1612,6 +1614,7 @@ $(document).ready(function () {
 
                         if (!checkBounds()) {
                             console.log("Simulation trace out of bounds, disabling further steps.");
+                            popupModal("Error", "Simulation trace out of bounds, disabling further steps. Refresh page and try different initial values.");
                             nextDisabled = true;
                             clearInterval(plpause);
                             break;
@@ -1800,7 +1803,6 @@ function triggerDynamicsInput() {
 $(document).on("click", "#simTable tbody tr", function () {
     $(this).addClass('selected').siblings().removeClass('selected');
     let value = $(this).find('td:first').children()[0].getAttribute("value")
-    console.log(value);
     $(this).find('td input[type=radio]').prop('checked', true);
     // let ind = parseInt($("input[name='indexers']:checked").val());
     let ind = parseInt(value);
