@@ -66,7 +66,7 @@ class IntegrationTest(unittest.TestCase):
                 'OC1': 4639
             },
             'firewire_abst': {
-                'CategoricalCART': 13,
+                'CategoricalCART': 6,
                 'AVG': 6
             },
             'wlan0': {
