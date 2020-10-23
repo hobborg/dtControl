@@ -307,7 +307,7 @@ def partial_construct():
     except Exception as e:
         print_exc()
 
-    return jsonify(partial_json)
+    return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
 
 @app.route("/construct-partial/interactive", methods=['POST'])

@@ -943,7 +943,10 @@ function run_partial_construction(configuration) {
         configuration.selected_node.forEach((pos) => {
             pointer = pointer.children[pos]
         });
-        replaceInTree(pointer, data);
+
+        treeData = data["full_json"];
+        replaceInTree(pointer, data["partial_json"]);
+
         $("body").css("cursor", "default");
 
         document.getElementById("retrain-button").removeAttribute("disabled");
