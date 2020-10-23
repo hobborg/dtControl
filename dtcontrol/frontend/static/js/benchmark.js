@@ -212,6 +212,7 @@ $(document).ready(function () {
             cache: false,
             contentType: false,
             processData: false,
+            beforeSend: () => {$('#add-experiments-button').text("Uploading...")},
 
             // Custom XMLHttpRequest
             xhr: function () {
@@ -221,9 +222,9 @@ $(document).ready(function () {
                     myXhr.upload.addEventListener('progress', function (e) {
                         if (e.lengthComputable) {
                             $('#controller-file-upload-progress').attr({
-                                'aria-valuenow': e.loaded
+                                'aria-valuenow': Math.round(e.loaded * 100 / e.total)
                             })
-                                .width(e.loaded+"%");
+                                .width(Math.round(e.loaded * 100 / e.total)+"%");
                         }
                     }, false);
                 }
@@ -231,6 +232,7 @@ $(document).ready(function () {
             }
         }).done(() => {
             document.getElementById("add-experiments-button").disabled = false;
+            $('#add-experiments-button').text("Add");
         });
     });
 
@@ -268,9 +270,9 @@ $(document).ready(function () {
                     myXhr.upload.addEventListener('progress', function (e) {
                         if (e.lengthComputable) {
                             $('#metadata-file-upload-progress').attr({
-                                'aria-valuenow': e.loaded
+                                'aria-valuenow': Math.round(e.loaded * 100 / e.total)
                             })
-                                .width(e.loaded+"%");
+                                .width(Math.round(e.loaded * 100 / e.total)+"%");
                         }
                     }, false);
                 }
