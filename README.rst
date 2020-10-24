@@ -6,14 +6,14 @@ dtControl: Decision Tree Learning Algorithms for Controller Representation
 System requirements
 *******************
 
-To run dtControl, you need Python 3.6.8 or higher with several other libraries which are automatically installed if installing with the python-based ``pip`` package manager. We have tested the installation and basic functionality on Ubuntu Linux, MacOS Catalina and Windows 10.
+To run dtControl, you need Python 3.7.9 or higher with several other libraries which are automatically installed if installing with the python-based ``pip`` package manager. We have tested the installation and basic functionality on Ubuntu Linux, MacOS Catalina and Windows 10.
 
 
 ************************************
 Installing dtControl on your machine
 ************************************
 
-For most users, running the following command should install the latest version of dtControl, as long as you have Python 3.6.8 or newer and ``pip`` installed on your system::
+For most users, running the following command should install the latest version of dtControl, as long as you have Python 3.7.9 or newer and ``pip`` installed on your system::
 
     $ pip install dtcontrol
 
@@ -26,7 +26,7 @@ Manual Installation
 
 *Note: In case of difficulty when following any of the instructions in this section, please check the section 'Common Installation Issues' below*
 
-1. Make sure you have Python 3.6.8 (or newer), `pip3` and `python3-venv` for creating virtual environments.
+1. Make sure you have Python 3.7.9 (or newer), `pip3` and `python3-venv` for creating virtual environments.
 
    On **Ubuntu** 16.10 or newer::
 
@@ -47,7 +47,7 @@ Manual Installation
        $ python3 -m venv venv
        $ source venv/bin/activate
 
-   Run ``python`` and verify that the displayed version is greater than 3.6.8. Press ``Ctrl+D`` to exit the python console again.
+   Run ``python`` and verify that the displayed version is greater than 3.7.9. Press ``Ctrl+D`` to exit the python console again.
 3. With the virtual environment activated, run::
 
        $ pip install dtcontrol
