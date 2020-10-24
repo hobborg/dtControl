@@ -62,13 +62,13 @@ class BDD(BenchmarkSuiteClassifier):
         # (Stuff like minnorm comes by modifying dataset before)
         if self.all_or_unique_label == 0:
             self.act_metadata["variables"] = ["actOR"]
-            self.act_metadata["max"] = [numpy.amax(dataset.get_single_labels())]
-            self.act_metadata["min"] = [0]
+            self.act_metadata["max_outer"] = [numpy.amax(dataset.get_single_labels())]
+            self.act_metadata["min_outer"] = [0]
             self.act_metadata["step_size"] = [1]
         elif self.all_or_unique_label == 1:
             self.act_metadata["variables"] = ['actUL']
-            self.act_metadata["max"] = [max(dataset.get_unique_labels())]
-            self.act_metadata["min"] = [0]
+            self.act_metadata["max_outer"] = [max(dataset.get_unique_labels())]
+            self.act_metadata["min_outer"] = [0]
             self.act_metadata["step_size"] = [1]
         else:
             logging.error("Invalid value for all_or_unique_label, namely" + str(self.all_or_unique_label))
@@ -139,10 +139,10 @@ class BDD(BenchmarkSuiteClassifier):
             #print("max: " + str(metadata["max"][i]))
             #print("min: " + str(metadata["min"][i]))
             #print("stepsize: " + str(metadata["step_size"][i]))
-            if metadata["max"][i] - metadata["min"][i] == 0:
+            if metadata["max_outer"][i] - metadata["min_outer"][i] == 0:
                 num_bits = 0 # catch corner case of useless vars, e.g. in cruise
             else:
-                num_bits = 1 + int(math.log(((metadata["max"][i] - metadata["min"][i]) / metadata["step_size"][i]), 2))
+                num_bits = 1 + int(math.log(((metadata["max_outer"][i] - metadata["min_outer"][i]) / metadata["step_size"][i]), 2))
             for j in range(0, num_bits):
                 blasted_name = metadata["variables"][i] + f"_{j}"
                 self.bdd.declare(blasted_name)
@@ -172,8 +172,8 @@ class BDD(BenchmarkSuiteClassifier):
     # Use metadata to figure out which bits to set to 0 and which to 1
     def bdd_for(self, value, metadata, i):
         varname = metadata["variables"][i]
-        min_val = metadata["min"][i]
-        max_val = metadata["max"][i]
+        min_val = metadata["min_outer"][i]
+        max_val = metadata["max_outer"][i]
         step_size = metadata["step_size"][i]
 
         if max_val - min_val == 0:
@@ -258,8 +258,8 @@ class BDD(BenchmarkSuiteClassifier):
 
         # bit_values for the action (too lazy to avoid duplicating); also note that this only works for SingleOutputDatasets
         varname = self.act_metadata["variables"][0]
-        min_val = self.act_metadata["min"][0]
-        max_val = self.act_metadata["max"][0]
+        min_val = self.act_metadata["min_outer"][0]
+        max_val = self.act_metadata["max_outer"][0]
         step_size = self.act_metadata["step_size"][0]
         num_bits = 1 + int(math.log(((max_val - min_val) / step_size), 2))
         label = int(round((act - min_val) / step_size))
