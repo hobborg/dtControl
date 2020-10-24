@@ -280,7 +280,7 @@ In case the dtControl CLI is not working properly, you can clean up the cache by
 
 In case the dtControl GUI is malfunctioning, you may try
 1. Looking at the server logs displayed in the terminal in which `dtcontrol-frontend` is run.
-2. Looking at the browser console by pressing `Ctrl+Shift+J` (in Firefox).
+2. Looking at the browser console by pressing the F12 button (in Firefox).
 3. If there are any errors, you may restart the server (press `Ctrl+C` in the terminal to kill `dtcontrol-frontend`)
 and try again.
 
