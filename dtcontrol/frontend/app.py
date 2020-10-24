@@ -665,13 +665,13 @@ def start_web_frontend():
     logging.warning(
         'dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
     print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
-    # app.run(debug=True, use_reloader=False)
-    http_server = WSGIServer(('', 5000), app)
-    http_server.serve_forever()
+    app.run(debug=True, use_reloader=False)
+    # http_server = WSGIServer(('', 5000), app)
+    # http_server.serve_forever()
 
 
 if __name__ == "__main__":
     # Tell Python to run the handler() function when SIGINT is recieved
-    signal(SIGINT, handler)
+    # signal(SIGINT, handler)
 
     start_web_frontend()

@@ -1238,6 +1238,16 @@ function use_predicate() {
             } catch (error) {
                 console.error(error);
             }
+            // Empty the all tables
+            document.getElementById("feature-specification-table").childNodes[3].innerHTML = "";
+            document.getElementById("label-specification-table").childNodes[3].innerHTML = "";
+            document.getElementById("label-statistics-table").childNodes[3].innerHTML = "";
+
+            // Disable Add/Del/Use Buttons
+            document.getElementById("use-predicate-button").disabled = true;
+            document.getElementById("add-predicate-button").disabled = true;
+            document.getElementById("delete-predicate-button").disabled = true;
+
         });
     }
 }
@@ -1266,6 +1276,11 @@ function refresh_interactive_tables() {
         }
         // Scroll the interactive tree builder cards into view
         document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
+
+        // Reactivate Add/Del/Use Buttons
+        document.getElementById("use-predicate-button").removeAttribute("disabled");
+        document.getElementById("add-predicate-button").removeAttribute("disabled");
+        document.getElementById("delete-predicate-button").removeAttribute("disabled");
     });
 }
 
