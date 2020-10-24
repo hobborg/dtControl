@@ -21,7 +21,9 @@ More concretely, we show how to
 3. Use the tool in general (Robustness testing)
 
 More detailed instructions follow. 
-Note that we always assume you are inside our unzipped [artifact folder][1] and give paths relative to that. E.g. just executing 'ls' should result in seeing the folders examples, installation and results as well as 9 python scripts.
+Note that we always assume you are inside our unzipped [artifact folder](https://dtcontrol.model.in.tum.de/files/tacas21-artifact.zip) and give 
+paths relative to that. E.g. just executing `ls` should result in seeing the folders 
+`examples`, `installation` and `results` as well as 9 python scripts.
 
 ## Paper abstract 
 
@@ -47,13 +49,17 @@ the controllers are more explainable and smaller.
 We tested the artifact on a PC with a 64 bit Windows 10 operating system, 24 GB RAM and a 3.00 GHz AMD Phenom II X6 1075T processor.
 We ran the virtual machine with 12 GB of RAM and 2 cores of the processor, using VirtualBox 6.0.16.
 The case studies have a size of ~4.5GB, so the experiments require ~5GB hard drive.
-The original experiments were conducted on an Ubuntu 19.10 server with much more power, namely 250 GB RAM and a 2.2GHz Intel Xeon CPU E5-2630 v4, and we parallelized a lot.
+The experiments in the paper were conducted on an Ubuntu 19.10 server with much more power, 
+namely 250 GB RAM and a 2.2GHz Intel Xeon CPU E5-2630 v4, with multiple experiments running in parallel.
 More concrete details on the scripts are in Section "Reproducing the results of the paper"
 
-To run dtControl, you need Python 3.7.9 or higher (which is installed automatically on the TACAS 21 VM) as well as several libraries which are included in the [zip of the artifact][1].
+To run dtControl, you need Python 3.7.9 or higher (which is installed automatically on the TACAS 21 VM) as well as 
+several libraries which are included in the [zip of the artifact](https://dtcontrol.model.in.tum.de/files/tacas21-artifact.zip). The web-based graphical user interface was tested
+on Firefox 80, which comes bundled with the VM.
 
 ### Installing dtControl
-We assume that you start on a clean version of the [TACAS 2021 VM](https://zenodo.org/record/4041464) and use it only for this evaluation, hence we do not bother with virtual environments.
+We assume that you start on a clean version of the [TACAS 2021 VM](https://zenodo.org/record/4041464) and use it only 
+for this evaluation, hence we do not bother with virtual environments.
 We assume that `python3.8` and `pip3` are already installed.
 
 First, we have to add `~/.local/bin` to the path so that `dtcontrol` can easily be found after installation
@@ -94,8 +100,8 @@ Then execute
 
 	$ dtcontrol-frontend
 
-and then open firefox and go to https://127.0.0.1:5000 You should see the GUI (and not a 404 not found).
-Finally, in the top level of our artifact folder, execute the script quickcheck.py by typing
+and then open firefox and go to `http://127.0.0.1:5000` You should see the GUI (and not a 404 not found).
+Finally, in the top level of our artifact folder, execute the script `quickcheck.py` by typing
 
 	$ python quickcheck.py
 
@@ -103,18 +109,6 @@ This executes 3 different algorithms on 2 case studies and finally opens a resul
 
 
 ## Reproducing the results of the paper
-
-### Single case-study: Command line interface
-
-To run dtControl on a single case study, execute the following (assuming that you have 
-installed dtControl and unzipped the examples):
-
-	$ dtcontrol --input examples/<location_of_controller_file> --use-preset <preset>
-
-where `<location_of_controller_file>` is the path to an example, e.g. `cps/cartpole.scs` or `storm/wlan_dl.0.80.deadline.storm.json`.
-and `<preset>` is one of the available presets (run `dtcontrol preset --list` to list all available presets, we recommend
-`avg` for MDPs and `mlentropy` for the CPS benchmarks).
-
 
 ### Scripts for convenience
 
@@ -137,19 +131,23 @@ In this 'include' list, all cast studies are explicitly listed, and you can remo
 2) Similarly, there is the command `classifiers = [...]` where all algorithms for representation are listed. By commenting some of the classifiers, you can omit them in the computation (for an example, compare the cps-bdd-subset to the cps-bdd-all script: Two case studies where excluded and all but two classifiers have been commented).
 By modifying the scripts, you can reproduce as many of the results as your computational resources and time allow.
 
-Here we report the time and memory requirements of the different scripts. We marked those we suggest to run in **bold**.
+Here we report the time and memory requirements of the different scripts.
+Note that we are not benchmarking the memory or time requirements, and hence these are ballpark figures to help
+the reviewer choose the experiments to reproduce.
+
+We mark some suggested experiments in **bold**. OOM indicates that the script ran out of memory on our VM.
 
 Script Name        | Max RAM | Time on TACAS VM   | Theoretical Maximum
 -------------------|---------|--------------------|--------------------
-**quickcheck**     | 100MB   |  20sec             | 6min
-**cps-dt-subset**  | 870MB   |  42min             | 3.5h
-**cps-bdd-subset** | ~8GB    |  63min             | 2.5h
-cps-dt-all         | >11GB   |  Failed            | 3.5d
-cps-bdd-all        | >11GB   |  Failed            | 17.5d
-**mdp-dt-subset** | ~1.4GB  |  12 (@540%) / 37 min (user time)        | 11h
-**mdp-bdd-subset**|   ?     |  38min            | 16h
-mdp-dt-all         | ~5.75GB |  98min (@471%) / 5 hours (user time)               | 9.5d
-mdp-bdd-all        | > 11GB  |  Failed            | 47.5d
+**quickcheck**     | 100MB   |  20 sec             | 6min
+**cps-dt-subset**  | ~1GB   |  89 min             | 3.5h
+**cps-bdd-subset** | ~8GB    |  63 min             | 2.5h
+cps-dt-all         | 12GB+   |  OOM            | 3.5d
+cps-bdd-all        | 12GB+   |  OOM            | 17.5d
+**mdp-dt-subset** | ~1.4GB  |  37 min           | 11h
+**mdp-bdd-subset**|  ~3.4GB     |  38 min            | 16h
+mdp-dt-all         | ~5.8GB |  5 hours               | 9.5d
+mdp-bdd-all        | 12GB+  |  OOM            | 47.5d
 
 
 Provided that you have a good setup, you can also run the scripts in parallel to speed things up (as we did when running them for the paper).
@@ -160,37 +158,42 @@ to just restart the script, and it continued without this error, picking up from
 
 
 ### Table 1 - Cyber-physical systems (CPS)
-To reproduce this table, we suggest to run the scripts cps-dt-subset.py and cps-bdd-subset.py, i.e. execute 
-`python cps-dt-subset.py` and `python cps-bdd-subset.py`.
-The results are saved in multiple formats, namely in the folders decision_trees, saved_classifiers and results. 
+To reproduce this table, we suggest to run the scripts `cps-dt-subset.py` and `cps-bdd-subset.py`
+    
+    $ python cps-dt-subset.py
+    $ python cps-bdd-subset.py
+    
+The results are saved in multiple formats, namely in the folders `decision_trees`, `saved_classifiers` and `results`. 
 The former two are not relevant for reproducing the table. In the results folder, you see an html and a 
-json-file that report all the statistics of every combination of algorithm and case study. 
-By running `results/create_table.py cps`, you can automatically read the json-files and create 
-something with the same structure as Table 1 in the paper. The script selects the minimum sized dtControl1, 
-dtControl2 and BDD results from the different DT-algorithms respectively the multiple BDD repetitions and 
-writes them to the file `results/table2.csv`.
-
+json file that report all the statistics of every combination of algorithm and case study. You may open the 
+`results/DT-CPS.html` file and the `results/BDD-CPS.html` file in a browser to compare the results with the paper.
+We report the minimum sized dtControl1, dtControl2 and BDD results from the different DT-algorithms 
+respectively the multiple BDD repetitions.
 
 ### Table 2 - Probabilistic model checking (concretely Markov decision processes, MDP)
-For this table, we suggest to run `python mdp-dt-subset.py` and `python mdp-bdd-subset.py`, 
-followed by `results/create_table.py mdp` to create the file `results/table2.csv`.
 
+To reproduce this table, we suggest to run the scripts `mdp-dt-subset.py` and `mdp-bdd-subset.py`.
+
+    $ python mdp-dt-subset.py
+    $ python mdp-bdd-subset.py
+
+The results of Table 2 may be compiled as described for Table 1, from the `results/DT-MDP.html` file and 
+the `results/BDD-MDP.html` file generated by the above commands.
 
 ### Figure 1, 4 and 5
 These figures show small illustrative examples that need not be reproduced via the tool.
 
 ### Figure 3
-This figure shows a screenshot of the new GUI. To start the GUI, run dtcontrol-frontend 
-(assuming you added `/home/tacas21/.local/bin` to the PATH; note that restarting the VM resets this, 
-so you will have to do it again). The sidebar on the left allows the selection of the case study and the preset. 
+This figure shows a screenshot of the new GUI. To start the GUI, run `dtcontrol-frontend`. 
+The sidebar on the left allows the selection of the case study and the preset. 
 By clicking the browse button, you can select the case study. `10rooms.scs` and `cartpole.scs` are located 
 in `<our-artifact-folder>/examples/cps` and `firewire_abst.prism` is in `<our-artifact-folder>/examples/prism`.
 The dropdown menu allows to select the preset, i.e. the exact DT construction algorithm. Every preset induces 
 a choice of hyper-parameters. These hyper-parameters can also be tuned by hand, but to recreate the screenshot, 
 you do not need to use the advanced options.
 
-Adding the case studies with their respective preset as in screenshot and then clicking the run button on the right for the first two recreates the Figure.
-
+Adding the case studies with their respective preset as in screenshot and then clicking the run button on the 
+right for the first two recreates the Figure.
 
 ### Figure 2
 This figure shows all the workflow and software architecture of dtControl 2.0. We suggest to read the description 
@@ -201,7 +204,7 @@ We also include an example CSV controller. See [our documentation](https://dtcon
 for a description of the CSV format.
 - Predicate Domain: All these options are offered in the advanced options menu. 
 When selecting algebraic predicates, you also are required to enter domain knowledge predicates. 
-The domain knowledge has to follow the structure presented in [Appendix B.2][2]. 
+The domain knowledge has to follow the structure presented in [Appendix B.2](https://dtcontrol.model.in.tum.de/dtcontrol2.pdf). 
 In general, x-variables are used to refer to features. 
 For example, x_0 references the first feature (whereas c-variables describe coefficients).
 In order to apply the predicate **x₀ - log(x₁) >= 150**,
@@ -229,17 +232,59 @@ After a node is selected (visualized by an orange colour), you can click on the 
 ## Robustness testing
 
 You can play around with CLI and GUI, trying any combination of hyper-parameters on any case study. 
-You can also download further case studies from the Quantitative Verification Benchmark set or from our [examples repository](https://gitlab.lrz.de/i7/dtcontrol-examples). 
-You can explore DTs in the GUI and try to get better understanding, or see whether you can come up with useful predicates.
+You can also download further case studies from the [Quantitative Verification Benchmark set](http://qcomp.org/benchmarks/index.html) 
+or from our [examples repository](https://gitlab.lrz.de/i7/dtcontrol-examples). You can explore DTs in the GUI and 
+try to get better understanding, or see whether you can come up with useful predicates.
 
-[1]:{{ site.url }}/files/tacas21-artifact.zip
-[2]:{{ site.url }}/dtcontrol2.pdf
+### Single case-study: Command line interface
 
+To run dtControl on a single case study, execute the following (assuming that you have 
+installed dtControl and unzipped the examples):
 
-TODO: 
-Complete the table about scripts (at least the subset ones).
-Verify that the prism thing in frontend is working, actually recreate screenshot.
-Write scripts to read the results (read script draft included in results folder, can be simpler, as it just has to find minimum); alternatively, just tell people to look at html and find the minimum node number among those with BDD/dtcontrol1/dtcontrol2 in their name.
-Fix layout issues of the webpage (code being displayed nicely, links, etc.)
-We wanted to have a look at the documentation.
-Submit to easychar: Do we have to export the readme? I.e. this webpage?
+	$ dtcontrol --input examples/<location_of_controller_file> --use-preset <preset>
+
+where `<location_of_controller_file>` is the path to an example, e.g. `cps/cartpole.scs` or `storm/wlan_dl.0.80.deadline.storm.json`.
+and `<preset>` is one of the available presets (run `dtcontrol preset --list` to list all available presets, we recommend
+`avg` for MDPs and `mlentropy` for the CPS benchmarks).
+
+Note that, for the `avg` preset, there needs to be a `<controller_name>_config.json` file containing the metadata present
+in the same location as the controller file.
+
+The output tree (in JSON, C and DOT formats) can be found inside the `decision_trees/<present_name>/<controller_name>/` folder, 
+and a summary will be available in the `benchmarks.html` file in the folder from which `dtcontrol` was run. 
+
+### Interactive DT building in the GUI
+
+To reproduce Figure 9 of the Appendix, one may follow these steps
+1. Run `dtcontrol-frontend` to start the GUI and navigate to `http://127.0.0.1:5000` in the browser.
+2. Upload the `examples/cps/10rooms.scs` controller along with the metadata file `examples/cps/10rooms_config.json`.
+3. Select the `mlentropy` preset and run the experiment.
+4. Open the interactive DT viewer by pressing the *eye icon* in the results table.
+5. In the top left area, click the **Edit** mode button.
+6. Click on the `x[4] <= 20.625` predicate in the tree by clicking on it and press on the "Start interactive tree builder ..." 
+button in the left side bar.
+7. Click on the Add predicate button in the Predicate Collection table and enter `x_0 + 3*x_1 <= c_0` and wait until
+ the Instantiated Predicate table reloads.
+
+## In case of malfunction
+
+In case of problems with the evaluation scripts, you may try
+1. The `*.json` files in the `results` folder.
+2. Making sure that all the examples are unzipped.
+3. Deleting the `.benchmark_suite` hidden folder inside each of the examples folders. 
+
+In case the dtControl CLI is not working properly, you can clean up the cache by deleting
+1. The `*.json` files in the folder from which `dtcontrol` is run
+2. The `.benchmark_suite` hidden folder inside each of the examples folders.
+3. Running `dtcontrol --help`
+
+In case the dtControl GUI is malfunctioning, you may try
+1. Looking at the server logs displayed in the terminal in which `dtcontrol-frontend` is run.
+2. Looking at the browser console by pressing `Ctrl+Shift+J` (in Firefox).
+3. If there are any errors, you may restart the server (press `Ctrl+C` in the terminal to kill `dtcontrol-frontend`)
+and try again.
+
+## User and Developer Manuals
+
+More information on dtControl and its functionality can be found in the user and developer manuals at
+ [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io/en/latest/).
