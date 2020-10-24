@@ -1094,6 +1094,7 @@ function generate_html_table(table_selector, body_index, header, body, add_radio
 
 function process_interaction_response(data) {
     if (data.type === "error") {
+        popupModal("Error", data.body);
         // Show error in a modal?
     }
     else if (data.type === "success") {
