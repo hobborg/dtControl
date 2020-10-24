@@ -1,15 +1,12 @@
 import json
 import logging
 import os
-import random
-from signal import signal, SIGINT
 import html
 
 import numpy as np
 import sympy as sp
 from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for
 from werkzeug.utils import secure_filename
-from gevent.pywsgi import WSGIServer
 
 from dtcontrol import frontend_helper
 
@@ -665,7 +662,7 @@ def start_web_frontend():
     logging.warning(
         'dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
     print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=False, use_reloader=False)
     # http_server = WSGIServer(('', 5000), app)
     # http_server.serve_forever()
 

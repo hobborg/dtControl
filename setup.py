@@ -66,15 +66,13 @@ setuptools.setup(
         'tabulate==0.8.6',
         'tqdm==4.42.0',
         'flask==1.1.2',
-        'gevent==20.9.0',
         'sympy==1.6.1'
     ],
     package_data={
         'dtcontrol': ['config.yml'],
         'dtcontrol.c_templates': ['*.c'],
         'dtcontrol.ui': ['*.js', '*.css', '*.html', '*.py'],
-        'dtcontrol.frontend': ['*/*/*.js', '*/*/*.css', '*/*/*.png', '*/*.html'],
-        'dtcontrol.frontend.static.fonts': ['*'],
+        'dtcontrol.frontend': ['*/*/*.js', '*/*/*.css', '*/*/*.png', '*/*.html', '*/*/*.otf', '*/*/*.eot', '*/*/*.svg', '*/*/*.ttf', '*/*/*.woff', '*/*/*.woff2'],
         'dtcontrol.decision_tree.OC1_source': ['*.c', '*.h', 'makefile', '*.readme', 'README'],
     }
 )
