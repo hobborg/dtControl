@@ -288,3 +288,7 @@ and try again.
 
 More information on dtControl and its functionality can be found in the user and developer manuals at
  [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io/en/latest/).
+ 
+## Source Code
+
+dtControl is developed as an open-source software, with the source available in [LRZ Gitlab](https://gitlab.lrz.de/i7/dtcontrol/). 
