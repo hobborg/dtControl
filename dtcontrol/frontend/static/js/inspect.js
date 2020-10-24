@@ -105,7 +105,6 @@ function constructTree(data) {
     root = d3.hierarchy(data);
 
     root.descendants().forEach((d, i) => {
-        console.log(i);
         d.id = i;
         d._children = d.children;
     });
@@ -585,8 +584,8 @@ function drawCanvas() {
 // Checks if state variables go out of bounds at any point
 function checkBounds() {
     for (let i = 0; i < stateDimension; i++) {
-        console.log("Current bounds: ", xCurrent[i][currentSim]);
-        console.log("Outer bounds: ", xBoundsOuter[i][0], ", ", xBoundsOuter[i][1]);
+        // console.log("Current bounds: ", xCurrent[i][currentSim]);
+        // console.log("Outer bounds: ", xBoundsOuter[i][0], ", ", xBoundsOuter[i][1]);
         if (xCurrent[i][currentSim] < xBoundsOuter[i][0] || xCurrent[i][currentSim] > xBoundsOuter[i][1]) {
             return false;
         }
@@ -606,7 +605,7 @@ function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
         chartConfig.push([]);
     }
     for (let i = 0; i < actionDimension; i++) {
-        console.log(`Pushing [] to uCurrent`);
+        // console.log(`Pushing [] to uCurrent`);
         uCurrent.push([]);
     }
     const tab = document.getElementById('simTable');
@@ -791,7 +790,7 @@ function renderChart(id, data, labels, ub, lb) {
 
 // Called every time when 'Next' or 'Play' button is used
 async function oneStep() {
-    console.log((currentSim+1) + ': oneStep is called');
+    // console.log((currentSim+1) + ': oneStep is called');
     recolourPath();
 
     if (currentSim == totalSims) {
@@ -861,7 +860,7 @@ async function oneStep() {
                     xCurrent[i].push(data.x_new[0][i]);
                 }
                 for (let i = 0; i < actionDimension; i++) {
-                    console.log(`Pushing ${data.x_new[1][i]} to uCurrent[${i}]`);
+                    // console.log(`Pushing ${data.x_new[1][i]} to uCurrent[${i}]`);
                     uCurrent[i].push(data.x_new[1][i]);
                 }
 
@@ -926,7 +925,7 @@ function replaceInTree(selected, replacementData) {
     // Assign parents and address properly
     // not updating parents breaks the tree on update
     assignParentsDfs(newNode, selected, root_address);
-    console.log("newNode", newNode);
+    // console.log("newNode", newNode);
 
     //Selected is a node, to which we are adding the new node as a child
     selected.children = newNode.children;
@@ -959,9 +958,9 @@ function run_partial_construction(configuration) {
         },
     }).done(data => {
         // Change existing tree data at the necessary position to data
-        console.log("Return from partial construct: ", data);
+        console.log("Return from partial construct");
 
-        console.log("newData: ", data);
+        // console.log("newData: ", data);
         let pointer = root;
         configuration.selected_node.forEach((pos) => {
             pointer = pointer.children[pos]
@@ -977,7 +976,7 @@ function run_partial_construction(configuration) {
         constructTree(treeData);
         update(root);
 
-        console.log(configuration.selected_node.toString());
+        // console.log(configuration.selected_node.toString());
 
         let adr = configuration.selected_node.toString();
         if (adr === "") {
@@ -986,7 +985,7 @@ function run_partial_construction(configuration) {
             timedResetFocus(adr);
         }
 
-        console.log(treeData);
+        // console.log(treeData);
 
         $("body").css("cursor", "default");
 
@@ -1007,7 +1006,7 @@ function start_interactive_construction(configuration) {
             document.getElementById("interactive-button").disabled = "true";},
     }).done(data => {
         // Change existing tree data at the necessary position to data
-        console.log("Return from interactive construct: ", data);
+        console.log("Return from interactive construct");
 
         let pointer = root;
         configuration.selected_node.forEach((pos) => {
@@ -1024,7 +1023,7 @@ function start_interactive_construction(configuration) {
         constructTree(treeData);
         update(root);
 
-        console.log(configuration.selected_node.toString());
+        // console.log(configuration.selected_node.toString());
 
         let adr = configuration.selected_node.toString();
         if (adr === "") {
@@ -1094,6 +1093,7 @@ function generate_html_table(table_selector, body_index, header, body, add_radio
 
 function process_interaction_response(data) {
     if (data.type === "error") {
+        popupModal("Error", data.body);
         // Show error in a modal?
     }
     else if (data.type === "success") {
@@ -1156,7 +1156,7 @@ function process_interaction_response(data) {
             generate_html_table(document.getElementById("standard-predicates-collection"),
                 1, recently_added_predicates_collection.header, recently_added_predicates_collection.body,
                 true, "abstract-predicate");
-            console.log(recently_added_predicates_collection.length);
+            // console.log(recently_added_predicates_collection.length);
             document.getElementById("delete-predicate-button").disabled = (recently_added_predicates_collection.length === 0);
         } else {
             // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
@@ -1183,7 +1183,7 @@ function add_predicate()
         },
     }).done(data => {
         console.log("Return from add");
-        console.log(data);
+        // console.log(data);
         try {
             let response = JSON.parse(data);
             process_interaction_response(response);
@@ -1206,7 +1206,7 @@ function remove_predicate() {
         },
     }).done(data => {
         console.log("Return from del");
-        console.log(data);
+        // console.log(data);
         try {
             let response = JSON.parse(data);
             process_interaction_response(response);
@@ -1226,11 +1226,21 @@ function use_predicate() {
             contentType: "application/json; charset=utf-8",
             url: '/interact',
             beforeSend: () => {
-                $("body").css("cursor", "progress")
+                $("body").css("cursor", "progress");
+
+                // Empty the all tables
+                document.getElementById("feature-specification-table").childNodes[3].innerHTML = "";
+                document.getElementById("label-specification-table").childNodes[3].innerHTML = "";
+                document.getElementById("label-statistics-table").childNodes[3].innerHTML = "";
+
+                // // Disable Add/Del/Use Buttons
+                document.getElementById("use-predicate-button").disabled = true;
+                document.getElementById("add-predicate-button").disabled = true;
+                document.getElementById("delete-predicate-button").disabled = true;
             },
         }).done(data => {
             console.log("Return from use");
-            console.log(data);
+            // console.log(data);
             try {
                 let response = JSON.parse(data);
                 process_interaction_response(response);
@@ -1248,14 +1258,13 @@ function refresh_interactive_tables() {
         contentType: "application/json; charset=utf-8",
         url: '/interact',
         beforeSend: () => {
-            $("body").css("cursor", "progress")
+            $("body").css("cursor", "progress");
         },
     }).done(data => {
         console.log("Return from refresh");
-        console.log(data);
+        // console.log(data);
         // Unhide the cards related to interactive tree builder
         document.getElementById("mainRow-interactive").classList.remove("d-none");
-        document.getElementById("")
         try {
             let response = JSON.parse(data);
             process_interaction_response(response);
@@ -1265,6 +1274,11 @@ function refresh_interactive_tables() {
         }
         // Scroll the interactive tree builder cards into view
         document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
+
+        // // Reactivate Add/Del/Use Buttons
+        document.getElementById("use-predicate-button").removeAttribute("disabled");
+        document.getElementById("add-predicate-button").removeAttribute("disabled");
+        document.getElementById("delete-predicate-button").removeAttribute("disabled");
     });
 }
 
@@ -1442,12 +1456,12 @@ $(document).ready(function () {
 
         idUnderInspection = data.idUnderInspection
         treeData = data.classifier;
-        console.log("Tree Data", treeData);
+        // console.log("Tree Data", treeData);
         stateDimension = data.numVars;
         actionDimension = data.numResults;
         controllerFile = data.controllerFile;
 
-        console.log(treeData);
+        // console.log(treeData);
 
         // TODO C: Check if these two lines affect the tree layout (see the svgSetup() and constructTree() below)
         // height = 50 * getLeaves(treeData);
@@ -1479,8 +1493,8 @@ $(document).ready(function () {
 
             opt.appendChild(dumDiv);
 
-            console.log(i + ": pushing outer bounds " + [data.boundOuter[0][i], data.boundOuter[1][i]]);
-            console.log(i + ": pushing inner bounds " + [data.boundInner[0][i], data.boundInner[1][i]]);
+            // console.log(i + ": pushing outer bounds " + [data.boundOuter[0][i], data.boundOuter[1][i]]);
+            // console.log(i + ": pushing inner bounds " + [data.boundInner[0][i], data.boundInner[1][i]]);
             xBoundsOuter.push([data.boundOuter[0][i], data.boundOuter[1][i]]);
             xBoundsInner.push([data.boundInner[0][i], data.boundInner[1][i]])
         }
@@ -1488,7 +1502,7 @@ $(document).ready(function () {
 
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {
-        console.log('form is submitted');
+        // console.log('form is submitted');
         initializeSimulatorTablesAndCharts(stateDimension, actionDimension)
         let x_toPass = [];
         for (let i = 0; i < stateDimension; i++) {
@@ -1864,7 +1878,7 @@ function addToDomainKnowledgeTable() {
 
 function splitNode() {
     let toSendPredicate = $('input[name="buildPredicate"]:checked').val();
-    console.log(toSendPredicate);
+    // console.log(toSendPredicate);
     $.ajax({
         data: JSON.stringify({
             address: (selectedNode),
@@ -1898,7 +1912,7 @@ function splitNode() {
 
 // Randomize button in Modal for selecting initial values of state variables
 function randomizeInputs() {
-    console.log(idUnderInspection);
+    // console.log(idUnderInspection);
     $.ajax({
         data: JSON.stringify({
             id: idUnderInspection
@@ -1938,5 +1952,5 @@ $(document).on("click", "#simTable tbody tr", function () {
 
 $(document).on("change", "#animateTree", function () {
     treeAnimation = !treeAnimation;
-    console.log(treeAnimation);
+    // console.log(treeAnimation);
 });

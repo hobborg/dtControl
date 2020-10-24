@@ -390,3 +390,11 @@ class RicherDomainSplit(Split):
     def print_vhdl(self):
         # TODO
         return self.print_dot()
+
+    def to_json_dict(self, rounded=False, variables=None, **kwargs):
+        subs_list = self.coef_assignment if self.coef_assignment else []
+        evaluated_predicate = self.term.subs(subs_list).evalf(5)
+        return {
+            "lhs": evaluated_predicate,
+            "op": self.relation,
+            "rhs": 0}
