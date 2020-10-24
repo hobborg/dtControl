@@ -57,17 +57,13 @@ We assume that you start on a clean version of the [TACAS 2021 VM](https://zenod
 We assume that `python3.8` and `pip3` are already installed.
 
 First, we have to add `~/.local/bin` to the path so that `dtcontrol` can easily be found after installation
-```
-echo "export PATH=\"$PATH:/home/tacas21/.local/bin\"" >> ~/.bashrc
-source ~/.bashrc
-```
+
+	$ echo "export PATH=\"$PATH:/home/tacas21/.local/bin\"" >> ~/.bashrc
+	$ source ~/.bashrc
 
 To install dtControl with all its dependencies, go to the `installation` folder of our artifact and execute 
 
-```
-cd installation
-pip3 install *
-```
+	$ cd installation && pip3 install *
 
 This installs dtControl in the `.local/bin` directory. 
 You can check that it worked by typing `dtcontrol`, which should print the help text of dtcontrol.
@@ -76,13 +72,13 @@ You can check that it worked by typing `dtcontrol`, which should print the help 
 
 The case studies are located in folder `examples`.
 To unpack them, first
-```
-cd examples
-```
+
+	$ cd examples
+
 then run 
-```
-find . -name "*.zip" | while read filename; do unzip -o -d "`dirname "$filename"`" "$filename"; done;
-```
+
+	$ find . -name "*.zip" | while read filename; do unzip -o -d "`dirname "$filename"`" "$filename"; done;
+
 to extract the zipped examples within all the subfolders (`examples/cps` and `examples/storm`). 
 The examples in the `prism` and `csv` folder are not zipped as they are very small.
 
@@ -90,19 +86,19 @@ The examples in the `prism` and `csv` folder are not zipped as they are very sma
 
 We want to verify that three things work properly: The command line interface (CLI), the graphical user interface (GUI) and the python bindings which we use for the large scripts.
 To do so, first execute
-```
-dtcontrol
-```
+
+	$ dtcontrol
+
 which should print the help text. If it doesn't, make sure you have set the path correctly.
 Then execute
-```
-dtcontrol-frontend
-```
+
+	$ dtcontrol-frontend
+
 and then open firefox and go to https://127.0.0.1:5000 You should see the GUI (and not a 404 not found).
 Finally, in the top level of our artifact folder, execute the script quickcheck.py by typing
-```
-python quickcheck.py
-```
+
+	$ python quickcheck.py
+
 This executes 3 different algorithms on 2 case studies and finally opens a results page in firefox.
 
 
@@ -113,9 +109,7 @@ This executes 3 different algorithms on 2 case studies and finally opens a resul
 To run dtControl on a single case study, execute the following (assuming that you have 
 installed dtControl and unzipped the examples):
 
-```
-$ dtcontrol --input examples/<location_of_controller_file> --use-preset <preset>
-```
+	$ dtcontrol --input examples/<location_of_controller_file> --use-preset <preset>
 
 where `<location_of_controller_file>` is the path to an example, e.g. `cps/cartpole.scs` or `storm/wlan_dl.0.80.deadline.storm.json`.
 and `<preset>` is one of the available presets (run `dtcontrol preset --list` to list all available presets, we recommend
@@ -145,17 +139,17 @@ By modifying the scripts, you can reproduce as many of the results as your compu
 
 Here we report the time and memory requirements of the different scripts. We marked those we suggest to run in **bold**.
 
-scriptname        | max RAM | time on TACAS VM   | theoretical maximum
-------------------|---------|--------------------|--------------------
-**quickcheck**    | 100MB   |  20sec             | 6min
-**cps-dt-subset** | 870MB   |  42min             | 3.5h
-**cps-bdd-subset**| ~8GB    |  63min             | 2.5h
-cps-dt-all        | >11GB   |  Failed            | 3.5d
-cps-bdd-all       | >11GB   |  Failed            | 17.5d
+Script Name        | Max RAM | Time on TACAS VM   | Theoretical Maximum
+-------------------|---------|--------------------|--------------------
+**quickcheck**     | 100MB   |  20sec             | 6min
+**cps-dt-subset**  | 870MB   |  42min             | 3.5h
+**cps-bdd-subset** | ~8GB    |  63min             | 2.5h
+cps-dt-all         | >11GB   |  Failed            | 3.5d
+cps-bdd-all        | >11GB   |  Failed            | 17.5d
 **mdp-dt-subset** | ~1.4GB  |  12 (@540%) / 37 min (user time)        | 11h
 **mdp-bdd-subset**|   ?     |  38min            | 16h
-mdp-dt-all        | ~5.75GB |  98min (@471%) / 5 hours (user time)               | 9.5d
-mdp-bdd-all       | > 11GB  |  Failed            | 47.5d
+mdp-dt-all         | ~5.75GB |  98min (@471%) / 5 hours (user time)               | 9.5d
+mdp-bdd-all        | > 11GB  |  Failed            | 47.5d
 
 
 Provided that you have a good setup, you can also run the scripts in parallel to speed things up (as we did when running them for the paper).
