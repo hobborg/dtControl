@@ -23,7 +23,7 @@ More concretely, we show how to
 More detailed instructions follow. 
 Note that we always assume you are inside our unzipped [artifact folder](https://dtcontrol.model.in.tum.de/files/tacas21-artifact.zip) and give 
 paths relative to that. E.g. just executing `ls` should result in seeing the folders 
-`examples`, `installation` and `results` as well as 9 python scripts.
+`examples`, `installation` and `results` as well as 9 Python scripts.
 
 ## Paper abstract 
 
@@ -41,8 +41,21 @@ probabilistic systems, namely STORM and PRISM and provide dedicated
 support for categorical enumeration-type state variables. Consequently,
 the controllers are more explainable and smaller.
 
+## Statement on archival
+
+The artifact, on passing the artifact evaluation review, would be archived on [Zenodo](https://zenodo.org/) and made publicly available through our [website](https://dtcontrol.model.in.tum.de/artifacts/).
+
 
 ## Preparation
+
+### Contents of this artifact
+
+This artifact contains the following files and folders
+- `tacas21-dtcontrol-artifact` countaining the installation files, examples and run scripts
+- `TACAS_2021_paper_146.pdf`, the manuscript submitted for review and `Full-Paper-with-Appendix.pdf`, the extended version containing the appendix.
+- `License.txt` containing the license text
+- `Readme.txt` containing instructions on how to reproduce the tables and figures of the paper.
+
 
 ### Technical setup
 
@@ -139,15 +152,15 @@ We mark some suggested experiments in **bold**. OOM indicates that the script ra
 
 Script Name        | Max RAM | Time on TACAS VM   | Theoretical Maximum
 -------------------|---------|--------------------|--------------------
-**quickcheck**     | 100MB   |  20 sec             | 6min
-**cps-dt-subset**  | ~1GB   |  89 min             | 3.5h
-**cps-bdd-subset** | ~8GB    |  63 min             | 2.5h
-cps-dt-all         | 12GB+   |  OOM            | 3.5d
-cps-bdd-all        | 12GB+   |  OOM            | 17.5d
-**mdp-dt-subset** | ~1.4GB  |  37 min           | 11h
-**mdp-bdd-subset**|  ~3.4GB     |  38 min            | 16h
-mdp-dt-all         | ~5.8GB |  5 hours               | 9.5d
-mdp-bdd-all        | 12GB+  |  OOM            | 47.5d
+**quickcheck**     | 100MB   |  20 sec            | 6min
+**cps-dt-subset**  | ~1GB    |  89 min            | 3.5h
+**cps-bdd-subset** | ~8GB    |  63 min            | 2.5h
+cps-dt-all         | 12GB+   |  OOM               | 3.5d
+cps-bdd-all        | 12GB+   |  OOM               | 17.5d
+**mdp-dt-subset**  | ~1.4GB  |  37 min            | 11h
+**mdp-bdd-subset** | ~3.4GB  |  38 min            | 16h
+mdp-dt-all         | ~5.8GB  |  5 hours           | 9.5d
+mdp-bdd-all        | 12GB+   |  OOM               | 47.5d
 
 
 Provided that you have a good setup, you can also run the scripts in parallel to speed things up (as we did when running them for the paper).
