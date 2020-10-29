@@ -55,12 +55,12 @@ class LinearSplit(Split, ABC):
         for i in range(len(self.real_coefficients)):
             if self.real_coefficients[i] == 0:
                 continue
-            coefficient = round(self.real_coefficients[i], 6) if rounded else self.real_coefficients[i]
+            coefficient = f"{round(self.real_coefficients[i], 6)}" if rounded else f"{self.real_coefficients[i]:.32f}"
             variable = variables[i] if variables else f'x[{i}]'
             line.append(f"{coefficient}*{variable}")
-        line.append(f"{round(self.intercept, 6) if rounded else self.intercept}")
+        line.append(f"{round(self.intercept, 6) if rounded else self.intercept:.32f}")
         joiner = "\\n+" if newlines else "+"
-        hyperplane = joiner.join(line) + " <= 0"
+        hyperplane = joiner.join(line) + " <= eps"
         return hyperplane.replace('+-', '-')
 
     def to_json_dict(self, rounded=False, variables=None, **kwargs):
@@ -69,9 +69,9 @@ class LinearSplit(Split, ABC):
             if self.real_coefficients[i] == 0:
                 continue
             coefficient = round(self.real_coefficients[i], 6) if rounded else self.real_coefficients[i]
-            lhs.append({"coeff": coefficient, "var": variables[i] if variables else i})
-        lhs.append({"intercept": round(self.intercept, 6) if rounded else self.intercept})
+            lhs.append({"coeff": f"{coefficient:.32f}", "var": variables[i] if variables else i})
+        lhs.append({"intercept": f"{round(self.intercept, 6)}" if rounded else f"{self.intercept:.32f}"})
         return {
             "lhs": lhs,
             "op": "<=",
-            "rhs": 0}
+            "rhs": "eps"}
