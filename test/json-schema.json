@@ -1,0 +1,129 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Node",
+    "definitions": {
+        "Node": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "actual_label": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "edge_label": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Node"
+                    }
+                },
+                "split": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Split"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "actual_label",
+                "children",
+                "edge_label",
+                "split"
+            ],
+            "title": "Node"
+        },
+        "Split": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "lhs": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/AxisParallelLhs"
+                        },
+                        {
+                            "$ref": "#/definitions/LinearExpressionLhs"
+                        }
+                    ]
+                },
+                "op": {
+                    "type": "string"
+                },
+                "rhs": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "lhs",
+                "op",
+                "rhs"
+            ],
+            "title": "Split"
+        },
+        "AxisParallelLhs": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "coeff": {
+                    "type": "integer"
+                },
+                "var": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "coeff",
+                "var"
+            ],
+            "title": "AxisParallelExpression"
+        },
+        "LinearExpressionLhs": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/LinearTerm"
+            }
+        },
+        "LinearTerm": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "coeff": {
+                    "type": "number"
+                },
+                "var": {
+                    "type": "integer"
+                },
+                "intercept": {
+                    "type": "number"
+                }
+            },
+            "required": [],
+            "title": "LinearTerm"
+        }
+    }
+}
