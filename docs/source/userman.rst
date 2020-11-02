@@ -108,7 +108,7 @@ If your installation has run successfully, you will now see the help page detail
     Run the 'my-config' preset on the SCOTS model located at 'examples/cps/cartpole.scs'
         dtcontrol --input examples/cps/cartpole.scs --config user-config.yml --use-preset my-config
 
-Input format
+Input
 ^^^^^^^^^^^^
 
 Supported tools
@@ -252,8 +252,8 @@ cart             ['axisonly']                                             none  
 linsvm           ['axisonly', 'linear-linsvm']                            none           entropy                 
 logreg           ['axisonly', 'linear-logreg']                            none           entropy                 
 oc1              ['oc1']                                                  none           entropy
-avg              ['axisonly']                   ['valuegrouping']         none           entropy
-singlesplit      ['axisonly']                   ['singlesplit']           none           entropy
+avg              ['axisonly']                    ['valuegrouping']        none           entropy
+singlesplit      ['axisonly']                    ['singlesplit']          none           entropy
 maxfreq          ['axisonly']                                             maxfreq        entropy                 
 maxfreqlc        ['axisonly', 'linear-logreg']                            maxfreq        entropy                 
 minnorm          ['axisonly']                                             minnorm        entropy                 
@@ -295,7 +295,7 @@ Configurable options
         b. ``minnorm`` to pick control inputs with the minimal norm,
         c. ``maxnorm`` to pick control inputs with the maximal norm,
         d. ``random`` to pick a control input uniformly at random,
-        e. ``maxfreq`` to pick our in-house developed determinization strategy, details of which are available in M. Jackermeier's thesis (TODO link).
+        e. ``maxfreq`` to pick our in-house developed determinization strategy, details of which are available in `M. Jackermeier's thesis <https://mediatum.ub.tum.de/1547107>`_.
         f. ``auto`` to let dtControl automatically choose a determinization strategy; currently defaults to ``maxfreq``.
 
 #. **impurity** allows users to choose the measure by which splitting predicates are evaluated. Possible options are
