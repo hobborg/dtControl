@@ -51,13 +51,15 @@ something like ``(venv) $``. You can now proceed with installing dtControl from 
     (venv) $ pip install dtcontrol
 
 .. note::
-    In case you want to get the development version of dtControl, you could instead clone the Git repository first
+    In case you want to get the development version of dtControl, you could instead clone the Git repository first::
 
         (venv) $ git clone https://gitlab.lrz.de/i7/dtcontrol.git
 
-    And then run
+    And then run::
 
         (venv) $ pip install .
+
+    from within the ``dtcontrol`` folder.
 
 Once the dtControl package is installed, the command line interface can be accessed using the ``dtcontrol`` command.
 Try running::
