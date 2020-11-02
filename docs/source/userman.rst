@@ -361,10 +361,12 @@ Once dtControl is used to run some experiments, you may notice a bunch of new fi
    |   `-- cartpole
    |       |-- default.c
    |       |-- default.dot
+   |       |-- default.json
    |-- my-config
    |   `-- cartpole
    |       |-- my-config.c
    |       |-- my-config.dot
+   |       |-- my-config.json
    benchmark.json
    benchmark.html
 
@@ -375,6 +377,39 @@ Once dtControl is used to run some experiments, you may notice a bunch of new fi
 * ``default.c`` contains the C-code of the decision tree
 * ``default.dot`` contains the DOT source code which can be compiled using the ``dot -Tpdf default.dot -o default.pdf`` command
   or `viewed using a web-based tool <https://dreampuf.github.io/GraphvizOnline/>`_
+* ``default.json`` contains a decision tree in a machine-readable format (valid according to this `JSON Schema <https://gitlab.lrz.de/i7/dtcontrol/-/blob/master/test/golf_multi_config.json>`_). The schema is also given below as a (human-readable) Python code below.
+
+  .. code-block:: python
+
+    @dataclass
+    class LinearTerm:
+        coeff: Optional[float] = None
+        intercept: Optional[float] = None
+        var: Optional[int] = None
+
+
+    @dataclass
+    class AxisParallelExpression:
+        coeff: int
+        var: int
+
+
+    @dataclass
+    class Split:
+        lhs: Union[List[LinearTerm], AxisParallelExpression]
+        op: str
+        rhs: str
+
+
+    @dataclass
+    class Node:
+        actual_label: Union[List[str], None, str]
+        children: List['Node']
+        edge_label: Optional[Union[List[str], str]] = None
+        split: Optional[Split] = None
+
+
+  where **actual_label** is a list of actions (only for leaf nodes) and **edge_label** is a string that defines the relation between the parent and the current node (for Boolean predicates, the **edge_label** marks the ``true`` and ``false`` branches; for categorical predicates, the **edge_label** gives the value or list of values being split on).
 
 By default, the decision trees are stored in the ``decision_trees`` folder and the statistics are stored in the ``benchmark.json``
 and ``benchmark.html`` files. This can however be customized with the help of the ``--output`` and the ``--benchmark-file``
@@ -393,6 +428,7 @@ Will produce the following files and directories::
    |   `-- cartpole
    |       |-- my-config.c
    |       |-- my-config.dot
+   |       |-- my-config.json
    cartpole_stats.json
    cartpole_stats.html
 

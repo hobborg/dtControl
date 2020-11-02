@@ -25,6 +25,12 @@
                 "edge_label": {
                     "anyOf": [
                         {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        {
                             "type": "string"
                         },
                         {
