@@ -1,14 +1,39 @@
 import sys
 import time
+import dtcontrol
+import numpy as np
 from os.path import exists
+
+from jinja2 import FileSystemLoader, Environment
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
 from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.frontend_helper import get_classifier
 
+file_loader = FileSystemLoader([path + "/c_templates" for path in dtcontrol.__path__])
+env = Environment(loader=file_loader)
+single_output_c_template = env.get_template('single_output.c')
+multi_output_c_template = env.get_template('multi_output.c')
+
+def save_dot_c_json(classifier, dataset):
+    dot_filename = 'dot.dot'
+    with open(dot_filename, 'w+') as outfile:
+        outfile.write(classifier.print_dot(dataset.x_metadata, dataset.y_metadata))
+
+    num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
+    template = multi_output_c_template if num_outputs > 1 else single_output_c_template
+    example = f'{{{",".join(str(i) + (".f" if isinstance(i, np.integer) else "f") for i in dataset.x[0])}}}'
+    c_filename = 'c.c'
+    with open(c_filename, 'w+') as outfile:
+        outfile.write(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
+
+    json_filename = 'json.json'
+    with open(json_filename, 'w+') as outfile:
+        outfile.write(classifier.toJSON(dataset.x_metadata, dataset.y_metadata))
+
 # file = "examples/cps/10rooms.scs"
-file = "/tmp/cartpole.scs"
+file = "examples/cps/cartpole.scs"
 if not exists(file):
     print(f"The file/folder {file} does not exist.")
     sys.exit(1)
@@ -34,6 +59,13 @@ print("Fitting dataset to tree...")
 classifier.fit(ds)
 run_time = time.time() - start
 print(f"Tree constructed in {run_time}s")
+
+print("Saving to c, dot and json files")
+save_dot_c_json(classifier, ds)
+
+# Compile C output
+
+# For each state, give it to the C output and get response and compare it with response of classifier.predict
 
 # This generates a list of predictions for every input in the dataset
 pred = classifier.predict(ds, actual_values=True)
