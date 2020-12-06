@@ -17,7 +17,7 @@ suite = BenchmarkSuite(timeout=60 * 2,
                        benchmark_file='prism_benchmark',
                        rerun=False)
 
-suite.add_datasets(['../examples/prism'])
+suite.add_datasets(['../examples/cps/10rooms.scs'])
 
 aa = AxisAlignedSplittingStrategy()
 categorical_multi = CategoricalMultiSplittingStrategy()

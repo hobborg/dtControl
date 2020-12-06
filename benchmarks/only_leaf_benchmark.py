@@ -1,6 +1,7 @@
-from sklearn.linear_model import LogisticRegression
+
 
 from dtcontrol.benchmark_suite import BenchmarkSuite
+from sklearn.linear_model import LogisticRegression
 from dtcontrol.decision_tree.decision_tree import DecisionTree
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.impurity.entropy import Entropy
@@ -13,7 +14,7 @@ suite = BenchmarkSuite(timeout=60,
                        benchmark_file='leaves_benchmark',
                        rerun=False)
 
-suite.add_datasets(['examples', 'examples/prism'],
+suite.add_datasets(['examples', 'examples/cps/10room.scs'],
                    include=[
                        # "firewire_abst",
                        # "wlan0",
