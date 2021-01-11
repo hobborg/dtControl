@@ -34,8 +34,8 @@ class BenchmarkSuite:
     The benchmark suite runs the given classifiers on the given datasets and saves the results.
     """
 
-    def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', save_folder=None,
-                 rerun=False, is_artifact=False):
+    def __init__(self, benchmark_file='benchmark', timeout=None, output_folder='decision_trees', output_type=None, save_folder=None,
+                 stdout=False, rerun=False, is_artifact=False):
         logging.basicConfig(level=logging.INFO, format='%(message)s', stream=sys.stdout)
         self.datasets = []
         self.json_file = f'{benchmark_file}.json'
@@ -43,14 +43,18 @@ class BenchmarkSuite:
         self.results = {}
         self.timeout = timeout
         self.output_folder = output_folder
+        self.output_type = output_type
         self.save_folder = save_folder
+        self.stdout = stdout
         self.rerun = rerun  # rerun benchmarks even if there already are results available
         self.is_artifact = is_artifact  # always produces a table exactly corresponding to the one in the paper
         self.table_controller = TableController(self.html_file, self.output_folder, self.is_artifact)
 
         logging.info(f"INFO: Benchmark statistics will be available in {self.json_file} and {self.html_file}.")
-        logging.info(f"INFO: Constructed trees will be written to {self.output_folder}.\n")
-
+        if not self.stdout:
+            logging.info(f"INFO: Constructed trees will be written to {self.output_folder}.\n")
+        else:
+            logging.info(f"INFO: Constructed trees will be written to stdout.\n")
     def add_datasets(self, paths, include=None, exclude=None):
         if not exclude:
             exclude = []
@@ -182,6 +186,21 @@ class BenchmarkSuite:
         # corresponding methods
 
         if isinstance(classifier, BDD):
+            return
+
+        if self.stdout:
+            logging.info(f"INFO: Writing {self.output_type} code into stdout.\n")
+            print("START")
+            if self.output_type == 'c':
+                num_outputs = 1 if len(dataset.y.shape) <= 2 else len(dataset.y)
+                template = multi_output_c_template if num_outputs > 1 else single_output_c_template
+                example = f'{{{",".join(str(i) + (".f" if isinstance(i, np.integer) else "f") for i in dataset.x[0])}}}'
+                print(template.render(example=example, num_outputs=num_outputs, code=classifier.print_c()))
+            elif self.output_type == 'dot':
+                print(classifier.print_dot(dataset.x_metadata, dataset.y_metadata))
+            elif self.output_type == 'json':
+                print(classifier.toJSON(dataset.x_metadata, dataset.y_metadata))
+            print("END")
             return
 
         logging.info(f"INFO: Writing DOT file into {self.output_folder}.\n")

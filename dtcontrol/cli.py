@@ -418,8 +418,19 @@ def main():
 
         if args.output:
             try:
-                makedirs(args.output, exist_ok=True)
-                kwargs["output_folder"] = args.output
+                if args.output.startswith('stdout:'):
+                    kwargs["stdout"] = True
+                    if args.output == 'stdout:c':
+                        kwargs["output_type"] = 'c'
+                    elif args.output == 'stdout:dot':
+                        kwargs["output_type"] = 'dot'
+                    elif args.output == 'stdout:json':
+                        kwargs["output_type"] = 'json'
+                    else:
+                        sys.exit("Invalid stdout type. Use either stdout:c, stdout:dot or stdout:json.")
+                else:
+                    makedirs(args.output, exist_ok=True)
+                    kwargs["output_folder"] = args.output
             except PermissionError:
                 sys.exit("Ensure permission exists to create output directory")
 
@@ -546,7 +557,8 @@ def main():
 
     input_output.add_argument("--output", "-o", type=str,
                               help="The output switch takes in a path to a folder where the constructed controller "
-                                   "representation would be saved (c and dot)")
+                                   "representation would be saved (c and dot). Use --ouptut stdout:c, stdout:dot or "
+                                   "stdout:json to print the C, DOT or JSON files into stdout.")
 
     input_output.add_argument("--benchmark-file", "-b", metavar="FILENAME", type=str,
                               help="Saves statistics pertaining the construction of the decision trees and their "

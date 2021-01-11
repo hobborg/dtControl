@@ -52,4 +52,4 @@ class AxisAlignedSplit(Split):
             "lhs":
                 {"coeff": 1, "var": variables[self.feature] if variables else self.feature},
             "op": "<=",
-            "rhs": str(round(self.threshold, 6)) if rounded else str(self.threshold)}
+            "rhs": round(self.threshold, 6) if rounded else self.threshold}
