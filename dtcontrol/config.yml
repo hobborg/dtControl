@@ -42,6 +42,11 @@ presets:
   mlentropy:
     determinize: auto
     impurity: multilabelentropy
+  mlentropylc:
+    numeric-predicates: ['axisonly', 'linear-logreg']
+    determinize: auto
+    impurity: multilabelentropy
+    safe-pruning: true
 
   # Previous papers
   sos:
