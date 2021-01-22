@@ -6,8 +6,7 @@ algorithms implemented in it.
 
 Capabilities
 ------------
-
-(`Watch a 5 minute introductory video on YouTube <https://www.youtube.com/watch?v=qS8FQ3pCeE4>`_)
+.. youtube:: https://www.youtube.com/watch?v=qS8FQ3pCeE4
 
 dtControl is a tool to represent controllers using `decision trees <https://en.wikipedia.org/wiki/Decision_tree>`_.
 It uses `decision tree learning <https://en.wikipedia.org/wiki/Decision_tree_learning>`_ to achieve this. The 5-minute video
