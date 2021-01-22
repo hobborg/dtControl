@@ -35,7 +35,10 @@ Currently dtControl supports controllers output by three tools:
 
 To learn more about dtControl and representing controllers using decision trees, you may want to watch our [demo](https://www.youtube.com/watch?v=qS8FQ3pCeE4)
 or [talk](https://www.youtube.com/watch?v=K6d3pS6Ege0) at HSCC 2020, take a look at our 
-[tool manual](https://dtcontrol.readthedocs.io) or read our [paper](https://arxiv.org/abs/2002.04991).
+[tool manual](https://dtcontrol.readthedocs.io) or read our [HSCC 2020 paper](https://arxiv.org/abs/2002.04991).
+The latest features including support of algebraic predicates, categorical predicates, a semi-automatic interface, 
+GUI with several interactive modes, new determinization procedure and an interface for model checkers PRISM and Storm, 
+can be found in our latest [TACAS 2021 paper](https://arxiv.org/abs/2101.07202).
  
 
 ## Quick Start
@@ -77,7 +80,7 @@ dtControl has undergone several artifact evaluation processes. All the resources
 
 ## Contact
 
-For questions, suggestions and comments, you may contact [Mathias](mailto:jackerme@in.tum.de), [Pranav](ashok@in.tum.de), [Maxi](maxi.weininger@tum.de) or [Jan](jan.kretinsky@tum.de). We would also be glad to help you incorporate dtControl into your controller synthesis/usage workflow. Other feature requests are also welcome.
+For questions, suggestions and comments, you may contact [Mathias](mailto:jackerme@in.tum.de), [Pranav](mailto:ashok@in.tum.de), [Maxi](mailto:maxi.weininger@tum.de), [Christoph](mailto:christoph.weinhuber@tum.de) or [Jan](mailto:jan.kretinsky@tum.de). We would also be glad to help you incorporate dtControl into your controller synthesis/usage workflow. Other feature requests are also welcome.
 
 ## Citing
 
