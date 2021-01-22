@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: #fff;
   padding: 50px 50px 50px 50px;
@@ -53,6 +57,13 @@ a small {
 
 a:hover small {
   color:#777;
+}
+
+:target:before {
+    content: "";
+    display: block;
+    height: 100px;
+    margin: -100px 0 0;
 }
 
 .wrapper {
@@ -204,6 +215,7 @@ section {
   width:560px;
   float:right;
   padding-bottom:50px;
+  scroll-margin-top: 1em;
 }
 
 small {
@@ -269,7 +281,92 @@ footer {
   margin-top:20px;
 }
 
+.navbar-wrapper {
+    margin-bottom: 40px;
+}
+
+.navbar {
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  width: 900px;
+  height:50px;
+  padding-top: 10px;
+  background: white;
+}
+/* Links inside the navbar */
+.navbar a {
+  float: left;
+  color:#39c;
+  text-align: center;
+  padding: 10px 25px;
+  font-size:15px;
+  font-weight: 700;
+}
+
+/* Change background on mouse-over */
+.navbar a:hover, .navbar a.active {
+  color: #069;
+  background: #deedff;
+  border-radius: 10px;
+}
+
+.navbar a.icon {
+  display: none;
+}
+
+#mobile-navbar {
+  display: none;
+}
+
 @media print, screen and (max-width: 960px) {
+
+  :target:before {
+    height: 50px;
+    margin: -50px 0 0;
+  }
+
+  .navbar {
+    overflow: visible;
+    position: fixed;
+    height: unset;
+    width: 100%;
+    display: none;
+    float: none;
+    left: 0;
+    margin-bottom: 100px;
+    top: 40px;
+
+  }
+
+  .navbar a {
+    display: block;
+    float: none;
+    text-align: left;
+    position: relative;
+  }
+
+  .navbar a.icon {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  #mobile-navbar {
+    display: block;
+    float: none;
+    text-align: left;
+    position: fixed;
+    top: 0;
+    left: 0;
+    color: #39c;
+    text-align: center;
+    padding: 10px 25px;
+    font-size: 15px;
+    font-weight: 700;
+    background: #deedff;
+    width: 100%;
+  }
 
   div.wrapper {
     width:auto;
@@ -298,7 +395,7 @@ footer {
   }
 
   ul.buttons {
-    position:absolute;
+    position:static;
     right:50px;
     top:52px;
   }

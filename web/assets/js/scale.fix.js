@@ -15,3 +15,12 @@ function gestureStart() {
     }
   }
 }
+
+function extendNavbar() {
+  let navbar = document.getElementsByTagName("nav")[0];
+  if (navbar.style.display ==="") {
+    navbar.style.display = "block";
+  }else {
+    navbar.style.display = "";
+  }
+}

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/assets/css/styles.css">
     <link rel="stylesheet" href="/assets/css/pygment_trac.css">
     <link rel="icon" href="/assets/images/favicon-32.png" sizes="32x32">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <meta name="viewport" content="width=device-width">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -15,26 +16,46 @@
   </head>
   <body>
     <div class="wrapper">
-      <header>
-        <div style="overflow:hidden">
-          <a href="/"><img src="{{ page.logo }}" alt="dtControl logo" style="max-height: 130px; margin-left: 0px; margin-bottom: 20px"></a>
-          <h1><a href="/">dtControl</a></h1>
-          <p>{{ page.summary }}</p>
-          <ul class="buttons">
-            <li><a href="https://pypi.org/project/dtcontrol/">Install<strong>using PIP</strong></a></li>
-            <li><a href="https://gitlab.lrz.de/i7/dtcontrol/-/archive/master/dtcontrol-master.zip">Download <strong>Latest ZIP</strong></a></li>
-            <li><a href="https://gitlab.lrz.de/i7/dtcontrol">View On <strong>GitLab</strong></a></li>
-          </ul>
+        <div class="navbar-wrapper">
+            <div id="mobile-navbar">
+                <a href="javascript:void(0);" class="icon" onclick="extendNavbar()">
+                    <i class="fa fa-bars"></i>
+                    <text>Navigation</text>
+                </a>
+            </div>
+            <nav class="navbar" onclick="extendNavbar()">
+                <a href="/">Home</a>
+                <a href="#quick-start">Quick Start</a>
+                <a href="#manuals--documentation">Documentation</a>
+                <a href="#artifact-evaluation">Artifact</a>
+                <a href="#contact">Contact</a>
+                <a href="#citing">Citing</a>
+                <a href="#related-publications">Related Publications</a>
+            </nav>
         </div>
-      </header>
-      <section>
+            <header>
+                <div style="overflow:hidden">
+                    <a href="/"><img src="{{ page.logo }}" alt="dtControl logo"
+                                     style="max-height: 130px; margin-left: 0px; margin-bottom: 20px"></a>
+                    <h1><a href="/">dtControl</a></h1>
+                    <p>{{ page.summary }}</p>
+                    <ul class="buttons">
+                        <li><a href="https://pypi.org/project/dtcontrol/">Install<strong>using PIP</strong></a></li>
+                        <li><a href="https://gitlab.lrz.de/i7/dtcontrol/-/archive/master/dtcontrol-master.zip">Download <strong>Latest
+                            ZIP</strong></a></li>
+                        <li><a href="https://gitlab.lrz.de/i7/dtcontrol">View On <strong>GitLab</strong></a></li>
+                    </ul>
+                </div>
+            </header>
+            <section>
 
-        {{ content }}
+                {{ content }}
 
-      </section>
-      <footer>        
-        <p><small>Theme adapted from <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
+            </section>
+            <footer>
+                <p><small>Theme adapted from <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+            </footer>
+
     </div>
     <script src="/assets/js/scale.fix.js"></script>
   </body>
