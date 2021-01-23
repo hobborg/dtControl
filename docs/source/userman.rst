@@ -106,6 +106,8 @@ If your installation has run successfully, you will now see the help page detail
 Input format
 ^^^^^^^^^^^^
 
+.. _supported-tools:
+
 Supported tools
 """""""""""""""
 
@@ -171,6 +173,8 @@ An example is given in form of the configuration file for the ``firewire_abst.pr
     }
 
 This configuration provides the information that the two variables are ``clock`` and ``state``, the first of which is numeric and the second of which is categorical. Furthermore, a ``state`` of 0 corresponds to ``start_start``, a state of 1 to ``fast_start``, and so on. Note that, for PRISM models, dtControl automatically parses the names of the actions and it is thus not necessary to provide a ``y_category_names`` entry.
+
+.. _the-command-line-interface:
 
 The Command-line Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -265,7 +269,7 @@ Configurable options
 
         a. ``multisplit`` which creates a decision node with as many children as the number of possible categories the variable can take (e.g. ``color = blue``, ``color = green`` and ``color = red``).
         b. ``singlesplit`` which creates a decision node with just two children, one satisfying a categorical equality (``color = blue``) and the other that does not (``color != blue``).
-        c. ``valuegrouping`` as described in M. Jackermeier's thesis (TODO link)
+        c. ``valuegrouping`` as described in M. Jackermeier's `thesis <http://mediatum.ub.tum.de/1547107?id=1547107&change_language=en>`_.
 
 #. **determinize** determines the type of determinization used on permissive/non-deterministic controller when constructing the tree. Possible
    options are
@@ -274,7 +278,7 @@ Configurable options
         b. ``minnorm`` to pick control inputs with the minimal norm,
         c. ``maxnorm`` to pick control inputs with the maximal norm,
         d. ``random`` to pick a control input uniformly at random,
-        e. ``maxfreq`` to pick our in-house developed determinization strategy, details of which are available in M. Jackermeier's thesis (TODO link).
+        e. ``maxfreq`` to pick our in-house developed determinization strategy, details of which are available in M. Jackermeier's `thesis <http://mediatum.ub.tum.de/1547107?id=1547107&change_language=en>`_.
         f. ``auto`` to let dtControl automatically choose a determinization strategy; currently defaults to ``maxfreq``.
 
 #. **impurity** allows users to choose the measure by which splitting predicates are evaluated. Possible options are
@@ -291,6 +295,8 @@ Configurable options
 #. **tolerance** is a floating point value relevant only when choosing the ``valuegrouping`` categorical predicate.
 
 #. **safe-pruning** decides whether to post-process the decision tree as specified in `Ashok et. al. (2019) <https://link.springer.com/chapter/10.1007%2F978-3-030-30281-8_9>`_.
+
+.. _creating-own-presets:
 
 """""""""""""""""""""""""
 Creating your own presets
@@ -457,3 +463,72 @@ As you can see, the Python interface provides mostly the same parameters as the 
 - The ``ScaledBincount`` impurity measure with a custom scaling function
 
 The easiest way to get more information on the methods available in the Python interface is to directly browse the `source code <https://gitlab.lrz.de/i7/dtcontrol/-/tree/master/dtcontrol>`_ of dtControl.
+
+
+dtControl 2.0
+-----------------------------------
+In this section, we elaborate a little more on the usage and advantages of our latest features, including support of algebraic predicates, categorical predicates, a semi-automatic interface, GUI with several interactive modes, new determinization procedure and an interface for model checkers PRISM and Storm, which can also be found in our latest `TACAS 2021 paper <https://arxiv.org/abs/2101.07202>`_.
+
+Web-based graphical user interface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The interface is is powered by `flask <https://flask.palletsprojects.com/en/1.1.x/>`_ and `d3.js <https://d3js.org/>`_.
+An overview of the graphical interface is given below:
+
+.. image:: img/interface_start.png
+  :width: 650
+  :alt: screenshot of the web-based graphical user interface
+
+It offers a sidebar for easy selection of the controller file and hyper-parameters, an experiments table where benchmarks can be queued, and a results table in which some statistics (number of nodes, construction time, ...) of the run are provided.
+Moreover, users can click on the 'eye' icon in the results table to inspect the built decision tree.
+
+Running your first experiment
+"""""""""""""""""""""""""""""""
+
+#. **Select controller file:** First, choose a controller file by clicking on the 'Browse'-Button within the 'Controller File' section. The currently supported file formats can be found in :ref:`supported-tools`. You can choose to download all of our examples from our `Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol-examples>`_ via this `zip archive <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_. Make sure you unzip all files before selecting them. (Alternatively, you can follow the commands provided in :ref:`the-command-line-interface`).
+
+
+
+#. **Optional: Select metadata file.** This step is completely optional. If wanted, the user can provide a ``txt`` file containing metadata for the corresponding controller file. For this case we provide two dynamics files:
+
+        :download:`10rooms dynamics <files/10room_dynamics.txt>`
+
+        :download:`cartepole dynamics <files/cartpoledynamics.txt>`
+
+#. **Select preset:** In this step, the user can choose from various different preset options, presented in the section :ref:`presets-and-configuration-files`. Furthermore, we introduce two additional presents:
+
+        a. ``custom``, which corresponds to section :ref:`configurable-options`. Upon selection this preset, the advanced options menu automatically expands.
+        b. ``algebraic / user-defined``, which is described in more detail in section :ref:`algebraic-predicates`.
+
+#. **Add experiment:** After selecting both the required controller file and the preset, the user can save this experiment by pressing the 'Add' button. Note that the 'Add' button is only clickable, once both required steps are done.
+
+        .. image:: img/interface_experiment.png
+            :width: 650
+            :alt: screenshot of the web-based graphical user interface with an added experiment
+
+#. **Run/ delete experiment:** After successfully adding an experiment, the corresponding experiment can be executed by pressing :fa:`play` or deleted by pressing :fa:`trash`. Alternatively, if there are several different experiments, the user can execute all of them by pressing the ':fa:`play` Run all' button.
+
+        .. image:: img/interface_result.png
+            :width: 650
+            :alt: screenshot of the web-based graphical user interface with a finished experiment
+
+    Once the computation is finished, the experiment will appear in the results section. The experiment can be inspected by clicking :fa:`eye`. By pressing this button, the user exits the start page and enters the 'Inspection' mode.
+
+
+Inspecting your first result
+""""""""""""""""""""""""""""""
+
+TODO
+
+#. **Select controller file:** In order to enter the 'Inspection' mode, the user has to click the :fa:`eye` symbol. Upon clicking, the user will
+
+Editing your first result
+"""""""""""""""""""""""""""
+
+TODO
+
+.. _algebraic-predicates:
+
+Algebraic user-defined predicates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TODO
