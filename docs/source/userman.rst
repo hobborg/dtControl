@@ -475,11 +475,13 @@ The interface is is powered by `flask <https://flask.palletsprojects.com/en/1.1.
 An overview of the graphical interface is given below:
 
 .. image:: img/interface_start.png
-  :width: 650
+  :width: 600
   :alt: screenshot of the web-based graphical user interface
 
 It offers a sidebar for easy selection of the controller file and hyper-parameters, an experiments table where benchmarks can be queued, and a results table in which some statistics (number of nodes, construction time, ...) of the run are provided.
 Moreover, users can click on the 'eye' icon in the results table to inspect the built decision tree.
+
+.. _running-first-experiment:
 
 Running your first experiment
 """""""""""""""""""""""""""""""
@@ -488,7 +490,7 @@ Running your first experiment
 
 
 
-#. **Optional: Select metadata file.** This step is completely optional. If wanted, the user can provide a ``txt`` file containing metadata for the corresponding controller file. For this case we provide two dynamics files:
+#. **Optional: Select metadata file.** This step is completely optional. If wanted, the user can provide a ``json`` file containing metadata for the corresponding controller file. For this case we provide two example files: TODO
 
         :download:`10rooms dynamics <files/10room_dynamics.txt>`
 
@@ -502,13 +504,13 @@ Running your first experiment
 #. **Add experiment:** After selecting both the required controller file and the preset, the user can save this experiment by pressing the 'Add' button. Note that the 'Add' button is only clickable, once both required steps are done.
 
         .. image:: img/interface_experiment.png
-            :width: 650
+            :width: 600
             :alt: screenshot of the web-based graphical user interface with an added experiment
 
 #. **Run/ delete experiment:** After successfully adding an experiment, the corresponding experiment can be executed by pressing :fa:`play` or deleted by pressing :fa:`trash`. Alternatively, if there are several different experiments, the user can execute all of them by pressing the ':fa:`play` Run all' button.
 
         .. image:: img/interface_result.png
-            :width: 650
+            :width: 600
             :alt: screenshot of the web-based graphical user interface with a finished experiment
 
     Once the computation is finished, the experiment will appear in the results section. The experiment can be inspected by clicking :fa:`eye`. By pressing this button, the user exits the start page and enters the 'Inspection' mode.
@@ -517,14 +519,54 @@ Running your first experiment
 Inspecting your first result
 """"""""""""""""""""""""""""""
 
-TODO
+**Select controller file:** In order to enter the 'Inspection' mode, the user has to click the :fa:`eye` symbol, within the 'Results' section. Upon clicking, a new window will appear where the computed decision tree is displayed.
 
-#. **Select controller file:** In order to enter the 'Inspection' mode, the user has to click the :fa:`eye` symbol. Upon clicking, the user will
+    **Inspection mode:**
+
+        .. image:: img/interface_inspect_result.png
+            :width: 600
+            :alt: screenshot of the web-based graphical user interface for inspecting a decision tree
+
+    To take a look at the computed decision tree, the user can click and drag to pan and scroll to zoom. By clicking on a node, the node will collapse and absorb all its child nodes. A collapsed node can be simply expanded, by clicking again on it.
+
+        **Reset focus Button**: If you lost the orientation of the root node, simply click on the 'Reset focus' Button to reset the focus on the root node.
+
+        **Expand all Button:** To quickly expand all collapsed nodes, simply click this button.
+
+        **Collapse all Button:** To quickly collapse all nodes within the root node, simply click this button.
 
 Editing your first result
 """""""""""""""""""""""""""
 
-TODO
+**Editing mode:** In order to enter the 'Editing' mode, the user has to click the 'Edit' Button. At this point the user can either retrain the decision tree from a certain node by clicking on a node and then the 'Retrain from selected node' Button or alternatively start the interactive tree builder from a selected node.
+
+        **Retrain from selected node:** Similar to the 'select preset' Section in :ref:`running-first-experiment`, the user can can specify the preset used for retraining all child nodes.
+
+        **Start interactive tree builder from selected node:** By selecting a node and pressing this button, the user enters the interactive tree builder mode.
+
+        .. image:: img/interface_interactive_builder.png
+            :width: 600
+            :alt: screenshot of the interactive tree builder mode
+
+
+        The user can now provide for the selected node, a custom predicate. For this purpose, additional information about the current state of the dataset at the current node is displayed. A user defined predicate can be added by pressing the 'Add predicate' Button. The Syntax is described in the :ref:`algebraic-predicates` section. In the 'Instantiated Predicates', the user can now select the wanted predicate. Child nodes containing a inhomogeneous set of labels will be labeled with 'Not yet homogeneous'. For those nodes, the user can again either decide to use the 'Retrain from selected node' functionality or start again the 'interactive tree builder'.
+
+Simulate your first result
+"""""""""""""""""""""""""""
+
+**Simulating mode:** The simulation mode can be entered by clicking the 'Simulate' Button. To start the simulation, the user has to enter a system dynamics file. For this purpose we provide following two example files:
+
+        :download:`10rooms dynamics <files/10room_dynamics.txt>`
+
+        :download:`cartepole dynamics <files/cartpoledynamics.txt>`
+
+        After the system dynamics file is uploaded, the user can enter some initial values for the simulation task.
+
+        .. image:: img/interface_simulation.png
+            :width: 600
+            :alt: screenshot of the simulation window
+
+        With the buttons 'Play', 'Pause', 'Next' and 'Previous', the user can navigate between the different simulation steps. The corresponding path inside the decision tree, which corresponds to the current simulation values is marked with red.
 
 .. _algebraic-predicates:
 
