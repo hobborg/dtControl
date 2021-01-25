@@ -6,22 +6,3 @@ ga = 0.0125
 Dynamics:
 dx_0=x_1
 dx_1=(-omega*omega*(sin(x_0)+u_0*cos(x_0))-2*ga*x_1)
-
-
-
-
-
-
-#Predicate ideas
-c_0 < -1 * sin(x_0) + cos(x_0) - 0.025*x_1
-c_0 > -1 * sin(x_0) + cos(x_0) - 0.025*x_1
-c_0 > -1 * sin(x_0) - 0.025*x_1
-c_0 < -1 * sin(x_0) - 0.025*x_1
-
-0.025*x_1 + sin(x_0) - cos(x_0) - 0.8 < 0
-
-If abs of x_1 is large, try to reduce it.
-Abs(x_1) > 0.25461
-
-If x_1 is positive, we need the negative actions and vice versa
-x_1>0
