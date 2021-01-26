@@ -486,7 +486,7 @@ Moreover, users can click on the 'eye' icon in the results table to inspect the 
 Running your first experiment
 """""""""""""""""""""""""""""""
 
-#. **Select controller file:** First, choose a controller file by clicking on the 'Browse'-Button within the 'Controller File' section. The currently supported file formats can be found in :ref:`supported-tools`. You can choose to download all of our examples from our `Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol-examples>`_ via this `zip archive <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_. Make sure you unzip all files before selecting them. (Alternatively, you can follow the commands provided in :ref:`the-command-line-interface`).
+#. **Select controller file:** First, choose a controller file by clicking on the :guilabel:`Browse` Button within the 'Controller File' section. The currently supported file formats can be found in :ref:`supported-tools`. You can choose to download all of our examples from our `Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol-examples>`_ via this `zip archive <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_. Make sure you unzip all files before selecting them. (Alternatively, you can follow the commands provided in :ref:`the-command-line-interface`).
 
 
 
@@ -501,13 +501,13 @@ Running your first experiment
         a. ``custom``, which corresponds to section :ref:`configurable-options`. Upon selection this preset, the advanced options menu automatically expands.
         b. ``algebraic / user-defined``, which is described in more detail in section :ref:`algebraic-predicates`.
 
-#. **Add experiment:** After selecting both the required controller file and the preset, the user can save this experiment by pressing the 'Add' button. Note that the 'Add' button is only clickable, once both required steps are done.
+#. **Add experiment:** After selecting both the required controller file and the preset, the user can save this experiment by pressing the :guilabel:`Add` button. Note that the :guilabel:`Add` button is only clickable, once both required steps are done.
 
         .. image:: img/interface_experiment.png
             :width: 600
             :alt: screenshot of the web-based graphical user interface with an added experiment
 
-#. **Run/ delete experiment:** After successfully adding an experiment, the corresponding experiment can be executed by pressing :fa:`play` or deleted by pressing :fa:`trash`. Alternatively, if there are several different experiments, the user can execute all of them by pressing the ':fa:`play` Run all' button.
+#. **Run/ delete experiment:** After successfully adding an experiment, the corresponding experiment can be executed by pressing :fa:`play` or deleted by pressing :fa:`trash`. Alternatively, if there are several different experiments, the user can execute all of them by pressing the :fa:`play` :guilabel:`Run all` button.
 
         .. image:: img/interface_result.png
             :width: 600
@@ -529,32 +529,32 @@ Inspecting your first result
 
     To take a look at the computed decision tree, the user can click and drag to pan and scroll to zoom. By clicking on a node, the node will collapse and absorb all its child nodes. A collapsed node can be simply expanded, by clicking again on it.
 
-        **Reset focus Button**: If you lost the orientation of the root node, simply click on the 'Reset focus' Button to reset the focus on the root node.
+        :guilabel:`Reset focus` If you lost the orientation of the root node, simply click on the :guilabel:`Reset focus` Button to reset the focus on the root node.
 
-        **Expand all Button:** To quickly expand all collapsed nodes, simply click this button.
+        :guilabel:`Expand all` To quickly expand all collapsed nodes, simply click this button.
 
-        **Collapse all Button:** To quickly collapse all nodes within the root node, simply click this button.
+        :guilabel:`Collapse all` To quickly collapse all nodes within the root node, simply click this button.
 
 Editing your first result
 """""""""""""""""""""""""""
 
-**Editing mode:** In order to enter the 'Editing' mode, the user has to click the 'Edit' Button. At this point the user can either retrain the decision tree from a certain node by clicking on a node and then the 'Retrain from selected node' Button or alternatively start the interactive tree builder from a selected node.
+**Editing mode:** In order to enter the 'Editing' mode, the user has to click the :guilabel:`Edit` Button. At this point the user can either retrain the decision tree from a certain node by clicking on a node and then the :guilabel:`Retrain from selected node` Button or alternatively start the interactive tree builder from a selected node.
 
-        **Retrain from selected node:** Similar to the 'select preset' Section in :ref:`running-first-experiment`, the user can can specify the preset used for retraining all child nodes.
+        :guilabel:`Retrain from selected node` Similar to the 'select preset' Section in :ref:`running-first-experiment`, the user can can specify the preset used for retraining all child nodes.
 
-        **Start interactive tree builder from selected node:** By selecting a node and pressing this button, the user enters the interactive tree builder mode.
+        :guilabel:`Start interactive tree builder from selected node` By selecting a node and pressing this button, the user enters the interactive tree builder mode.
 
         .. image:: img/interface_interactive_builder.png
             :width: 600
             :alt: screenshot of the interactive tree builder mode
 
 
-        The user can now provide for the selected node, a custom predicate. For this purpose, additional information about the current state of the dataset at the current node is displayed. A user defined predicate can be added by pressing the 'Add predicate' Button. The Syntax is described in the :ref:`algebraic-predicates` section. In the 'Instantiated Predicates', the user can now select the wanted predicate. Child nodes containing a inhomogeneous set of labels will be labeled with 'Not yet homogeneous'. For those nodes, the user can again either decide to use the 'Retrain from selected node' functionality or start again the 'interactive tree builder'.
+        The user can now provide for the selected node, a custom predicate. For this purpose, additional information about the current state of the dataset at the current node is displayed. A user defined predicate can be added by pressing the :guilabel:`Add predicate` Button. The Syntax is described in the :ref:`algebraic-predicates` section. In the 'Instantiated Predicates', the user can now select the wanted predicate. Child nodes containing a inhomogeneous set of labels will be labeled with 'Not yet homogeneous'. For those nodes, the user can again either decide to use the 'Retrain from selected node' functionality or start again the 'interactive tree builder'.
 
 Simulate your first result
 """""""""""""""""""""""""""
 
-**Simulating mode:** The simulation mode can be entered by clicking the 'Simulate' Button. To start the simulation, the user has to enter a system dynamics file. For this purpose we provide following two example files:
+**Simulation mode:** The simulation mode can be entered by clicking the :guilabel:`Simulate` Button. To start the simulation, the user has to enter a system dynamics file. For this purpose we provide following two example files:
 
         :download:`10rooms dynamics <files/10room_dynamics.txt>`
 
@@ -566,11 +566,55 @@ Simulate your first result
             :width: 600
             :alt: screenshot of the simulation window
 
-        With the buttons 'Play', 'Pause', 'Next' and 'Previous', the user can navigate between the different simulation steps. The corresponding path inside the decision tree, which corresponds to the current simulation values is marked with red.
+        With the buttons :guilabel:`Play`, :guilabel:`Pause`, :guilabel:`Next` and :guilabel:`Previous`, the user can navigate between the different simulation steps. The corresponding path inside the decision tree, which corresponds to the current simulation values is marked with red nodes.
 
 .. _algebraic-predicates:
 
 Algebraic user-defined predicates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The support for algebraic user-defined predicates forms one of the cornerstones of ``dtControl 2.0``. In this subsection we introduce several different extensions for predicates. The most simplified predicate structure can be summarized as follows:
 
-TODO
+.. _standard-predicates:
+
+Standard predicate
+"""""""""""""""""""
+
+.. math::
+
+   \textit{term} \sim \textit{term}
+
+Where :math:`\textit{term}` is an arbitrary arithmetic term, using any elementary function that can be parsed by `SymPy <https://www.sympy.org>`_. :math:`\sim` is a standard comparator from the set :math:`\{\texttt{<=,>=,<,>,=}\}`.
+
+.. note::
+    The :math:`i` -th feature can be referenced by typing :code:`x_i`. With :math:`i \in \mathbb{N}_0` and :code:`x_0` referencing the first feature.
+
+**Some arbitrary examples:**
+
+====================================================================================================  ========================================================================
+Example predicate                                                                                     dtControl syntax
+====================================================================================================  ========================================================================
+:math:`x_0 \leq 0.5`                                                                                    :code:`x_0 <= 0.5`
+:math:`x_0 * 12 + x_1 * 3 \ge x_0 * 2 - x_2 * 3`                                                        :code:`x_0 * 12 + x_1 * 3 >= x_0 * 2 - x_2 * 3`
+:math:`\sqrt{x_0} * x_2 + log(x_1) - \displaystyle\frac{x_2}{x_3} \leq x_4`                             :code:`sqrt(x_0) * x_2 + log(x_1) - (x_2)/(x_3) <= x_4`
+:math:`1.0546e-34 + 90 - x_2 \ge x_0`                                                                   :code:`1.0546e-34 + 90 - x_2 >= x_0`
+:math:`e^{10} + ln(2) + \displaystyle\frac{x_1}{x_2} \ge 0`                                             :code:`e^10 + ln(2) + (x_1)/(x_2) >= 0`
+:math:`sin(cos(12)) + x_2^{x_3} \leq x_1`                                                               :code:`sin(cos(12)) + x_2^(x_3) <= x_1`
+====================================================================================================  ========================================================================
+
+
+
+Coefficient predicates
+"""""""""""""""""""""""
+Coefficients overcome the limitations of standard predicates by enabling the usage of coefficients within :math:`\textit{term}`. In `dtControl 2.0` we distinguish between **Finite** and **Infinite** coefficients.
+
+    **Finite coefficients:** In order to bundle different variations of one single predicate, we introduce finite coefficients. The concept builds upon :ref:`standard-predicates` and can be describes as the following:
+
+    .. math::
+        \textit{term}_f \sim \textit{const; def}
+
+    With the extension of :math:`\textit{term}_f` being an arbitrary algebraic term using Finite Coefficients defined in :math:`\textit{def}`. The general idea is to utilize Finite Coefficients :math:`c_i` within :math:`\textit{term}_f` and extend the finished predicate with a semicolon, followed by the concrete coefficient definition :math:`C_i \subseteq \mathbb{R}` with :math:`c_i \in C_i`.
+
+    .. note::
+        For computational reasons, the only restriction we insist on is :math:`|C_i| \in \mathbb{N}`. However, it should be noted that specifying too many or too large sets results in an infeasibly large set of predicates.
+
+    **Infinite coefficients:**
