@@ -26,6 +26,8 @@ Getting Started
 A quick start installation guide is available in the `README <https://gitlab.lrz.de/i7/dtcontrol/-/blob/master/README.rst>`_.
 In this section, we elaborate a little more on the installation process.
 
+.. _installation:
+
 Installation
 ^^^^^^^^^^^^^^^^^
 
@@ -472,7 +474,12 @@ In this section, we elaborate a little more on the usage and advantages of our l
 Web-based graphical user interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The interface is is powered by `flask <https://flask.palletsprojects.com/en/1.1.x/>`_ and `d3.js <https://d3js.org/>`_.
-An overview of the graphical interface is given below:
+After succesfully installing the latest version of `dtControl 2.0` the user can access the web-based graphical user interface by running::
+
+    $ dtcontrol-frontend
+
+
+Download and open `firefox <https://www.mozilla.org/firefox/download/thanks/>`_ and navigate to `http://127.0.0.1:5000 <http://127.0.0.1:5000>`_. If your installation has run successfully, you will now see the graphical interface which is given below.
 
 .. image:: img/interface_start.png
   :width: 600
@@ -490,11 +497,11 @@ Running your first experiment
 
 
 
-#. **Optional: Select metadata file.** This step is completely optional. If wanted, the user can provide a ``json`` file containing metadata for the corresponding controller file. For this case we provide two example files: TODO
 
-        :download:`10rooms dynamics <files/10room_dynamics.txt>`
+#. **Optional: Select metadata file.** This step is completely optional. If wanted, the user can provide a ``json`` file containing metadata for the corresponding controller file. An example file for the 10room model can be found here:
 
-        :download:`cartepole dynamics <files/cartpoledynamics.txt>`
+        :download:`10rooms metadata <https://gitlab.lrz.de/i7/dtcontrol-examples/-/raw/master/cps/10rooms_config.json?inline=false>`
+
 
 #. **Select preset:** In this step, the user can choose from various different preset options, presented in the section :ref:`presets-and-configuration-files`. Furthermore, we introduce two additional presents:
 
@@ -622,10 +629,10 @@ Coefficients overcome the limitations of standard predicates by enabling the usa
         ==============================================================================================================================================================================================================================================  ========================================================================
         Example finite coefficient predicate                                                                                                                                                                                                             dtControl syntax
         ==============================================================================================================================================================================================================================================  ========================================================================
-        :math:`\sqrt{x_0} * c_0 + log(x_1) - \displaystyle\frac{x_2}{c_1} \leq c_2 \text{; }c_0 \text{ in }\{-\frac{1}{3},\frac{1}{3}\} \text{; } c_1 \text{ in \{1,2\}} \text{; } c_2 \text{ in }\{\sqrt{2}, \pi\}`                                        :code:`sqrt(x_0) * c_0 + log(x_1) - (x_2 / c_1) <= c_2; c_0 in {-(1/3),(1/3)}; c_1 in {1, 2}; c_2 in {sqrt(2), pi}`
-        :math:`1.0546e-34 + 90 - c_0 \ge x_0 \text{; }c_0 \text{ in }\{0,12\}`                                                                                                                                                                              :code:`1.0546e-34 + 90 - c_0 >= x_0; c_0 in {0,12}`
-        :math:`e^{10} + ln(2) + \displaystyle\frac{x_2}{c_0} \ge 0 \text{; }c_0 \text{ in }\{-\frac{1}{9},\frac{2}{3}\}`                                                                                                                                    :code:`e^10 + ln(2) + (x_2 / c_0) >= 0; c_0 in {-(1/9), (2/3)}`
-        :math:`sin(cos(12)) + c_0^{c_1} \leq x_1 \text{; }c_0 \text{ in }\{1,2,3\} \text{; } c_1 \text{ in }\{4\}`                                                                                                                                          :code:`sin(cos(12)) + c_0^(c_1) <= x_1; c_0 in {1,2,3}; c_1 in{4}`
+        :math:`\sqrt{x_0} * c_0 + log(x_1) - \displaystyle\frac{x_2}{c_1} \leq c_2 \text{; }c_0 \in \{-\frac{1}{3},\frac{1}{3}\} \text{; } c_1  \in  \{1,2\} \text{; } c_2  \in \{\sqrt{2}, \pi\}`                                                          :code:`sqrt(x_0) * c_0 + log(x_1) - (x_2 / c_1) <= c_2; c_0 in {-(1/3),(1/3)}; c_1 in {1, 2}; c_2 in {sqrt(2), pi}`
+        :math:`1.0546e-34 + 90 - c_0 \ge x_0 \text{; }c_0  \in \{0,12\}`                                                                                                                                                                                    :code:`1.0546e-34 + 90 - c_0 >= x_0; c_0 in {0,12}`
+        :math:`e^{10} + ln(2) + \displaystyle\frac{x_2}{c_0} \ge 0 \text{; }c_0  \in \{-\frac{1}{9},\frac{2}{3}\}`                                                                                                                                          :code:`e^10 + ln(2) + (x_2 / c_0) >= 0; c_0 in {-(1/9), (2/3)}`
+        :math:`sin(cos(12)) + c_0^{c_1} \leq x_1 \text{; }c_0  \in \{1,2,3\} \text{; } c_1  \in \{4\}`                                                                                                                                                      :code:`sin(cos(12)) + c_0^(c_1) <= x_1; c_0 in {1,2,3}; c_1 in{4}`
         ==============================================================================================================================================================================================================================================  ========================================================================
 
     **Infinite coefficients:** Infinite coefficients extend the concept of finite coefficients and enable the usage of more generic terms. Building upon the structure of Finite Coefficients, predicates using infinite coefficients can be described as the following:
@@ -633,7 +640,7 @@ Coefficients overcome the limitations of standard predicates by enabling the usa
     .. math::
         \textit{term}_i \sim \textit{term}_i
 
-    With the extension of :math:`\textit{term}_i` being an arbitrary algebraic term using infinite coefficients. Infinite coefficients can be used throughout the term without defining them. `dtControl 2.0` uses Curve Fitting to heuristically determine their exact substitued value.
+    With the extension of :math:`\textit{term}_i` being an arbitrary algebraic term using infinite coefficients. Infinite coefficients can be used throughout the term without defining them. `dtControl 2.0` uses `SciPy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html>`_ to heuristically determine their exact substituted value.
 
     .. note::
         The difference between **infinite** and **finite** coefficients is that latter need a concrete definition whereas **infinite** coefficients can be seen as a placeholder for 'perfect'-fitting value.
@@ -641,3 +648,32 @@ Coefficients overcome the limitations of standard predicates by enabling the usa
 
     .. warning::
         It should be avoided to combine too many finite and infinite coefficients together as that can easily end up in a combinatorial explosion.
+
+Feature Constraints
+"""""""""""""""""""""""
+The concept of Feature Constraints is provided for explicit situations where the usage of a predicate is only valid under certain constraints within the current controller file. Similar to the previous sections of coefficient predicates, predicates using Feature Constraints can be described as the following:
+
+    .. math::
+        \textit{term}_i \sim \textit{term}_i \textit{; def}_f
+
+With the extension of :math:`\textit{def}_f` containing the explicit feature constraints. Similar to the **finite** coefficients, the user can specify the valid range with a by declaring a set with accepted values. Additionally, we also enabled the usage of infinite sets by declaring an interval of the structure :code:`[a,b)`, :code:`[a,b]`, :code:`(a,b)` or :code:`(a,b]` with :math:`a,b \in \mathbb{R}\cup \{-\infty, \infty\}`. To utilize :math:`\infty` simply type :code:`Inf`, :code:`infinity` or :code:`oo`. Additionally, we support the possibility to union several different sets by using the keywords :code:`or` or :code:`u`.
+
+    .. note::
+        :math:`(a,b) = \{ x \in \mathbb{R} | a < x < b\}`
+
+        :math:`[a,b) = \{ x \in \mathbb{R} | a \leq x < b\}`
+
+        :math:`(a,b] = \{ x \in \mathbb{R} | a < x \leq b\}`
+
+        :math:`[a,b] = \{ x \in \mathbb{R} | a \leq x \leq b\}`
+
+    **Some arbitrary examples:**
+
+        ==================================================================================================================================================  ================================================================================================================================================
+        Example predicates with **finite** feature constraints                                                                                                  dtControl syntax
+        ==================================================================================================================================================  ================================================================================================================================================
+        :math:`x_0 \leq 0.5 \text{; }x_0 \in \{1,2,3,\displaystyle\frac{1}{3}\}`                                                                            :code:`x_0 <= 0.5; x_0 in {1,2,3,1/3}`
+        :math:`x_0 + x_1 \leq 3.9 \text{; }x_0 \in \{\displaystyle\frac{1}{3}\}; x_1 \in [1,2) \cup (-\infty,-123]`                                         :code:`x_0 <= 0.5; x_0 in {1/3}; x_1 in [1,2) or (-Inf,-123]`
+        :math:`\sqrt{x_0} * c_0 + log(x_1) \geq x_2 * c_1\text{; }x_0 \in \{ \pi \}; x_1 \in [\sqrt{2},\infty); c_0 \in \{1,2,\pi \}; x_1 \in \{1,2\}`      :code:`sqrt(x_0) * c_0 + log(x_1) >= x_2 * c_1; x_0 in {pi}; x_1 in [sqrt(2),Inf); c_0 in {1,2,pi}; x_1 in {1,2}`
+        ==================================================================================================================================================  ================================================================================================================================================
+
