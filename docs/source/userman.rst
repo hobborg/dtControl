@@ -591,7 +591,7 @@ Where :math:`\textit{term}` is an arbitrary arithmetic term, using any elementar
 **Some arbitrary examples:**
 
 ====================================================================================================  ========================================================================
-Example predicate                                                                                     dtControl syntax
+Example standard predicate                                                                              dtControl syntax
 ====================================================================================================  ========================================================================
 :math:`x_0 \leq 0.5`                                                                                    :code:`x_0 <= 0.5`
 :math:`x_0 * 12 + x_1 * 3 \ge x_0 * 2 - x_2 * 3`                                                        :code:`x_0 * 12 + x_1 * 3 >= x_0 * 2 - x_2 * 3`
@@ -605,16 +605,39 @@ Example predicate                                                               
 
 Coefficient predicates
 """""""""""""""""""""""
-Coefficients overcome the limitations of standard predicates by enabling the usage of coefficients within :math:`\textit{term}`. In `dtControl 2.0` we distinguish between **Finite** and **Infinite** coefficients.
+Coefficients overcome the limitations of standard predicates by enabling the usage of coefficients within :math:`\textit{term}`. In `dtControl 2.0` we distinguish between **finite** and **infinite** coefficients.
 
     **Finite coefficients:** In order to bundle different variations of one single predicate, we introduce finite coefficients. The concept builds upon :ref:`standard-predicates` and can be describes as the following:
 
     .. math::
-        \textit{term}_f \sim \textit{const; def}
+        \textit{term}_f \sim \textit{term}_f \textit{; def}
 
     With the extension of :math:`\textit{term}_f` being an arbitrary algebraic term using Finite Coefficients defined in :math:`\textit{def}`. The general idea is to utilize Finite Coefficients :math:`c_i` within :math:`\textit{term}_f` and extend the finished predicate with a semicolon, followed by the concrete coefficient definition :math:`C_i \subseteq \mathbb{R}` with :math:`c_i \in C_i`.
 
     .. note::
         For computational reasons, the only restriction we insist on is :math:`|C_i| \in \mathbb{N}`. However, it should be noted that specifying too many or too large sets results in an infeasibly large set of predicates.
 
-    **Infinite coefficients:**
+    **Some arbitrary examples:**
+
+        ==============================================================================================================================================================================================================================================  ========================================================================
+        Example finite coefficient predicate                                                                                                                                                                                                             dtControl syntax
+        ==============================================================================================================================================================================================================================================  ========================================================================
+        :math:`\sqrt{x_0} * c_0 + log(x_1) - \displaystyle\frac{x_2}{c_1} \leq c_2 \text{; }c_0 \text{ in }\{-\frac{1}{3},\frac{1}{3}\} \text{; } c_1 \text{ in \{1,2\}} \text{; } c_2 \text{ in }\{\sqrt{2}, \pi\}`                                        :code:`sqrt(x_0) * c_0 + log(x_1) - (x_2 / c_1) <= c_2; c_0 in {-(1/3),(1/3)}; c_1 in {1, 2}; c_2 in {sqrt(2), pi}`
+        :math:`1.0546e-34 + 90 - c_0 \ge x_0 \text{; }c_0 \text{ in }\{0,12\}`                                                                                                                                                                              :code:`1.0546e-34 + 90 - c_0 >= x_0; c_0 in {0,12}`
+        :math:`e^{10} + ln(2) + \displaystyle\frac{x_2}{c_0} \ge 0 \text{; }c_0 \text{ in }\{-\frac{1}{9},\frac{2}{3}\}`                                                                                                                                    :code:`e^10 + ln(2) + (x_2 / c_0) >= 0; c_0 in {-(1/9), (2/3)}`
+        :math:`sin(cos(12)) + c_0^{c_1} \leq x_1 \text{; }c_0 \text{ in }\{1,2,3\} \text{; } c_1 \text{ in }\{4\}`                                                                                                                                          :code:`sin(cos(12)) + c_0^(c_1) <= x_1; c_0 in {1,2,3}; c_1 in{4}`
+        ==============================================================================================================================================================================================================================================  ========================================================================
+
+    **Infinite coefficients:** Infinite coefficients extend the concept of finite coefficients and enable the usage of more generic terms. Building upon the structure of Finite Coefficients, predicates using infinite coefficients can be described as the following:
+
+    .. math::
+        \textit{term}_i \sim \textit{term}_i
+
+    With the extension of :math:`\textit{term}_i` being an arbitrary algebraic term using infinite coefficients. Infinite coefficients can be used throughout the term without defining them. `dtControl 2.0` uses Curve Fitting to heuristically determine their exact substitued value.
+
+    .. note::
+        The difference between **infinite** and **finite** coefficients is that latter need a concrete definition whereas **infinite** coefficients can be seen as a placeholder for 'perfect'-fitting value.
+
+
+    .. warning::
+        It should be avoided to combine too many finite and infinite coefficients together as that can easily end up in a combinatorial explosion.
