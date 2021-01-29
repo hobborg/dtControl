@@ -649,6 +649,17 @@ Coefficients overcome the limitations of standard predicates by enabling the usa
     .. warning::
         It should be avoided to combine too many finite and infinite coefficients together as that can easily end up in a combinatorial explosion.
 
+        **Example:**
+        The following predicate :math:`x_1 * c_0 >= c_1\text{; }c_0  \in \{1,2\}\text{; }c_1  \in \{1,2,3\}` bundles **6** predicates together.
+
+            #. :math:`x_1 * 1 >= 1`
+            #. :math:`x_1 * 1 >= 2`
+            #. :math:`x_1 * 1 >= 3`
+            #. :math:`x_1 * 2 >= 1`
+            #. :math:`x_1 * 2 >= 2`
+            #. :math:`x_1 * 2 >= 3`
+
+
 Feature Constraints
 """""""""""""""""""""""
 The concept of Feature Constraints is provided for explicit situations where the usage of a predicate is only valid under certain constraints within the current controller file. Similar to the previous sections of coefficient predicates, predicates using Feature Constraints can be described as the following:
