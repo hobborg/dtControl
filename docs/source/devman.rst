@@ -124,8 +124,11 @@ As can be seen, the heart of the component is the ``DecisionTree`` class, which 
 - ``fit(dataset)`` constructs a decision tree for a dataset.
 - ``predict(dataset)`` returns a list of control inputs predicted for a dataset.
 - ``get_stats()`` returns the statistics to be displayed in the benchmark results as a dictionary. This will mainly include the number of nodes and potentially some algorithm-specific statistics.
-- ``export_dot()`` saves a representation of the decision tree in the `DOT <https://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ format.
-- ``export_c()`` exports the decision tree to a C-file as a chain of if-else statements.
+- ``print_dot()`` saves a representation of the decision tree in the `DOT <https://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ format.
+- ``print_c()`` exports the decision tree to a C-file as a chain of if-else statements.
+- ``print_vhdl()`` returns the corresponding vhdl code.
+- ``toJSON()`` converts the ``DecisionTree`` object to a ``JSON`` dictionary.
+
 
 Most of these methods simply delegate to the ``root`` object of type ``Node``, which implements the actual decision tree data structure. It has mostly the same attributes as a ``DecisionTree``, as well as some statistics and either a list of children or a label. Depending on the dataset and algorithm, a label can be one of the following:
 
