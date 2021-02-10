@@ -142,7 +142,13 @@ We now examine the most important interfaces in detail.
 Splitting strategies
 ^^^^^^^^^^^^^^^^^^^^
 
-A ``SplittingStrategy`` provides the method ``find_split(dataset, impurity_measure)``, which returns the best predicate of a certain type, given a dataset and an impurity measure. For instance, the ``AxisAlignedSplittingStrategy`` searches through all possible axis-aligned splits for the given dataset and returns the one with lowest impurity.
+A ``SplittingStrategy`` provides the method ``find_split(dataset, impurity_measure)``, which returns the best predicate of a certain type, given a dataset and an impurity measure. For instance, the ``AxisAlignedSplittingStrategy`` searches through all possible axis-aligned splits for the given dataset and returns the one with lowest impurity. Additionally, if several different splitting strategies are in use, the user can assign an individual priority to the strategies. The priority is later taken into account when calculating the impurity of the predicate :math:`p_i`. The new impurity (with priority in :math:`(0,1]`) is calculated as the following:
+
+.. math::
+        \text{Impurity}_\text{new}(p_i) = \displaystyle\frac{\text{Impurity}(p_i)}{\text{Priority}}
+
+.. note::
+        The default value of ``priority`` is 1. By assigning the exclusive priority of 0, the user can specify a ``FallbackStrategy``, a strategy which should only be used if all other strategies fail.
 
 The returned predicate is of type ``Split`` and must provide the following methods:
 
@@ -153,6 +159,10 @@ The returned predicate is of type ``Split`` and must provide the following metho
 - ``print_dot()`` returns the string that should be put in the node in the DOT format.
 
 - ``print_c()`` returns the string that should be put in the corresponding if-statement in the C code.
+
+- ``print_vhdl()`` returns the string that corresponds to vhdl code.
+
+- ``to_json_dict()`` converts the ``Split`` object to a ``JSON`` dictionary.
 
 The simplest example of a ``Split`` is probably the ``AxisAlignedSplit``.
 
