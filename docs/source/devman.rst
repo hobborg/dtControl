@@ -182,3 +182,21 @@ Supporting new output formats
 As shown above, the core decision tree data structure is implemented in the ``DecisionTree`` and ``Node`` classes. These classes also offer functionality for DOT and C printing.
 
 To add a new output format to dtControl, one thus would have to provide new exporting methods in the ``DecisionTree`` and ``Node`` classes. Furthermore, the ``BenchmarkSuite`` would have to be adapted to export the tree to the new output format once a DT has been constructed.
+
+Predicate Parser
+-----------------
+
+The ``PredicateParser`` class provides all core methods to process predicates, provided by the user. The core methods are called:
+
+- ``get_domain_knowledge()`` parses a whole file, containing domain knowledge.
+- ``get_predicate()`` parses a whole ``txt`` file, containing predicates.
+- ``parse_single_predicate(single_predicate)`` parses a single predicate, provided as String and returns a :ref:`richer-domain-split` Object.
+- ``parse_user_string(user_input)`` parses a string, which contains more than one predicate. Typically used when working with the frontend.
+- ``parse_user_interval(interval)`` parses a single interval, provided as String and returns a `SymPy interval <https://docs.sympy.org/latest/modules/sets.html>`_.
+
+
+.. _richer-domain-split:
+
+Richer Domain Split
+--------------------
+The ``RicherDomainSplit`` class extends the ``Split`` class.....
