@@ -142,6 +142,8 @@ Most of these methods simply delegate to the ``root`` object of type ``Node``, w
 
 We now examine the most important interfaces in detail.
 
+.. _splitting-strategies:
+
 Splitting strategies
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -203,13 +205,45 @@ The ``PredicateParser`` class provides all core methods to process predicates, p
 
 - ``get_domain_knowledge()`` parses a whole file, containing domain knowledge.
 - ``get_predicate()`` parses a whole ``txt`` file, containing predicates.
-- ``parse_single_predicate(single_predicate)`` parses a single predicate, provided as String and returns a :ref:`richer-domain-split` Object.
+- ``parse_single_predicate(single_predicate)`` parses a single predicate, provided as String.
 - ``parse_user_string(user_input)`` parses a string, which contains more than one predicate. Typically used when working with the frontend.
 - ``parse_user_interval(interval)`` parses a single interval, provided as String and returns a `SymPy interval <https://docs.sympy.org/latest/modules/sets.html>`_.
 
+The final returned predicates of the ``PredicateParser`` are of type :ref:`richer-domain-split`.
 
 .. _richer-domain-split:
 
 Richer Domain Split
 --------------------
-The ``RicherDomainSplit`` class extends the ``Split`` class.....
+The ``RicherDomainSplit`` class is used to represent predicates given by the user. Additionally to the already mentioned methods of the ``Split`` class, (which can be found in :ref:`splitting-strategies`) it provides following attributes:
+
+.. image:: img/RicherDomainSplit.png
+  :width: 500
+  :align: center
+  :alt: UML diagram of the RicherDomainSplit class.
+
+For demonstration purposes, consider an example user given predicate of following structure: :code:`c_1 * x_1 - c_2 + x_2 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3};`.
+
+- ``column_interval`` is a dict storing all given column intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example: :code:`column_interval = {x_1:(-Inf,Inf), x_2:{1,2,3}}`.
+- ``coef_interval`` is a dict storing all given coefficient intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example: :code:`coef_interval = {c_1:(-Inf,Inf), c_2:{1,2,3}}`.
+- ``term`` is storing the term as ``Sympy`` expression. In the running example: :code:`term = c_1 * x_1 - c_2 + x_2`.
+- ``relation`` is a ``String`` containing the relation. In the running example: :code:`relation = "<="`.
+- ``coef_assignment`` is by default :code:`None`. It will be determined inside :code:`fit()` and stores a list containing substitution tuples of structure :code:`(Sympy Symbol, Value)`. In the running example: :code:`coef_assignment = [(c_1,-8.23), (c_2,2)]`.
+- ``id`` is a unique `uuid <https://docs.python.org/3/library/uuid.html>`_.
+
+.. note::
+        Every symbol without a specific defined Interval will be assigned to the interval: :code:`(-Inf, Inf)`.
+
+Additionally we provide following methods:
+
+- ``get_fixed_coef_combinations()`` returns a list of fixed coefficients. In the running example: :code:`[[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)], [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)], [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]`.
+
+- ``contains_unfixed_coefs()`` returns a boolean if the predicate contains unfixed coefficients. In the running example: :code:`false`.
+
+- ``fit(fixed_coefs, x, y, method)`` computes the best fit according to the chosen :code:`method`.
+
+- ``check_valid_column_reference(x)`` checks whether the used column reference index is represented in the dataset :code:`x` or not. In the running example, the function returns :code:`true` if the dataset has at least 3 columns.
+
+- ``check_data_in_column_interval(x)`` checks if the column intervals contain all the values of the dataset :code:`x`. In the running example, the function returns :code:`true` if all values of the third column are in :code:`{1,2,3}`.
+
+- ``check_offset(offset)`` compares the offset with the relation to 0. In the running example, the function compares :code:`Offset <= 0`.
