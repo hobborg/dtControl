@@ -404,6 +404,8 @@ use the ``--rerun`` flag.::
    $ dtcontrol --input examples/cps/cartpole.scs --rerun
 
 
+.. _quick-start-python-interface:
+
 Quick Start with the Python Interface
 -------------------------------------
 
@@ -470,8 +472,21 @@ The easiest way to get more information on the methods available in the Python i
 
 Assigning priorities to splitting strategies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If several different splitting strategies are in use, the user can assign an individual priority to the strategies. The priority is later taken into account when calculating the impurity of the predicate :math:`p_i`. The new impurity (with priority in :math:`(0,1]`) is calculated as the following:
 
-TODO
+.. math::
+        \text{Impurity}_\text{new}(p_i) = \displaystyle\frac{\text{Impurity}(p_i)}{\text{Priority}}
+
+.. note::
+        The default value of ``priority`` is 1. By assigning the exclusive priority of 0, the user can specify a ``FallbackStrategy``, a strategy which should only be used if all other strategies fail.
+
+For example, to assign a priority of 0.5 to :code:`AxisAlignedSplittingStrategy` and a priority of 0.7 to :code:`LinearClassifierSplittingStrategy`, simply add following lines::
+
+    aa = AxisAlignedSplittingStrategy()
+    aa.priority = 0.5
+
+    logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+    logreg = 0.7
 
 Web-based graphical user interface
 -----------------------------------
@@ -581,7 +596,7 @@ Simulate your first result
 
 Semi-automatic command-line user interface
 --------------------------------------------
-TODO
+Here is a demonstration video from which you may copy-paste the commands to start the command-line user inferface.
 
 
 .. _algebraic-predicates:
