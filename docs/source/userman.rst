@@ -466,13 +466,15 @@ As you can see, the Python interface provides mostly the same parameters as the 
 
 The easiest way to get more information on the methods available in the Python interface is to directly browse the `source code <https://gitlab.lrz.de/i7/dtcontrol/-/tree/master/dtcontrol>`_ of dtControl.
 
+.. _priority-strategy:
 
-dtControl 2.0
------------------------------------
-In this section, we elaborate a little more on the usage and advantages of our latest features, including support of algebraic predicates, categorical predicates, a semi-automatic interface, GUI with several interactive modes, new determinization procedure and an interface for model checkers PRISM and Storm, which can also be found in our latest `TACAS 2021 paper <https://arxiv.org/abs/2101.07202>`_.
+Assigning priorities to splitting strategies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TODO
 
 Web-based graphical user interface
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 The interface is is powered by `flask <https://flask.palletsprojects.com/en/1.1.x/>`_ and `d3.js <https://d3js.org/>`_.
 After succesfully installing the latest version of `dtControl 2.0` the user can access the web-based graphical user interface by running::
 
@@ -491,7 +493,7 @@ Moreover, users can click on the 'eye' icon in the results table to inspect the 
 .. _running-first-experiment:
 
 Running your first experiment
-"""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. **Select controller file:** First, choose a controller file by clicking on the :guilabel:`Browse` Button within the 'Controller File' section. The currently supported file formats can be found in :ref:`supported-tools`. You can choose to download all of our examples from our `Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol-examples>`_ via this `zip archive <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_. Make sure you unzip all files before selecting them. (Alternatively, you can follow the commands provided in :ref:`the-command-line-interface`).
 
@@ -524,7 +526,7 @@ Running your first experiment
 
 
 Inspecting your first result
-""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Select controller file:** In order to enter the 'Inspection' mode, the user has to click the :fa:`eye` symbol, within the 'Results' section. Upon clicking, a new window will appear where the computed decision tree is displayed.
 
@@ -543,7 +545,7 @@ Inspecting your first result
         :guilabel:`Collapse all` To quickly collapse all nodes within the root node, simply click this button.
 
 Editing your first result
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Editing mode:** In order to enter the 'Editing' mode, the user has to click the :guilabel:`Edit` Button. At this point the user can either retrain the decision tree from a certain node by clicking on a node and then the :guilabel:`Retrain from selected node` Button or alternatively start the interactive tree builder from a selected node.
 
@@ -559,7 +561,7 @@ Editing your first result
         The user can now provide for the selected node, a custom predicate. For this purpose, additional information about the current state of the dataset at the current node is displayed. A user defined predicate can be added by pressing the :guilabel:`Add predicate` Button. The Syntax is described in the :ref:`algebraic-predicates` section. In the 'Instantiated Predicates', the user can now select the wanted predicate. Child nodes containing a inhomogeneous set of labels will be labeled with 'Not yet homogeneous'. For those nodes, the user can again either decide to use the 'Retrain from selected node' functionality or start again the 'interactive tree builder'.
 
 Simulate your first result
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Simulation mode:** The simulation mode can be entered by clicking the :guilabel:`Simulate` Button. To start the simulation, the user has to enter a system dynamics file. For this purpose we provide following two example files:
 
@@ -575,16 +577,23 @@ Simulate your first result
 
         With the buttons :guilabel:`Play`, :guilabel:`Pause`, :guilabel:`Next` and :guilabel:`Previous`, the user can navigate between the different simulation steps. The corresponding path inside the decision tree, which corresponds to the current simulation values is marked with red nodes.
 
+.. _semi-automatic-cli:
+
+Semi-automatic command-line user interface
+--------------------------------------------
+TODO
+
+
 .. _algebraic-predicates:
 
 Algebraic user-defined predicates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 The support for algebraic user-defined predicates forms one of the cornerstones of ``dtControl 2.0``. In this subsection we introduce several different extensions for predicates. The most simplified predicate structure can be summarized as follows:
 
 .. _standard-predicates:
 
 Standard predicate
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 
 .. math::
 
@@ -611,7 +620,7 @@ Example standard predicate                                                      
 
 
 Coefficient predicates
-"""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^
 Coefficients overcome the limitations of standard predicates by enabling the usage of coefficients within :math:`\textit{term}`. In `dtControl 2.0` we distinguish between **finite** and **infinite** coefficients.
 
     **Finite coefficients:** In order to bundle different variations of one single predicate, we introduce finite coefficients. The concept builds upon :ref:`standard-predicates` and can be describes as the following:
@@ -661,7 +670,7 @@ Coefficients overcome the limitations of standard predicates by enabling the usa
 
 
 Feature Constraints
-"""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^
 The concept of Feature Constraints is provided for explicit situations where the usage of a predicate is only valid under certain constraints within the current controller file. Similar to the previous sections of coefficient predicates, predicates using Feature Constraints can be described as the following:
 
     .. math::
