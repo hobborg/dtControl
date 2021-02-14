@@ -596,8 +596,23 @@ Simulate your first result
 
 Semi-automatic command-line user interface
 --------------------------------------------
-Here is a demonstration video from which you may copy-paste the commands to start the command-line user inferface.
+In order the utilize the semi-automatic user interface the user has to import the command-line interface by adding following line to :ref:`quick-start-python-interface`::
 
+    from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy import RicherDomainCliStrategy
+
+Additionally, create and add the classifier::
+
+    cli = RicherDomainCliStrategy(debug=True)
+
+    classifiers = [
+    # Interactive
+    DecisionTree([cli], Entropy(), 'interactive')
+    ]
+
+
+After adding these lines of code, the user can follow the commands (which you may copy-paste) from this demonstration video:
+
+.. asciinema:: img/cli.cast
 
 .. _algebraic-predicates:
 
