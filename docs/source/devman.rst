@@ -115,7 +115,7 @@ dtControl already supports a wide variety of decision tree construction algorith
 
 We again start with a UML diagram of the DT learning subsystem. In order to keep it as flexible as possible, we use a composition-based approach that makes heavy use of interfaces. This has the advantage that you only need to develop against a specific interface if you want to only extend a part of the DT learning algorithm. For instance, if you want to add a new impurity measure, you just have to provide an implementation of the ``ImpurityMeasure`` interface and your code will immediately integrate with the rest of the learning algorithm.
 
-.. image:: img/dt.png
+.. image:: img/dt.svg
   :width: 650
   :alt: UML class diagram of the decision tree learning subsystem
 
@@ -217,30 +217,56 @@ Richer Domain Split
 --------------------
 The ``RicherDomainSplit`` class is used to represent predicates given by the user. Additionally to the already mentioned methods of the ``Split`` class, (which can be found in :ref:`splitting-strategies`) it provides following attributes:
 
-.. image:: img/RicherDomainSplit.png
+.. image:: img/RicherDomainSplit.svg
   :width: 500
   :align: center
   :alt: UML diagram of the RicherDomainSplit class.
 
-For demonstration purposes, consider an example user given predicate of following structure: :code:`c_1 * x_1 - c_2 + x_2 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3};`.
+For demonstration purposes, consider an example user given predicate of following structure::
 
-- ``column_interval`` is a dict storing all given column intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example: :code:`column_interval = {x_1:(-Inf,Inf), x_2:{1,2,3}}`.
-- ``coef_interval`` is a dict storing all given coefficient intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example: :code:`coef_interval = {c_1:(-Inf,Inf), c_2:{1,2,3}}`.
-- ``term`` is storing the term as ``Sympy`` expression. In the running example: :code:`term = c_1 * x_1 - c_2 + x_2`.
-- ``relation`` is a ``String`` containing the relation. In the running example: :code:`relation = "<="`.
-- ``coef_assignment`` is by default :code:`None`. It will be determined inside :code:`fit()` and stores a list containing substitution tuples of structure :code:`(Sympy Symbol, Value)`. In the running example: :code:`coef_assignment = [(c_1,-8.23), (c_2,2)]`.
-- ``id`` is a unique `uuid <https://docs.python.org/3/library/uuid.html>`_.
+    c_1 * x_1 - c_2 + x_2 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3};
+
+- ``column_interval`` is a dict storing all given column intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example::
+
+    column_interval = {x_1:(-Inf,Inf), x_2:{1,2,3}}
+
+- ``coef_interval`` is a dict storing all given coefficient intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example::
+
+    coef_interval = {c_1:(-Inf,Inf), c_2:{1,2,3}}
+
+- ``term`` is storing the term as ``Sympy`` expression. In the running example::
+
+    term = c_1 * x_1 - c_2 + x_2
+
+- ``relation`` is a ``String`` containing the relation. In the running example::
+
+    relation = "<="
+
+- ``coef_assignment`` is by default :code:`None`. It will be determined inside :code:`fit()` and stores a list containing substitution tuples of structure :code:`(Sympy Symbol, Value)`. In the running example::
+
+    coef_assignment = [(c_1,-8.23), (c_2,2)]
+
+- ``id`` is a unique `uuid <https://docs.python.org/3/library/uuid.html>`_ to identify a RicherDomainSplit object.
 
 .. note::
         Every symbol without a specific defined Interval will be assigned to the interval: :code:`(-Inf, Inf)`.
 
 Additionally we provide following methods:
 
-- ``get_fixed_coef_combinations()`` returns a list of fixed coefficients. In the running example: :code:`[[('c_1', 1), ('c_2', -3)], [('c_1', 1), ('c_2', -1)], [('c_1', 2), ('c_2', -3)], [('c_1', 2), ('c_2', -1)], [('c_1', 3), ('c_2', -3)], [('c_1', 3), ('c_2', -1)]]`.
+- ``get_fixed_coef_combinations()`` returns a list of fixed coefficients. In the running example::
+
+    [
+        [('c_1', 1), ('c_2', -3)],
+        [('c_1', 1), ('c_2', -1)],
+        [('c_1', 2), ('c_2', -3)],
+        [('c_1', 2), ('c_2', -1)],
+        [('c_1', 3), ('c_2', -3)],
+        [('c_1', 3), ('c_2', -1)]
+    ]
 
 - ``contains_unfixed_coefs()`` returns a boolean if the predicate contains unfixed coefficients. In the running example: :code:`false`.
 
-- ``fit(fixed_coefs, x, y, method)`` computes the best fit according to the chosen :code:`method`.
+- ``fit(fixed_coefs, x, y, method)`` computes the best fit according to the chosen :code:`method`. Available methods are `‘lm’ <http://www.jstor.org/stable/43633451>`_, `‘trf’ <https://www.jstor.org/stable/1909768>`_, `‘dogbox’ <https://ieeexplore.ieee.org/document/1544898>`_ or 'optimized', which utilizes as often as possible the Levenberg-Marquardt strategy. Only in the edge case where the number of data points is less than the number of parameters the Trust Region Reflective Approach will be used.
 
 - ``check_valid_column_reference(x)`` checks whether the used column reference index is represented in the dataset :code:`x` or not. In the running example, the function returns :code:`true` if the dataset has at least 3 columns.
 
