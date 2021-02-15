@@ -612,6 +612,9 @@ Additionally, create and add the classifier::
 
 After adding these lines of code, the user can follow the commands (which you may copy-paste) from this demonstration video:
 
+.. warning::
+    We expect the user to have an activated virtual environment at this point.
+
 .. asciinema:: img/cli.cast
 
 .. _algebraic-predicates:
