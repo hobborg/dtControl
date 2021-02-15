@@ -1321,8 +1321,46 @@ function deactivateEdit()
 
 function deactivateInspect()
 {
-    // Nothing here
+    document.getElementById("highlight-input-field").classList.add("d-none");
 }
+
+$("#highlight-form-button").on('click', function (event) {
+        let category = document.getElementById("highlight-category").value;
+        let search_input = document.getElementById("highlight-input").value;
+        document.getElementById("highlight-input").value = "";
+
+        if (category === "leaf"){
+
+            let all_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
+            console.log(all_nodes);
+            all_nodes.forEach(function (item) {
+                let current_text = item.childNodes[1].innerHTML;
+                if (!(current_text.includes("=")) && (current_text === search_input)) {
+
+                    let parent_id = item.id;
+                    let counter = parent_id.split(",").length;
+
+                    // Coloring the label itself
+                    console.log(parent_id);
+                    document.getElementById(parent_id).childNodes[0].style.fill = "red";
+
+                    // Coloring all nodes between the label and root
+                    for (let i = 1; i < counter; i++){
+                        document.getElementById(parent_id.slice(0,-i*2)).childNodes[0].style.fill = "red";
+                    }
+
+                    // coloring the root
+                    document.getElementById("node-at-root").childNodes[0].style.fill = "red";
+                    timedResetFocus("root");
+                }
+            })
+        }else {
+
+        }
+
+
+
+    });
 
 $(document).ready(function () {
 
@@ -1333,6 +1371,8 @@ $(document).ready(function () {
 
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
+
+    document.getElementById("highlight-input-field").classList.remove("d-none");
 
     // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
@@ -1453,6 +1493,7 @@ $(document).ready(function () {
         else {
             // Inspect
             openNav();
+            document.getElementById("highlight-input-field").classList.remove("d-none");
             deactivateSimulator();
             deactivateEdit();
         }
