@@ -1331,6 +1331,9 @@ $(document).ready(function () {
     document.getElementById("metadata-upload-row").remove();
     document.getElementById("add-experiments-button").remove();
 
+    document.getElementById("presetSelectRow").classList.add("d-none");
+    document.getElementById("advanced-options-edit").classList.add("d-none");
+
     // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
         event.preventDefault();
