@@ -1312,7 +1312,8 @@ function deactivateEdit()
 
     document.getElementById("retrain-button").classList.add("d-none");
     document.getElementById("interactive-button").classList.add("d-none");
-
+    document.getElementById("presetSelectRow").classList.add("d-none");
+    document.getElementById("advanced-options-edit").classList.add("d-none");
     // editMode = false;
     disableNodeSelect();
     // update(root);
@@ -1415,6 +1416,7 @@ $(document).ready(function () {
         let option = $("#operation-selector input:checked")[0].id;
         console.log("Selected " + option);
         if (option === "option-simulate") {
+            closeNav();
             isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
@@ -1429,9 +1431,12 @@ $(document).ready(function () {
             // document.getElementById("animationDiv").classList.remove("d-none");
         }
         else if (option === "option-edit") {
+            openNav();
             deactivateSimulator();
             deactivateInspect();
             // Activate Edit Mode
+            document.getElementById("presetSelectRow").classList.remove("d-none");
+            document.getElementById("advanced-options-edit").classList.remove("d-none");
             document.getElementById("retrain-button").classList.remove("d-none");
             document.getElementById("interactive-button").classList.remove("d-none");
 
@@ -1444,6 +1449,7 @@ $(document).ready(function () {
         }
         else {
             // Inspect
+            openNav();
             deactivateSimulator();
             deactivateEdit();
         }
