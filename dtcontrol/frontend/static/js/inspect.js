@@ -1329,22 +1329,21 @@ $("#highlight-form-button").on('click', function (event) {
         let search_input = document.getElementById("highlight-input").value;
         document.getElementById("highlight-input").value = "";
 
-        if (category === "leaf"){
+        // access the dt
+        let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
 
-            let all_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
-            console.log(all_nodes);
-            all_nodes.forEach(function (item) {
-                let current_text = item.childNodes[1].innerHTML;
-                if (!(current_text.includes("=")) && (current_text === search_input)) {
+        if (category === "leaf"){
+            all_dt_nodes.forEach(function (item) {
+                let current_node_text = item.childNodes[1].innerHTML;
+                if (!(current_node_text.includes("=")) && (current_node_text === search_input)) {
 
                     let parent_id = item.id;
                     let counter = parent_id.split(",").length;
 
-                    // Coloring the label itself
-                    console.log(parent_id);
+                    // coloring the label itself
                     document.getElementById(parent_id).childNodes[0].style.fill = "red";
 
-                    // Coloring all nodes between the label and root
+                    // coloring all nodes between the label and root
                     for (let i = 1; i < counter; i++){
                         document.getElementById(parent_id.slice(0,-i*2)).childNodes[0].style.fill = "red";
                     }
