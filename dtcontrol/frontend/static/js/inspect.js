@@ -1324,18 +1324,41 @@ function deactivateInspect()
     document.getElementById("highlight-input-field").classList.add("d-none");
 }
 
+
+function extract_labels(input){
+
+        // regex to extract numbers
+        let regex = /[+-]?\d+(\.\d+)?/g;
+        return input.match(regex).map(function(v) { return parseFloat(v); });
+
+}
+
 $("#highlight-form-button").on('click', function (event) {
-        let category = document.getElementById("highlight-category").value;
-        let search_input = document.getElementById("highlight-input").value;
-        document.getElementById("highlight-input").value = "";
+    let category = document.getElementById("highlight-category").value;
+    let search_input = document.getElementById("highlight-input").value;
+    document.getElementById("highlight-input").value = "";
 
-        // access the dt
-        let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
+    // access the dt
+    let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
 
-        if (category === "leaf"){
-            all_dt_nodes.forEach(function (item) {
-                let current_node_text = item.childNodes[1].innerHTML;
-                if (!(current_node_text.includes("=")) && (current_node_text === search_input)) {
+    if (category === "leaf" && search_input !== "") {
+        let processed_search = extract_labels(search_input);
+
+        all_dt_nodes.forEach(function (item) {
+            let current_node_text = item.childNodes[2].innerHTML;
+
+            // check if the current_node is a leaf
+            if (!(current_node_text.includes("="))) {
+                let processed_current_labels = extract_labels(current_node_text);
+
+                console.log(processed_current_labels);
+                console.log(processed_search);
+
+                console.log(processed_current_labels.includes(processed_search));
+
+                // check if search is contained in current leaf
+                if (processed_search.every(r => processed_current_labels.includes(r))) {
+
 
                     let parent_id = item.id;
                     let counter = parent_id.split(",").length;
@@ -1344,22 +1367,24 @@ $("#highlight-form-button").on('click', function (event) {
                     document.getElementById(parent_id).childNodes[0].style.fill = "red";
 
                     // coloring all nodes between the label and root
-                    for (let i = 1; i < counter; i++){
-                        document.getElementById(parent_id.slice(0,-i*2)).childNodes[0].style.fill = "red";
+                    for (let i = 1; i < counter; i++) {
+                        document.getElementById(parent_id.slice(0, -i * 2)).childNodes[0].style.fill = "red";
                     }
 
                     // coloring the root
                     document.getElementById("node-at-root").childNodes[0].style.fill = "red";
-                    timedResetFocus("root");
                 }
-            })
-        }else {
-
-        }
 
 
+            }
+        })
+        timedResetFocus("root");
+    } else if (search_input !== "") {
 
-    });
+    }
+
+
+});
 
 $(document).ready(function () {
 
