@@ -71,6 +71,8 @@ var margin = {top: 20, right: 120, bottom: 20, left: 120},
     zoom = "",
     dTcontainer;
 
+var highlight_first_run = true;
+
 // var width, height;
 
 function svgSetup() {
@@ -242,7 +244,14 @@ function update(source) {
     let nodeEnter = node.enter().append("g")
         .attr("class", d => {
             // questionmark cursor appears when hovering over too large predicates
-            return (d.data.name.length > 20) ? "node scaled" : "node";
+            let class_name = "node"
+            if (!d._children){
+                class_name += " leaf"
+            }
+            if (d.data.name.length > 20){
+                class_name += " scaled"
+            }
+            return class_name;
         })
         .attr("id", d => {
             return (d.data.address.length == 0) ? "node-at-root" : "node-at-" + d.data.address;
@@ -296,7 +305,8 @@ function update(source) {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
-            let nodeText = d.data.name;
+            let nodeText = String(d.data.name);
+            nodeText = nodeText.replaceAll("\\n", ", ");
 
             // scales predicate down, if too large
             if (nodeText.length > 20 && (d.data.children.length != 0 || d.data._children)) {
@@ -343,7 +353,7 @@ function update(source) {
     // title containing the whole predicate which can be shown by hovering over the element
     nodeUpdate.select("title")
         .text(function (d) {
-            return d.data.name;
+            return String(d.data.name).replaceAll("\\n", ", ");
         });
 
     // Transition exiting nodes to the parent's new position.
@@ -1321,11 +1331,11 @@ function deactivateEdit()
 
 function deactivateInspect()
 {
-    document.getElementById("highlight-input-field").classList.add("d-none");
+    document.getElementById("inspect-field").classList.add("d-none");
 }
 
 
-function extract_labels(input){
+function extract_all_floats(input){
 
         // regex to extract numbers
         let regex = /[+-]?\d+(\.\d+)?/g;
@@ -1342,14 +1352,14 @@ $("#highlight-form-button").on('click', function (event) {
     let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
 
     if (category === "leaf" && search_input !== "") {
-        let processed_search = extract_labels(search_input);
+        let processed_search = extract_all_floats(search_input);
 
         all_dt_nodes.forEach(function (item) {
             let current_node_text = item.childNodes[2].innerHTML;
 
             // check if the current_node is a leaf
             if (!(current_node_text.includes("="))) {
-                let processed_current_labels = extract_labels(current_node_text);
+                let processed_current_labels = extract_all_floats(current_node_text);
 
                 console.log(processed_current_labels);
                 console.log(processed_search);
@@ -1379,12 +1389,74 @@ $("#highlight-form-button").on('click', function (event) {
             }
         })
         timedResetFocus("root");
-    } else if (search_input !== "") {
+    } else if (search_input.includes("<=")) {
+        // category === Node
+        let processed_search = search_input.split("<=");
+
+        let x = processed_search[0].match(/x\[(\d+)\]\s/)[1];
+        let offset = processed_search[1].match(/[+-]?\d+(\.\d+)?/g);
+
+        // root
+        let current_node = "node-at-root"
+        let current_processed_text;
+        let current_x;
+        let current_offset;
+
+        while (true) {
+            // Leaf or Label
+            if (!document.getElementById(current_node).childNodes[2].innerHTML.includes("=")) {
+                break;
+            }
+
+            current_processed_text = document.getElementById(current_node).childNodes[2].innerHTML.replace("&lt;", "<").split("<=");
+
+            current_x = current_processed_text[0].match(/x\[(\d+)\]\s/)[1];
+            current_offset = current_processed_text[1].match(/[+-]?\d+(\.\d+)?/g);
+
+            if (current_x === x && offset <= current_offset) {
+                if (current_node === "node-at-root") {
+                    document.getElementById(current_node).childNodes[0].style.fill = "red";
+                    current_node = "node-at-1";
+                } else {
+                }
+                current_node = current_node + ",1";
+            } else {
+                if (current_node === "node-at-root") {
+                    document.getElementById(current_node).childNodes[0].style.fill = "red";
+                    current_node = "node-at-0";
+                } else {
+                    current_node = current_node + ",0";
+                }
+
+            }
+            document.getElementById(current_node).childNodes[0].style.fill = "red";
+
+        }
 
     }
 
 
 });
+
+function populate_action_information() {
+    let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
+    let action_list = []
+     all_dt_nodes.forEach(function (item) {
+         if (item.classList.contains("leaf")){
+             action_list.push(item.childNodes[2].innerHTML);
+         }
+     })
+    console.log(action_list);
+
+}
+
+$("#accordionButton-inspect").on('click', function (event) {
+    if (highlight_first_run){
+        // populate action stats because the d3 tree takes sooooooo long to load
+        populate_action_information()
+    }
+    highlight_first_run = false;
+})
 
 $(document).ready(function () {
 
@@ -1396,7 +1468,9 @@ $(document).ready(function () {
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
 
-    document.getElementById("highlight-input-field").classList.remove("d-none");
+    document.getElementById("inspect-field").classList.remove("d-none");
+
+
 
     // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
@@ -1517,7 +1591,7 @@ $(document).ready(function () {
         else {
             // Inspect
             openNav();
-            document.getElementById("highlight-input-field").classList.remove("d-none");
+            document.getElementById("inspect-field").classList.remove("d-none");
             deactivateSimulator();
             deactivateEdit();
         }

@@ -240,7 +240,7 @@
     </form>
 
 
-    <div id="highlight-input-field" class="container search-box row d-none">
+    <div id="inspect-field" class="container search-box row d-none">
         <label>Highlight</label>
         <div class="input-group col-12">
             <div class="input-group-prepend">
@@ -260,9 +260,32 @@
                 <button id="highlight-form-button" class="btn btn-success" type="button">Find</button>
             </div>
         </div>
+
+        <div id="advanced-options-inspect" class="row mt-3">
+                <div id="accordion-inspect">
+                    <button id="accordionButton-inspect" type="button" class="btn btn-link collapsed" data-toggle="collapse"
+                            data-target="#advancedHelp">
+                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-right-fill"
+                             fill="currentColor"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.14 8.753l-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"></path>
+                        </svg>
+                        <span>Show help</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="advancedHelp" class="collapse" data-parent="#accordion">
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <p class="font-weight-bold">Help menu</p>
+                        <p class="text-md-left">Within the current decision tree you can highlight various different components.</p>
+                        <p class="font-weight-bold">Detailed stats:</p>
+                    </div>
+                </div>
+            </div>
     </div>
-
-
 </div>
 
 <!-- Modal -->
