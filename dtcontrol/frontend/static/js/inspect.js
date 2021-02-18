@@ -1366,18 +1366,21 @@ $("#highlight-form-button").on('click', function (event) {
                 let processes_constraint = constraint.split(rel);
                 let action_index = parseInt(processes_constraint[0].split("a_")[1]);
                 let offset = parseFloat(processes_constraint[1]);
-                console.log("RESULT OF PARSING THE CONSTRAINT:")
-                console.log("relation: " + rel);
-                console.log("action index: " + action_index);
-                console.log("offset: " + offset);
+                //console.log("RESULT OF PARSING THE CONSTRAINT:")
+                //console.log("relation: " + rel);
+                //console.log("action index: " + action_index);
+                //console.log("offset: " + offset);
 
                 // iterate over all actions and check if they satisfy the current constraint
                 for (let j = 0; j < converted_action_list.length; j++) {
                     let single_action = converted_action_list[j];
 
+                    if (permissive){
+                        highlighting_results[highlighting_results.length -1][j] = null;
+                    }
 
                     for (let k = 0; k < single_action.length; k++) {
-                        console.log("currently loocking at: " + single_action[k]);
+                        //console.log("currently loocking at: " + single_action[k]);
                         if (typeof single_action[k] === "number") {
                             // 1 dimensional actions, otherwise we would receive an array at this point
                             // action has to be 0 else error
@@ -1386,19 +1389,27 @@ $("#highlight-form-button").on('click', function (event) {
                             }
 
                             // does the current single action satisfy the constraint?
-                            if (! constraint_checker(single_action[k], rel, offset)) {
-                                highlighting_results[highlighting_results.length -1][j] = null;
-                            }
+                            if (permissive && constraint_checker(single_action[k], rel, offset)) {
+                                console.log(action_id_list[j].slice());
+                                highlighting_results[highlighting_results.length - 1][j] = action_id_list[j].slice();
+                            } else if (!permissive && !constraint_checker(single_action[k], rel, offset)) {
+                                    console.log("WTF?!");
+                                    highlighting_results[highlighting_results.length - 1][j] = null;
+                                }
 
-                            console.log("question was: " + single_action[k] + rel + offset);
-                            console.log("result was: " + constraint_checker(single_action[k], rel, offset));
-                        }else {
+
+                            //console.log("question was: " + single_action[k] + rel + offset);
+                            //console.log("result was: " + constraint_checker(single_action[k], rel, offset));
+                        } else {
                             // more dimensional actions, which are represented by an array
-                            if (! constraint_checker(single_action[k][action_index], rel, offset)){
-                                highlighting_results[highlighting_results.length -1][j] = null;
-                            }
-                            console.log("question was: " + single_action[k][action_index] + rel + offset);
-                            console.log("result was: " + constraint_checker(single_action[k][action_index], rel, offset));
+                            if (permissive && constraint_checker(single_action[k][action_index], rel, offset)) {
+                                highlighting_results[highlighting_results.length - 1][j] = action_id_list[j].slice();
+                            } else if (!permissive && !constraint_checker(single_action[k][action_index], rel, offset)) {
+                                    highlighting_results[highlighting_results.length - 1][j] = null;
+                                }
+
+                            //console.log("question was: " + single_action[k][action_index] + rel + offset);
+                            //console.log("result was: " + constraint_checker(single_action[k][action_index], rel, offset));
 
                         }
                     }
