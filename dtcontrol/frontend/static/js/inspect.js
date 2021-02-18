@@ -1338,7 +1338,8 @@ function deactivateInspect()
 function extract_all_floats(input){
 
         // regex to extract numbers
-        let regex = /[+-]?\d+(\.\d+)?/g;
+        //\(([+-]?\d+(?:\.\d+)?)(?:, ([+-]?\d+(?:\.\d+)?))*\)
+        let regex = /([+-]?\d+(?:\.\d+)?)/g;
         return input.match(regex).map(function(v) { return parseFloat(v); });
 
 }
@@ -1346,12 +1347,14 @@ function extract_all_floats(input){
 $("#highlight-form-button").on('click', function (event) {
     let category = document.getElementById("highlight-category").value;
     let search_input = document.getElementById("highlight-input").value;
+    let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
+
     document.getElementById("highlight-input").value = "";
 
     // access the dt
     let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
 
-    if (category === "leaf" && search_input !== "") {
+    if (category === "action" && search_input !== "") {
         let processed_search = extract_all_floats(search_input);
 
         all_dt_nodes.forEach(function (item) {
@@ -1389,7 +1392,7 @@ $("#highlight-form-button").on('click', function (event) {
             }
         })
         timedResetFocus("root");
-    } else if (search_input.includes("<=")) {
+    } /*else if (search_input.includes("<=")) {
         // category === Node
         let processed_search = search_input.split("<=");
 
@@ -1433,20 +1436,60 @@ $("#highlight-form-button").on('click', function (event) {
 
         }
 
-    }
+    }*/
 
 
 });
 
 function populate_action_information() {
     let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
-    let action_list = []
-     all_dt_nodes.forEach(function (item) {
-         if (item.classList.contains("leaf")){
-             action_list.push(item.childNodes[2].innerHTML);
-         }
-     })
-    console.log(action_list);
+    let action_list = [];
+    var converted_action_list = [];
+    var permissive = false;
+    let available_actions = [];
+    var dimension;
+
+    // extract all actions
+    all_dt_nodes.forEach(function (item) {
+        if (item.classList.contains("leaf")) {
+            action_list.push(item.childNodes[2].innerHTML);
+        }
+    });
+
+    // convert all actions into processable schema
+    action_list.forEach(function (item) {
+        if (item.includes("[")) {
+            permissive = true;
+            let converted_item = item.replaceAll("(", "[").replaceAll(")", "]");
+            converted_action_list.push(JSON.parse(converted_item));
+        } else {
+            let converted_item = item.replaceAll("(", "[").replaceAll(")", "]");
+            converted_action_list.push(JSON.parse("[" + converted_item + "]"));
+        }
+
+    });
+
+    // calculate dimension
+    if (typeof converted_action_list[0][0] === "number") {
+        dimension = 1;
+    } else {
+        dimension = converted_action_list[0][0].length;
+    }
+
+    // create available symbols to reference actions
+    for (let i = 0; i < dimension; i++) {
+        available_actions.push("a_" + i);
+    }
+
+    // disable checkbox if not permissive
+    if (!permissive){
+        document.getElementById("permissiveCheckBox").disabled = "true";
+    }
+
+    document.getElementById("permissiveHere").innerHTML += (permissive) ? "permissive." : "not permissive.";
+    document.getElementById("dimensionHere").innerHTML += dimension + ".";
+    document.getElementById("availableActionsHere").innerHTML += available_actions + ".";
+    document.getElementById("exampleActionHere").innerHTML += (available_actions.length > 1) ? "a_0 <= 0 ∧ a_1 <= 1" : "a_0 <= 0";
 
 }
 
