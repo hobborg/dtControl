@@ -1359,22 +1359,22 @@ $("#highlight-form-button").on('click', function (event) {
     //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
 
     document.getElementById("highlight-input").value = "";
-    let input_constraints = search_input.split(/and|∧/);
+    let conjunction_constraints = search_input.split(/and|∧/);
     let supported_relations = ["<=", ">=", "="];
 
     highlighting_constraint_history.push(search_input);
     highlighting_results.push(action_id_list.slice());
 
-    input_constraints.forEach(function (constraint) {
+    conjunction_constraints.forEach(function (c_constraint) {
 
         for (let i = 0; i < supported_relations.length; i++) {
             let rel = supported_relations[i];
 
-            if (constraint.includes(rel)) {
+            if (c_constraint.includes(rel)) {
 
-                let processes_constraint = constraint.split(rel);
-                let action_index = parseInt(processes_constraint[0].split("a_")[1]);
-                let offset = parseFloat(processes_constraint[1]);
+                let processed_constraint = c_constraint.split(rel);
+                let action_index = parseInt(processed_constraint[0].split("a_")[1]);
+                let offset = parseFloat(processed_constraint[1]);
 
                 // iterate over all actions and check if they satisfy the current constraint
                 for (let j = 0; j < converted_action_list.length; j++) {
@@ -1390,7 +1390,7 @@ $("#highlight-form-button").on('click', function (event) {
                             // 1 dimensional actions, otherwise we would receive an array at this point
                             // action has to be 0 else error
                             if (action_index > 0) {
-                                throw Error;
+                                throw {name : "Wrong dimension", message : "the current decision tree has a dimension of 1."};
                             }
 
                             // does the current single action satisfy the constraint?
