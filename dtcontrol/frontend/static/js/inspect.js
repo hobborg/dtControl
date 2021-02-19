@@ -1376,7 +1376,8 @@ $("#highlight-form-button").on('click', function (event) {
         })
     }
 
-
+    highlighting_constraint_history.push(search_input);
+    highlighting_results.push(action_id_list.slice());
 
     conjunction_constraints.forEach(function (c_constraint) {
 
@@ -1384,9 +1385,6 @@ $("#highlight-form-button").on('click', function (event) {
             let rel = supported_relations[i];
 
             if (c_constraint.includes(rel)) {
-
-                highlighting_constraint_history.push(search_input);
-                highlighting_results.push(action_id_list.slice());
 
                 let processed_constraint = c_constraint.split(rel);
                 let action_index = parseInt(processed_constraint[0].split("a_")[1]);
