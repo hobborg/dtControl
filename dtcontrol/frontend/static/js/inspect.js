@@ -1354,16 +1354,29 @@ function extract_all_floats(input){
 $("#highlight-form-button").on('click', function (event) {
     populate_action_information();
 
-    let category = document.getElementById("highlight-category").value;
     let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
+
+    if (search_input === "") {
+        return;
+    }
     //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
 
-    document.getElementById("highlight-input").value = "";
-    let conjunction_constraints = search_input.split(/and|∧/);
+
+    let conjunction_constraints = search_input.split(/and|&/);
     let supported_relations = ["<=", ">=", "="];
 
-    highlighting_constraint_history.push(search_input);
-    highlighting_results.push(action_id_list.slice());
+
+
+    // uncoloring the last results tree
+    if (highlighting_results.length){
+        highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
+            if (single_id != null) {
+                uncolor_leaf_to_root(single_id);
+            }
+        })
+    }
+
+
 
     conjunction_constraints.forEach(function (c_constraint) {
 
@@ -1371,6 +1384,9 @@ $("#highlight-form-button").on('click', function (event) {
             let rel = supported_relations[i];
 
             if (c_constraint.includes(rel)) {
+
+                highlighting_constraint_history.push(search_input);
+                highlighting_results.push(action_id_list.slice());
 
                 let processed_constraint = c_constraint.split(rel);
                 let action_index = parseInt(processed_constraint[0].split("a_")[1]);
@@ -1387,11 +1403,6 @@ $("#highlight-form-button").on('click', function (event) {
                     for (let k = 0; k < single_action.length; k++) {
 
                         if (typeof single_action[k] === "number") {
-                            // 1 dimensional actions, otherwise we would receive an array at this point
-                            // action has to be 0 else error
-                            if (action_index > 0) {
-                                throw {name : "Wrong dimension", message : "the current decision tree has a dimension of 1."};
-                            }
 
                             // does the current single action satisfy the constraint?
                             if (permissive && constraint_checker(single_action[k], rel, offset)) {
@@ -1418,14 +1429,14 @@ $("#highlight-form-button").on('click', function (event) {
         }
     });
 
-    // coloring all nodes inside highlighting_results
-    highlighting_results.forEach(function (single_result) {
-       single_result.forEach(function (single_id) {
-           if (single_id != null){
-               color_leaf_to_root(single_id);
-           }
-       })
-    });
+    // uncoloring the last results tree
+    if (highlighting_results.length){
+        highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
+            if (single_id != null) {
+                color_leaf_to_root(single_id);
+            }
+        })
+    }
 
 });
 
@@ -1444,6 +1455,21 @@ function color_leaf_to_root(id) {
     // coloring the root
     document.getElementById("node-at-root").childNodes[0].style.fill = "red";
 
+}
+
+function uncolor_leaf_to_root(id) {
+    let counter = id.split(",").length;
+
+    // uncoloring the action itself
+    document.getElementById(id).childNodes[0].style.fill = "";
+
+    // uncoloring all nodes between the label and root
+    for (let i = 1; i < counter; i++) {
+        document.getElementById(id.slice(0, -i * 2)).childNodes[0].style.fill = "";
+    }
+
+    // uncoloring the root
+    document.getElementById("node-at-root").childNodes[0].style.fill = "";
 }
 
 function constraint_checker(symbol, rel, offset) {
@@ -1503,10 +1529,10 @@ function populate_action_information() {
         //     document.getElementById("permissiveCheckBox").disabled = "true";
         // }
 
-        document.getElementById("permissiveHere").innerHTML += (permissive) ? "permissive." : "not permissive.";
-        document.getElementById("dimensionHere").innerHTML += dimension + ".";
-        document.getElementById("availableActionsHere").innerHTML += available_actions + ".";
-        document.getElementById("exampleActionHere").innerHTML += (available_actions.length > 1) ? "a_0 <= 0 ∧ a_1 <= 1" : "a_0 <= 0";
+        document.getElementById("permissiveHere").innerHTML = (permissive) ? "permissive" : "not permissive";
+        document.getElementById("dimensionHere").innerHTML = dimension;
+        document.getElementById("availableActionsHere").innerHTML = available_actions;
+        document.getElementById("exampleActionHere").innerHTML = (available_actions.length > 1) ? "a_0 <= 0 & a_1 <= 1" : "a_0 <= 0";
 
         populated = true;
     }
