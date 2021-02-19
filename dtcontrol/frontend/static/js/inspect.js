@@ -1356,17 +1356,6 @@ $("#highlight-form-button").on('click', function (event) {
 
     let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
 
-    if (search_input === "") {
-        return;
-    }
-    //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
-
-
-    let conjunction_constraints = search_input.split(/and|&/);
-    let supported_relations = ["<=", ">=", "="];
-
-
-
     // uncoloring the last results tree
     if (highlighting_results.length){
         highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
@@ -1375,6 +1364,24 @@ $("#highlight-form-button").on('click', function (event) {
             }
         })
     }
+
+    // input validation
+    if (search_input === "") {
+        console.error("Empty input");
+        return;
+    }else if (!(search_input.includes("<=") || search_input.includes(">=") || search_input.includes("="))){
+        console.error("No valid relation found. Supported relations are '<=', '>=' and '='");
+        return;
+    }else if (!search_input.includes("a_")){
+        console.error("No valid symbol found. Exemplary supported symbol is 'a_0'");
+        return;
+    }
+    //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
+
+    let dimension_error = false;
+
+    let conjunction_constraints = search_input.split(/and|&/);
+    let supported_relations = ["<=", ">=", "="];
 
     highlighting_constraint_history.push(search_input);
     highlighting_results.push(action_id_list.slice());
@@ -1389,6 +1396,12 @@ $("#highlight-form-button").on('click', function (event) {
                 let processed_constraint = c_constraint.split(rel);
                 let action_index = parseInt(processed_constraint[0].split("a_")[1]);
                 let offset = parseFloat(processed_constraint[1]);
+
+                if (action_index >= dimension){
+                    console.error("Referenced dimension is not presented within the current decision tree.");
+                    dimension_error = true;
+                    break;
+                }
 
                 // iterate over all actions and check if they satisfy the current constraint
                 for (let j = 0; j < converted_action_list.length; j++) {
@@ -1428,7 +1441,7 @@ $("#highlight-form-button").on('click', function (event) {
     });
 
     // uncoloring the last results tree
-    if (highlighting_results.length){
+    if (highlighting_results.length && !dimension_error){
         highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
             if (single_id != null) {
                 color_leaf_to_root(single_id);
