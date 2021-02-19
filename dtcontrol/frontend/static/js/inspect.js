@@ -73,6 +73,15 @@ var margin = {top: 20, right: 120, bottom: 20, left: 120},
 
 // var width, height;
 
+// variables which are used throughout the leaf highlighting
+var action_id_list = [];
+var converted_action_list = [];
+var permissive = false;
+var dimension;
+var populated = false;
+var highlighting_results = [];
+var highlighting_constraint_history = [];
+
 function svgSetup() {
     zoom = d3.zoom()
         .on("zoom", ({transform}) => {
@@ -1347,7 +1356,7 @@ $("#highlight-form-button").on('click', function (event) {
 
     let category = document.getElementById("highlight-category").value;
     let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
-    let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
+    //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
 
     document.getElementById("highlight-input").value = "";
     let input_constraints = search_input.split(/and|∧/);
@@ -1366,10 +1375,6 @@ $("#highlight-form-button").on('click', function (event) {
                 let processes_constraint = constraint.split(rel);
                 let action_index = parseInt(processes_constraint[0].split("a_")[1]);
                 let offset = parseFloat(processes_constraint[1]);
-                //console.log("RESULT OF PARSING THE CONSTRAINT:")
-                //console.log("relation: " + rel);
-                //console.log("action index: " + action_index);
-                //console.log("offset: " + offset);
 
                 // iterate over all actions and check if they satisfy the current constraint
                 for (let j = 0; j < converted_action_list.length; j++) {
@@ -1380,7 +1385,7 @@ $("#highlight-form-button").on('click', function (event) {
                     }
 
                     for (let k = 0; k < single_action.length; k++) {
-                        //console.log("currently loocking at: " + single_action[k]);
+
                         if (typeof single_action[k] === "number") {
                             // 1 dimensional actions, otherwise we would receive an array at this point
                             // action has to be 0 else error
@@ -1390,16 +1395,11 @@ $("#highlight-form-button").on('click', function (event) {
 
                             // does the current single action satisfy the constraint?
                             if (permissive && constraint_checker(single_action[k], rel, offset)) {
-                                console.log(action_id_list[j].slice());
                                 highlighting_results[highlighting_results.length - 1][j] = action_id_list[j].slice();
                             } else if (!permissive && !constraint_checker(single_action[k], rel, offset)) {
-                                    console.log("WTF?!");
                                     highlighting_results[highlighting_results.length - 1][j] = null;
                                 }
 
-
-                            //console.log("question was: " + single_action[k] + rel + offset);
-                            //console.log("result was: " + constraint_checker(single_action[k], rel, offset));
                         } else {
                             // more dimensional actions, which are represented by an array
                             if (permissive && constraint_checker(single_action[k][action_index], rel, offset)) {
@@ -1407,9 +1407,6 @@ $("#highlight-form-button").on('click', function (event) {
                             } else if (!permissive && !constraint_checker(single_action[k][action_index], rel, offset)) {
                                     highlighting_results[highlighting_results.length - 1][j] = null;
                                 }
-
-                            //console.log("question was: " + single_action[k][action_index] + rel + offset);
-                            //console.log("result was: " + constraint_checker(single_action[k][action_index], rel, offset));
 
                         }
                     }
@@ -1419,8 +1416,6 @@ $("#highlight-form-button").on('click', function (event) {
             }
 
         }
-
-
     });
 
     // coloring all nodes inside highlighting_results
@@ -1431,103 +1426,6 @@ $("#highlight-form-button").on('click', function (event) {
            }
        })
     });
-
-
-
-    //console.log(input_constraints);
-    //console.log(action_id_list);
-    //console.log(converted_action_list);
-    console.log(highlighting_constraint_history);
-    console.log(highlighting_results);
-
-/*
-    // access the dt
-    let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
-
-    if (category === "action" && search_input !== "") {
-        let processed_search = extract_all_floats(search_input);
-
-        all_dt_nodes.forEach(function (item) {
-            let current_node_text = item.childNodes[2].innerHTML;
-
-            // check if the current_node is a leaf
-            if (!(current_node_text.includes("="))) {
-                let processed_current_labels = extract_all_floats(current_node_text);
-
-                console.log(processed_current_labels);
-                console.log(processed_search);
-
-                console.log(processed_current_labels.includes(processed_search));
-
-                // check if search is contained in current leaf
-                if (processed_search.every(r => processed_current_labels.includes(r))) {
-
-
-                    let parent_id = item.id;
-                    let counter = parent_id.split(",").length;
-
-                    // coloring the label itself
-                    document.getElementById(parent_id).childNodes[0].style.fill = "red";
-
-                    // coloring all nodes between the label and root
-                    for (let i = 1; i < counter; i++) {
-                        document.getElementById(parent_id.slice(0, -i * 2)).childNodes[0].style.fill = "red";
-                    }
-
-                    // coloring the root
-                    document.getElementById("node-at-root").childNodes[0].style.fill = "red";
-                }
-
-
-            }
-        })
-        timedResetFocus("root");
-    } else if (search_input.includes("<=")) {
-        // category === Node
-        let processed_search = search_input.split("<=");
-
-        let x = processed_search[0].match(/x\[(\d+)\]\s/)[1];
-        let offset = processed_search[1].match(/[+-]?\d+(\.\d+)?/g);
-
-        // root
-        let current_node = "node-at-root"
-        let current_processed_text;
-        let current_x;
-        let current_offset;
-
-        while (true) {
-            // Leaf or Label
-            if (!document.getElementById(current_node).childNodes[2].innerHTML.includes("=")) {
-                break;
-            }
-
-            current_processed_text = document.getElementById(current_node).childNodes[2].innerHTML.replace("&lt;", "<").split("<=");
-
-            current_x = current_processed_text[0].match(/x\[(\d+)\]\s/)[1];
-            current_offset = current_processed_text[1].match(/[+-]?\d+(\.\d+)?/g);
-
-            if (current_x === x && offset <= current_offset) {
-                if (current_node === "node-at-root") {
-                    document.getElementById(current_node).childNodes[0].style.fill = "red";
-                    current_node = "node-at-1";
-                } else {
-                }
-                current_node = current_node + ",1";
-            } else {
-                if (current_node === "node-at-root") {
-                    document.getElementById(current_node).childNodes[0].style.fill = "red";
-                    current_node = "node-at-0";
-                } else {
-                    current_node = current_node + ",0";
-                }
-
-            }
-            document.getElementById(current_node).childNodes[0].style.fill = "red";
-
-        }
-
-    }*/
-
 
 });
 
@@ -1559,19 +1457,11 @@ function constraint_checker(symbol, rel, offset) {
 
 }
 
-var action_id_list = [];
-var converted_action_list = [];
-var permissive = false;
-var dimension;
-var populated = false;
-var highlighting_results = [];
-var highlighting_constraint_history = [];
 
 function populate_action_information() {
     if (!populated) {
         let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
         let action_list = [];
-
         let available_actions = [];
 
 
@@ -1609,9 +1499,9 @@ function populate_action_information() {
         }
 
         // disable checkbox if not permissive
-        if (!permissive) {
-            document.getElementById("permissiveCheckBox").disabled = "true";
-        }
+        // if (!permissive) {
+        //     document.getElementById("permissiveCheckBox").disabled = "true";
+        // }
 
         document.getElementById("permissiveHere").innerHTML += (permissive) ? "permissive." : "not permissive.";
         document.getElementById("dimensionHere").innerHTML += dimension + ".";
