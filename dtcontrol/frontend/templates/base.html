@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 
 <head>
     <meta charset="UTF-8">
@@ -241,25 +241,20 @@
 
 
     <div id="inspect-field" class="container search-box row d-none">
-        <label>Highlight</label>
-        <div class="input-group col-12">
-            <div class="input-group-prepend">
-                <div class="search_categories">
-                    <div class="select">
-                        <select class="propList custom-select" id="highlight-category">
-                            <!-- <option value="all">All</option> -->
-                            <option value="action">Action</option>
-                            <!-- <option value="node">Node</option> -->
-                        </select>
-                    </div>
 
+        <div class="row mt-3">
+            <div class="col-12">
+                <label for="highlight-input">Highlight</label>
+                <div>
+                    <input class="input-group-text" type="text" id="highlight-input" name="highlight" value="a_0 >= 0">
                 </div>
             </div>
-            <input id="highlight-input" type="text" class="form-control" aria-label="Search input with dropdown button">
-            <div class="input-group-append">
-                <button id="highlight-form-button" class="btn btn-success" type="button">Find</button>
-            </div>
+
+            <button class="btn btn-primary btn-lg btn-block" name="find" style="margin: 1.25rem 0.8rem 0.8rem;"
+                id="highlight-form-button">Find
+            </button>
         </div>
+
 
         <div id="advanced-options-inspect" class="row mt-3">
                 <div id="accordion-inspect">
@@ -286,16 +281,24 @@
 {#                            must hold for every single permissive action#}
 {#                        </label>#}
 {#                    </div>#}
+
                     <p class="font-weight-bold">Help menu</p>
-                    <p class="text-md-left">Within the current decision tree you can highlight various different
-                        components.</p>
-                    <p class="font-weight-bold">Detailed stats:</p>
-                    <p class="text-md-left" id="permissiveHere">The current dt is </p>
-                    <p class="text-md-left" id="dimensionHere">The action-dimension is </p>
-                    <p class="text-md-left" id="availableActionsHere">Available symbols to reference actions: </p>
-                    <p class="text-md-left">Available relations: <=, >=, =</p>
-                    <p class="text-md-left">Available connector symbols (to copy-paste): or, and, ∧, ∨</p>
-                    <p class="text-md-left" id="exampleActionHere">An example input could be: </p>
+                    <p class="text-md-left">Within the current decision tree you can highlight various different paths to leaf nodes.</p>
+                    <p class="font-weight-bold">Detailed statistic</p>
+                    <ul>
+                        <li>The current decision tree is:</li>
+                        <pre id="permissiveHere"></pre>
+                        <li>The action-dimension is:</li>
+                        <pre id="dimensionHere"></pre>
+                        <li>Available symbols to reference actions:</li>
+                        <pre id="availableActionsHere"></pre>
+                        <li>Available relations:</li>
+                        <pre><=, >=, =</pre>
+                        <li>Available boolean operations:</li>
+                        <pre>&, and</pre>
+                        <li>Example input:</li>
+                        <pre id="exampleActionHere"></pre>
+                    </ul>
 
                 </div>
             </div>
