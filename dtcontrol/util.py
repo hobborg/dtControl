@@ -5,6 +5,7 @@ from enum import Enum
 from os.path import basename, splitext
 
 import numpy as np
+import sympy as sp
 
 
 # Queue for use in interactive tree building between web ui and backend
@@ -158,6 +159,8 @@ def convert(o):
         return int(o)
     if isinstance(o, np.float32):
         return float(o)
+    if isinstance(o, sp.Basic):
+        return str(o)
     raise TypeError
 
 
