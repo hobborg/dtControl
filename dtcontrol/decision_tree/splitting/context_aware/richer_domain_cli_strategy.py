@@ -236,7 +236,6 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                     label_stats.append(list(map(str, list(map(dataset.index_label_to_actual, dataset.tuple_id_to_tuple[k])) + [v])))
             ret.update({"label_statistics": {"header": header_stats, "body": label_stats}})
         except Exception as e:
-            print(e)
             ret.update({"label_statistics": None})
 
         return ret
