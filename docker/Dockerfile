@@ -4,7 +4,8 @@
 
 # Run the create_docker_examples script before building a new docker image!
 
-FROM ubuntu:rolling
+FROM ubuntu:latest
+ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/Berlin"
 
 COPY req.txt /req.txt
 
@@ -14,15 +15,15 @@ ENV PYTHONUNBUFFERED=1
 RUN \
   apt-get update && apt-get install -y \
   git \
-  python3.7 \
   python3.8 \
-  python3.7-dev \
+  python3.9 \
   python3.8-dev \
+  python3.9-dev \
   python3-pip \
   ssh \ 
-  && python3.7 -m pip install --no-cache-dir -r /req.txt \
   && python3.8 -m pip install --no-cache-dir -r /req.txt \
-  && apt-get remove -y python3.7-dev python3.8-dev \
+  && python3.9 -m pip install --no-cache-dir -r /req.txt \
+  && apt-get remove -y python3.8-dev python3.9-dev \
   && apt-get -y autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*

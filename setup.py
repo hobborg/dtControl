@@ -50,19 +50,19 @@ setuptools.setup(
                             'dtcontrol-frontend=dtcontrol.frontend.app:start_web_frontend'],
     },
     classifiers=[
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         'License :: OSI Approved :: MIT License'
     ],
-    python_requires='>=3.7.9',
+    python_requires='>=3.8',
     install_requires=[
         'dd==0.5.5',
         'Jinja2==2.10.3',
-        'pandas==0.25.2',
+        'pandas==1.2.2',
         'psutil>=5.6.7',
         'pydot==1.4.1',
         'ruamel.yaml==0.16.10',
-        'scikit-learn==0.22',
+        'scikit-learn==0.24.1',
         'tabulate==0.8.6',
         'tqdm==4.42.0',
         'flask==1.1.2',
