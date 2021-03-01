@@ -39,7 +39,7 @@ version:
     - ssh-keyscan gitlab.lrz.de >> ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
     - eval $(ssh-agent -s)
     - echo "$CI_GITLAB_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - python3.7 gen-semver.py
+    - python3.8 gen-semver.py
   artifacts:
     paths:
       - VERSION
