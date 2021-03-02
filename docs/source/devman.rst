@@ -115,7 +115,7 @@ dtControl already supports a wide variety of decision tree construction algorith
 
 We again start with a UML diagram of the DT learning subsystem. In order to keep it as flexible as possible, we use a composition-based approach that makes heavy use of interfaces. This has the advantage that you only need to develop against a specific interface if you want to only extend a part of the DT learning algorithm. For instance, if you want to add a new impurity measure, you just have to provide an implementation of the ``ImpurityMeasure`` interface and your code will immediately integrate with the rest of the learning algorithm.
 
-.. image:: img/dt.png
+.. image:: img/dt.svg
   :width: 650
   :alt: UML class diagram of the decision tree learning subsystem
 
@@ -124,8 +124,11 @@ As can be seen, the heart of the component is the ``DecisionTree`` class, which 
 - ``fit(dataset)`` constructs a decision tree for a dataset.
 - ``predict(dataset)`` returns a list of control inputs predicted for a dataset.
 - ``get_stats()`` returns the statistics to be displayed in the benchmark results as a dictionary. This will mainly include the number of nodes and potentially some algorithm-specific statistics.
-- ``export_dot()`` saves a representation of the decision tree in the `DOT <https://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ format.
-- ``export_c()`` exports the decision tree to a C-file as a chain of if-else statements.
+- ``print_dot()`` saves a representation of the decision tree in the `DOT <https://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ format.
+- ``print_c()`` exports the decision tree to a C-file as a chain of if-else statements.
+- ``print_vhdl()`` returns the corresponding vhdl code.
+- ``toJSON()`` converts the ``DecisionTree`` object to a ``JSON`` dictionary.
+
 
 Most of these methods simply delegate to the ``root`` object of type ``Node``, which implements the actual decision tree data structure. It has mostly the same attributes as a ``DecisionTree``, as well as some statistics and either a list of children or a label. Depending on the dataset and algorithm, a label can be one of the following:
 
@@ -139,10 +142,18 @@ Most of these methods simply delegate to the ``root`` object of type ``Node``, w
 
 We now examine the most important interfaces in detail.
 
+.. _splitting-strategies:
+
 Splitting strategies
 ^^^^^^^^^^^^^^^^^^^^
 
-A ``SplittingStrategy`` provides the method ``find_split(dataset, impurity_measure)``, which returns the best predicate of a certain type, given a dataset and an impurity measure. For instance, the ``AxisAlignedSplittingStrategy`` searches through all possible axis-aligned splits for the given dataset and returns the one with lowest impurity.
+A ``SplittingStrategy`` provides the method ``find_split(dataset, impurity_measure)``, which returns the best predicate of a certain type, given a dataset and an impurity measure. For instance, the ``AxisAlignedSplittingStrategy`` searches through all possible axis-aligned splits for the given dataset and returns the one with lowest impurity. Additionally, if several different splitting strategies are in use, the user can assign an individual priority to the strategies. The priority is later taken into account when calculating the impurity of the predicate :math:`p_i`. The new impurity (with priority in :math:`(0,1]`) is calculated as the following:
+
+.. math::
+        \text{Impurity}_\text{new}(p_i) = \displaystyle\frac{\text{Impurity}(p_i)}{\text{Priority}}
+
+.. note::
+        The default value of ``priority`` is 1. By assigning the exclusive priority of 0, the user can specify a ``FallbackStrategy``, a strategy which should only be used if all other strategies fail.
 
 The returned predicate is of type ``Split`` and must provide the following methods:
 
@@ -153,6 +164,10 @@ The returned predicate is of type ``Split`` and must provide the following metho
 - ``print_dot()`` returns the string that should be put in the node in the DOT format.
 
 - ``print_c()`` returns the string that should be put in the corresponding if-statement in the C code.
+
+- ``print_vhdl()`` returns the string that corresponds to vhdl code.
+
+- ``to_json_dict()`` converts the ``Split`` object to a ``JSON`` dictionary.
 
 The simplest example of a ``Split`` is probably the ``AxisAlignedSplit``.
 
@@ -182,3 +197,79 @@ Supporting new output formats
 As shown above, the core decision tree data structure is implemented in the ``DecisionTree`` and ``Node`` classes. These classes also offer functionality for DOT and C printing.
 
 To add a new output format to dtControl, one thus would have to provide new exporting methods in the ``DecisionTree`` and ``Node`` classes. Furthermore, the ``BenchmarkSuite`` would have to be adapted to export the tree to the new output format once a DT has been constructed.
+
+Predicate Parser
+-----------------
+
+The ``PredicateParser`` class provides all core methods to process predicates, provided by the user. The core methods are called:
+
+- ``get_domain_knowledge()`` parses a whole file, containing domain knowledge.
+- ``get_predicate()`` parses a whole ``txt`` file, containing predicates.
+- ``parse_single_predicate(single_predicate)`` parses a single predicate, provided as String.
+- ``parse_user_string(user_input)`` parses a string, which contains more than one predicate. Typically used when working with the frontend.
+- ``parse_user_interval(interval)`` parses a single interval, provided as String and returns a `SymPy interval <https://docs.sympy.org/latest/modules/sets.html>`_.
+
+The final returned predicates of the ``PredicateParser`` are of type :ref:`richer-domain-split`.
+
+.. _richer-domain-split:
+
+Richer Domain Split
+--------------------
+The ``RicherDomainSplit`` class is used to represent predicates given by the user. Additionally to the already mentioned methods of the ``Split`` class, (which can be found in :ref:`splitting-strategies`) it provides following attributes:
+
+.. image:: img/RicherDomainSplit.svg
+  :width: 500
+  :align: center
+  :alt: UML diagram of the RicherDomainSplit class.
+
+For demonstration purposes, consider an example user given predicate of following structure::
+
+    c_1 * x_1 - c_2 + x_2 <= 0; x_2 in {1,2,3}; c_1 in (-inf, inf); c_2 in {1,2,3};
+
+- ``column_interval`` is a dict storing all given column intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example::
+
+    column_interval = {x_1:(-Inf,Inf), x_2:{1,2,3}}
+
+- ``coef_interval`` is a dict storing all given coefficient intervals. Key: ``Sympy Symbol`` Value:``Sympy Interval``. In the running example::
+
+    coef_interval = {c_1:(-Inf,Inf), c_2:{1,2,3}}
+
+- ``term`` is storing the term as ``Sympy`` expression. In the running example::
+
+    term = c_1 * x_1 - c_2 + x_2
+
+- ``relation`` is a ``String`` containing the relation. In the running example::
+
+    relation = "<="
+
+- ``coef_assignment`` is by default :code:`None`. It will be determined inside :code:`fit()` and stores a list containing substitution tuples of structure :code:`(Sympy Symbol, Value)`. In the running example::
+
+    coef_assignment = [(c_1,-8.23), (c_2,2)]
+
+- ``id`` is a unique `uuid <https://docs.python.org/3/library/uuid.html>`_ to identify a RicherDomainSplit object.
+
+.. note::
+        Every symbol without a specific defined Interval will be assigned to the interval: :code:`(-Inf, Inf)`.
+
+Additionally we provide following methods:
+
+- ``get_fixed_coef_combinations()`` returns a list of fixed coefficients. In the running example::
+
+    [
+        [('c_1', 1), ('c_2', -3)],
+        [('c_1', 1), ('c_2', -1)],
+        [('c_1', 2), ('c_2', -3)],
+        [('c_1', 2), ('c_2', -1)],
+        [('c_1', 3), ('c_2', -3)],
+        [('c_1', 3), ('c_2', -1)]
+    ]
+
+- ``contains_unfixed_coefs()`` returns a boolean if the predicate contains unfixed coefficients. In the running example: :code:`false`.
+
+- ``fit(fixed_coefs, x, y, method)`` computes the best fit according to the chosen :code:`method`. Available methods are `‘lm’ <http://www.jstor.org/stable/43633451>`_, `‘trf’ <https://www.jstor.org/stable/1909768>`_, `‘dogbox’ <https://ieeexplore.ieee.org/document/1544898>`_ or 'optimized', which utilizes as often as possible the Levenberg-Marquardt strategy. Only in the edge case where the number of data points is less than the number of parameters the Trust Region Reflective Approach will be used.
+
+- ``check_valid_column_reference(x)`` checks whether the used column reference index is represented in the dataset :code:`x` or not. In the running example, the function returns :code:`true` if the dataset has at least 3 columns.
+
+- ``check_data_in_column_interval(x)`` checks if the column intervals contain all the values of the dataset :code:`x`. In the running example, the function returns :code:`true` if all values of the third column are in :code:`{1,2,3}`.
+
+- ``check_offset(offset)`` compares the offset with the relation to 0. In the running example, the function compares :code:`Offset <= 0`.

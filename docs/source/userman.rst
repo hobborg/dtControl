@@ -6,8 +6,7 @@ algorithms implemented in it.
 
 Capabilities
 ------------
-
-(`Watch a 5 minute introductory video on YouTube <https://www.youtube.com/watch?v=qS8FQ3pCeE4>`_)
+.. youtube:: https://www.youtube.com/watch?v=qS8FQ3pCeE4
 
 dtControl is a tool to represent controllers using `decision trees <https://en.wikipedia.org/wiki/Decision_tree>`_.
 It uses `decision tree learning <https://en.wikipedia.org/wiki/Decision_tree_learning>`_ to achieve this. The 5-minute video
@@ -26,6 +25,8 @@ Getting Started
 
 A quick start installation guide is available in the `README <https://gitlab.lrz.de/i7/dtcontrol/-/blob/master/README.rst>`_.
 In this section, we elaborate a little more on the installation process.
+
+.. _installation:
 
 Installation
 ^^^^^^^^^^^^^^^^^
@@ -107,6 +108,8 @@ If your installation has run successfully, you will now see the help page detail
 Input format
 ^^^^^^^^^^^^
 
+.. _supported-tools:
+
 Supported tools
 """""""""""""""
 
@@ -172,6 +175,8 @@ An example is given in form of the configuration file for the ``firewire_abst.pr
     }
 
 This configuration provides the information that the two variables are ``clock`` and ``state``, the first of which is numeric and the second of which is categorical. Furthermore, a ``state`` of 0 corresponds to ``start_start``, a state of 1 to ``fast_start``, and so on. Note that, for PRISM models, dtControl automatically parses the names of the actions and it is thus not necessary to provide a ``y_category_names`` entry.
+
+.. _the-command-line-interface:
 
 The Command-line Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -266,7 +271,7 @@ Configurable options
 
         a. ``multisplit`` which creates a decision node with as many children as the number of possible categories the variable can take (e.g. ``color = blue``, ``color = green`` and ``color = red``).
         b. ``singlesplit`` which creates a decision node with just two children, one satisfying a categorical equality (``color = blue``) and the other that does not (``color != blue``).
-        c. ``valuegrouping`` as described in M. Jackermeier's thesis (TODO link)
+        c. ``valuegrouping`` as described in M. Jackermeier's `thesis <http://mediatum.ub.tum.de/1547107?id=1547107&change_language=en>`_.
 
 #. **determinize** determines the type of determinization used on permissive/non-deterministic controller when constructing the tree. Possible
    options are
@@ -275,7 +280,7 @@ Configurable options
         b. ``minnorm`` to pick control inputs with the minimal norm,
         c. ``maxnorm`` to pick control inputs with the maximal norm,
         d. ``random`` to pick a control input uniformly at random,
-        e. ``maxfreq`` to pick our in-house developed determinization strategy, details of which are available in M. Jackermeier's thesis (TODO link).
+        e. ``maxfreq`` to pick our in-house developed determinization strategy, details of which are available in M. Jackermeier's `thesis <http://mediatum.ub.tum.de/1547107?id=1547107&change_language=en>`_.
         f. ``auto`` to let dtControl automatically choose a determinization strategy; currently defaults to ``maxfreq``.
 
 #. **impurity** allows users to choose the measure by which splitting predicates are evaluated. Possible options are
@@ -292,6 +297,8 @@ Configurable options
 #. **tolerance** is a floating point value relevant only when choosing the ``valuegrouping`` categorical predicate.
 
 #. **safe-pruning** decides whether to post-process the decision tree as specified in `Ashok et. al. (2019) <https://link.springer.com/chapter/10.1007%2F978-3-030-30281-8_9>`_.
+
+.. _creating-own-presets:
 
 """""""""""""""""""""""""
 Creating your own presets
@@ -397,6 +404,8 @@ use the ``--rerun`` flag.::
    $ dtcontrol --input examples/cps/cartpole.scs --rerun
 
 
+.. _quick-start-python-interface:
+
 Quick Start with the Python Interface
 -------------------------------------
 
@@ -458,3 +467,266 @@ As you can see, the Python interface provides mostly the same parameters as the 
 - The ``ScaledBincount`` impurity measure with a custom scaling function
 
 The easiest way to get more information on the methods available in the Python interface is to directly browse the `source code <https://gitlab.lrz.de/i7/dtcontrol/-/tree/master/dtcontrol>`_ of dtControl.
+
+.. _priority-strategy:
+
+Assigning priorities to splitting strategies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If several different splitting strategies are in use, the user can assign an individual priority to the strategies. The priority is later taken into account when calculating the impurity of the predicate :math:`p_i`. The new impurity (with priority in :math:`(0,1]`) is calculated as the following:
+
+.. math::
+        \text{Impurity}_\text{new}(p_i) = \displaystyle\frac{\text{Impurity}(p_i)}{\text{Priority}}
+
+.. note::
+        The default value of ``priority`` is 1. By assigning the exclusive priority of 0, the user can specify a ``FallbackStrategy``, a strategy which should only be used if all other strategies fail.
+
+For example, to assign a priority of 0.5 to :code:`AxisAlignedSplittingStrategy` and a priority of 0.7 to :code:`LinearClassifierSplittingStrategy`, simply add following lines::
+
+    aa = AxisAlignedSplittingStrategy()
+    aa.priority = 0.5
+
+    logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+    logreg = 0.7
+
+Web-based graphical user interface
+-----------------------------------
+The interface is is powered by `flask <https://flask.palletsprojects.com/en/1.1.x/>`_ and `d3.js <https://d3js.org/>`_.
+After succesfully installing the latest version of `dtControl 2.0` the user can access the web-based graphical user interface by running::
+
+    $ dtcontrol-frontend
+
+
+Download and open `firefox <https://www.mozilla.org/firefox/download/thanks/>`_ and navigate to `http://127.0.0.1:5000 <http://127.0.0.1:5000>`_. If your installation has run successfully, you will now see the graphical interface which is given below.
+
+.. image:: img/interface_start.png
+  :width: 600
+  :alt: screenshot of the web-based graphical user interface
+
+It offers a sidebar for easy selection of the controller file and hyper-parameters, an experiments table where benchmarks can be queued, and a results table in which some statistics (number of nodes, construction time, ...) of the run are provided.
+Moreover, users can click on the 'eye' icon in the results table to inspect the built decision tree.
+
+.. _running-first-experiment:
+
+Running your first experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+#. **Select controller file:** First, choose a controller file by clicking on the :guilabel:`Browse` Button within the 'Controller File' section. The currently supported file formats can be found in :ref:`supported-tools`. You can choose to download all of our examples from our `Gitlab repository <https://gitlab.lrz.de/i7/dtcontrol-examples>`_ via this `zip archive <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_. Make sure you unzip all files before selecting them. (Alternatively, you can follow the commands provided in :ref:`the-command-line-interface`).
+
+
+
+
+#. **Optional: Select metadata file.** This step is completely optional. If wanted, the user can provide a ``json`` file containing metadata for the corresponding controller file. An example file for the 10room model can be found here:
+
+        :download:`10rooms metadata <https://gitlab.lrz.de/i7/dtcontrol-examples/-/raw/master/cps/10rooms_config.json?inline=false>`
+
+
+#. **Select preset:** In this step, the user can choose from various different preset options, presented in the section :ref:`presets-and-configuration-files`. Furthermore, we introduce two additional presents:
+
+        a. ``custom``, which corresponds to section :ref:`configurable-options`. Upon selection this preset, the advanced options menu automatically expands.
+        b. ``algebraic / user-defined``, which is described in more detail in section :ref:`algebraic-predicates`.
+
+#. **Add experiment:** After selecting both the required controller file and the preset, the user can save this experiment by pressing the :guilabel:`Add` button. Note that the :guilabel:`Add` button is only clickable, once both required steps are done.
+
+        .. image:: img/interface_experiment.png
+            :width: 600
+            :alt: screenshot of the web-based graphical user interface with an added experiment
+
+#. **Run/ delete experiment:** After successfully adding an experiment, the corresponding experiment can be executed by pressing :fa:`play` or deleted by pressing :fa:`trash`. Alternatively, if there are several different experiments, the user can execute all of them by pressing the :fa:`play` :guilabel:`Run all` button.
+
+        .. image:: img/interface_result.png
+            :width: 600
+            :alt: screenshot of the web-based graphical user interface with a finished experiment
+
+    Once the computation is finished, the experiment will appear in the results section. The experiment can be inspected by clicking :fa:`eye`. By pressing this button, the user exits the start page and enters the 'Inspection' mode.
+
+
+Inspecting your first result
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Select controller file:** In order to enter the 'Inspection' mode, the user has to click the :fa:`eye` symbol, within the 'Results' section. Upon clicking, a new window will appear where the computed decision tree is displayed.
+
+    **Inspection mode:**
+
+        .. image:: img/interface_inspect_result.png
+            :width: 600
+            :alt: screenshot of the web-based graphical user interface for inspecting a decision tree
+
+    To take a look at the computed decision tree, the user can click and drag to pan and scroll to zoom. By clicking on a node, the node will collapse and absorb all its child nodes. A collapsed node can be simply expanded, by clicking again on it.
+
+        :guilabel:`Reset focus` If you lost the orientation of the root node, simply click on the :guilabel:`Reset focus` Button to reset the focus on the root node.
+
+        :guilabel:`Expand all` To quickly expand all collapsed nodes, simply click this button.
+
+        :guilabel:`Collapse all` To quickly collapse all nodes within the root node, simply click this button.
+
+Editing your first result
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Editing mode:** In order to enter the 'Editing' mode, the user has to click the :guilabel:`Edit` Button. At this point the user can either retrain the decision tree from a certain node by clicking on a node and then the :guilabel:`Retrain from selected node` Button or alternatively start the interactive tree builder from a selected node.
+
+        :guilabel:`Retrain from selected node` Similar to the 'select preset' Section in :ref:`running-first-experiment`, the user can can specify the preset used for retraining all child nodes.
+
+        :guilabel:`Start interactive tree builder from selected node` By selecting a node and pressing this button, the user enters the interactive tree builder mode.
+
+        .. image:: img/interface_interactive_builder.png
+            :width: 600
+            :alt: screenshot of the interactive tree builder mode
+
+
+        The user can now provide for the selected node, a custom predicate. For this purpose, additional information about the current state of the dataset at the current node is displayed. A user defined predicate can be added by pressing the :guilabel:`Add predicate` Button. The Syntax is described in the :ref:`algebraic-predicates` section. In the 'Instantiated Predicates', the user can now select the wanted predicate. Child nodes containing a inhomogeneous set of labels will be labeled with 'Not yet homogeneous'. For those nodes, the user can again either decide to use the 'Retrain from selected node' functionality or start again the 'interactive tree builder'.
+
+Simulate your first result
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Simulation mode:** The simulation mode can be entered by clicking the :guilabel:`Simulate` Button. To start the simulation, the user has to enter a system dynamics file. For this purpose we provide following two example files:
+
+        :download:`10rooms dynamics <files/10room_dynamics.txt>`
+
+        :download:`cartepole dynamics <files/cartpoledynamics.txt>`
+
+        After the system dynamics file is uploaded, the user can enter some initial values for the simulation task.
+
+        .. image:: img/interface_simulation.png
+            :width: 600
+            :alt: screenshot of the simulation window
+
+        With the buttons :guilabel:`Play`, :guilabel:`Pause`, :guilabel:`Next` and :guilabel:`Previous`, the user can navigate between the different simulation steps. The corresponding path inside the decision tree, which corresponds to the current simulation values is marked with red nodes.
+
+.. _semi-automatic-cli:
+
+Semi-automatic command-line user interface
+--------------------------------------------
+In order the utilize the semi-automatic user interface the user has to import the command-line interface by adding following line to :ref:`quick-start-python-interface`::
+
+    from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy import RicherDomainCliStrategy
+
+Additionally, create and add the classifier::
+
+    cli = RicherDomainCliStrategy(debug=True)
+
+    classifiers = [
+    # Interactive
+    DecisionTree([cli], Entropy(), 'interactive')
+    ]
+
+
+After adding these lines of code, the user can follow the commands (which you may copy-paste) from this demonstration video:
+
+.. warning::
+    We expect the user to have an activated virtual environment at this point.
+
+.. asciinema:: img/cli.cast
+
+.. _algebraic-predicates:
+
+Algebraic user-defined predicates
+-----------------------------------
+The support for algebraic user-defined predicates forms one of the cornerstones of ``dtControl 2.0``. In this subsection we introduce several different extensions for predicates. The most simplified predicate structure can be summarized as follows:
+
+.. _standard-predicates:
+
+Standard predicate
+^^^^^^^^^^^^^^^^^^^
+
+.. math::
+
+   \textit{term} \sim \textit{term}
+
+Where :math:`\textit{term}` is an arbitrary arithmetic term, using any elementary function that can be parsed by `SymPy <https://www.sympy.org>`_. :math:`\sim` is a standard comparator from the set :math:`\{\texttt{<=,>=,<,>,=}\}`.
+
+.. note::
+    The :math:`i` -th feature can be referenced by typing :code:`x_i`. With :math:`i \in \mathbb{N}_0` and :code:`x_0` referencing the first feature.
+
+**Some arbitrary examples:**
+
+====================================================================================================  ========================================================================
+Example standard predicate                                                                              dtControl syntax
+====================================================================================================  ========================================================================
+:math:`x_0 \leq 0.5`                                                                                    :code:`x_0 <= 0.5`
+:math:`x_0 * 12 + x_1 * 3 \ge x_0 * 2 - x_2 * 3`                                                        :code:`x_0 * 12 + x_1 * 3 >= x_0 * 2 - x_2 * 3`
+:math:`\sqrt{x_0} * x_2 + log(x_1) - \displaystyle\frac{x_2}{x_3} \leq x_4`                             :code:`sqrt(x_0) * x_2 + log(x_1) - (x_2)/(x_3) <= x_4`
+:math:`1.0546e-34 + 90 - x_2 \ge x_0`                                                                   :code:`1.0546e-34 + 90 - x_2 >= x_0`
+:math:`e^{10} + ln(2) + \displaystyle\frac{x_1}{x_2} \ge 0`                                             :code:`e^10 + ln(2) + (x_1)/(x_2) >= 0`
+:math:`sin(cos(12)) + x_2^{x_3} \leq x_1`                                                               :code:`sin(cos(12)) + x_2^(x_3) <= x_1`
+====================================================================================================  ========================================================================
+
+
+
+Coefficient predicates
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Coefficients overcome the limitations of standard predicates by enabling the usage of coefficients within :math:`\textit{term}`. In `dtControl 2.0` we distinguish between **finite** and **infinite** coefficients.
+
+    **Finite coefficients:** In order to bundle different variations of one single predicate, we introduce finite coefficients. The concept builds upon :ref:`standard-predicates` and can be describes as the following:
+
+    .. math::
+        \textit{term}_f \sim \textit{term}_f \textit{; def}
+
+    With the extension of :math:`\textit{term}_f` being an arbitrary algebraic term using Finite Coefficients defined in :math:`\textit{def}`. The general idea is to utilize Finite Coefficients :math:`c_i` within :math:`\textit{term}_f` and extend the finished predicate with a semicolon, followed by the concrete coefficient definition :math:`C_i \subseteq \mathbb{R}` with :math:`c_i \in C_i`.
+
+    .. note::
+        For computational reasons, the only restriction we insist on is :math:`|C_i| \in \mathbb{N}`. However, it should be noted that specifying too many or too large sets results in an infeasibly large set of predicates.
+
+    **Some arbitrary examples:**
+
+        ==============================================================================================================================================================================================================================================  ========================================================================
+        Example finite coefficient predicate                                                                                                                                                                                                             dtControl syntax
+        ==============================================================================================================================================================================================================================================  ========================================================================
+        :math:`\sqrt{x_0} * c_0 + log(x_1) - \displaystyle\frac{x_2}{c_1} \leq c_2 \text{; }c_0 \in \{-\frac{1}{3},\frac{1}{3}\} \text{; } c_1  \in  \{1,2\} \text{; } c_2  \in \{\sqrt{2}, \pi\}`                                                          :code:`sqrt(x_0) * c_0 + log(x_1) - (x_2 / c_1) <= c_2; c_0 in {-(1/3),(1/3)}; c_1 in {1, 2}; c_2 in {sqrt(2), pi}`
+        :math:`1.0546e-34 + 90 - c_0 \ge x_0 \text{; }c_0  \in \{0,12\}`                                                                                                                                                                                    :code:`1.0546e-34 + 90 - c_0 >= x_0; c_0 in {0,12}`
+        :math:`e^{10} + ln(2) + \displaystyle\frac{x_2}{c_0} \ge 0 \text{; }c_0  \in \{-\frac{1}{9},\frac{2}{3}\}`                                                                                                                                          :code:`e^10 + ln(2) + (x_2 / c_0) >= 0; c_0 in {-(1/9), (2/3)}`
+        :math:`sin(cos(12)) + c_0^{c_1} \leq x_1 \text{; }c_0  \in \{1,2,3\} \text{; } c_1  \in \{4\}`                                                                                                                                                      :code:`sin(cos(12)) + c_0^(c_1) <= x_1; c_0 in {1,2,3}; c_1 in{4}`
+        ==============================================================================================================================================================================================================================================  ========================================================================
+
+    **Infinite coefficients:** Infinite coefficients extend the concept of finite coefficients and enable the usage of more generic terms. Building upon the structure of Finite Coefficients, predicates using infinite coefficients can be described as the following:
+
+    .. math::
+        \textit{term}_i \sim \textit{term}_i
+
+    With the extension of :math:`\textit{term}_i` being an arbitrary algebraic term using infinite coefficients. Infinite coefficients can be used throughout the term without defining them. `dtControl 2.0` uses `SciPy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html>`_ to heuristically determine their exact substituted value.
+
+    .. note::
+        The difference between **infinite** and **finite** coefficients is that latter need a concrete definition whereas **infinite** coefficients can be seen as a placeholder for 'perfect'-fitting value.
+
+
+    .. warning::
+        It should be avoided to combine too many finite and infinite coefficients together as that can easily end up in a combinatorial explosion.
+
+        **Example:**
+        The following predicate :math:`x_1 * c_0 >= c_1\text{; }c_0  \in \{1,2\}\text{; }c_1  \in \{1,2,3\}` bundles **6** predicates together.
+
+            #. :math:`x_1 * 1 >= 1`
+            #. :math:`x_1 * 1 >= 2`
+            #. :math:`x_1 * 1 >= 3`
+            #. :math:`x_1 * 2 >= 1`
+            #. :math:`x_1 * 2 >= 2`
+            #. :math:`x_1 * 2 >= 3`
+
+
+Feature Constraints
+^^^^^^^^^^^^^^^^^^^^^^^
+The concept of Feature Constraints is provided for explicit situations where the usage of a predicate is only valid under certain constraints within the current controller file. Similar to the previous sections of coefficient predicates, predicates using Feature Constraints can be described as the following:
+
+    .. math::
+        \textit{term}_i \sim \textit{term}_i \textit{; def}_f
+
+With the extension of :math:`\textit{def}_f` containing the explicit feature constraints. Similar to the **finite** coefficients, the user can specify the valid range with a by declaring a set with accepted values. Additionally, we also enabled the usage of infinite sets by declaring an interval of the structure :code:`[a,b)`, :code:`[a,b]`, :code:`(a,b)` or :code:`(a,b]` with :math:`a,b \in \mathbb{R}\cup \{-\infty, \infty\}`. To utilize :math:`\infty` simply type :code:`Inf`, :code:`infinity` or :code:`oo`. Additionally, we support the possibility to union several different sets by using the keywords :code:`or` or :code:`u`.
+
+    .. note::
+        :math:`(a,b) = \{ x \in \mathbb{R} | a < x < b\}`
+
+        :math:`[a,b) = \{ x \in \mathbb{R} | a \leq x < b\}`
+
+        :math:`(a,b] = \{ x \in \mathbb{R} | a < x \leq b\}`
+
+        :math:`[a,b] = \{ x \in \mathbb{R} | a \leq x \leq b\}`
+
+    **Some arbitrary examples:**
+
+        ==================================================================================================================================================  ================================================================================================================================================
+        Example predicates with **finite** feature constraints                                                                                                  dtControl syntax
+        ==================================================================================================================================================  ================================================================================================================================================
+        :math:`x_0 \leq 0.5 \text{; }x_0 \in \{1,2,3,\displaystyle\frac{1}{3}\}`                                                                            :code:`x_0 <= 0.5; x_0 in {1,2,3,1/3}`
+        :math:`x_0 + x_1 \leq 3.9 \text{; }x_0 \in \{\displaystyle\frac{1}{3}\}; x_1 \in [1,2) \cup (-\infty,-123]`                                         :code:`x_0 <= 0.5; x_0 in {1/3}; x_1 in [1,2) or (-Inf,-123]`
+        :math:`\sqrt{x_0} * c_0 + log(x_1) \geq x_2 * c_1\text{; }x_0 \in \{ \pi \}; x_1 \in [\sqrt{2},\infty); c_0 \in \{1,2,\pi \}; x_1 \in \{1,2\}`      :code:`sqrt(x_0) * c_0 + log(x_1) >= x_2 * c_1; x_0 in {pi}; x_1 in [sqrt(2),Inf); c_0 in {1,2,pi}; x_1 in {1,2}`
+        ==================================================================================================================================================  ================================================================================================================================================
+

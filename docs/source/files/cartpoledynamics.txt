@@ -1,0 +1,8 @@
+Parameters:
+tau = 0.3
+omega = 1
+ga = 0.0125
+
+Dynamics:
+dx_0=x_1
+dx_1=(-omega*omega*(sin(x_0)+u_0*cos(x_0))-2*ga*x_1)
