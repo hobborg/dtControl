@@ -160,3 +160,11 @@ class MultiOutputDataset(Dataset):
         empty_object.parent_mask = mask
         empty_object.get_single_labels = lambda: self.get_single_labels()[mask]
         return empty_object
+
+    def calc_single_feature_importance(self, featureInd, ignoredFeatures):
+        # take maximum over all y labels
+        return max([
+            super(MultiOutputDataset, self).calc_feature_importance_for_y(
+                featureInd, self.y[i], ignoredFeatures
+            ) for i in range(self.y.shape[0])
+        ])
