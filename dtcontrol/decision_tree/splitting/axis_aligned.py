@@ -29,6 +29,9 @@ class AxisAlignedSplit(Split):
         self.threshold = threshold
         self.priority = priority
 
+    def __repr__(self):
+        return "AxisAlignedSplit: " + self.print_c()
+
     def get_masks(self, dataset):
         mask = dataset.x[:, self.feature] <= self.threshold
         return [mask, ~mask]

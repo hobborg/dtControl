@@ -240,6 +240,7 @@ class Node:
             self.logger.warning("Aborting branch: no split possible. "
                                 "You might want to consider adding more splitting strategies.")
             return
+        self.logger.debug(f"Level {self.depth}: Found split for data set size {len(dataset.x)}: {self.split}")
         for subset in subsets:
             # TODO P: Store address in the Node object if needed in frontend
             node = Node(self.splitting_strategies, self.impurity_measure, self.early_stopping,
