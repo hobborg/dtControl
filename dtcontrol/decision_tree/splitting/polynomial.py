@@ -1,7 +1,7 @@
 from abc import ABC
 import numpy as np
 from sklearn import svm
-import math
+import math, logging
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -22,6 +22,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
     def __init__(self, prettify=True, determinizer=LabelPowersetDeterminizer(), linear_svc_params={}, **kwargs):
         """Disabling prettify can give a ~2x speed-up"""
         super().__init__()
+        self.logger = logging.getLogger("poly_logger")
+        self.logger.setLevel(logging.ERROR)
         self.determinizer = determinizer
         self.kwargs = kwargs
         self.prettify = prettify
@@ -83,6 +85,7 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         # To test if the classification still works, we over-approximate the change.
         # This way, we have no problems with rounding errors when transforming the coefficents
         # to the non-standardized form.
+        self.logger.debug("prettifying..")
         baseAccurarcy = pipeline.score(x, y)
         coefs = svc.coef_[0]  # reference which we write into
         enabledFeatures = np.ones(len(coefs), dtype=bool) #bool flag if enabled
@@ -168,7 +171,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
                         coefs[coefInd] = eqCoefGoal * scale  # without overApproxFac
                         break
             else: # should never happen
-                print(f"WARN: could not find rounded value for variable with index {coefInd}")
+                self.logger.error(f"Could not find rounded value for variable with index {coefInd}")
+        self.logger.debug("prettifying done.")
         return self.get_coefficients(std, svc)
 
     def find_split(self, dataset, impurity_measure, **kwargs):
@@ -193,8 +197,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             acc = pipeline.score(x_high_dim, label_mask)
             totCnt = x_high_dim.shape[0]
             falseCount = totCnt * (1-acc)
-            #print("misclassified:", round(falseCount),
-            #      "out of", totCnt, "iterations:", svc.n_iter_)
+            self.logger.debug(f"misclassified: {round(falseCount)}" +
+                  f" out of {totCnt} iterations: {svc.n_iter_}")
 
             coefs = self.get_coefficients(standardizer, svc)
             split = PolynomialSplit(
