@@ -32,7 +32,7 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         self.linear_svc_params = {
             "max_iter": 200,
             "dual": False,
-            "C": 1e8,
+            "C": 1e6,
             **linear_svc_params
         }
 
