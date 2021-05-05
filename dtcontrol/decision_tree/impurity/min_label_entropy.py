@@ -1,4 +1,4 @@
-import sys
+import sys, math
 
 import numpy as np
 
@@ -8,9 +8,9 @@ class MinLabelEntropy(DeterminizingImpurityMeasure):
     """
     Tries to finish one label first.
 
-    Treats the dataset as a binary dataset with labels y and not y for every label y.
-    Then it calculates the entropy of this binary dataset and returns the
-    smallest entropy among all labels.
+    Estimates for every label y, how difficult it will be to to separate the
+    label y in both partions after this split.
+    Then it returns the value of the best label.
     
     The strategy we want to provoke with this impurity measure is to first,
     fully separate one label and then continue with the next one.
@@ -37,7 +37,7 @@ class MinLabelEntropy(DeterminizingImpurityMeasure):
                 if subsetSize == 0:
                     return sys.maxsize
                 prob = len(subset[subset == label]) / subsetSize
-                entropy = -prob * np.log2(prob) - (1-prob) * np.log2(1-prob) if prob > 0 and prob < 1 else 0
+                entropy = -prob * np.log2(prob) if prob > 0 else 0
                 imp += (subsetSize / len(dataset)) * entropy
             impurities.append(imp)
         return min(impurities)
