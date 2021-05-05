@@ -19,13 +19,17 @@ FLOAT_PRECISION = 1e-12
 
 
 class PolynomialClassifierSplittingStrategy(SplittingStrategy):
-    def __init__(self, prettify=True, determinizer=LabelPowersetDeterminizer(), linear_svc_params={}, **kwargs):
-        """Disabling prettify can give a ~2x speed-up"""
+    def __init__(self, prettify=True, determinizer=LabelPowersetDeterminizer(), linear_svc_params={}):
+        """ Args:
+        prettify: Disabling prettify can give a ~2x speed-up.
+        determinizer: Default is LabelPowersetDeterminizer.
+        linear_svc_params: Keyword args given to sklearn.svm.LinearSVC, default values are:
+                            max_iter=200, dual=False, C=1e6,
+        """
         super().__init__()
         self.logger = logging.getLogger("poly_logger")
         self.logger.setLevel(logging.ERROR)
         self.determinizer = determinizer
-        self.kwargs = kwargs
         self.prettify = prettify
         # C scales the error term when data is misclassified. Set it so something very high
         # so that we get as many samples correct as possible correct (overfitting is not a problem)
@@ -79,7 +83,9 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         # 1: we test if we can fit the function without a certain coefficient
         # For that, we re-train the model without this dimension.
         #
-        # 2: we test if we can round coefficient c to rnd(c),
+        # 2: we scale the equation so that at least one coefficient is =1
+        #
+        # 3: we test if we can round coefficient c to rnd(c),
         # starting with a low precision then getting more precise until
         # there is no change in classification.
         # To test if the classification still works, we over-approximate the change.
@@ -135,7 +141,18 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
                 continue
             enabledFeatures[coefInd] = True
 
-        # step 2: round remaining coefficients
+        # step 2: take one coefficient and fix it to 1 (scale the entire equation)
+        # choose the one closest to 1, distance is abs(log10(abs(x)))
+        coefTo1 = min(
+            list(range(len(coefs) - 1)),
+            key= lambda x: abs(math.log10(abs(coefs[x]/std.scale_[x]))) if coefs[x] != 0 else math.inf
+        )
+        scaleFac = abs(1 / (coefs[coefTo1] / std.scale_[coefTo1])) # only positive scaling is allowed
+        coefs *= scaleFac
+        svc.intercept_[0] *= scaleFac
+        assert(accuracy_still_good())
+
+        # step 3: round remaining coefficients
         for coefInd in coefIndOrder:
             scale = std.scale_[coefInd]
             lastInd = coefInd == len(coefs) - 1
@@ -197,8 +214,6 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             acc = pipeline.score(x_high_dim, label_mask)
             totCnt = x_high_dim.shape[0]
             falseCount = totCnt * (1-acc)
-            self.logger.debug(f"misclassified: {round(falseCount)}" +
-                  f" out of {totCnt} iterations: {svc.n_iter_}")
 
             coefs = self.get_coefficients(standardizer, svc)
             split = PolynomialSplit(
@@ -208,6 +223,9 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             splitData = (impurity, split, label_mask, standardizer, svc)
             splits.append(splitData)
             
+            self.logger.debug(f"misclassified: {round(falseCount)}" +
+                  f" out of {totCnt} iterations: {svc.n_iter_}" +
+                  f" impurity: {impurity}")
             if falseCount == 0:
                 # if everything is correct, we take this split
                 break
