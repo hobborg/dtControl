@@ -145,9 +145,12 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         # choose the one closest to 1, distance is abs(log10(abs(x)))
         coefTo1 = min(
             list(range(len(coefs) - 1)),
-            key= lambda x: abs(math.log10(abs(coefs[x]/std.scale_[x]))) if coefs[x] != 0 else math.inf
+            key= lambda x: abs(math.log10(abs(coefs[x]/std.scale_[x])))
+                                if coefs[x]*std.scale_[x] != 0 else math.inf
         )
-        scaleFac = abs(1 / (coefs[coefTo1] / std.scale_[coefTo1])) # only positive scaling is allowed
+        # only positive scaling is allowed
+        scaleFac = abs(1 / (coefs[coefTo1] / std.scale_[coefTo1])) \
+                        if coefs[coefTo1]*std.scale_[coefTo1] != 0 else 1
         coefs *= scaleFac
         svc.intercept_[0] *= scaleFac
         assert(accuracy_still_good())
@@ -156,18 +159,20 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         for coefInd in coefIndOrder:
             scale = std.scale_[coefInd]
             lastInd = coefInd == len(coefs) - 1
-            if not lastInd and coefs[coefInd] == 0:
+            if (not lastInd and coefs[coefInd] == 0) or scale == 0:
                 continue
             if lastInd:  # coefficient for factor 1
                 # coef = intercept + off
                 interceptBase = svc.intercept_[0]
                 eqCoef = self.get_coefficients(std, svc)[-1]
+                if eqCoef == 0:
+                    continue
             else:
                 eqCoef = coefs[coefInd] / scale
 
             # try rounding
             exp = math.floor(math.log10(abs(eqCoef)))
-            for precision in range(0, 10):
+            for precision in range(0, 15):
                 # start with one above so that 0.7 can become 1
                 round_scale = 10**(exp + 1 - precision)
                 eqCoefGoal = round(eqCoef / round_scale) * round_scale
