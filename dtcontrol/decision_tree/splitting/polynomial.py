@@ -93,6 +93,7 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         # to the non-standardized form.
         self.logger.debug("prettifying..")
         baseAccurarcy = pipeline.score(x, y)
+        basePred = pipeline.predict(x)
         coefs = svc.coef_[0]  # reference which we write into
         enabledFeatures = np.ones(len(coefs), dtype=bool) #bool flag if enabled
 
@@ -107,7 +108,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             return alt_pipeline.score(x[:, enabledFeatures], y) >= baseAccurarcy
 
         def accuracy_still_good():
-            return pipeline.score(x, y) >= baseAccurarcy
+            #return pipeline.score(x, y) >= baseAccurarcy
+            return (basePred == pipeline.predict(x)).all()
 
         # sort by increasing order -> round small coefficients to 0 first
         # last index is intercept, has to be done last
@@ -141,6 +143,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
                 continue
             enabledFeatures[coefInd] = True
 
+        basePred = pipeline.predict(x)
+
         # step 2: take one coefficient and fix it to 1 (scale the entire equation)
         # choose the one closest to 1, distance is abs(log10(abs(x)))
         coefTo1 = min(
@@ -162,8 +166,9 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             lastInd = coefInd == len(coefs) - 1
             if (not lastInd and coefs[coefInd] == 0) or scale == 0:
                 continue
+            # eqCoef is the coefficent of the final equation.
             if lastInd:  # coefficient for factor 1
-                # coef = intercept + off
+                # eqCoef = intercept + off set from other coefs
                 interceptBase = svc.intercept_[0]
                 eqCoef = self.get_coefficients(std, svc)[-1]
                 if eqCoef == 0:
@@ -287,10 +292,10 @@ class PolynomialSplit(Split, ABC):
         return self.get_equation_str(rounded=True, newlines=True, variables=variables)
 
     def print_c(self):
-        return self.get_equation_str(square=False)
+        return self.get_equation_str(machineReadable=True)
 
     def print_vhdl(self):
-        eq = self.get_equation_str(square=False)
+        eq = self.get_equation_str(machineReadable=True)
         return eq.replace('[', '').replace(']', '')
 
     def _getVariablesWithOne(self, variables):
@@ -300,30 +305,30 @@ class PolynomialSplit(Split, ABC):
         variables = np.array(variables)[self.relevant_columns]
         return np.append(variables, "1")
 
-    def get_equation_str(self, rounded=False, newlines=False, variables=None, square=True):
+    def get_equation_str(self, rounded=False, newlines=False, variables=None, machineReadable=False):
         # if the classifier is called with prettify=True, rounding should not make a difference
         line = []
         n = len(self.relevant_columns)
         variables = self._getVariablesWithOne(variables)
         for ind, (i, j) in enumerate([(i, j) for j in range(n+1) for i in range(j+1)]):
             coef = self.coefficients[ind]
-            if rounded and abs(coef) < 1e-6:
+            if coef == 0 or rounded and abs(coef) < 1e-6:
                 continue
             coef = round(coef, 6) if rounded else coef
             if variables[i] == "1":  # i<=j --> var[j] == 1 --> constant offset without var
-                if coef != 0:
-                    line.append(
-                        f"{int(coef) if int(coef) == coef else coef}")
+                line.append(
+                    f"{int(coef) if int(coef) == coef else coef}")
                 continue
             elif variables[j] == "1":
                 var = f"{variables[i]}"
             else:
-                var = f"{variables[i]}²" if i == j and square else f"{variables[i]}*{variables[j]}"
+                var = f"{variables[i]}²" if i == j and not machineReadable else f"{variables[i]}*{variables[j]}"
             if coef == 1:
                 term = var
             elif coef == -1:
                 term = f"-{var}"
-            elif int(coef) == coef:
+            elif not machineReadable and int(coef) == coef:
+                # leave out the '*'
                 term = f"{int(coef)}{var}"
             else:
                 term = f"{coef}*{var}"
@@ -338,7 +343,7 @@ class PolynomialSplit(Split, ABC):
         variables = self._getVariablesWithOne(variables)
         for ind, (i, j) in enumerate([(i, j) for j in range(n+1) for i in range(j+1)]):
             coef = self.coefficients[ind]
-            if rounded and abs(coef) < 1e-6:
+            if coef == 0 or rounded and abs(coef) < 1e-6:
                 continue
             coef = round(coef, 6) if rounded else coef
             if variables[i] == "1":  # i<=j --> var[j] == 1
