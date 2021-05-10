@@ -153,7 +153,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
                         if coefs[coefTo1]*std.scale_[coefTo1] != 0 else 1
         coefs *= scaleFac
         svc.intercept_[0] *= scaleFac
-        assert(accuracy_still_good())
+        if not accuracy_still_good():
+            self.logger.error(f"After scaling the equation, accuracy decreased. Scale factor: {scaleFac}")
 
         # step 3: round remaining coefficients
         for coefInd in coefIndOrder:
