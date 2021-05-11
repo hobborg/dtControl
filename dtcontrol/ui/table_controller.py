@@ -79,7 +79,8 @@ class TableController:
                 'name': r,
                 'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'],
                 'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened'],
-                'unique_action_sets': results[r]['metadata']['Y_metadata']['num_unique_labels'],
+                # the .get() is for backward compatibility, eg. reading old result files
+                'unique_action_sets': results[r]['metadata']['Y_metadata'].get('num_unique_labels', 'unknown'),
             } for r in row_names
         ]
         return table, row_metadata, column_names
@@ -130,7 +131,8 @@ class TableController:
             'name': r,
             'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'] if r in results else "unknown",
             'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened'] if r in results else "unknown",
-            'unique_action_sets': results[r]['metadata']['Y_metadata']['num_unique_labels'] if r in results else "unknown",
+            # the .get() is for backward compatibility, eg. reading old result files
+            'unique_action_sets': results[r]['metadata']['Y_metadata'].get('num_unique_labels', "unkown") if r in results else "unknown",
             } for r in row_names
         ]
         return table, row_metadata, column_names

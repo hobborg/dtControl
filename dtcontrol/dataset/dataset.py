@@ -116,7 +116,7 @@ class Dataset(ABC):
             assert len([i for i in self.index_to_actual if i == 0]) == 0  # labels have to start with 1 because of OC1
             self.y_metadata['num_rows'] = len(self.x)
             self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
-            self.y_metadata['num_unique_labels'] = len(self.get_unique_labels())
+            self.y_metadata['num_unique_labels'] = len(np.unique(self.get_unique_labels()))
             self.feature_importance = self.calc_all_feature_importance()
 
     def load_metadata_from_json(self, json_object):
