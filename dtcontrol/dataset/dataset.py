@@ -79,7 +79,7 @@ class Dataset(ABC):
                            "min": None, "max": None, "step_size": None}
         self.y = None
         self.y_metadata = {"categorical": None, "category_names": None, "min": None, "max": None, "step_size": None,
-                           'num_rows': None, 'num_flattened': None}
+                           'num_rows': None, 'num_flattened': None, 'num_unique_labels': None}
         self.index_to_actual = {}  # mapping from arbitrary integer indices to the actual float/categorical labels
         self.numeric_feature_mapping = {}  # maps indices in the numeric array to the actual column index in x
         self.numeric_columns = None
@@ -116,6 +116,7 @@ class Dataset(ABC):
             assert len([i for i in self.index_to_actual if i == 0]) == 0  # labels have to start with 1 because of OC1
             self.y_metadata['num_rows'] = len(self.x)
             self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
+            self.y_metadata['num_unique_labels'] = len(self.get_unique_labels())
             self.feature_importance = self.calc_all_feature_importance()
 
     def load_metadata_from_json(self, json_object):

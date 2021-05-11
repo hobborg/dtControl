@@ -75,9 +75,13 @@ class TableController:
                     cell = 'not yet computed'
                 row.append(cell)
             table.append(row)
-        row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'],
-                         'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened']}
-                        for r in row_names]
+        row_metadata = [{
+                'name': r,
+                'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'],
+                'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened'],
+                'unique_action_sets': results[r]['metadata']['Y_metadata']['num_unique_labels'],
+            } for r in row_names
+        ]
         return table, row_metadata, column_names
 
     @staticmethod
@@ -122,10 +126,13 @@ class TableController:
                     cell = 'not yet computed'
                 row.append(cell)
             table.append(row)
-        row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata'][
-            'num_rows'] if r in results else "unknown",
-                         'state_action_pairs': results[r]['metadata']['Y_metadata'][
-                             'num_flattened'] if r in results else "unknown"} for r in row_names]
+        row_metadata = [{
+            'name': r,
+            'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'] if r in results else "unknown",
+            'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened'] if r in results else "unknown",
+            'unique_action_sets': results[r]['metadata']['Y_metadata']['num_unique_labels'] if r in results else "unknown",
+            } for r in row_names
+        ]
         return table, row_metadata, column_names
 
     def get_dot_and_c_links(self, row_metadata, column_names):
