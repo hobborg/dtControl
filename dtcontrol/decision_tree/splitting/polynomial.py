@@ -158,7 +158,9 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         coefs *= scaleFac
         svc.intercept_[0] *= scaleFac
         if not accuracy_still_good():
-            self.logger.error(f"After scaling the equation, accuracy decreased. Scale factor: {scaleFac}")
+            # can happen if precision error occur for very high coefs
+            # will be dealt with later in check_reasonable_coefs
+            self.logger.warn(f"After scaling the equation, accuracy decreased. Scale factor: {scaleFac}")
 
         # step 3: round remaining coefficients
         for coefInd in coefIndOrder:
@@ -199,9 +201,64 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
                         coefs[coefInd] = eqCoefGoal * scale  # without overApproxFac
                         break
             else: # should never happen
-                self.logger.error(f"Could not find rounded value for variable with index {coefInd}")
+                self.logger.warn(f"Could not find rounded value for variable with index {coefInd}")
         self.logger.debug("prettifying done.")
         return self.get_coefficients(std, svc)
+
+    def check_reasonable_coefs(self, x, y, std, svc, pipeline):
+        """
+        We want to avoid coefficients > 1e7 and < 1e-7. Otherwise we run into
+        precision errors when computing the dot product (calculation is no longer
+        commutative).
+        This method checks if the coefficients are in this reasobale range, otherwise
+        changes them. This could decrease accuracy.
+        """
+        # If we have very large coeffients, we add additional samplepoints
+        # for every feature with both labels. This way, a high coeffient is
+        # penalized. We set a low sample weight, to not disturb the fitting
+        # too much.
+
+        eqCoef = self.get_coefficients(std, svc) # the coefs for the equation
+        if any(abs(c) > 1e7 for c in eqCoef): # should only occur exceptionally
+            featCnt = x.shape[1]
+            addX1 = np.array([[1.0 if f == i else 0.0 for i in range(featCnt)] for f in range(featCnt)])
+            newX = np.concatenate((x, addX1, addX1))
+            addY = np.array([i<featCnt for i in range(2*featCnt)]) # first half True, other False
+            newY = np.concatenate((y, addY))
+            weights = np.concatenate((np.full(x.shape[0], 1), np.full(2*featCnt, 1e-3)))
+            
+            self.logger.warn(f"Fixing unreasonable coefs: {eqCoef}")
+            pipeline.fit(newX, newY, linearsvc__sample_weight=weights) # changes the coefs
+            eqCoef = self.get_coefficients(std, svc)
+            self.logger.warn(f"New coefs: {eqCoef}")
+
+            # this should remove unreasonable high coefs. If not
+            # change it by force (will change accuracy)
+            if any(abs(c) > 1e7 for c in eqCoef):
+                self.logger.warn(f"Coefs still too high.")
+                eqCoefNP = np.array(eqCoef)
+                inds = np.where(abs(eqCoefNP) > 1e7)[0]
+                # reference which we write into
+                # note: these are not scaled yet
+                coefs = svc.coef_[0]
+                for ind in inds:
+                    coefs[ind] = std.scale_[ind] * (1e7 if coefs[ind] > 0 else -1e7)
+                eqCoef = self.get_coefficients(std, svc)
+                self.logger.warn(f"New coefs: {eqCoef}")
+        # set coef < 1e-9 to 0 by force
+        # (will change accuracy)
+        if any(c != 0 and abs(c) < 1e-7 for c in eqCoef):
+            self.logger.warn(f"Coefs near zero: {eqCoef}")
+            eqCoefNP = np.array(eqCoef)
+            inds = np.where((eqCoefNP != 0) & (abs(eqCoefNP) < 1e-7))[0]
+            # reference which we write into
+            coefs = svc.coef_[0]
+            for ind in inds:
+                coefs[ind] = 0
+            eqCoef = self.get_coefficients(std, svc)
+            self.logger.warn(f"New coefs: {eqCoef}")
+
+        return eqCoef
 
     def find_split(self, dataset, impurity_measure, **kwargs):
         x_numeric = dataset.get_numeric_x()
@@ -247,6 +304,10 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             prettyCoefs = self.prettify_coefs(
                 x_high_dim, label_mask, standardizer, svc, bestSplit.pipeline)
             bestSplit.coefficients = prettyCoefs
+        
+        bestSplit.coefficients = self.check_reasonable_coefs(
+            x_high_dim, label_mask, standardizer, svc, bestSplit.pipeline
+        )
         return bestSplit
 
 
@@ -273,14 +334,10 @@ class PolynomialSplit(Split, ABC):
         x_transf = dataset.get_transformed_x( # try to use the cached transformation
             PolynomialClassifierSplittingStrategy.transform_quadratic, KEY_QUAD
         )
-        mask = self.pipeline.predict(x_transf)
-        return [~mask, mask]
+        mask = np.dot(x_transf, self.coefficients) <= 0
+        return [mask, ~mask]
 
     def predict(self, features):
-        #return 1 if self.pipeline.predict(
-        #    PolynomialClassifierSplittingStrategy.transform_quadratic(
-        #        features[:, self.relevant_columns])
-        #)[0] else 0
         x_transf = PolynomialClassifierSplittingStrategy.transform_quadratic(
                                             features[:, self.relevant_columns])
         return 0 if np.dot(x_transf, self.coefficients) <= 0 else 1
