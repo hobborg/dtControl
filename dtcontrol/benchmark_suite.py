@@ -27,7 +27,7 @@ single_output_c_template = env.get_template('single_output.c')
 multi_output_c_template = env.get_template('multi_output.c')
 
 util.ignore_convergence_warnings()
-
+sys.setrecursionlimit(10000)
 
 class BenchmarkSuite:
     """
