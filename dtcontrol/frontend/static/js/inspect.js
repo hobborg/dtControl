@@ -1351,6 +1351,7 @@ function extract_all_floats(input){
 
 }
 
+// Highlighting functionality
 $("#highlight-form-button").on('click', function (event) {
     populate_action_information();
 
@@ -1367,14 +1368,16 @@ $("#highlight-form-button").on('click', function (event) {
 
     // input validation
     if (search_input === "") {
-        console.error("Empty input");
+        document.getElementById("highlight-error-message").innerText = "Empty input. \nPlease click 'show help' to find \nan example input.";
         return;
     }else if (!(search_input.includes("<=") || search_input.includes(">=") || search_input.includes("="))){
-        console.error("No valid relation found. Supported relations are '<=', '>=' and '='");
+        document.getElementById("highlight-error-message").innerText = "No valid relation found. \nPlease click 'show help' to find \nthe supported relations.";
         return;
     }else if (!search_input.includes("a_")){
-        console.error("No valid symbol found. Exemplary supported symbol is 'a_0'");
+        document.getElementById("highlight-error-message").innerText = "No valid symbol found. \nPlease click 'show help' to find \nvalid symbols.";
         return;
+    }else {
+        document.getElementById("highlight-error-message").innerText = "";
     }
     //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
 
@@ -1398,7 +1401,7 @@ $("#highlight-form-button").on('click', function (event) {
                 let offset = parseFloat(processed_constraint[1]);
 
                 if (action_index >= dimension){
-                    console.error("Referenced dimension is not presented within the current decision tree.");
+                    document.getElementById("highlight-error-message").innerText = "Referenced dimension is not presented \nwithin the current decision tree. \nPlease click 'show help' to find the \ncurrent action-dimension.";
                     dimension_error = true;
                     break;
                 }
@@ -1534,11 +1537,6 @@ function populate_action_information() {
         for (let i = 0; i < dimension; i++) {
             available_actions.push("a_" + i);
         }
-
-        // disable checkbox if not permissive
-        // if (!permissive) {
-        //     document.getElementById("permissiveCheckBox").disabled = "true";
-        // }
 
         document.getElementById("permissiveHere").innerHTML = (permissive) ? "permissive" : "not permissive";
         document.getElementById("dimensionHere").innerHTML = dimension;
