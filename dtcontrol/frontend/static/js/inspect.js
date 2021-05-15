@@ -1360,7 +1360,7 @@ $("#highlight-form-button").on('click', function (event) {
     // uncoloring the last results tree
     if (highlighting_results.length){
         highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
-            if (single_id != null) {
+            if (typeof single_id === "string") {
                 uncolor_leaf_to_root(single_id);
             }
         })
@@ -1379,77 +1379,95 @@ $("#highlight-form-button").on('click', function (event) {
     }else {
         document.getElementById("highlight-error-message").innerText = "";
     }
-    //let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
 
     let dimension_error = false;
 
-    let conjunction_constraints = search_input.split(/and|&/);
+    // constraints is a list of disjunctions, containing conjunctions
+    // e.g.
+    // "a_0 = 1 and a_1 = 3 or a_0 = 9"  -->  [["a_0=1","a_1=3"],["a_0=9"]]
+    let constraints = [];
+    let disjunction_constraints = search_input.split(/or|\|/);
+
+    disjunction_constraints.forEach(function (d) {
+        constraints.push(d.split(/and|&/));
+    })
+
     let supported_relations = ["<=", ">=", "="];
+    let a = new Array(converted_action_list.length);
+    for (let i = 0; i < a.length; ++i) { a[i] = true; }
 
-    highlighting_constraint_history.push(search_input);
-    highlighting_results.push(action_id_list.slice());
+    highlighting_results.push(a);
 
-    conjunction_constraints.forEach(function (c_constraint) {
+    disjunction_loop:
+        for (let disjunction of constraints) {
 
-        for (let i = 0; i < supported_relations.length; i++) {
-            let rel = supported_relations[i];
+            for (let conjunction of disjunction) {
+                for (let rel of supported_relations) {
 
-            if (c_constraint.includes(rel)) {
+                    if (conjunction.includes(rel)) {
 
-                let processed_constraint = c_constraint.split(rel);
-                let action_index = parseInt(processed_constraint[0].split("a_")[1]);
-                let offset = parseFloat(processed_constraint[1]);
+                        // parsing the conjunction term
+                        let processed_constraint = conjunction.split(rel);
+                        let action_index = parseInt(processed_constraint[0].split("a_")[1]);
+                        let offset = parseFloat(processed_constraint[1]);
 
-                if (action_index >= dimension){
-                    document.getElementById("highlight-error-message").innerText = "Referenced dimension is not presented \nwithin the current decision tree. \nPlease click 'show help' to find the \ncurrent action-dimension.";
-                    dimension_error = true;
-                    break;
-                }
-
-                // iterate over all actions and check if they satisfy the current constraint
-                for (let j = 0; j < converted_action_list.length; j++) {
-                    let single_action = converted_action_list[j];
-
-                    if (permissive){
-                        highlighting_results[highlighting_results.length -1][j] = null;
-                    }
-
-                    for (let k = 0; k < single_action.length; k++) {
-
-                        if (typeof single_action[k] === "number") {
-
-                            // does the current single action satisfy the constraint?
-                            if (permissive && constraint_checker(single_action[k], rel, offset)) {
-                                highlighting_results[highlighting_results.length - 1][j] = action_id_list[j].slice();
-                            } else if (!permissive && !constraint_checker(single_action[k], rel, offset)) {
-                                    highlighting_results[highlighting_results.length - 1][j] = null;
-                                }
-
-                        } else {
-                            // more dimensional actions, which are represented by an array
-                            if (permissive && constraint_checker(single_action[k][action_index], rel, offset)) {
-                                highlighting_results[highlighting_results.length - 1][j] = action_id_list[j].slice();
-                            } else if (!permissive && !constraint_checker(single_action[k][action_index], rel, offset)) {
-                                    highlighting_results[highlighting_results.length - 1][j] = null;
-                                }
-
+                        if (action_index >= dimension) {
+                            document.getElementById("highlight-error-message").innerText = "Referenced dimension is not presented \nwithin the current decision tree. \nPlease click 'show help' to find the \ncurrent action-dimension.";
+                            dimension_error = true;
+                            break disjunction_loop;
                         }
-                    }
 
+                        // iterate over all actions and check if they satisfy the current constraint
+                        for (let j = 0; j < converted_action_list.length; j++) {
+                            let single_action = converted_action_list[j];
+
+
+                            for (let k = 0; k < single_action.length; k++) {
+
+                                if (typeof single_action[k] === "number") {
+                                    // current tree is a one dimensional tree
+                                    let result = single_action.some(x => constraint_checker(x, rel, offset));
+
+                                    if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
+                                        highlighting_results[highlighting_results.length -1][j] = false;
+                                    }
+
+                                } else {
+                                    // more dimensional actions, which are represented by an array
+                                    let result = single_action.some(x => constraint_checker(x[action_index], rel, offset));
+
+                                    if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
+                                        highlighting_results[highlighting_results.length -1][j] = false;
+                                    }
+
+                                }
+                            }
+                        }
+                        break;
+                    }
                 }
-                break;
             }
 
+            for (let g = 0; g < highlighting_results[highlighting_results.length -1].length; g++){
+                if (highlighting_results[highlighting_results.length -1][g] === true){
+                    highlighting_results[highlighting_results.length -1][g] = action_id_list[g];
+                }else if (highlighting_results[highlighting_results.length -1][g] === false){
+                    highlighting_results[highlighting_results.length -1][g] = true;
+                }
+            }
         }
-    });
 
-    // uncoloring the last results tree
-    if (highlighting_results.length && !dimension_error){
+    // Check whether a dimension error occurred. If not --> safe the latest result in the history and color all actions
+    // else delete
+    if (!dimension_error) {
+        highlighting_constraint_history.push(search_input);
         highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
-            if (single_id != null) {
+            if (typeof single_id === "string") {
                 color_leaf_to_root(single_id);
             }
         })
+    } else {
+        highlighting_results.pop();
     }
 
 });
