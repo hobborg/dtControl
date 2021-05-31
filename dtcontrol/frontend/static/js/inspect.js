@@ -1300,6 +1300,7 @@ function refresh_interactive_tables() {
 }
 
 function deactivateSimulator() {
+    document.getElementById("option-simulate").parentElement.classList.remove("active");
     // Return node colors to white
     recolourPath();
     destroySimulatorTablesAndCharts();
@@ -1324,6 +1325,7 @@ function deactivateSimulator() {
 
 function deactivateEdit()
 {
+    document.getElementById("option-edit").parentElement.classList.remove("active");
     document.getElementById("expandAllButton").removeAttribute("disabled");
     document.getElementById("collapseAllButton").removeAttribute("disabled");
 
@@ -1339,6 +1341,7 @@ function deactivateEdit()
 function deactivateInspect()
 {
     document.getElementById("inspect-field").classList.add("d-none");
+    document.getElementById("option-inspect").parentElement.classList.remove("active");
 }
 
 
@@ -1571,7 +1574,35 @@ $("#accordionButton-inspect").on('click', function (event) {
     populate_action_information()
 })
 
+function closeNav() {
+    // if (isSimulator) return;
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.paddingLeft = "0";
+
+    deactivateEdit();
+    deactivateInspect();
+    deactivateSimulator();
+}
+
+function openNav() {
+    // if (isSimulator) return;
+    let selected_option_children = document.getElementById("operation-selector").children;
+
+    if ((selected_option_children[0].classList.contains("active")) || (selected_option_children[1].classList.contains("active"))){
+        document.getElementById("mySidenav").style.width = "310px";
+        document.getElementById("main").style.paddingLeft = "310px";
+    }else {
+        document.getElementById("navbar-hamburger").click();
+    }
+
+
+}
+
 $(document).ready(function () {
+
+    // close sidebar at startup
+    document.getElementById("navbar-hamburger").click();
+
 
     // If we are in the inspect/edit/simulate screen, there is no need for having the "load controller directory" etc available
     document.getElementById("controller-upload-row").remove();
@@ -1648,22 +1679,6 @@ $(document).ready(function () {
      });
 
 
-    $('button.hamburger').on('click', function (event) {
-        if ($(this).hasClass("is-active")) {
-            closeNav();
-        } else {
-            openNav();
-        }
-
-        $(this).toggleClass("is-active");
-    });
-
-    const accordionButton = $('#accordionButton');
-    accordionButton.on('click', event => {
-        const wasCollapsed = accordionButton.hasClass('collapsed');
-        accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
-        accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
-    });
 
     // Simulate Button
     $("#operation-selector input").on("click", function (event) {
@@ -1671,6 +1686,7 @@ $(document).ready(function () {
         console.log("Selected " + option);
         if (option === "option-simulate") {
             closeNav();
+            document.getElementById("navbar-hamburger").className += " is-active";
             isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
@@ -1686,6 +1702,7 @@ $(document).ready(function () {
         }
         else if (option === "option-edit") {
             openNav();
+            document.getElementById("navbar-hamburger").className += " is-active";
             deactivateSimulator();
             deactivateInspect();
             // Activate Edit Mode
@@ -1704,6 +1721,7 @@ $(document).ready(function () {
         else {
             // Inspect
             openNav();
+            document.getElementById("navbar-hamburger").className += " is-active";
             document.getElementById("inspect-field").classList.remove("d-none");
             deactivateSimulator();
             deactivateEdit();
