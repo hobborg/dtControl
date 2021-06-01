@@ -1356,8 +1356,8 @@ function extract_all_floats(input){
 
 // Highlighting functionality
 $("#highlight-form-button").on('click', function (event) {
-    populate_action_information();
 
+    let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
     let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
 
     // uncoloring the last results tree
@@ -1429,7 +1429,7 @@ $("#highlight-form-button").on('click', function (event) {
 
                                 if (typeof single_action[k] === "number") {
                                     // current tree is a one dimensional tree
-                                    let result = single_action.some(x => constraint_checker(x, rel, offset));
+                                    let result = (permissive_checkbox) ? single_action.every(x => constraint_checker(x, rel, offset)) : single_action.some(x => constraint_checker(x, rel, offset));
 
                                     if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
                                         highlighting_results[highlighting_results.length -1][j] = false;
@@ -1437,7 +1437,7 @@ $("#highlight-form-button").on('click', function (event) {
 
                                 } else {
                                     // more dimensional actions, which are represented by an array
-                                    let result = single_action.some(x => constraint_checker(x[action_index], rel, offset));
+                                    let result = (permissive_checkbox) ? single_action.every(x => constraint_checker(x[action_index], rel, offset)) : single_action.some(x => constraint_checker(x[action_index], rel, offset));
 
                                     if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
                                         highlighting_results[highlighting_results.length -1][j] = false;
@@ -1565,14 +1565,15 @@ function populate_action_information() {
         document.getElementById("exampleActionHere").innerHTML = (available_actions.length > 1) ? "a_0 <= 0 & a_1 <= 1" : "a_0 <= 0";
 
         populated = true;
+
+        if (permissive){
+            document.getElementById("permissiveCheckBoxGroup").classList.remove("d-none");
+        }
     }
 
 
 }
 
-$("#accordionButton-inspect").on('click', function (event) {
-    populate_action_information()
-})
 
 function closeNav() {
     // if (isSimulator) return;
@@ -1720,6 +1721,7 @@ $(document).ready(function () {
         }
         else {
             // Inspect
+            populate_action_information();
             openNav();
             document.getElementById("navbar-hamburger").className += " is-active";
             document.getElementById("inspect-field").classList.remove("d-none");

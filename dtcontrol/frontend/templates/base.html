@@ -249,10 +249,14 @@
                     <input class="input-group-text" type="text" id="highlight-input" name="highlight" value="a_0 >= 0">
                 </div>
                 <pre style="color:red;" id="highlight-error-message"></pre>
+
+                <div id="permissiveCheckBoxGroup" class="d-none">
+                    <input type="checkbox" id="permissiveCheckBox"/>
+                    <label for="permissiveCheckBox">All permissive actions should satisfy the highlighting term</label>
+                </div>
+
+
             </div>
-
-
-
 
 
             <button class="btn btn-primary btn-lg btn-block" name="find" style="margin: 1.25rem 0.8rem 0.8rem;"
@@ -280,12 +284,6 @@
 
             <div class="row mt-3">
                 <div class="col-12">
-{#                    <div class="form-check">#}
-{#                        <input class="form-check-input" type="checkbox" value="" id="permissiveCheckBox">#}
-{#                        <label class="form-check-label" for="permissiveCheckBox">#}
-{#                            must hold for every single permissive action#}
-{#                        </label>#}
-{#                    </div>#}
 
                     <p class="font-weight-bold">Help menu</p>
                     <p class="text-md-left">Within the current decision tree you can highlight various different paths to leaf nodes.</p>
