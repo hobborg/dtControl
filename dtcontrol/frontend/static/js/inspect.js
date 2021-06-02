@@ -1300,6 +1300,7 @@ function refresh_interactive_tables() {
 }
 
 function deactivateSimulator() {
+    // deactivates the simulator mode
     document.getElementById("option-simulate").parentElement.classList.remove("active");
     // Return node colors to white
     recolourPath();
@@ -1319,12 +1320,11 @@ function deactivateSimulator() {
     $("#formSecond-randomize-button").hide();
     $("#formSecond-submit-button").hide();
     $("#exampleModalLongTitle").html("Enter system dynamics");
-
-    // document.getElementById("hideThisDiv").style.display = "block";
 }
 
 function deactivateEdit()
 {
+    // deactivates the edit mode
     document.getElementById("option-edit").parentElement.classList.remove("active");
     document.getElementById("expandAllButton").removeAttribute("disabled");
     document.getElementById("collapseAllButton").removeAttribute("disabled");
@@ -1333,26 +1333,16 @@ function deactivateEdit()
     document.getElementById("interactive-button").classList.add("d-none");
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
-    // editMode = false;
     disableNodeSelect();
-    // update(root);
 }
 
 function deactivateInspect()
 {
+    // deactivates the inspect/highlighting mode
     document.getElementById("inspect-field").classList.add("d-none");
     document.getElementById("option-inspect").parentElement.classList.remove("active");
 }
 
-
-function extract_all_floats(input){
-
-        // regex to extract numbers
-        //\(([+-]?\d+(?:\.\d+)?)(?:, ([+-]?\d+(?:\.\d+)?))*\)
-        let regex = /([+-]?\d+(?:\.\d+)?)/g;
-        return input.match(regex).map(function(v) { return parseFloat(v); });
-
-}
 
 // Highlighting functionality
 $("#highlight-form-button").on('click', function (event) {
@@ -1576,7 +1566,7 @@ function populate_action_information() {
 
 
 function closeNav() {
-    // if (isSimulator) return;
+    // CAUTION: overwrites the closeNav() function from common.js
     document.getElementById("mySidenav").style.width = "0";
     document.getElementById("main").style.paddingLeft = "0";
 
@@ -1586,7 +1576,7 @@ function closeNav() {
 }
 
 function openNav() {
-    // if (isSimulator) return;
+    // CAUTION: overwrites the openNav() function from common.js
     let selected_option_children = document.getElementById("operation-selector").children;
 
     if ((selected_option_children[0].classList.contains("active")) || (selected_option_children[1].classList.contains("active"))){
@@ -1601,7 +1591,7 @@ function openNav() {
 
 $(document).ready(function () {
 
-    // close sidebar at startup
+    // close the sidebar at startup
     document.getElementById("navbar-hamburger").click();
 
 
@@ -1686,6 +1676,7 @@ $(document).ready(function () {
         let option = $("#operation-selector input:checked")[0].id;
         console.log("Selected " + option);
         if (option === "option-simulate") {
+            // simulation mode
             closeNav();
             document.getElementById("navbar-hamburger").className += " is-active";
             isSimulator = true;
@@ -1702,6 +1693,7 @@ $(document).ready(function () {
             // document.getElementById("animationDiv").classList.remove("d-none");
         }
         else if (option === "option-edit") {
+            // Edit mode
             openNav();
             document.getElementById("navbar-hamburger").className += " is-active";
             deactivateSimulator();
@@ -1720,7 +1712,7 @@ $(document).ready(function () {
             // update(root);
         }
         else {
-            // Inspect
+            // Inspect/Highlight mode
             populate_action_information();
             openNav();
             document.getElementById("navbar-hamburger").className += " is-active";
@@ -1744,7 +1736,6 @@ $(document).ready(function () {
 
         // console.log(treeData);
 
-        // TODO C: Check if these two lines affect the tree layout (see the svgSetup() and constructTree() below)
         // height = 50 * getLeaves(treeData);
         height = 25 * getLeaves(treeData);
         // height = 650;
