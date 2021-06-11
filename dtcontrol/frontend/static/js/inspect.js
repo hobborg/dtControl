@@ -82,6 +82,9 @@ var populated = false;
 var highlighting_results = [];
 var highlighting_constraint_history = [];
 
+// helper variable used for redirecting back within the navbar hamburger
+var redirect = false;
+
 function svgSetup() {
     zoom = d3.zoom()
         .on("zoom", ({transform}) => {
@@ -1564,9 +1567,11 @@ function populate_action_information() {
 
 }
 
+// Navbar functionality buttons
+// CAUTION: overwrites the openNav(), closeNav() and event handler function from common.js
+
 
 function closeNav() {
-    // CAUTION: overwrites the closeNav() function from common.js
     document.getElementById("mySidenav").style.width = "0";
     document.getElementById("main").style.paddingLeft = "0";
 
@@ -1576,24 +1581,47 @@ function closeNav() {
 }
 
 function openNav() {
-    // CAUTION: overwrites the openNav() function from common.js
+
+    //console.log(arguments.callee.caller.toString());
     let selected_option_children = document.getElementById("operation-selector").children;
 
     if ((selected_option_children[0].classList.contains("active")) || (selected_option_children[1].classList.contains("active"))){
         document.getElementById("mySidenav").style.width = "310px";
         document.getElementById("main").style.paddingLeft = "310px";
-    }else {
-        document.getElementById("navbar-hamburger").click();
+    }else if (redirect) {
+        window.location.href = "/";
+        // console.log(isSimulator);
+        // console.log(arguments.callee.caller.toString());
+        // document.getElementById("navbar-hamburger").click();
     }
-
-
 }
 
 $(document).ready(function () {
+    // unbind old event handler
+    $('button.hamburger').off("click");
 
-    // close the sidebar at startup
-    document.getElementById("navbar-hamburger").click();
+    // create new event handler for hamburger
+    $('button.hamburger').on('click', function (event) {
+        if ($(this).hasClass("hamburger--spin")) {
+            closeNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--spin", "hamburger--arrow");
+        } else {
+            openNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin")
+        }
 
+    });
+
+    // manually close navbar at startup
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.paddingLeft = "0";
+    document.getElementById("navbar-hamburger").classList.add("is-active");
+
+    // setting helper variable for redirecting to homepage
+    redirect = true;
+
+    // change navbar from hamburger--spin to hamburger--arrow
+    document.getElementById("navbar-hamburger").classList.replace("hamburger--spin", "hamburger--arrow");
 
     // If we are in the inspect/edit/simulate screen, there is no need for having the "load controller directory" etc available
     document.getElementById("controller-upload-row").remove();
@@ -1677,8 +1705,11 @@ $(document).ready(function () {
         console.log("Selected " + option);
         if (option === "option-simulate") {
             // simulation mode
+
+            // close the navbar but it should still be active!
             closeNav();
-            document.getElementById("navbar-hamburger").className += " is-active";
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+
             isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
@@ -1694,8 +1725,12 @@ $(document).ready(function () {
         }
         else if (option === "option-edit") {
             // Edit mode
+
+            // open the navbar
             openNav();
-            document.getElementById("navbar-hamburger").className += " is-active";
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+
+
             deactivateSimulator();
             deactivateInspect();
             // Activate Edit Mode
@@ -1714,8 +1749,11 @@ $(document).ready(function () {
         else {
             // Inspect/Highlight mode
             populate_action_information();
+            // open navbar
             openNav();
-            document.getElementById("navbar-hamburger").className += " is-active";
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+
+
             document.getElementById("inspect-field").classList.remove("d-none");
             deactivateSimulator();
             deactivateEdit();
