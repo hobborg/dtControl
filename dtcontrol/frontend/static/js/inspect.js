@@ -1351,7 +1351,7 @@ function deactivateInspect()
 $("#highlight-form-button").on('click', function (event) {
     console.log(highlighting_results);
 
-    let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
+    let all_actions = (document.getElementById("inputGroupSelect02").value) === "all";
     let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
 
     uncolor_last_highlight();
@@ -1416,7 +1416,7 @@ $("#highlight-form-button").on('click', function (event) {
 
                                 if (typeof single_action[k] === "number") {
                                     // current tree is a one dimensional tree
-                                    let result = (permissive_checkbox) ? single_action.every(x => constraint_checker(x, rel, offset)) : single_action.some(x => constraint_checker(x, rel, offset));
+                                    let result = (all_actions) ? single_action.every(x => constraint_checker(x, rel, offset)) : single_action.some(x => constraint_checker(x, rel, offset));
 
                                     if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
                                         highlighting_results[highlighting_results.length -1][j] = false;
@@ -1424,7 +1424,7 @@ $("#highlight-form-button").on('click', function (event) {
 
                                 } else {
                                     // more dimensional actions, which are represented by an array
-                                    let result = (permissive_checkbox) ? single_action.every(x => constraint_checker(x[action_index], rel, offset)) : single_action.some(x => constraint_checker(x[action_index], rel, offset));
+                                    let result = (all_actions) ? single_action.every(x => constraint_checker(x[action_index], rel, offset)) : single_action.some(x => constraint_checker(x[action_index], rel, offset));
 
                                     if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
                                         highlighting_results[highlighting_results.length -1][j] = false;
@@ -1570,13 +1570,14 @@ function populate_action_information() {
 
         document.getElementById("permissiveHere").innerHTML = (permissive) ? "permissive" : "not permissive";
         document.getElementById("dimensionHere").innerHTML = dimension;
-        document.getElementById("availableActionsHere").innerHTML = available_actions;
+        document.getElementById("availableActions1").innerText = "actions " + "(" + available_actions + ")";
+        document.getElementById("availableActions2").innerHTML = available_actions;
         document.getElementById("exampleActionHere").innerHTML = (available_actions.length > 1) ? "a_0 <= 0 & a_1 <= 1" : "a_0 <= 0";
 
         populated = true;
 
         if (permissive){
-            document.getElementById("permissiveCheckBoxGroup").classList.remove("d-none");
+            document.getElementById("permissiveSomeHighlight").classList.remove("d-none");
         }
     }
 

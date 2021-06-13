@@ -245,16 +245,25 @@
 
         <div class="row mt-3">
             <div class="col-12">
-                <label for="highlight-input">Highlight</label>
+
+                <div class="input-group mb-3">
+                    <label for="inputGroupSelect02">Highlight the path to leaf nodes where</label>
+                    <select class="custom-select" id="inputGroupSelect02">
+                        <option selected value="all">all</option>
+                        <option value="some" id="permissiveSomeHighlight" class="d-none">some</option>
+                    </select>
+                    <div class="input-group-append">
+                        <label class="input-group-text" for="inputGroupSelect02" id="availableActions1">actions</label>
+                    </div>
+                </div>
+
+
+                <label for="highlight-input">satisfy following constraint: </label>
                 <div>
                     <input class="input-group-text" type="text" id="highlight-input" name="highlight" value="a_0 >= 0">
                 </div>
                 <pre style="color:red;" id="highlight-error-message"></pre>
 
-                <div id="permissiveCheckBoxGroup" class="d-none">
-                    <input type="checkbox" id="permissiveCheckBox"/>
-                    <label for="permissiveCheckBox">All permissive actions should satisfy the highlighting term</label>
-                </div>
 
 
             </div>
@@ -301,7 +310,7 @@
                         <li>The action-dimension is:</li>
                         <pre id="dimensionHere"></pre>
                         <li>Available symbols to reference actions:</li>
-                        <pre id="availableActionsHere"></pre>
+                        <pre id="availableActions2"></pre>
                         <li>Available relations:</li>
                         <pre><=, >=, =</pre>
                         <li>Available boolean operations:</li>
