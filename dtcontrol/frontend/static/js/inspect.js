@@ -1349,18 +1349,12 @@ function deactivateInspect()
 
 // Highlighting functionality
 $("#highlight-form-button").on('click', function (event) {
+    console.log(highlighting_results);
 
     let permissive_checkbox = document.getElementById("permissiveCheckBox").checked;
     let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
 
-    // uncoloring the last results tree
-    if (highlighting_results.length){
-        highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
-            if (typeof single_id === "string") {
-                uncolor_leaf_to_root(single_id);
-            }
-        })
-    }
+    uncolor_last_highlight();
 
     // input validation
     if (search_input === "") {
@@ -1456,6 +1450,9 @@ $("#highlight-form-button").on('click', function (event) {
     // Check whether a dimension error occurred. If not --> safe the latest result in the history and color all actions
     // else delete
     if (!dimension_error) {
+        // activate uncoloring button visible
+        document.getElementById("highlight-undo-button").removeAttribute("disabled");
+
         highlighting_constraint_history.push(search_input);
         highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
             if (typeof single_id === "string") {
@@ -1467,6 +1464,14 @@ $("#highlight-form-button").on('click', function (event) {
     }
 
 });
+
+// functionality of highligh undo button
+function highlight_undo_button(){
+    uncolor_last_highlight();
+
+    // deactivate uncoloring button
+    document.getElementById("highlight-undo-button").disabled = true;
+}
 
 function color_leaf_to_root(id) {
 
@@ -1483,6 +1488,17 @@ function color_leaf_to_root(id) {
     // coloring the root
     document.getElementById("node-at-root").childNodes[0].style.fill = "red";
 
+}
+
+function uncolor_last_highlight() {
+    // uncoloring the last results tree
+    if (highlighting_results.length) {
+        highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
+            if (typeof single_id === "string") {
+                uncolor_leaf_to_root(single_id);
+            }
+        })
+    }
 }
 
 function uncolor_leaf_to_root(id) {
