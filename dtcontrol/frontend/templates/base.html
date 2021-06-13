@@ -260,9 +260,15 @@
             </div>
 
 
-            <button class="btn btn-primary btn-lg btn-block" name="find" style="margin: 1.25rem 0.8rem 0.8rem;"
-                id="highlight-form-button">Find
-            </button>
+            <div class="col-9">
+                <button id="highlight-form-button" type="button" class="btn btn-primary btn-block">Find</button>
+            </div>
+
+            <div class="col-2">
+                <button id="highlight-undo-button" type="button" class="btn btn-secondary" disabled="" onclick="highlight_undo_button()">
+                    <i class="fa fa-undo"></i>
+                </button>
+            </div>
         </div>
 
 
