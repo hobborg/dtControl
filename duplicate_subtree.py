@@ -77,6 +77,11 @@ def analyze_more_detailed(m):
 
 if __name__ == '__main__':
     path = "decision_trees/aa-logreg/cartpole/aa-logreg.json"
+    #path = "decision_trees/dtControl2-LogReg-MLE/helicopter/dtControl2-LogReg-MLE.json"
+    #path = "decision_trees/dtControl2-LogReg/consensus.2.disagree/dtControl2-LogReg.json"
+    #path = "decision_trees/dtControl2-LogReg/firewire_abst.3.rounds/dtControl2-LogReg.json"
+    #path = "decision_trees/dtControl2-LogReg/zeroconf.1000.4.true.correct_max/dtControl2-LogReg.json"
+    #path = "decision_trees/dtControl2-aa/zeroconf.1000.4.true.correct_max/dtControl2-aa.json"
 
     try:
         f = open(path)
@@ -86,3 +91,17 @@ if __name__ == '__main__':
     else:
         tree = reformat_tree(root, None)
         find_duplicate_subtrees(tree)
+
+    # root = Node(1)
+    # root.true = Node(2)
+    # root.false = Node(2)
+    # root.true.true = Node(3)
+    # root.true.false = Node(4)
+    # root.true.true.true = Node(5)
+    # root.true.true.false = Node(6)
+    # root.false.false = Node(4)
+    # root.false.true = Node(3)
+    # root.false.true.true = Node(7)
+    # root.false.true.false = Node(8)
+
+    #find_duplicate_subtrees(root)
