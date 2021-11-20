@@ -73,6 +73,18 @@ var margin = {top: 20, right: 120, bottom: 20, left: 120},
 
 // var width, height;
 
+// variables which are used throughout the leaf highlighting
+var action_id_list = [];
+var converted_action_list = [];
+var permissive = false;
+var dimension;
+var populated = false;
+var highlighting_results = [];
+var highlighting_constraint_history = [];
+
+// helper variable used for redirecting back within the navbar hamburger
+var redirect = false;
+
 function svgSetup() {
     zoom = d3.zoom()
         .on("zoom", ({transform}) => {
@@ -242,7 +254,14 @@ function update(source) {
     let nodeEnter = node.enter().append("g")
         .attr("class", d => {
             // questionmark cursor appears when hovering over too large predicates
-            return (d.data.name.length > 20) ? "node scaled" : "node";
+            let class_name = "node"
+            if (!d._children){
+                class_name += " leaf"
+            }
+            if (d.data.name.length > 20){
+                class_name += " scaled"
+            }
+            return class_name;
         })
         .attr("id", d => {
             return (d.data.address.length == 0) ? "node-at-root" : "node-at-" + d.data.address;
@@ -296,7 +315,8 @@ function update(source) {
             return "addr" + d.data.address.toString();
         })
         .text(function (d) {
-            let nodeText = d.data.name;
+            let nodeText = String(d.data.name);
+            nodeText = nodeText.replaceAll("\\n", ", ");
 
             // scales predicate down, if too large
             if (nodeText.length > 20 && (d.data.children.length != 0 || d.data._children)) {
@@ -343,7 +363,7 @@ function update(source) {
     // title containing the whole predicate which can be shown by hovering over the element
     nodeUpdate.select("title")
         .text(function (d) {
-            return d.data.name;
+            return String(d.data.name).replaceAll("\\n", ", ");
         });
 
     // Transition exiting nodes to the parent's new position.
@@ -1283,6 +1303,8 @@ function refresh_interactive_tables() {
 }
 
 function deactivateSimulator() {
+    // deactivates the simulator mode
+    document.getElementById("option-simulate").parentElement.classList.remove("active");
     // Return node colors to white
     recolourPath();
     destroySimulatorTablesAndCharts();
@@ -1301,34 +1323,334 @@ function deactivateSimulator() {
     $("#formSecond-randomize-button").hide();
     $("#formSecond-submit-button").hide();
     $("#exampleModalLongTitle").html("Enter system dynamics");
-
-    // document.getElementById("hideThisDiv").style.display = "block";
 }
 
 function deactivateEdit()
 {
+    // deactivates the edit mode
+    document.getElementById("option-edit").parentElement.classList.remove("active");
     document.getElementById("expandAllButton").removeAttribute("disabled");
     document.getElementById("collapseAllButton").removeAttribute("disabled");
 
     document.getElementById("retrain-button").classList.add("d-none");
     document.getElementById("interactive-button").classList.add("d-none");
-
-    // editMode = false;
+    document.getElementById("presetSelectRow").classList.add("d-none");
+    document.getElementById("advanced-options-edit").classList.add("d-none");
     disableNodeSelect();
-    // update(root);
 }
 
 function deactivateInspect()
 {
-    // Nothing here
+    // deactivates the inspect/highlighting mode
+    document.getElementById("inspect-field").classList.add("d-none");
+    document.getElementById("option-inspect").parentElement.classList.remove("active");
+}
+
+
+// Highlighting functionality
+$("#highlight-form-button").on('click', function (event) {
+    console.log(highlighting_results);
+
+    let all_actions = (document.getElementById("inputGroupSelect02").value) === "all";
+    let search_input = document.getElementById("highlight-input").value.replace(/\s/g, '');
+
+    uncolor_last_highlight();
+
+    // input validation
+    if (search_input === "") {
+        document.getElementById("highlight-error-message").innerText = "Empty input. \nPlease click 'show help' to find \nan example input.";
+        return;
+    }else if (!(search_input.includes("<=") || search_input.includes(">=") || search_input.includes("="))){
+        document.getElementById("highlight-error-message").innerText = "No valid relation found. \nPlease click 'show help' to find \nthe supported relations.";
+        return;
+    }else if (!search_input.includes("a_")){
+        document.getElementById("highlight-error-message").innerText = "No valid symbol found. \nPlease click 'show help' to find \nvalid symbols.";
+        return;
+    }else {
+        document.getElementById("highlight-error-message").innerText = "";
+    }
+
+    let dimension_error = false;
+
+    // constraints is a list of disjunctions, containing conjunctions
+    // e.g.
+    // "a_0 = 1 and a_1 = 3 or a_0 = 9"  -->  [["a_0=1","a_1=3"],["a_0=9"]]
+    let constraints = [];
+    let disjunction_constraints = search_input.split(/or|\|/);
+
+    disjunction_constraints.forEach(function (d) {
+        constraints.push(d.split(/and|&/));
+    })
+
+    let supported_relations = ["<=", ">=", "="];
+    let a = new Array(converted_action_list.length);
+    for (let i = 0; i < a.length; ++i) { a[i] = true; }
+
+    highlighting_results.push(a);
+
+    disjunction_loop:
+        for (let disjunction of constraints) {
+
+            for (let conjunction of disjunction) {
+                for (let rel of supported_relations) {
+
+                    if (conjunction.includes(rel)) {
+
+                        // parsing the conjunction term
+                        let processed_constraint = conjunction.split(rel);
+                        let action_index = parseInt(processed_constraint[0].split("a_")[1]);
+                        let offset = parseFloat(processed_constraint[1]);
+
+                        if (action_index >= dimension) {
+                            document.getElementById("highlight-error-message").innerText = "Referenced dimension is not presented \nwithin the current decision tree. \nPlease click 'show help' to find the \ncurrent action-dimension.";
+                            dimension_error = true;
+                            break disjunction_loop;
+                        }
+
+                        // iterate over all actions and check if they satisfy the current constraint
+                        for (let j = 0; j < converted_action_list.length; j++) {
+                            let single_action = converted_action_list[j];
+
+
+                            for (let k = 0; k < single_action.length; k++) {
+
+                                if (typeof single_action[k] === "number") {
+                                    // current tree is a one dimensional tree
+                                    let result = (all_actions) ? single_action.every(x => constraint_checker(x, rel, offset)) : single_action.some(x => constraint_checker(x, rel, offset));
+
+                                    if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
+                                        highlighting_results[highlighting_results.length -1][j] = false;
+                                    }
+
+                                } else {
+                                    // more dimensional actions, which are represented by an array
+                                    let result = (all_actions) ? single_action.every(x => constraint_checker(x[action_index], rel, offset)) : single_action.some(x => constraint_checker(x[action_index], rel, offset));
+
+                                    if (!result && (typeof highlighting_results[highlighting_results.length -1][j] === "boolean")){
+                                        highlighting_results[highlighting_results.length -1][j] = false;
+                                    }
+
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            for (let g = 0; g < highlighting_results[highlighting_results.length -1].length; g++){
+                if (highlighting_results[highlighting_results.length -1][g] === true){
+                    highlighting_results[highlighting_results.length -1][g] = action_id_list[g];
+                }else if (highlighting_results[highlighting_results.length -1][g] === false){
+                    highlighting_results[highlighting_results.length -1][g] = true;
+                }
+            }
+        }
+
+    // Check whether a dimension error occurred. If not --> safe the latest result in the history and color all actions
+    // else delete
+    if (!dimension_error) {
+        // activate uncoloring button visible
+        document.getElementById("highlight-undo-button").removeAttribute("disabled");
+
+        highlighting_constraint_history.push(search_input);
+        highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
+            if (typeof single_id === "string") {
+                color_leaf_to_root(single_id);
+            }
+        })
+    } else {
+        highlighting_results.pop();
+    }
+
+});
+
+// functionality of highligh undo button
+function highlight_undo_button(){
+    uncolor_last_highlight();
+
+    // deactivate uncoloring button
+    document.getElementById("highlight-undo-button").disabled = true;
+}
+
+function color_leaf_to_root(id) {
+
+    let counter = id.split(",").length;
+
+    // coloring the action itself
+    document.getElementById(id).childNodes[0].style.fill = "red";
+
+    // coloring all nodes between the label and root
+    for (let i = 1; i < counter; i++) {
+        document.getElementById(id.slice(0, -i * 2)).childNodes[0].style.fill = "red";
+    }
+
+    // coloring the root
+    document.getElementById("node-at-root").childNodes[0].style.fill = "red";
+
+}
+
+function uncolor_last_highlight() {
+    // uncoloring the last results tree
+    if (highlighting_results.length) {
+        highlighting_results[highlighting_results.length - 1].forEach(function (single_id) {
+            if (typeof single_id === "string") {
+                uncolor_leaf_to_root(single_id);
+            }
+        })
+    }
+}
+
+function uncolor_leaf_to_root(id) {
+    let counter = id.split(",").length;
+
+    // uncoloring the action itself
+    document.getElementById(id).childNodes[0].style.fill = "";
+
+    // uncoloring all nodes between the label and root
+    for (let i = 1; i < counter; i++) {
+        document.getElementById(id.slice(0, -i * 2)).childNodes[0].style.fill = "";
+    }
+
+    // uncoloring the root
+    document.getElementById("node-at-root").childNodes[0].style.fill = "";
+}
+
+function constraint_checker(symbol, rel, offset) {
+    if (rel === ">="){
+        return symbol >= offset;
+    }else if (rel === "<="){
+        return symbol <= offset;
+    }else{
+        return symbol === offset;
+    }
+
+}
+
+
+function populate_action_information() {
+    if (!populated) {
+        let all_dt_nodes = Array.prototype.slice.call(document.getElementById("mainDtContainer").lastChild.childNodes);
+        let action_list = [];
+        let available_actions = [];
+
+
+        // extract all actions
+        all_dt_nodes.forEach(function (item) {
+            if (item.classList.contains("leaf")) {
+                action_list.push(item.childNodes[2].innerHTML);
+                action_id_list.push(item.id);
+            }
+        });
+
+        // convert all actions into processable schema
+        action_list.forEach(function (item) {
+            if (item.includes("[")) {
+                permissive = true;
+                let converted_item = item.replaceAll("(", "[").replaceAll(")", "]");
+                converted_action_list.push(JSON.parse(converted_item));
+            } else {
+                let converted_item = item.replaceAll("(", "[").replaceAll(")", "]");
+                converted_action_list.push(JSON.parse("[" + converted_item + "]"));
+            }
+
+        });
+
+        // calculate dimension
+        if (typeof converted_action_list[0][0] === "number") {
+            dimension = 1;
+        } else {
+            dimension = converted_action_list[0][0].length;
+        }
+
+        // create available symbols to reference actions
+        for (let i = 0; i < dimension; i++) {
+            available_actions.push("a_" + i);
+        }
+
+        document.getElementById("permissiveHere").innerHTML = (permissive) ? "permissive" : "not permissive";
+        document.getElementById("dimensionHere").innerHTML = dimension;
+        document.getElementById("availableActions1").innerText = "actions " + "(" + available_actions + ")";
+        document.getElementById("availableActions2").innerHTML = available_actions;
+        document.getElementById("exampleActionHere").innerHTML = (available_actions.length > 1) ? "a_0 <= 0 & a_1 <= 1" : "a_0 <= 0";
+
+        populated = true;
+
+        if (permissive){
+            document.getElementById("permissiveSomeHighlight").classList.remove("d-none");
+        }
+    }
+
+
+}
+
+// Navbar functionality buttons
+// CAUTION: overwrites the openNav(), closeNav() and event handler function from common.js
+
+
+function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.paddingLeft = "0";
+
+    deactivateEdit();
+    deactivateInspect();
+    deactivateSimulator();
+}
+
+function openNav() {
+
+    //console.log(arguments.callee.caller.toString());
+    let selected_option_children = document.getElementById("operation-selector").children;
+
+    if ((selected_option_children[0].classList.contains("active")) || (selected_option_children[1].classList.contains("active"))){
+        document.getElementById("mySidenav").style.width = "310px";
+        document.getElementById("main").style.paddingLeft = "310px";
+    }else if (redirect) {
+        window.location.href = "/";
+        // console.log(isSimulator);
+        // console.log(arguments.callee.caller.toString());
+        // document.getElementById("navbar-hamburger").click();
+    }
 }
 
 $(document).ready(function () {
+    // unbind old event handler
+    $('button.hamburger').off("click");
+
+    // create new event handler for hamburger
+    $('button.hamburger').on('click', function (event) {
+        if ($(this).hasClass("hamburger--spin")) {
+            closeNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--spin", "hamburger--arrow");
+        } else {
+            openNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin")
+        }
+
+    });
+
+    // manually close navbar at startup
+    document.getElementById("mySidenav").style.width = "0";
+    document.getElementById("main").style.paddingLeft = "0";
+    document.getElementById("navbar-hamburger").classList.add("is-active");
+
+    // setting helper variable for redirecting to homepage
+    redirect = true;
+
+    // change navbar from hamburger--spin to hamburger--arrow
+    document.getElementById("navbar-hamburger").classList.replace("hamburger--spin", "hamburger--arrow");
 
     // If we are in the inspect/edit/simulate screen, there is no need for having the "load controller directory" etc available
     document.getElementById("controller-upload-row").remove();
     document.getElementById("metadata-upload-row").remove();
     document.getElementById("add-experiments-button").remove();
+
+    document.getElementById("presetSelectRow").classList.add("d-none");
+    document.getElementById("advanced-options-edit").classList.add("d-none");
+
+    document.getElementById("inspect-field").classList.remove("d-none");
+
+
 
     // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
@@ -1393,28 +1715,18 @@ $(document).ready(function () {
      });
 
 
-    $('button.hamburger').on('click', function (event) {
-        if ($(this).hasClass("is-active")) {
-            closeNav();
-        } else {
-            openNav();
-        }
-
-        $(this).toggleClass("is-active");
-    });
-
-    const accordionButton = $('#accordionButton');
-    accordionButton.on('click', event => {
-        const wasCollapsed = accordionButton.hasClass('collapsed');
-        accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
-        accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
-    });
 
     // Simulate Button
     $("#operation-selector input").on("click", function (event) {
         let option = $("#operation-selector input:checked")[0].id;
         console.log("Selected " + option);
         if (option === "option-simulate") {
+            // simulation mode
+
+            // close the navbar but it should still be active!
+            closeNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+
             isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
@@ -1429,9 +1741,18 @@ $(document).ready(function () {
             // document.getElementById("animationDiv").classList.remove("d-none");
         }
         else if (option === "option-edit") {
+            // Edit mode
+
+            // open the navbar
+            openNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+
+
             deactivateSimulator();
             deactivateInspect();
             // Activate Edit Mode
+            document.getElementById("presetSelectRow").classList.remove("d-none");
+            document.getElementById("advanced-options-edit").classList.remove("d-none");
             document.getElementById("retrain-button").classList.remove("d-none");
             document.getElementById("interactive-button").classList.remove("d-none");
 
@@ -1443,7 +1764,14 @@ $(document).ready(function () {
             // update(root);
         }
         else {
-            // Inspect
+            // Inspect/Highlight mode
+            populate_action_information();
+            // open navbar
+            openNav();
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+
+
+            document.getElementById("inspect-field").classList.remove("d-none");
             deactivateSimulator();
             deactivateEdit();
         }
@@ -1463,7 +1791,6 @@ $(document).ready(function () {
 
         // console.log(treeData);
 
-        // TODO C: Check if these two lines affect the tree layout (see the svgSetup() and constructTree() below)
         // height = 50 * getLeaves(treeData);
         height = 25 * getLeaves(treeData);
         // height = 650;
