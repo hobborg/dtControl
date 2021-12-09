@@ -16,7 +16,7 @@ tools and represents them in the form of decision trees. An example is shown bel
 {::options parse_block_html="true" /}
 <div class="image-container">
 <div class="fixed">
-<img src="assets/images/10rooms-pause-loop.gif" />
+<img src="assets/images/10rooms.gif" />
 <div class="caption">
 Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS
 </div>
