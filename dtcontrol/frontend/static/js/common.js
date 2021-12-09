@@ -7,6 +7,9 @@ var allConfig = {};
 // preset data json
 var preset_json;
 
+// Are we currently in demo simulator mode?
+var demo = false;
+
 function popupModal(title, msg) {
     $("#messageModal h5.modal-title").text(title);
     $("#messageModal div.modal-body").text(msg);
@@ -196,13 +199,21 @@ function fillYML(preset_json) {
 }
 
 $(document).ready(function () {
+
+    // Check if we are currently in the demo version
+    if (document.getElementById("demoModal") != null) {
+        demo = true;
+    }
     openNav();
     document.getElementById("navbar-hamburger").className += " is-active";
     loadPresets();
 
     // Handles changing of form selections when different configs are changed
     $("#config").change(function () {
-        if ($(this).val() != "custom" && $(this).val() != "algebraic") {
+        if (demo && ($(this).val() == "custom" || $(this).val() == "algebraic")) {
+            $("#demoModal").modal()
+            $("#config").val("mlentropy")
+        } else if ($(this).val() != "custom" && $(this).val() != "algebraic") {
             // clearCheckBoxes();
             for (x in preset_json.presets) {
                 //x is  preset names
@@ -241,12 +252,10 @@ $(document).ready(function () {
 
                 }
             }
-        }
-        else if ($(this).val() == "custom") {
+        } else if ($(this).val() == "custom") {
             // In case custom is selected
             $('#accordionButton').click();
-        }
-        else if ($(this).val() == "algebraic") {
+        } else if ($(this).val() == "algebraic") {
             document.getElementById("userPredicatesInputRow").classList.remove("collapse");
             document.getElementById("fallbackSelectRow").classList.remove("collapse");
 

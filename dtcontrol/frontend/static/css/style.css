@@ -106,3 +106,7 @@ i.fa {
     width: 100%;
     display: block;
 }
+
+.modal-backdrop {
+    z-index: auto;
+}

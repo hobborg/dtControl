@@ -7,6 +7,7 @@ import numpy as np
 import sympy as sp
 from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for
 from werkzeug.utils import secure_filename
+from sys import argv
 
 from dtcontrol import frontend_helper
 
@@ -45,6 +46,9 @@ tau = 0
 
 # Saved domain knowledge predicates
 pred = []
+
+# Demo
+demo = False
 
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
@@ -117,7 +121,7 @@ def discretize(x):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", demo=demo)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -670,5 +674,12 @@ def start_web_frontend():
 if __name__ == "__main__":
     # Tell Python to run the handler() function when SIGINT is recieved
     # signal(SIGINT, handler)
+    try:
+        argv[1]
+    except Exception:
+        print("Booting into normal version of dtControl...\n")
+    else:
+        print("Booting into demo version of dtControl...\n")
+        demo = True
 
     start_web_frontend()
