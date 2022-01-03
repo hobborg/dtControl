@@ -166,7 +166,9 @@ function startPolling() {
 
 $(document).ready(function () {
     // Disable Add-Button until controller directory is loaded
-    document.getElementById("add-experiments-button").disabled = true;
+    if (!getDemo()) {
+     document.getElementById("add-experiments-button").disabled = true;
+    }
     $(".runall").hide();
 
     //MJ load data and init listeners
@@ -188,6 +190,9 @@ $(document).ready(function () {
     });
 
     $('#controller-file').on('change', function () {
+        if (getDemo()){
+            return;
+        }
         //get the file name
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
         //replace the "Choose a file" label

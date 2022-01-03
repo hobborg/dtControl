@@ -675,7 +675,8 @@ if __name__ == "__main__":
     # Tell Python to run the handler() function when SIGINT is recieved
     # signal(SIGINT, handler)
     try:
-        argv[1]
+        # e.g. path for CW: /Users/weinhuber/repositories/dtcontrol/examples/cps
+        UPLOAD_FOLDER = argv[1]
     except Exception:
         print("Booting into normal version of dtControl...\n")
     else:

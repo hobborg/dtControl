@@ -7,8 +7,6 @@ var allConfig = {};
 // preset data json
 var preset_json;
 
-// Are we currently in demo simulator mode?
-var demo = false;
 
 function popupModal(title, msg) {
     $("#messageModal h5.modal-title").text(title);
@@ -27,6 +25,16 @@ function closeNav() {
     // if (isSimulator) return;
     document.getElementById("mySidenav").style.width = "0";
     document.getElementById("main").style.paddingLeft = "0";
+}
+
+function getDemo() {
+    // Are we currently in demo simulator mode?
+    // Check if we are currently in the demo version
+    if (document.getElementById("demoModal") != null) {
+        return true;
+    }else {
+        return false;
+    }
 }
 
 function loadPresets() {
@@ -200,17 +208,13 @@ function fillYML(preset_json) {
 
 $(document).ready(function () {
 
-    // Check if we are currently in the demo version
-    if (document.getElementById("demoModal") != null) {
-        demo = true;
-    }
     openNav();
     document.getElementById("navbar-hamburger").className += " is-active";
     loadPresets();
 
     // Handles changing of form selections when different configs are changed
     $("#config").change(function () {
-        if (demo && ($(this).val() == "custom" || $(this).val() == "algebraic")) {
+        if (getDemo() && ($(this).val() == "custom" || $(this).val() == "algebraic")) {
             $("#demoModal").modal()
             $("#config").val("mlentropy")
         } else if ($(this).val() != "custom" && $(this).val() != "algebraic") {

@@ -8,10 +8,10 @@
     <meta name="author" content="Tom Doan">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for( 'static', filename='js/common.js' ) }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}" charset="UTF-8"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}" charset="UTF-8"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }} "charset="UTF-8"></script>
+    <script src="{{ url_for( 'static', filename='js/common.js' ) }}" charset="UTF-8"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/new-select.css') }}">
@@ -64,14 +64,18 @@
 <!-- Navbar at top -->
 <nav class="navbar navbar-expand-xl navbar-light">
     {% block hamburger %}
-    <button id="navbar-hamburger" class="hamburger hamburger--spin" type="button">
+        <button id="navbar-hamburger" class="hamburger hamburger--spin" type="button">
       <span class="hamburger-box">
         <span class="hamburger-inner"></span>
       </span>
-    </button>
+        </button>
     {% endblock %}
     <a class="navbar-brand ml-0" href="/"><img class="logo"
                                                src="{{ url_for('static', filename='images/logo.png') }}"/>dtControl</a>
+    {% if demo %}
+        <p class="font-italic text-danger">Demo</p>
+    {% endif %}
+
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -112,9 +116,9 @@
                         <label for="controller-file">Controller File</label>
                         <div class="search_categories">
                             <div class="select">
-                                <select class="custom-select" id="controller" name="controller">
-                                    <option value="cartpole" selected="selected">cartpole</option>
-                                    <option value="10rooms">10rooms</option>
+                                <select class="custom-select" id="controller-file" name="controller">
+                                    <option value="cartpole.scs" selected="selected">cartpole.scs</option>
+                                    <option value="10rooms.scs">10rooms.scs</option>
                                 </select>
                             </div>
                         </div>
