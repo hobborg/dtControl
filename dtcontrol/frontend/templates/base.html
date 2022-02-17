@@ -30,12 +30,14 @@
 
 <body id="bootstrap-override">
 
-{% if demo %}
-    <!-- Button trigger modal -->
-{#    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#demoModal">
-        modal
-    </button>#}
 
+    <!-- Button trigger modal for debugging purposes-->
+    <!--
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#demoModal">
+        modal
+    </button>
+    //-->
+    {% if demo %}
     <!-- Modal -->
     <div class="modal fade" id="demoModal" tabindex="2" role="dialog" aria-labelledby="demoModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -59,7 +61,7 @@
             </div>
         </div>
     </div>
-{% endif %}
+    {% endif %}
 
 <!-- Navbar at top -->
 <nav class="navbar navbar-expand-xl navbar-light">
@@ -310,9 +312,16 @@
             <button class="btn btn-primary btn-lg btn-block d-none" type="submit" name="retrain" style="margin-top: 1.25rem;"
                     id="retrain-button" disabled>Retrain from selected node
             </button>
-            <button class="btn btn-primary btn-lg btn-block d-none" type="submit" name="interact" style="margin-top: 1.25rem;"
+            {% if demo %}
+            <button class="btn btn-primary btn-lg btn-block d-none" type="button" style="margin-top: 1.25rem;" data-toggle="modal" data-target="#demoModal"
                     id="interactive-button" disabled>Start interactive tree builder from selected node
             </button>
+            {% else %}
+            <button class="btn btn-primary btn-lg btn-block d-none" type="submit" name="interact" style="margin-top: 1.25rem;"
+            id="interactive-button" disabled>Start interactive tree builder from selected node
+            </button>
+            {% endif %}
+            
         </div>
 
     </form>

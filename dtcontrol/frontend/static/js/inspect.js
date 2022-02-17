@@ -1012,7 +1012,10 @@ function run_partial_construction(configuration) {
         document.getElementById("retrain-button").removeAttribute("disabled");
         document.getElementById("interactive-button").removeAttribute("disabled");
 
-    });
+    }).fail(function() {
+        console.log("Catched error and force reloading...");
+        window.location.reload();
+      });
 }
 
 function start_interactive_construction(configuration) {
@@ -1721,12 +1724,22 @@ $(document).ready(function () {
         let option = $("#operation-selector input:checked")[0].id;
         console.log("Selected " + option);
         if (option === "option-simulate") {
-            // simulation mode
-
             // close the navbar but it should still be active!
             closeNav();
-            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
+            
+            // if demo mode
+            if (getDemo()) {
+                // trigger demo modal
+                $("#demoModal").modal();
 
+                // super hacky solution to unselect button
+                setTimeout(function () {
+                    document.getElementById("option-simulate").parentElement.classList.remove("active");
+                }, 200);
+            } else {
+
+            // simulation mode
+            document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
             isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
@@ -1739,9 +1752,13 @@ $(document).ready(function () {
             document.getElementById("timeRangeContainer").classList.remove("d-none");
             document.getElementById("instep").classList.remove("d-none");
             // document.getElementById("animationDiv").classList.remove("d-none");
+            }
         }
         else if (option === "option-edit") {
             // Edit mode
+
+            // uncolor all nodes (in case they got highlighted by inspect)
+            uncolor_last_highlight();
 
             // open the navbar
             openNav();
@@ -1825,7 +1842,10 @@ $(document).ready(function () {
             xBoundsOuter.push([data.boundOuter[0][i], data.boundOuter[1][i]]);
             xBoundsInner.push([data.boundInner[0][i], data.boundInner[1][i]])
         }
-    });
+    }).fail(function() {
+        console.log("Catched error and force reloading...");
+        window.location.reload();
+      });
 
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {

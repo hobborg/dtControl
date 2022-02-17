@@ -47,8 +47,8 @@ function loadPresets() {
     xhr.open('GET', '/yml', true);
     xhr.onload = function () {
         // Reads the config.yml file
-        preset_json = JSON.parse(this.response);
         if (xhr.status >= 200 && xhr.status < 400) {
+            preset_json = JSON.parse(this.response);
             for (x in preset_json.presets) {
                 const option = document.createElement('option');
                 option.textContent = x;
