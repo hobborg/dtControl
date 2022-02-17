@@ -15,7 +15,7 @@ from traceback import print_exc
 
 from dtcontrol.util import interactive_queue
 
-UPLOAD_FOLDER = '/tmp'
+UPLOAD_FOLDER = '/home/weinhuber/Downloads'
 ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
 
 app = Flask(__name__)
@@ -48,7 +48,7 @@ tau = 0
 pred = []
 
 # Demo
-demo = False
+demo = True
 
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
@@ -305,10 +305,13 @@ def partial_construct():
 
         results[id]["status"] = "Edited"
 
+        return jsonify({"partial_json": partial_json, "full_json": updated_json})
+
     except Exception as e:
         print_exc()
+        return
 
-    return jsonify({"partial_json": partial_json, "full_json": updated_json})
+    
 
 
 @app.route("/construct-partial/interactive", methods=['POST'])
@@ -365,11 +368,13 @@ def interactive_construct():
         })
 
         results[id]["status"] = "Edited"
+        return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
     except Exception as e:
         print_exc()
+        return
 
-    return jsonify({"partial_json": partial_json, "full_json": updated_json})
+    
 
 
 @app.route("/interact", methods=['POST'])
@@ -397,7 +402,7 @@ def select():
 # route when loading default simulator
 @app.route("/simulator")
 def simulator():
-    return render_template("simulator.html")
+    return render_template("simulator.html", demo=demo)
 
 
 # returns the computed tree
@@ -674,13 +679,8 @@ def start_web_frontend():
 if __name__ == "__main__":
     # Tell Python to run the handler() function when SIGINT is recieved
     # signal(SIGINT, handler)
-    try:
-        # e.g. path for CW: /Users/weinhuber/repositories/dtcontrol/examples/cps
-        UPLOAD_FOLDER = argv[1]
-    except Exception:
-        print("Booting into normal version of dtControl...\n")
-    else:
-        print("Booting into demo version of dtControl...\n")
-        demo = True
+
+    print("Booting into normal version of dtControl...\n")
+    demo = False
 
     start_web_frontend()
