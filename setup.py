@@ -56,17 +56,38 @@ setuptools.setup(
     ],
     python_requires='>=3.8',
     install_requires=[
-        'dd==0.5.5',
-        'Jinja2==2.10.3',
-        'pandas==1.2.2',
-        'psutil>=5.6.7',
-        'pydot==1.4.1',
-        'ruamel.yaml==0.16.10',
-        'scikit-learn==0.24.1',
-        'tabulate==0.8.6',
-        'tqdm==4.42.0',
-        'flask==1.1.2',
-        'sympy==1.6.1'
+        'dd==0.5.7'
+        'astutils==0.0.4'
+        'ply==3.11'
+        'networkx==2.6.3'
+        'psutil==5.9.0'
+        'pydot==1.4.2'
+        'pyparsing==3.0.7'
+        'setuptools==60.9.3'
+        'Flask==2.0.3'
+        'click==8.0.4'
+        'itsdangerous==2.1.0'
+        'Jinja2==3.0.3'
+        'MarkupSafe==2.1.0'
+        'Werkzeug==2.0.3'
+        'pandas==1.4.1'
+        'numpy==1.22.2'
+        'python-dateutil==2.8.2'
+        'six==1.16.0'
+        'pytz==2021.3'
+        'psutil==5.9.0'
+        'pydot==1.4.2'
+        'pyparsing==3.0.7'
+        'ruamel.yaml.clib==0.2.6'
+        'ruamel.yaml==0.17.21'
+        'scikit-learn==1.0.2'
+        'joblib==1.1.0'
+        'numpy==1.22.2'
+        'scipy==1.8.0'
+        'sympy==1.9'
+        'mpmath==1.2.1'
+        'tabulate==0.8.9'
+        'tqdm==4.62.3'
     ],
     package_data={
         'dtcontrol': ['config.yml'],
