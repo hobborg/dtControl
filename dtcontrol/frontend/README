@@ -24,3 +24,43 @@ dx_0=...
 "
 
     There should be no [] and change in state variable 0 is to be denoted as dx_0 not dx[0]
+
+Additional informations on the demo version:
+    In order to deploy the demo version of dtControl, we sticked to apache2.
+    For that, we need following two files:
+
+    WSGI:
+        The app.wsgi files contains the code mod_wsgi is executing on startup to get the application object. 
+        The object called application in that file is then used as application. 
+        In our case the app application corresponds to the Flask app within app.py
+        Important sidenote: In this wsgi file we also manually activate our virtual environment.
+
+    Pipfile:
+        Pipfile is the dedicated file used by the Pipenv virtual environment to manage project dependencies. 
+        This file is essential for using Pipenv. We had to use pipenv instead of pip because pip just didn't work out for me :P
+    
+    Tutorial how to deploy: (We assume apache2 is already installed on the server)
+        0. clone dtControl into '/var/www/'
+        1. cd into the frontend folder by running:
+            $ cd dtcontrol/dtcontrol/frontend/
+        2. Install the project dependencies manually via 
+            $ pipenv install
+            - If the commmand 'pipenv' is not supported, run:
+                $ sudo apt install pipenv
+        3. Copy-Paste the path to the virtual environment to the app.wsgi file
+            - To get the path run
+                $ pipenv --venv
+            - Copy the path and paste it to the variable 'storedVenv' in line 4.
+                IMPORTANT: EXTEND THE PATH WITH '/bin/activate_this.py'
+                e.g: storedVenv = "/home/urName/.local/share/virtualenvs/frontend-RWjeeMLl/bin/activate_this.py"
+        3. Activate the virtual environment via
+            $ pipenv shell
+        4. To make sure everything worked out, run
+            $ python app.py
+        5. Now everything is setup and we only need to copy-paste the configuration file for apache2 into the right folder.
+            5.1 sudo cp /var/www/dtcontrol/dtcontrol/frontend/dtcontrol.conf /etc/apache2/sites-available/dtcontrol.conf
+        6. Restart apache by running following command:
+            $ sudo systemctl restart apache2
+        7. If something went wrong, check out the logs in 'dtcontrol/dtcontrol/frontend/logs/'
+            7.1 I think this guy really made an awesome tutorial on this topic: 
+                https://www.youtube.com/watch?v=w0QDAg85Oow
