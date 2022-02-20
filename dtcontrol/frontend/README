@@ -58,9 +58,10 @@ Additional informations on the demo version:
         4. To make sure everything worked out, run
             $ python app.py
         5. Now everything is setup and we only need to copy-paste the configuration file for apache2 into the right folder.
-            5.1 sudo cp /var/www/dtcontrol/dtcontrol/frontend/dtcontrol.conf /etc/apache2/sites-available/dtcontrol.conf
+            5.1 sudo cp /var/www/dtcontrol/dtcontrol/frontend/dtcontrol.conf /etc/apache2/sites-available/
         6. Restart apache by running following command:
             $ sudo systemctl restart apache2
         7. If something went wrong, check out the logs in 'dtcontrol/dtcontrol/frontend/logs/'
             7.1 I think this guy really made an awesome tutorial on this topic: 
                 https://www.youtube.com/watch?v=w0QDAg85Oow
+        8. As a last and final step, add the path to where the cartpole and 10rooms file.
