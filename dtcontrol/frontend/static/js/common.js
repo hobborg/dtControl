@@ -294,4 +294,30 @@ $(document).ready(function () {
         accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
         accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
     });
+
+
+    // Help Tutorial Video
+    $('#startTutorialVideo').click(function(){
+        $('#videoModalBody').removeClass("d-none");
+        $('#helpTextBody').addClass("d-none");
+        $('#tutorialFooter').addClass("d-none");
+        document.getElementById('helpModal').childNodes[1].classList.add('modal-xl');
+    });
+
+    /* Get iframe src attribute value i.e. YouTube video url
+    and store it in a variable */
+    var url = $("#tutorialVideo").attr('src');
+    
+    /* Assign empty url value to the iframe src attribute when
+    modal hide, which stop the video playing */
+    $("#helpModal").on('hide.bs.modal', function(){
+        $("#tutorialVideo").attr('src', '');
+    });
+    
+    /* Assign the initially stored url back to the iframe src
+    attribute when modal is displayed again */
+    $("#helpModal").on('show.bs.modal', function(){
+        $("#tutorialVideo").attr('src', url);
+    });
+
 });

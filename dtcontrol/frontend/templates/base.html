@@ -30,15 +30,14 @@
 
 <body id="bootstrap-override">
 
-
-    <!-- Button trigger modal for debugging purposes-->
-    <!--
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#demoModal">
-        modal
-    </button>
-    //-->
+<!-- Demo Modal -->
     {% if demo %}
-    <!-- Modal -->
+    <!-- Button trigger modal for debugging purposes-->
+    
+    <!--
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#demoModal">modal</button>
+    //-->
+    
     <div class="modal fade" id="demoModal" tabindex="2" role="dialog" aria-labelledby="demoModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -63,6 +62,35 @@
     </div>
     {% endif %}
 
+    <div class="modal fade" id="helpModal" tabindex="2" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">Welcome to dtControl</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="helpTextBody">
+                    Hi and thanks for using dtControl :) <br><br>
+                    In the following section we will provide you with a short video tutorial to guide you through dtControl.
+                    You can exit this tutorial anytime by clicking outside of this modal. <br><br>
+                    Click 'Start Video' to continue.
+                </div>
+
+                <div class="modal-body d-none" id="videoModalBody">
+                    <div class="embed-responsive embed-responsive-16by9 ">
+                        <iframe id="tutorialVideo" class="embed-responsive-item" src="https://www.youtube.com/embed/tgbNymZ7vqY" allowfullscreen></iframe>
+                      </div>
+                </div>
+
+                <div class="modal-footer" id="tutorialFooter">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="startTutorialVideo">Start Video</button>
+                </div>
+            </div>
+        </div>
+    </div>
 <!-- Navbar at top -->
 <nav class="navbar navbar-expand-xl navbar-light">
     {% block hamburger %}
@@ -82,6 +110,8 @@
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
+
+    <button type="button" id="helpButton" data-toggle="modal" data-target="#helpModal" class="btn btn-outline-info">Help</button>
 </nav>
 
 <!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->

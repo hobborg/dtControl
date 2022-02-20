@@ -110,3 +110,8 @@ i.fa {
 .modal-backdrop {
     z-index: auto;
 }
+
+#helpButton {
+    margin-left: auto; 
+    margin-right: 8px; 
+}
