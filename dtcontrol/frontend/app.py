@@ -15,7 +15,7 @@ from traceback import print_exc
 
 from dtcontrol.util import interactive_queue
 
-UPLOAD_FOLDER = '/home/weinhuber/Downloads'
+UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
 
 app = Flask(__name__)
