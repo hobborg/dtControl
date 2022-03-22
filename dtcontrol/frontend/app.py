@@ -5,9 +5,9 @@ import html
 
 import numpy as np
 import sympy as sp
-from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for
+from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for, session
 from werkzeug.utils import secure_filename
-from sys import argv
+from datetime import timedelta
 
 from dtcontrol import frontend_helper
 
@@ -15,18 +15,15 @@ from traceback import print_exc
 
 from dtcontrol.util import interactive_queue
 
-UPLOAD_FOLDER = '/home/weinhuber/Downloads'
+UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
 
 app = Flask(__name__)
+app.secret_key = "dtControlRockzZ!"
+app.permanent_session_lifetime = timedelta(days=1)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 logging.basicConfig(format="%(threadName)s: %(message)s")
-
-# stored experiments
-experiments = []
-# stored results
-results = {}
 
 # computed configurations from the benchmark view
 completed_experiments = {}
@@ -49,6 +46,7 @@ pred = []
 
 # Demo
 demo = True
+
 
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
@@ -115,45 +113,70 @@ def discretize(x):
 
         # Reference: https://gitlab.lrz.de/matthias/SCOTSv0.2/-/blob/master/src/UniformGrid.hh#L234
         half_step_size = (step_size[i] / 2.0)
-        diff.append((((x[i] - min_bounds_outer[i]) + half_step_size) // step_size[i]) * step_size[i] + min_bounds_outer[i])
+        diff.append(
+            (((x[i] - min_bounds_outer[i]) + half_step_size) // step_size[i]) * step_size[i] + min_bounds_outer[i])
     return diff
 
 
+def setupSession():
+    # setup of session if not already done
+    # stored experiments
+    if "experiments" not in session:
+        session["experiments"] = []
+
+    # stored results
+    if "results" not in session:
+        session["results"] = {}
+
+    # stored results
+    if "results" not in session:
+        session["results"] = {}
+
+    # computed configurations from the benchmark view
+    if "completed_experiments" not in session:
+        session["completed_experiments"] = {}
+
+    if "selected_computation_id" not in session:
+        session["selected_computation_id"] = None
+
+    session.permanent = True
+
+@app.route("/reset-hard")
+def resetHard():
+    session.clear()
+    return redirect(url_for("index"))
+
 @app.route("/")
 def index():
+    setupSession()
     return render_template("index.html", demo=demo)
+
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static/images'),
                                'favicon-32.png', mimetype='image/png')
 
+
 @app.route('/experiments', methods=['GET', 'POST'])
 def experimentsRoute():
-    global experiments
     if request.method == 'GET':
-        return jsonify(experiments)
+        return jsonify(session.get("experiments"))
     else:
-        experiments.append(request.get_json())
+        session["experiments"].append(request.get_json())
         return jsonify(success=True)
 
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
-    global experiments
     experiment_to_delete = request.get_json()
-
-    """
-    experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
-    """
-    experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
-    experiments.remove(experiment_to_delete)
+    session["experiments"].remove(experiment_to_delete)
     return jsonify(success=True)
+
 
 @app.route('/results', methods=['GET'])
 def resultsRoute():
-    global results
-    return jsonify(results)
+    return jsonify(session["results"])
 
 
 # First call that receives controller and config and returns constructed tree
@@ -167,8 +190,9 @@ def construct():
     nice_name = data['nice_name']
     config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    results[id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
-                   "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
+
+    session["results"][id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
+                              "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
         to_parse_dict = {"controller": cont, "determinize": data['determinize'],
@@ -178,7 +202,8 @@ def construct():
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
         to_parse_dict = {"controller": cont, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
-                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
+                         "tolerance": data['tolerance'], "determinize": data['determinize'],
+                         "safe-pruning": data['safe_pruning'],
                          "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
         to_parse_dict = {"controller": cont, "config": config}
@@ -214,17 +239,17 @@ def construct():
         stats = classifier["classifier"].get_stats()
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
         # this_result = results[id]
-        results[id]["status"] = "Completed"
-        results[id]["inner_nodes"] = new_stats[0]
-        results[id]["leaf_nodes"] = new_stats[1]
-        results[id]["construction_time"] = new_stats[2]
+        session["results"][id]["status"] = "Completed"
+        session["results"][id]["inner_nodes"] = new_stats[0]
+        session["results"][id]["leaf_nodes"] = new_stats[1]
+        session["results"][id]["construction_time"] = new_stats[2]
 
 
     except Exception as e:
         print_exc()
-        results[id]["status"] = "Error / " + type(e).__name__
+        session["results"][id]["status"] = "Error / " + type(e).__name__
 
-    return jsonify(results[id])
+    return jsonify(session["results"][id])
 
 
 # First call that receives controller and config and returns constructed tree
@@ -247,7 +272,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 
 @app.route("/construct-partial/from-preset", methods=['POST'])
 def partial_construct():
-    global completed_experiments, results
+    global completed_experiments
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -263,8 +288,10 @@ def partial_construct():
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
-        to_parse_dict = {"controller": controller_file, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
-                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
+        to_parse_dict = {"controller": controller_file, "config": "algebraic",
+                         "fallback": config.split("Fallback: ")[1][:-1],
+                         "tolerance": data['tolerance'], "determinize": data['determinize'],
+                         "safe-pruning": data['safe_pruning'],
                          "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
         to_parse_dict = {"controller": controller_file, "config": config}
@@ -303,7 +330,7 @@ def partial_construct():
             "saved_tree": updated_tree
         })
 
-        results[id]["status"] = "Edited"
+        session["results"][id]["status"] = "Edited"
 
         return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
@@ -311,12 +338,10 @@ def partial_construct():
         print_exc()
         return
 
-    
-
 
 @app.route("/construct-partial/interactive", methods=['POST'])
 def interactive_construct():
-    global completed_experiments, results
+    global completed_experiments
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -367,14 +392,12 @@ def interactive_construct():
             "saved_tree": updated_tree
         })
 
-        results[id]["status"] = "Edited"
+        session["results"]["status"] = "Edited"
         return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
     except Exception as e:
         print_exc()
         return
-
-    
 
 
 @app.route("/interact", methods=['POST'])
@@ -597,16 +620,19 @@ def pick_random_point():
     else:
         return jsonify(None)
 
+
 @app.route("/sample-websocket")
 def start_websocket():
     frontend_helper.start_websocket_with_frontend()
     return "Starting websocket"
 
+
 def recursive_scan(baseDir):
     for entry in os.scandir(baseDir):
         if entry.is_file():
-            if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(".prism") or entry.name.endswith(
-                    ".csv") or entry.name.endswith(".dump")) and (
+            if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(
+                    ".prism") or entry.name.endswith(
+                ".csv") or entry.name.endswith(".dump")) and (
                     not entry.name.startswith(".")):
                 yield os.path.join(baseDir, entry.name)
         else:
@@ -635,6 +661,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     # check if the post request has the file part
@@ -654,6 +681,7 @@ def upload_file():
         return "Successfully saved file " + filename
     return "Invalid request"
 
+
 global http_server
 
 
@@ -668,12 +696,18 @@ def handler(signal_received, frame):
 def start_web_frontend():
     global http_server
     print('Starting dtControl web interface...')
-    logging.warning(
-        'dtControl web interface is under development and may be unstable. One may find the commmand-line interface to be more reliable.')
     print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
     app.run(debug=False, use_reloader=False)
     # http_server = WSGIServer(('', 5000), app)
     # http_server.serve_forever()
+
+
+def start_production_server():
+    from waitress import serve
+    print('Starting dtControl web interface...')
+    print('Navigate to http://127.0.0.1:5000/ in your browser to open the frontend. Press Ctrl+C to exit.')
+
+    serve(app, host="127.0.0.1", port=5000)
 
 
 if __name__ == "__main__":
