@@ -6,8 +6,10 @@ import html
 import numpy as np
 import sympy as sp
 from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for, session
+from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.utils import secure_filename
-from datetime import timedelta
+import datetime
+import uuid
 
 from dtcontrol import frontend_helper
 
@@ -20,14 +22,14 @@ ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
 
 app = Flask(__name__)
 app.secret_key = "dtControlRockzZ!"
-app.permanent_session_lifetime = timedelta(days=1)
+app.permanent_session_lifetime = datetime.timedelta(days=2)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 logging.basicConfig(format="%(threadName)s: %(message)s")
 
-# computed configurations from the benchmark view
-completed_experiments = {}
-selected_computation_id = None
+# stores all the data
+# consists of { key: ID value: [experiments, results, completed_experiments, selected_computation_id]}
+mainData = {}
 
 # contains (variable_name, value) pairs obtained from dynamics.txt file present in examples folder
 variable_subs = []
@@ -46,6 +48,22 @@ pred = []
 
 # Demo
 demo = True
+
+
+def cleanupMainData():
+    # function to delete old data
+    global mainData
+    for sessionID in list(mainData.keys()):
+        delta = mainData[sessionID]["timestamp"] - datetime.datetime.now()
+        days = delta.days
+        hours = delta.total_seconds() / 3600
+        if days > 0 and hours > 1:
+            del mainData[sessionID]
+
+
+# scheduler to delete old mainData
+clean_up_scheduler = BackgroundScheduler(daemon=True)
+clean_up_scheduler.add_job(func=cleanupMainData, trigger="interval", hours=6)
 
 
 def runge_kutta(x, u, nint=15):
@@ -88,8 +106,10 @@ def computation(index, x, u, lambda_list):
 
 # some errors when using Greatest integer function-like discretisation
 def discretize(x):
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+    selected_computation_id = mainData[session["id"]]["selected_computation_id"]
     diff = []
-
     # step size (used in discretisation) for each of the state variables
     step_size = completed_experiments[selected_computation_id]["step_size"]
 
@@ -118,28 +138,36 @@ def discretize(x):
     return diff
 
 
-def setupSession():
-    # setup of session if not already done
-    # stored experiments
-    if "experiments" not in session:
-        session["experiments"] = []
+def initDataStorage():
+    global mainData
 
-    # stored results
-    if "results" not in session:
-        session["results"] = {}
+    # assign id and store id as cookie on client machine
+    if "id" not in session or session["id"] not in mainData:
+        session["id"] = str(uuid.uuid4())
 
-    # stored results
-    if "results" not in session:
-        session["results"] = {}
+        # setup mainData
+        mainData[session["id"]] = {}
+        mainData[session["id"]]["experiments"] = []
+        mainData[session["id"]]["results"] = {}
+        mainData[session["id"]]["completed_experiments"] = {}
+        mainData[session["id"]]["selected_computation_id"] = None
 
-    # computed configurations from the benchmark view
-    if "completed_experiments" not in session:
-        session["completed_experiments"] = {}
+        # timestamp
+        mainData[session["id"]]["timestamp"] = datetime.datetime.now()
 
-    if "selected_computation_id" not in session:
-        session["selected_computation_id"] = None
+        print("Successfully registered new client with ID:\n"+session["id"])
 
+    # make sessions permanent (see also permanent_session_lifetime)
     session.permanent = True
+
+def cleanupMainData():
+    # function to delete old data
+    global mainData
+    for sessionID in list(mainData.keys()):
+        delta = mainData[sessionID]["timestamp"] - datetime.datetime.now()
+        if delta.days > 0:
+            del mainData[sessionID]
+
 
 @app.route("/reset-hard")
 def resetHard():
@@ -148,7 +176,7 @@ def resetHard():
 
 @app.route("/")
 def index():
-    setupSession()
+    initDataStorage()
     return render_template("index.html", demo=demo)
 
 
@@ -160,29 +188,39 @@ def favicon():
 
 @app.route('/experiments', methods=['GET', 'POST'])
 def experimentsRoute():
+    global mainData
+    experiments = mainData[session["id"]]["experiments"]
+
     if request.method == 'GET':
-        return jsonify(session.get("experiments"))
+        return jsonify(experiments)
     else:
-        session["experiments"].append(request.get_json())
+        experiments.append(request.get_json())
         return jsonify(success=True)
 
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
+    global mainData
+    experiments = mainData[session["id"]]["experiments"]
+
     experiment_to_delete = request.get_json()
-    session["experiments"].remove(experiment_to_delete)
+    experiments.remove(experiment_to_delete)
     return jsonify(success=True)
 
 
 @app.route('/results', methods=['GET'])
 def resultsRoute():
-    return jsonify(session["results"])
+    global mainData
+    results = mainData[session["id"]]["results"]
+    return jsonify(results)
 
 
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
 def construct():
-    global completed_experiments
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+    results = mainData[session["id"]]["results"]
     data = request.get_json()
     logging.info("Request: \n", data)
     id = int(data['id'])
@@ -191,7 +229,7 @@ def construct():
     config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
 
-    session["results"][id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
+    results[id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
                               "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
@@ -239,17 +277,17 @@ def construct():
         stats = classifier["classifier"].get_stats()
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
         # this_result = results[id]
-        session["results"][id]["status"] = "Completed"
-        session["results"][id]["inner_nodes"] = new_stats[0]
-        session["results"][id]["leaf_nodes"] = new_stats[1]
-        session["results"][id]["construction_time"] = new_stats[2]
+        results[id]["status"] = "Completed"
+        results[id]["inner_nodes"] = new_stats[0]
+        results[id]["leaf_nodes"] = new_stats[1]
+        results[id]["construction_time"] = new_stats[2]
 
 
     except Exception as e:
         print_exc()
-        session["results"][id]["status"] = "Error / " + type(e).__name__
+        results[id]["status"] = "Error / " + type(e).__name__
 
-    return jsonify(session["results"][id])
+    return jsonify(results[id])
 
 
 # First call that receives controller and config and returns constructed tree
@@ -272,7 +310,9 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 
 @app.route("/construct-partial/from-preset", methods=['POST'])
 def partial_construct():
-    global completed_experiments
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+    results = mainData[session["id"]]["results"]
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -330,7 +370,7 @@ def partial_construct():
             "saved_tree": updated_tree
         })
 
-        session["results"][id]["status"] = "Edited"
+        results[id]["status"] = "Edited"
 
         return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
@@ -341,7 +381,9 @@ def partial_construct():
 
 @app.route("/construct-partial/interactive", methods=['POST'])
 def interactive_construct():
-    global completed_experiments
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+    results = mainData[session["id"]]["results"]
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -392,7 +434,7 @@ def interactive_construct():
             "saved_tree": updated_tree
         })
 
-        session["results"]["status"] = "Edited"
+        results["status"] = "Edited"
         return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
     except Exception as e:
@@ -417,8 +459,8 @@ def interact_with_fit():
 # route for selecting one of the computed configs
 @app.route('/select', methods=['POST'])
 def select():
-    global selected_computation_id
-    selected_computation_id = int(request.form['runConfigIndex'])
+    global mainData
+    mainData[session["id"]]["selected_computation_id"] = int(request.form['runConfigIndex'])
     return jsonify(success=True)
 
 
@@ -431,7 +473,10 @@ def simulator():
 # returns the computed tree
 @app.route("/computed")
 def computed():
-    global selected_computation_id
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+    selected_computation_id = mainData[session["id"]]["selected_computation_id"]
+
     selected_experiment = completed_experiments[selected_computation_id]
     returnDict = {
         "idUnderInspection": selected_computation_id,
@@ -448,6 +493,9 @@ def computed():
 # Gets user input values to initialise the state variables
 @app.route("/initRoute", methods=['POST'])
 def initroute():
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+
     data = request.get_json()
     id = int(data['id'])
     x = data['pass']
@@ -496,6 +544,8 @@ def initroute():
 # Called on each step of the simulation
 @app.route("/stepRoute", methods=['POST'])
 def stepRoute():
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
     data = request.get_json()
     id = int(data['id'])
     x = data['x_pass']
@@ -513,6 +563,8 @@ def stepRoute():
 # Called when using the instep function
 @app.route("/inStepRoute", methods=['POST'])
 def inStepRoute():
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
     data = request.get_json()
     id = int(data['id'])
     steps = data['steps']
@@ -601,6 +653,9 @@ def splitNode():
 
 @app.route("/random", methods=['POST'])
 def pick_random_point():
+    global mainData
+    completed_experiments = mainData[session["id"]]["completed_experiments"]
+    selected_computation_id = mainData[session["id"]]["selected_computation_id"]
     data = request.get_json()
     id = data['id']
     if selected_computation_id == id:
