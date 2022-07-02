@@ -15,6 +15,9 @@ benchmark*.json
 *.saved
 test/test_saved_classifiers
 
+# tabea
+dtcontrol_venv/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
