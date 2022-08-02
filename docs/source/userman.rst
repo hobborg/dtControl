@@ -178,7 +178,7 @@ This configuration provides the information that the two variables are ``clock``
 
 .. _the-command-line-interface:
 
-The Command-line Interface
+The command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This section shows how to configure and run dtControl. For this purpose, we assume that you have an ``examples`` folder
