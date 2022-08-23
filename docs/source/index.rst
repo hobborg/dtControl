@@ -13,8 +13,6 @@ We provide a :doc:`User Manual<userman>`, which gives information necessary to u
 
 An additional :doc:`Developer Manual<devman>` is made available for those who are interested in interfacing their own controller synthesis tools with dtControl or interested in implementing their own strategy representation algorithms.
 
-If you find any mistakes in this documentation or have any questions, we are happy to receive your message. You may contact `Maxi <mailto:maxi.weininger@tum.de>`_, `Christoph <mailto:christoph.weinhuber@tum.de>`_, `Jan <mailto:jan.kretinsky@tum.de>`_ or `Tabea <mailto:tabea.frisch@tum.de>`_.
-
 .. toctree::
    :maxdepth: 3
    :caption: Table of Contents
