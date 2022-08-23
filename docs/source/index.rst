@@ -11,7 +11,9 @@ Moreover, it also supports a CSV-based format which allows the user to quickly e
 
 We provide a :doc:`User Manual<userman>`, which gives information necessary to use dtControl and run the various decision tree learning algorithms implemented in it, as described in the paper "dtControl: Decision Tree Learning Algorithms for Controller Representation" appearing at the 23rd ACM International Conference on Hybrid Systems: Computation and Control (HSCC 2020).
 
-An additional :doc:`Developer Manual<devman>` is made available for those who are interested in interfacing their own controller synthesis tools with dtControl and/or those interested in implementing their own strategy representation algorithms.
+An additional :doc:`Developer Manual<devman>` is made available for those who are interested in interfacing their own controller synthesis tools with dtControl or interested in implementing their own strategy representation algorithms.
+
+If you find any mistakes in this documentation or have any questions, we are happy to receive your message. You may contact `Maxi <mailto:maxi.weininger@tum.de>`_, `Christoph <mailto:christoph.weinhuber@tum.de>`_, `Jan <mailto:jan.kretinsky@tum.de>`_ or `Tabea <mailto:tabea.frisch@tum.de>`_.
 
 .. toctree::
    :maxdepth: 3
