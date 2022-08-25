@@ -9,7 +9,7 @@ dtControl is a tool for compressing memoryless controllers arising out of automa
 
 Moreover, it also supports a CSV-based format, which allows the user to quickly experiment with the techniques provided by dtControl.
 
-We provide a :doc:`User Manual<userman>`, which gives information necessary to use dtControl and run the various decision tree learning algorithms implemented in it, as described in the paper "dtControl: Decision Tree Learning Algorithms for Controller Representation" appearing at the 23rd ACM International Conference on Hybrid Systems: Computation and Control (HSCC 2020).
+We provide a :doc:`User Manual<userman>`, which gives information necessary to use dtControl and run the various decision tree learning algorithms implemented in it, as described in the paper "dtControl: Decision Tree Learning Algorithms for Controller Representation", appearing at the 23rd ACM International Conference on Hybrid Systems: Computation and Control (HSCC 2020).
 
 An additional :doc:`Developer Manual<devman>` is made available for those who are interested in interfacing their own controller synthesis tools with dtControl or interested in implementing their own strategy representation algorithms.
 
