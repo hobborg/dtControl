@@ -13,6 +13,8 @@ We provide a :doc:`User Manual<userman>`, which gives information necessary to u
 
 An additional :doc:`Developer Manual<devman>` is made available for those who are interested in interfacing their own controller synthesis tools with dtControl or interested in implementing their own strategy representation algorithms.
 
+test
+
 .. toctree::
    :maxdepth: 3
    :caption: Table of Contents
