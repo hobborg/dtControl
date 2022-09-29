@@ -160,13 +160,6 @@ def initDataStorage():
     # make sessions permanent (see also permanent_session_lifetime)
     session.permanent = True
 
-def cleanupMainData():
-    # function to delete old data
-    global mainData
-    for sessionID in list(mainData.keys()):
-        delta = mainData[sessionID]["timestamp"] - datetime.datetime.now()
-        if delta.days > 0:
-            del mainData[sessionID]
 
 
 @app.route("/reset-hard")
