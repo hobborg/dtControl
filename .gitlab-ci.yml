@@ -91,6 +91,6 @@ deploy_website:
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - cat ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - rsync -avz _site/* ashok@vmesparza11:/var/www/dtcontrol
+    - rsync -avz _site/* dtcontrol @vmesparza11:/var/www/dtcontrol
   only:
     - master
