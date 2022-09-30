@@ -30,65 +30,60 @@
         </div>
     </header>
     <section>
-        <h1>Video Tutorials</h1>
+        <h1>Tutorials</h1>
         <h2>Setup</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>In this video, we provide a quick setup guide for dtControl.
+            Hereby, we recommend downloading dtControl from the <a href="https://pypi.org/project/dtcontrol/">Python Package Index (PyPI)</a>.
+            Before installing, we recommend creating a <a href="https://docs.python.org/3.8/tutorial/venv.html">virtual environment</a> so that dependencies of dtControl do not conflict with any other packages already installed on your local system.
+            However, we describe all necessary steps within this video.</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_0_Setup.mov" type=video/mp4>
         </video>
         <hr class="divider">
 
         <h2>Get Experiments</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>In case you don't have any controller files on your local machine, this video demonstrates how to download our commonly used controller files.
+            The same controller files are used throughout our tutorial series can be found in our <a href="https://gitlab.lrz.de/i7/dtcontrol-examples">repository</a>.</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_1_GetExperiments.mov" type=video/mp4>
         </video>
         <hr class="divider">
 
         <h2>Add and Run Experiments</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>Once the setup process is completed, this video shows how to add and run single experiments to dtControl.
+            The controller file used throughout this video can be found <a href="https://gitlab.lrz.de/i7/dtcontrol-examples/-/blob/master/cps/10rooms.scs.zip">here</a>.
+            However, before actually uploading the controller to dtControl, make sure it is unzipped as shown in the previous video "Get Experiments".</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_2_AddAndRunExperiments.mov" type=video/mp4>
         </video>
         <hr class="divider">
 
         <h2>Algebraic Predicates</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>As shown in our recent <a href="https://doi.org/10.1007/978-3-030-72013-1_17">paper</a>, it is possible to derive algebraic predicates from domain knowledge for the cruise-control model.
+            Hereby, we were able to construct a decision tree representing the whole permissive controller for the cruise-control model with 11 nodes.
+            This video demonstrates how to enter those algebraic predicates, which can be found <a href="https://mediatum.ub.tum.de/doc/1617115/1617115.pdf">here (Appendix A.1)</a>.</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_3_algebraicPredicates.mov" type=video/mp4>
         </video>
         <hr class="divider">
 
         <h2>Inspect Result</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>Once the result of an experiment is available, this video demonstrates all available features to inspect and understand the resulting decision tree.</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_4_Inspect.mov" type=video/mp4>
         </video>
         <hr class="divider">
 
         <h2>Edit Result</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>In case one might not be 100% satisfied with the obtained result, this video exemplifies how to edit and reconstruct parts of the resulting decision tree.
+            Hereby, we demonstrate the interactive tree builder, as well as the retrain-from-node feature.</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_5_Edit.mov" type=video/mp4>
         </video>
         <hr class="divider">
 
         <h2>Simulate Result</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-            enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-            in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <p>This video provides a quick introduction to our simulation mode, in which one can simulate a run of the system under the control of the decision tree and visualize the decisions made. The system dynamics file used throughout this video, can be found <a href="/assets/files/cartpoledynamics.txt" download>here</a>.</p>
         <video width="560" height="340" controls>
             <source src="/assets/videos/dtControlTutorial_6_Simulation.mov" type=video/mp4>
         </video>
