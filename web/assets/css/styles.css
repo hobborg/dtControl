@@ -445,3 +445,8 @@ footer {
     color:#444;
   }
 }
+
+/* Divider */
+hr.divider {
+   border-top: 3px solid #bbb;
+}
