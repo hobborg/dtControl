@@ -18,7 +18,7 @@ tools and represents them in the form of decision trees. An example is shown bel
 <div class="fixed">
 <img src="assets/images/10rooms-pause-loop.gif" />
 <div class="caption">
-Controller of an automatic climate control system for a building with 10 rooms obtained from SCOTS
+Controller of an automatic climate control system for a building with 10 rooms obtained from [SCOTS](https://www.hyconsys.com/software/scots/).
 </div>
 </div>
 <div class="flex-item">
