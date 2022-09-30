@@ -44,13 +44,13 @@ can be found in our latest [TACAS 2021 paper](https://arxiv.org/abs/2101.07202).
 
 ## Quick Start
 
-You can quickly install dtControl by running the following command
+You can quickly install **dtControl** by running the following command
 
 ```
 pip install dtcontrol
 ```
 
-Check whether dtControl has installed by running
+Check whether **dtControl** has installed by running
 
 ```
 dtcontrol --version
@@ -63,7 +63,7 @@ wget https://gitlab.lrz.de/i7/dtcontrol/raw/6dd07a5991a0e0a7992c9f7c94e1b9c75c7d
 && unzip 10rooms.scs.zip
 ```
 
-following which you may use dtControl to generate a decision tree.
+following which you may use **dtControl** to generate a decision tree.
 
 ```
 dtcontrol --input 10rooms.scs --use-preset maxfreq
@@ -73,15 +73,15 @@ The above command, if executed successfully, will generate a files `benchmark.ht
 
 ## Manuals / Documentation
 
-Our complete documentation including user and developer manuals are available at [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io). Please ensure that you are referring to the correct version of the documentation.
+Our complete documentation including user and developer manuals are available at [dtcontrol.readthedocs.io](https://dtcontrol.readthedocs.io). Please ensure that you are referring to the correct version of the documentation. Additionally, we provide [video tutorials][2], covering the most aspects of **dtControl**.
 
 ## Artifact evaluation
 
-dtControl has undergone several artifact evaluation processes. All the resources for that are available [here][1].
+**dtControl** has undergone several artifact evaluation processes. All the resources for that are available [here][1].
 
 ## Contact
 
-For questions, suggestions and comments, you may contact [Mathias](mailto:jackerme@in.tum.de), [Pranav](mailto:ashok@in.tum.de), [Maxi](mailto:maxi.weininger@tum.de), [Christoph](mailto:christoph.weinhuber@tum.de) or [Jan](mailto:jan.kretinsky@tum.de). We would also be glad to help you incorporate dtControl into your controller synthesis/usage workflow. Other feature requests are also welcome.
+For questions, suggestions and comments, you may contact [Mathias](mailto:jackerme@in.tum.de), [Pranav](mailto:ashok@in.tum.de), [Maxi](mailto:maxi.weininger@tum.de), [Christoph](mailto:christoph.weinhuber@tum.de) or [Jan](mailto:jan.kretinsky@tum.de). We would also be glad to help you incorporate **dtControl** into your controller synthesis/usage workflow. Other feature requests are also welcome.
 
 ## Citing
 
@@ -95,7 +95,7 @@ Cite **dtControl** in academic publications as:
   
 ## Related Publications
 
-dtControl was first introduced in:
+**dtControl** was first introduced in:
 
 - *Pranav Ashok, Mathias Jackermeier, Pushpak Jagtap, Jan Kretínský, Maximilian Weininger, Majid Zamani.*
 **dtControl: Decision Tree Learning Algorithms for Controller Representation.**
@@ -124,3 +124,4 @@ Other closely related publications include:
 [view](https://doi.org/10.1007/978-3-319-21690-4_10) / [bibtex](https://dblp.org/rec/bibtex/conf/cav/BrazdilCCFK15) / [pre-print](https://arxiv.org/abs/1502.02834)
 
 [1]:{{ site.url }}/artifacts
+[2]:{{ site.url }}/tutorials
