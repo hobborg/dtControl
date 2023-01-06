@@ -85,6 +85,18 @@ var highlighting_constraint_history = [];
 // helper variable used for redirecting back within the navbar hamburger
 var redirect = false;
 
+// global var that stores dataset for rendering the plot (renderPlot)
+
+// data_dict is a dictionary with the following entries:
+// - dataset_x: has the form [[dim1, dim2, ...], [dim1, dim2, ...], ...], contains every data point, but not the labels
+// - predicted_labels: list, length corresponds to number of data points
+// predicted labels can take multiple forms: can be single numbers or tuples, e.g. [1,1]
+// note: the tuples are displayed e.g. (1,1) in python, but in javascript, they are also just lists, e.g. [1,1]
+// can be of same type for every data point, or can vary if non-deterministic: sometimes list, sometimes single entry
+// - index_to_actual: dictionary that maps each integer used in the labels to its original value, e.g. {1: '1.0', 2: '0.0', 3: '0.5'}
+// the keys to this dictionary are always integers starting at 1
+var data_dict;
+
 function svgSetup() {
     zoom = d3.zoom()
         .on("zoom", ({transform}) => {
@@ -107,6 +119,7 @@ function svgSetup() {
     node_layer = d3.select("svg g").append("g");
 }
 
+
 function constructTree(data) {
     // Generates the tree diagram
     // const parentBoundingRect = d3.select("#treeHere").node().getBoundingClientRect();
@@ -124,6 +137,157 @@ function constructTree(data) {
     root.x0 = 0;
     root.y0 = 0;
 }
+
+function renderPlot() {
+    console.log("checking the input dimensions...")
+    let xdim = document.getElementById('xdim').value;
+    let ydim = document.getElementById('ydim').value;
+    let zdim = document.getElementById('zdim').value;
+    if(! (checkInputDim(xdim) && checkInputDim(ydim) && (checkInputDim(zdim) || zdim == ""))){
+    let ndim = data_dict.dataset_x[0].length;   // number of dimensions of the data
+    let errorMsg = "The dataset has " + ndim + " dimensions, so the given dimensions need " +
+        "to be integers between 0 and " + (ndim-1) + ". <br>" +
+        " Only the dimension for the z-axis can be omitted. In that case, the plot will be two-dimensional.";
+    document.getElementById("plotHere").innerHTML = errorMsg;
+    return false;
+    }
+    document.getElementById("plot_description").style.visibility = "visible";
+    console.log("made plot description visible");
+    if(zdim == ""){
+        construct2DScatterPlot()
+    } else {
+        construct3DScatterPlot()
+    }
+}
+
+// a given dimension is valid if it is a natural number in [0, number_of_dimensions]
+function checkInputDim(d){
+    let ndim = data_dict.dataset_x[0].length;   // number of dimensions of the data
+    return d == parseInt(d) && d < ndim && d >= 0;
+}
+
+function construct3DScatterPlot(){
+    console.log("construct scatterplot for multi-output dataset");
+
+    // get the data dimensions that will be plotted from the input form
+    let xdim = document.getElementById('xdim').value;
+    let ydim = document.getElementById('ydim').value;
+    let zdim = document.getElementById('zdim').value;
+
+    let data_x = data_dict.dataset_x;
+    let predicted_labels = data_dict.predicted_labels;
+    let index_to_actual = data_dict.index_to_actual;
+
+    console.log("number of data points to plot:")
+    console.log(data_x.length)
+
+    let classes = {}
+    for(let i=0; i < data_x.length; i++){   // for every data point
+        let c = predicted_labels[i];
+        (c in classes) || (classes[c] = [[],[],[]]);    // start new trace if class c not already in dict classes
+        classes[c][0].push(data_x[i][xdim]);
+        classes[c][1].push(data_x[i][ydim]);
+        classes[c][2].push(data_x[i][zdim]);
+    }
+
+    console.log("classes in multiOutput:")
+    console.log(classes)
+
+    let all_traces = [];
+    let trace_keys = Object.keys(classes);
+
+    // create one trace for every class and store them in all_traces
+    for(let c=0; c < trace_keys.length; c++){
+        let name_of_trace = trace_keys[c];
+        // replace artificial indices with original actual class labels
+        name_of_trace = name_of_trace.split(',').map(Number).map(x => index_to_actual[x]).join(", ");
+
+        let trace = {
+            x: classes[trace_keys[c]][0],
+            y: classes[trace_keys[c]][1],
+            z: classes[trace_keys[c]][2],
+            mode: 'markers',
+            marker: {
+            	//color: random_rgb(),
+                size: 10,
+                line: {
+                    color: 'rgba(217, 217, 217, 0.14)',
+                    width: 0.5},
+                opacity: 0.8},
+            type: 'scatter3d',
+            name: name_of_trace
+		};
+		all_traces.push(trace)
+    }
+
+		let layout = {
+		    margin: {l: 5, r: 5, b: 5, t: 50}};
+
+        console.log("plot these data_traces: ")
+        console.log(all_traces)
+		Plotly.newPlot('plotHere', all_traces, layout);
+
+    }
+
+function construct2DScatterPlot(){
+    console.log("construct 2D scatterplot for multi-output dataset");
+
+    // get the data dimensions that will be plotted from the input form
+    let xdim = document.getElementById('xdim').value;
+    let ydim = document.getElementById('ydim').value;
+
+    let data_x = data_dict.dataset_x;
+    let predicted_labels = data_dict.predicted_labels;
+    let index_to_actual = data_dict.index_to_actual;
+
+    console.log("number of data points to plot:")
+    console.log(data_x.length)
+
+    let classes = {}
+    for(let i=0; i < data_x.length; i++){   // for every data point
+        let c = predicted_labels[i];
+        (c in classes) || (classes[c] = [[],[],[]]);    // start new trace if class c not already in dict classes
+        classes[c][0].push(data_x[i][xdim]);
+        classes[c][1].push(data_x[i][ydim]);
+    }
+
+    console.log("classes in multiOutput:")
+    console.log(classes)
+
+    let all_traces = [];
+    let trace_keys = Object.keys(classes);
+
+    // create one trace for every class and store them in all_traces
+    for(let c=0; c < trace_keys.length; c++){
+        let name_of_trace = trace_keys[c];
+        // replace artificial indices with original actual class labels
+        name_of_trace = name_of_trace.split(',').map(Number).map(x => index_to_actual[x]).join(", ");
+
+        let trace = {
+            x: classes[trace_keys[c]][0],
+            y: classes[trace_keys[c]][1],
+            mode: 'markers',
+            marker: {
+            	//color: random_rgb(),
+                size: 10,
+                line: {
+                    color: 'rgba(217, 217, 217, 0.14)',
+                    width: 0.5},
+                opacity: 0.8},
+            type: 'scatter',
+            name: name_of_trace
+		};
+		all_traces.push(trace)
+    }
+
+		let layout = {
+		    margin: {l: 5, r: 5, b: 5, t: 50}};
+
+        console.log("plot now these data_traces: ")
+        console.log(all_traces)
+		Plotly.newPlot('plotHere', all_traces, layout);
+
+    }
 
 function setSelectedNode(d) {
     selectedNode = d;
@@ -1779,7 +1943,9 @@ $(document).ready(function () {
     });
 
     $.get('/computed', (data) => {
+        console.log("mainRow1 and mainRow4 become visible");
         document.getElementById("mainRow1").style.visibility = "visible";
+        document.getElementById("mainRow4").style.visibility = "visible";
         // document.getElementById("editTreeDiv").style.visibility = "visible";
 
         idUnderInspection = data.idUnderInspection
@@ -1797,7 +1963,17 @@ $(document).ready(function () {
         width = 200 * getDepth(treeData);
 
         svgSetup();
+        console.log("inspect.js: start tree construction");
         constructTree(treeData);
+
+        console.log("treeData / data.classifier in inspect.js before constructScatterPlot is called:");
+        console.log(treeData);
+        console.log("index_to_actual:");
+        console.log(data.index_to_actual);
+        console.log("predicted_labels:");
+        console.log(data.predicted_labels);
+        data_dict = data;
+
         update(root);
 
         timedResetFocus("root");
@@ -1845,6 +2021,7 @@ $(document).ready(function () {
                 document.getElementById("mainRow2").classList.remove("d-none");
                 document.getElementById("mainRow3").classList.remove("d-none");
                 document.getElementById("expandThisDiv").style.height = "450px";
+                document.getElementById("expandThisDiv_plot").style.height = "450px";
                 document.getElementById("playerDiv").classList.remove("d-none");
                 document.getElementById("timeRangeContainer").classList.remove("d-none");
                 document.getElementById("instep").classList.remove("d-none");
@@ -1855,6 +2032,7 @@ $(document).ready(function () {
                     mini[i].style.height = "425px";
                 }
                 document.getElementById("treeHere").style.height = "85%";
+                document.getElementById("plotHere").style.height = "85%";
                 document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree

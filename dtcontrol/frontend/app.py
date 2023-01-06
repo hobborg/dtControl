@@ -155,6 +155,7 @@ def resultsRoute():
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
 def construct():
+    print("/construct in app.py is called")
     global completed_experiments
     data = request.get_json()
     logging.info("Request: \n", data)
@@ -182,6 +183,7 @@ def construct():
     # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
     try:
         classifier = frontend_helper.train(to_parse_dict)
+        print("got classifier in app.py in construct")
         # root is saved in a global variable for use later
         saved_tree = classifier["classifier"].root
 
@@ -205,8 +207,16 @@ def construct():
             "step_size": step_size,
             "num_vars": num_vars,
             "num_results": num_results,
-            "controller": cont
+            "controller": cont,
+            # also return all points for the visualization:
+            "dataset_x": classifier["dataset_x"],
+            "index_to_actual": classifier["index_to_actual"],
+            "predicted_labels": classifier["predicted_labels"]
         }
+        print("dataset_x: ", completed_experiments[id]["dataset_x"][:10])
+        print("class of dataset_x", type(completed_experiments[id]["dataset_x"]))
+        print("predicted_labels: ", completed_experiments[id]["predicted_labels"][:10])
+        print("class of predicted_labels", type(completed_experiments[id]["predicted_labels"]))
         stats = classifier["classifier"].get_stats()
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
         # this_result = results[id]
@@ -220,6 +230,7 @@ def construct():
         print_exc()
         results[id]["status"] = "Error / " + type(e).__name__
 
+    print("/construct in app.py returns")
     return jsonify(results[id])
 
 
@@ -243,6 +254,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 
 @app.route("/construct-partial/from-preset", methods=['POST'])
 def partial_construct():
+    print("PARTIAL CONSTRUCT")
     global completed_experiments, results
     data = request.get_json()
     id = int(data['id'])
@@ -401,6 +413,7 @@ def simulator():
 def computed():
     global selected_computation_id
     selected_experiment = completed_experiments[selected_computation_id]
+    print("/computed in app.py is called")
     returnDict = {
         "idUnderInspection": selected_computation_id,
         "classifier": selected_experiment["classifier_as_json"],
@@ -408,10 +421,40 @@ def computed():
         "numResults": selected_experiment["num_results"],
         "boundInner": [selected_experiment["min_bounds_inner"], selected_experiment["max_bounds_inner"]],
         "boundOuter": [selected_experiment["min_bounds_outer"], selected_experiment["max_bounds_outer"]],
-        "controllerFile": selected_experiment["controller"]
+        "controllerFile": selected_experiment["controller"],
+        # also return all points for the visualization:
+        "dataset_x": selected_experiment["dataset_x"],
+        # conversions necessary bc returnDict is jsonified in return statement
+        # convert values in the dict index_to_acutal to strings (values can be floats, "Object of type float32 is not JSON serializable")
+        "index_to_actual": {key: str(value) for key, value in selected_experiment["index_to_actual"].items()},
+        # convert values in the list predicted_labels to strings ("Object of type int32 is not JSON serializable")
+        "predicted_labels": predicted_labels_to_JSON(selected_experiment["predicted_labels"])
     }
+    print("index_to_actual in /computed:", returnDict["index_to_actual"])
+    print("predicted labels in return dict:", returnDict["predicted_labels"][:10])
     return jsonify(returnDict)
 
+def predicted_labels_to_JSON(predicted_labels):
+    # predicted_labels is a list with one entry per data point
+    # single output dataset: entries are integers or lists of integers (can vary in the same list)
+    # multi output dataset: entries are tuples or lists of tuples (can vary in the same list)
+    l1 = []
+    for i in range(len(predicted_labels)):
+        if isinstance(predicted_labels[i], list):
+            if isinstance(predicted_labels[i][0], tuple):
+                # element i is a list of tuples
+                l1.append(list(map(lambda x: tuple(map(int, x)), predicted_labels[i])))
+            else:
+                # element i is a list of integers
+                l1.append(list(map(int, predicted_labels[i])))
+        else:
+            if isinstance(predicted_labels[i], tuple):
+                # element i is a tuple
+                l1.append(tuple(map(int, predicted_labels[i])))
+            else:
+                # element i is an integer
+                l1.append(int(predicted_labels[i]))
+    return l1
 
 # Gets user input values to initialise the state variables
 @app.route("/initRoute", methods=['POST'])

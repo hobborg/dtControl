@@ -380,10 +380,15 @@ def train(args):
     except KeyError:
         address = []
     classifier_as_json = intoJSON(classifier.root, "null", address, ds.y_metadata)
+    print("in frontend_helper before return")
     return {
         "classifier": classifier, "classifier_as_json": classifier_as_json,
         "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,
-        "run_time": run_time
+        "run_time": run_time,
+        # also return all points for the visualization:
+        "dataset_x": ds.x.tolist(),
+        "index_to_actual": ds.index_to_actual,
+        "predicted_labels": classifier.predict(ds, actual_values=False)
     }
 
 

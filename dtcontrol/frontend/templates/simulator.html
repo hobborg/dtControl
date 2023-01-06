@@ -158,6 +158,7 @@
                 </div>
             </div>
 
+
             <!-- Column for model visualisation -->
             <div class="col-lg-6 d-none" id="hideThisDiv">
                 <div class="card shadow mb-4">
@@ -276,6 +277,49 @@
 
             <div class="col-lg-6" id="chartsHere1">
 
+            </div>
+        </div>
+
+        <!-- Row for scatter plot -->
+        <div id="mainRow4" class="row ml-2 mb-2" style="visibility: hidden;">
+            <!-- Column for scatter plot -->
+            <div class="col-lg-12 mb-2" id="expandThisDiv_plot">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="container-fluid h-100">
+                            <div class="row">
+
+                                 <!--form onsubmit="return checkDimInput()" method="post">
+                                    <label for="xdim">Choose which dimensions of the data get plotted:</label><br>
+                                    <input type="text" id="plottingDims" name="plottingDims_name" placeholder="0,1,2" required><br>
+                                </form-->
+
+                                <form>
+                                    <label>Choose the dimensions of the data to be plotted:</label><br>
+                                    <label for="xdim">x-axis:
+                                     <input class="dim_input_field" type="text" id="xdim" name="xname" size="1" value="0"></label>
+                                    <label for="ydim">y-axis:
+                                    <input class="dim_input_field" type="text" id="ydim" name="yname" size="1" value="1"></label>
+                                    <label for="zdim">z-axis:
+                                    <input class="dim_input_field" type="text" id="zdim" name="zname" size="1" value="2"></label><br>
+                                    <button id="renderPlot-button" type="button" class="btn btn-dark mr-2"
+                                        onclick="renderPlot();">Render plot
+                                    </button>
+                                </form>
+
+                            </div>
+                            <!-- Plot in this div -->
+                            <!--div class="row d-flex align-items-center justify-content-center" style="width:800px;height:800px;">-->
+                                <div class="row" id="plotHere">
+
+                                </div>
+                            <!--/div-->
+                            <div class="row mb-2 align-self-end">
+                                <div class="col-auto mr-auto" id="plot_description" style="font-size:0.9em; visibility: hidden">Select the displayed traces in the legend to examine them individually.  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
