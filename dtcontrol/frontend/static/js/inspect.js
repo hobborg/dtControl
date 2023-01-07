@@ -269,7 +269,7 @@ function construct2DScatterPlot(){
             mode: 'markers',
             marker: {
             	//color: random_rgb(),
-                size: 10,
+                // size: 10,
                 line: {
                     color: 'rgba(217, 217, 217, 0.14)',
                     width: 0.5},
@@ -281,7 +281,7 @@ function construct2DScatterPlot(){
     }
 
 		let layout = {
-		    margin: {l: 5, r: 5, b: 5, t: 50}};
+		    margin: {l: 30, r: 5, b: 30, t: 50}};
 
         console.log("plot now these data_traces: ")
         console.log(all_traces)
@@ -2021,7 +2021,6 @@ $(document).ready(function () {
                 document.getElementById("mainRow2").classList.remove("d-none");
                 document.getElementById("mainRow3").classList.remove("d-none");
                 document.getElementById("expandThisDiv").style.height = "450px";
-                document.getElementById("expandThisDiv_plot").style.height = "450px";
                 document.getElementById("playerDiv").classList.remove("d-none");
                 document.getElementById("timeRangeContainer").classList.remove("d-none");
                 document.getElementById("instep").classList.remove("d-none");
@@ -2032,7 +2031,6 @@ $(document).ready(function () {
                     mini[i].style.height = "425px";
                 }
                 document.getElementById("treeHere").style.height = "85%";
-                document.getElementById("plotHere").style.height = "85%";
                 document.querySelector("#mainRow2 .card-body").style.height = "350px";
 
                 // resizing to get largest space for tree

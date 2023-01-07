@@ -110,13 +110,20 @@ i.fa {
 input.dim_input_field {
   margin-left: 10px;
   margin-right: 30px;
-  margin-bottom: 20px;
+}
+
+#renderPlot-button {
+  margin-top: 10px;
+  margin-bottom: 10px;
+
 }
 
 /* see #treeHere in node-stylings */
 #plotHere {
     overflow: hidden;
-    height: 90%;
+    height: 80%;
+    width: 95%;
+    margin: auto;
 }
 
 /* see #expandThisDiv in node-stylings */
