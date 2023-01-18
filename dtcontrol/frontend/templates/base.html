@@ -7,19 +7,20 @@
     <title>dtControl Frontend</title>
     <meta name="author" content="Tom Doan">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/imported_libs/bootstrap.min.css') }}">
+    <script src="{{ url_for('static', filename='js/imported_libs/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/imported_libs/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/imported_libs/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for( 'static', filename='js/imported_libs/plotly-2.14.0.min.js' ) }}"></script>
+    <script src="{{ url_for( 'static', filename='js/imported_libs/underscore-umd-min.js' ) }}"></script>
     <script src="{{ url_for( 'static', filename='js/common.js' ) }}"></script>
-    <script src="{{ url_for( 'static', filename='js/plotly-2.14.0.min.js' ) }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/new-select.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidenav-my.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/node-stylings.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/hamburger.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/imported_libs/sb-admin-2.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/imported_libs/hamburger.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         select.selectpicker {

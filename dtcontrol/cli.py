@@ -40,6 +40,8 @@ from dtcontrol.decision_tree.impurity.multi_label_twoing_rule import MultiLabelT
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
 # Import splitting strategies
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
+# TODO boundary points
+# from dtcontrol.decision_tree.splitting.axis_aligned_boundary_points import AxisAlignedBoundaryPointsSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSingleSplittingStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
@@ -283,6 +285,8 @@ def main():
             'auto': lambda x: MaxFreqDeterminizer()
         }
         splitting_map = {
+            # TODO boundary points
+            #'test_tabea': lambda x: AxisAlignedBoundaryPointsSplittingStrategy(),
             'axisonly': lambda x: AxisAlignedSplittingStrategy(),
             'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x,
                                                                          solver='lbfgs', penalty='none'),

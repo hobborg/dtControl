@@ -121,6 +121,9 @@ class Dataset(ABC):
         if self.x is None:
             raise RuntimeError('Dataset is not loaded.')
 
+    # includes only the columns of x that belong to numeric features
+    # includes categorical features if they are to be treated as numeric
+    # sets numeric_feature_mapping: maps new numeric column indices to "index" of that column in original complete x
     def get_numeric_x(self):
         if self.numeric_x is None:
             if self.treat_categorical_as_numeric:

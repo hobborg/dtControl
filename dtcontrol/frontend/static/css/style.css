@@ -112,10 +112,17 @@ input.dim_input_field {
   margin-right: 30px;
 }
 
+#plot-legend-wrapper {
+    overflow: hidden;
+}
+
+.plot-legend{
+    float: left;
+}
+
 #renderPlot-button {
   margin-top: 10px;
   margin-bottom: 10px;
-
 }
 
 /* see #treeHere in node-stylings */

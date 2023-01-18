@@ -287,26 +287,35 @@
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div class="container-fluid h-100">
-                            <div class="row">
+                            <div id="plot-legend-wrapper" class="row">
+                                <!-- Row above plot with description and buttons -->
 
                                  <!--form onsubmit="return checkDimInput()" method="post">
                                     <label for="xdim">Choose which dimensions of the data get plotted:</label><br>
                                     <input type="text" id="plottingDims" name="plottingDims_name" placeholder="0,1,2" required><br>
                                 </form-->
 
-                                <form>
-                                    <label>Choose the dimensions of the data to be plotted:</label><br>
-                                    <label for="xdim">x-axis:
-                                     <input class="dim_input_field" type="text" id="xdim" name="xname" size="1" value="0"></label>
-                                    <label for="ydim">y-axis:
-                                    <input class="dim_input_field" type="text" id="ydim" name="yname" size="1" value="1"></label>
-                                    <label for="zdim">z-axis:
-                                    <input class="dim_input_field" type="text" id="zdim" name="zname" size="1" value="2"></label><br>
-                                    <button id="renderPlot-button" type="button" class="btn btn-dark mr-2"
-                                        onclick="renderPlot();">Render plot
-                                    </button>
-                                </form>
 
+                                <div class="plot-legend">
+                                    <form>
+                                        <label>Choose the dimensions of the data to be plotted:</label><br>
+                                        <label for="xdim">x-axis:
+                                         <input class="dim_input_field" type="text" id="xdim" name="xname" size="1" value="0"></label>
+                                        <label for="ydim">y-axis:
+                                        <input class="dim_input_field" type="text" id="ydim" name="yname" size="1" value="1"></label>
+                                        <label for="zdim">z-axis:
+                                        <input class="dim_input_field" type="text" id="zdim" name="zname" size="1" value="2"></label><br>
+                                        <button id="renderPlot-button" type="button" class="btn btn-dark mr-2"
+                                            onclick="renderPlot();">Render plot
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="plot-legend">
+                                    <div class="col-auto mr-auto" id="plot_description" style="font-size:0.9em;"> test </div>
+                                </div>
+                            </div>
+                            <div class="row mb-2 align-self-end">
+                                <div class="col-auto mr-auto" id="error-msg" style="font-size:0.9em;"> </div>
                             </div>
                             <!-- Plot in this div -->
                             <!--div class="row d-flex align-items-center justify-content-center" style="width:800px;height:800px;">-->
@@ -314,9 +323,7 @@
 
                                 </div>
                             <!--/div-->
-                            <div class="row mb-2 align-self-end">
-                                <div class="col-auto mr-auto" id="plot_description" style="font-size:0.9em; visibility: hidden">If data points with different labels share the same coordinates, only one data point is visible at that position. Select the displayed classes in the legend to examine them individually.  </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -325,8 +332,8 @@
 
     </div>
 
-    <script src="{{ url_for('static', filename='js/d3.v6.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/imported_libs/d3.v6.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/imported_libs/Chart.js') }}"></script>
     <script src="{{ url_for( 'static', filename='js/inspect.js' ) }}"></script>
 <!--    <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>-->
 <!--    <script src="{{ url_for('static', filename='js/d3.v4.js') }}"></script>-->

@@ -126,6 +126,7 @@ class BenchmarkSuite:
                                               [cl.get_name() for cl in classifiers])
 
     def compute_cell(self, dataset, classifier):
+        # TODO boundary points: prints here to distinguish cases etc
         if self.already_computed(dataset, classifier) and not self.rerun:
             computed = False
             cell = self.results[dataset.get_name()]['classifiers'][classifier.get_name()]
