@@ -46,9 +46,13 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
-def runge_kutta(x, u, nint=15):
-    # nint is number of times to run Runga-Kutta loop
-    global tau, lambda_list
+def runge_kutta(x, u, nint=100):
+    global selected_computation_id, tau, lambda_list
+    selected_experiment = completed_experiments[selected_computation_id]
+
+    lower_bound = selected_experiment["min_bounds_outer"]
+    upper_bound = selected_experiment["max_bounds_outer"]
+
     h = tau / nint
 
     k0 = [None] * len(x)
@@ -67,6 +71,8 @@ def runge_kutta(x, u, nint=15):
             k3[i] = computation(i, [(x[j] + h * k2[j]) for j in range(len(x))], u, list(lambda_list))
         for i in range(len(x)):
             x[i] = x[i] + (h * 1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
+            x[i] = max(x[i], lower_bound[i])
+            x[i] = min(x[i], upper_bound[i])
     return x
 
 
@@ -473,7 +479,7 @@ def stepRoute():
     # Returns updated states variables
     x_new_non_classify = runge_kutta(list(x), u)
     newu_path = saved_tree.predict_one_step(np.array([discretize(list(x_new_non_classify))]))
-    print("row::" + str(list(map(lambda x: round(x, 6), discretize(list(x_new_non_classify)) + newu_path[0]))))
+    # print("row::" + str(list(map(lambda x: round(x, 6), discretize(list(x_new_non_classify)) + newu_path[0]))))
     returnDict = {"x_new": (x_new_non_classify,) + newu_path}
     return jsonify(returnDict)
 
