@@ -151,13 +151,22 @@ function renderPlot() {
 
     if(! (checkInputDim(xdim) && checkInputDim(ydim) && (checkInputDim(zdim) || zdim == ""))){
     let errorMsg = "Error: The given dimensions are not valid for this dataset.";
-    document.getElementById("error-msg").innerHTML = errorMsg;
+    document.getElementById("plot-legend-or-error-msg").innerHTML = errorMsg;
     return false;
     }
 
     let plotDescr = "If data points with different labels share the same coordinates, only one data point is visible at that position." +
     " Select the displayed classes in the legend to examine them individually.";
-    document.getElementById("error-msg").innerHTML = plotDescr;
+
+    let size_data_x = data_dict.dataset_x.length;
+    if(size_data_x > max_plotted_datapoints){
+        let samplingMsg = "Your dataset has " + size_data_x + " datapoints. "+
+        "Only a subsample of " + max_plotted_datapoints + " was plotted.";
+        document.getElementById("plot-legend-or-error-msg").innerHTML = plotDescr + "<br>" + samplingMsg;
+    } else {
+        document.getElementById("plot-legend-or-error-msg").innerHTML = plotDescr;
+    }
+
 
     // TODO: do sampling here
     // merge 2D and 3D function?
@@ -329,11 +338,8 @@ function construct3DScatterPlot(){
     // single output dataset: predicted label is integer or list of integers (can vary in the same list)
     // multi output dataset: predicted label is tuple or list of tuples (can vary in the same list)
  function predicted_labels_to_actual_JSON(predicted_label){
-         console.log("predicted label: ");
-         console.log(predicted_label);
          let label = "";
          if (Array.isArray(predicted_label)){
-         console.log("predicted label is an array")
             if (Array.isArray(predicted_label[0])){
                 // predicted label is a list of tuples or a list of lists (no difference in js)
                 label = predicted_label.map(x => "(" + x.map(y => data_dict.index_to_actual[y]).join(", ") + ")").join(", ");
@@ -343,7 +349,6 @@ function construct3DScatterPlot(){
                 label = predicted_label.map(x => data_dict.index_to_actual[x]).join(", ");
             }
          } else {
-         console.log("predicted label is an integer")
             // predicted label is an integer
             label = data_dict.index_to_actual[predicted_label];
          }

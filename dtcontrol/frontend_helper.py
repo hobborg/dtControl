@@ -333,8 +333,9 @@ def train(args):
                                                                                                           default_config)
     else:
         presets = "default"
-        numeric_split = args["numeric-predicates"]
-        categorical_split = args["categorical-predicates"]
+        # numeric_split and categorical_split need to be lists, even if just singleton
+        numeric_split = [args["numeric-predicates"]]
+        categorical_split = [args["categorical-predicates"]]
         determinize = args["determinize"]
         impurity = args["impurity"]
         tolerance = float(args["tolerance"])
