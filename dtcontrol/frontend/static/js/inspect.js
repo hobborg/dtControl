@@ -256,6 +256,16 @@ function construct2DScatterPlot(){
         console.log(all_traces)
 		Plotly.newPlot('plotHere', all_traces, layout);
 
+        var myPlot = document.getElementById('plotHere');
+        myPlot.on('plotly_click', function (data) {
+        var pts = '';
+        for (var i = 0; i < data.points.length; i++) {
+            pts = 'x = ' + data.points[i].x.toPrecision(3) + '\ny = ' +
+                data.points[i].y.toPrecision(3) + '\n\n';
+        }
+        alert('Closest point clicked:\n\n' + pts);
+    });
+
     }
 
 function construct3DScatterPlot(){
