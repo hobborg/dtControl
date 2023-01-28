@@ -422,6 +422,12 @@ def computed():
 # Gets user input values to initialise the state variables
 @app.route("/initRoute", methods=['POST'])
 def initroute():
+    # reset previous used variables
+    global variable_subs, lambda_list, tau
+    variable_subs = []
+    lambda_list = []
+    tau = 0
+
     data = request.get_json()
     id = int(data['id'])
     x = data['pass']
@@ -440,7 +446,6 @@ def initroute():
     # Opens dynamics file and saves obtained variables and lambda functions as lists (variable_subs and lambda_list)
     if 'Dynamics:' in dynamics_text and 'Parameters:' in dynamics_text:
         for line in dynamics_text:
-            global variable_subs, lambda_list, tau
             line = line.strip()
             if line == 'Dynamics:':
                 is_dynamics = True
