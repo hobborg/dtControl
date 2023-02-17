@@ -256,6 +256,11 @@ function construct2DScatterPlot(){
         console.log(all_traces)
 		Plotly.newPlot('plotHere', all_traces, layout);
 
+		cuts = plotTreeCuts();
+		console.log("3 plot now these cuts: ");
+        console.log(cuts);
+		Plotly.addTraces('plotHere', cuts);
+
         var myPlot = document.getElementById('plotHere');
         myPlot.on('plotly_click', function (data) {
         var pts = '';
@@ -365,6 +370,60 @@ function construct3DScatterPlot(){
     return label;
 
  }
+
+ function plotTreeCuts(){
+    let xdim = document.getElementById('xdim').value;
+    let ydim = document.getElementById('ydim').value;
+
+    // find plot borders
+    // boundOuter has min_bounds_outer and max_bounds_outer
+    let xmin = data_dict.boundOuter[0][xdim];
+    let xmax = data_dict.boundOuter[1][xdim];
+    let ymin = data_dict.boundOuter[0][ydim];
+    let ymax = data_dict.boundOuter[1][ydim];
+
+    let cuts = [];
+    plotTreeCuts_recursive(data_dict.classifier, cuts, xdim, ydim, ymax, ymin, xmax, xmin);
+    return cuts;
+}
+
+function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin){
+    if(!classifier_node.children.length){   // only draw a split if node is not a leaf
+        return;
+    }
+    let array_of_split = classifier_node.name.split("<=");
+    // e.g. classifier_node.name has the form "x[0] <= 1.5"
+    let split_dim = array_of_split[0].replace( /[^\d.]/g, '');
+
+    if(split_dim == xdim){
+        let x_value = array_of_split[1].replace( /[^\d.]/g, '');
+        var cut_line = {
+            // we give the two x-coordinates and the two y-coordinates
+            x: [x_value, x_value],
+            y: [ymin, ymax],
+            showlegend: false,
+            mode: 'lines'
+        }
+        cuts.push(cut_line);
+        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, x_value, xmin); // left child
+        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, x_value); // right child
+    } else if(split_dim == ydim) {
+        let y_value = array_of_split[1].replace( /[^\d.]/g, '');
+        var cut_line = {
+            // we give the two x-coordinates and the two y-coordinates
+            x: [xmin, xmax],
+            y: [y_value, y_value],
+            showlegend: false,
+            mode: 'lines'
+        }
+        cuts.push(cut_line);
+        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, y_value, ymin, xmax, xmin); // left child (values below threshold)
+        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, y_value, xmax, xmin); // right child
+    } else {
+        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, xmax, xmin); // left child (values below threshold)
+        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, xmin);
+    }
+}
 
 
 function setSelectedNode(d) {
