@@ -142,6 +142,39 @@ function constructTree(data) {
     root.y0 = 0;
 }
 
+// TODO T: data_dict now overshadows global var data_dict
+function renderPartialPlot(data_dict){
+    console.log("checking the input dimensions...")
+
+    let xdim = document.getElementById('xdim').value;
+    let ydim = document.getElementById('ydim').value;
+    let zdim = document.getElementById('zdim').value;
+
+    if(! (checkInputDim(xdim) && checkInputDim(ydim) && (checkInputDim(zdim) || zdim == ""))){
+        let errorMsg = "Error: The given dimensions are not valid for this dataset.";
+        document.getElementById("plot-legend-or-error-msg").innerHTML = errorMsg;
+        return false;
+    }
+
+    let plotDescr = "If data points with different labels share the same coordinates, only one data point is visible at that position." +
+    " Select the displayed classes in the legend to examine them individually.";
+
+    let size_data_x = data_dict.dataset_x.length;
+    if(size_data_x > max_plotted_datapoints){
+        let samplingMsg = "Your dataset has " + size_data_x + " datapoints. "+
+        "Only a subsample of " + max_plotted_datapoints + " was plotted.";
+        document.getElementById("plot-legend-or-error-msg").innerHTML = plotDescr + "<br>" + samplingMsg;
+    } else {
+        document.getElementById("plot-legend-or-error-msg").innerHTML = plotDescr;
+    }
+
+    if(zdim == ""){
+        construct2DScatterPlot(data_dict)
+    } else {
+        construct3DScatterPlot(data_dict)
+    }
+}
+
 function renderPlot() {
     console.log("checking the input dimensions...")
 
@@ -172,9 +205,9 @@ function renderPlot() {
     // merge 2D and 3D function?
 
     if(zdim == ""){
-        construct2DScatterPlot()
+        construct2DScatterPlot(data_dict)
     } else {
-        construct3DScatterPlot()
+        construct3DScatterPlot(data_dict)
     }
 }
 
@@ -184,7 +217,7 @@ function checkInputDim(d){
     return d == parseInt(d) && d >= 0 && d < ndim;
 }
 
-function construct2DScatterPlot(){
+function construct2DScatterPlot(data_dict){
     console.log("construct 2D scatterplot");
 
     // get the data dimensions that will be plotted from the input form
@@ -273,7 +306,7 @@ function construct2DScatterPlot(){
 
     }
 
-function construct3DScatterPlot(){
+function construct3DScatterPlot(data_dict){
     console.log("construct 3D scatterplot");
 
     // get the data dimensions that will be plotted from the input form
@@ -431,6 +464,7 @@ function setSelectedNode(d) {
     document.getElementById("nodeSelectInfo").innerText = "Selected " + selectedNode.data.name;
     document.getElementById("retrain-button").disabled = false;
     document.getElementById("interactive-button").disabled = false;
+    document.getElementById("replot-button").disabled = false;
 }
 
 function unsetSelectedNode() {
@@ -439,6 +473,7 @@ function unsetSelectedNode() {
         update(selectedNode);
         document.getElementById("retrain-button").disabled = true;
         document.getElementById("interactive-button").disabled = true;
+        document.getElementById("replot-button").disabled = true;
     }
     selectedNode = null;
     document.getElementById("nodeSelectInfo").innerText = "";
@@ -1276,6 +1311,7 @@ function run_partial_construction(configuration) {
             $("body").css("cursor", "progress");
             document.getElementById("retrain-button").disabled = "true";
             document.getElementById("interactive-button").disabled = "true";
+            document.getElementById("replot-button").disabled = "true";
         },
     }).done(data => {
         // Change existing tree data at the necessary position to data
@@ -1312,7 +1348,8 @@ function run_partial_construction(configuration) {
 
         document.getElementById("retrain-button").removeAttribute("disabled");
         document.getElementById("interactive-button").removeAttribute("disabled");
-
+        document.getElementById("replot-button").removeAttribute("disabled");
+        // TODO why remove??
     });
 }
 
@@ -1324,7 +1361,9 @@ function start_interactive_construction(configuration) {
         url: '/construct-partial/interactive',
         beforeSend: () => {
             document.getElementById("retrain-button").disabled = "true";
-            document.getElementById("interactive-button").disabled = "true";},
+            document.getElementById("interactive-button").disabled = "true";
+            document.getElementById("replot-button").disabled = "true"; // TODO sinnvoll?
+            },
     }).done(data => {
         // Change existing tree data at the necessary position to data
         console.log("Return from interactive construct");
@@ -1357,6 +1396,35 @@ function start_interactive_construction(configuration) {
 
         document.getElementById("retrain-button").removeAttribute("disabled");
         document.getElementById("interactive-button").removeAttribute("disabled");
+        document.getElementById("replot-button").removeAttribute("disabled");
+        // TODO remove?
+    });
+}
+
+function get_partial_plot(configuration){
+    $.ajax({
+        data: JSON.stringify(configuration),
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        url: '/plot-partial',
+        beforeSend: () => {
+            $("body").css("cursor", "progress");
+            // disable all buttons while computation runs
+            document.getElementById("retrain-button").disabled = "true";
+            document.getElementById("interactive-button").disabled = "true";
+            document.getElementById("replot-button").disabled = "true";
+        },
+    }).done(data => {
+        // data is dict with "dataset_x", "x_to_actual", "predicted_labels"
+        console.log("Return from partial plotting");
+        renderPartialPlot(data)
+
+        $("body").css("cursor", "default");
+        document.getElementById("retrain-button").removeAttribute("disabled");
+        document.getElementById("interactive-button").removeAttribute("disabled");
+        document.getElementById("replot-button").removeAttribute("disabled");
+        // TODO remove?
+
     });
 }
 
@@ -1635,6 +1703,7 @@ function deactivateEdit()
 
     document.getElementById("retrain-button").classList.add("d-none");
     document.getElementById("interactive-button").classList.add("d-none");
+    document.getElementById("replot-button").classList.add("d-none");
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
     disableNodeSelect();
@@ -1955,6 +2024,7 @@ $(document).ready(function () {
 
     // Retrain from sidenav
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
+        console.log("Retrain...")
         event.preventDefault();
         let configuration = {};
         configuration.id = idUnderInspection;
@@ -1986,8 +2056,9 @@ $(document).ready(function () {
         }
      });
 
-    // Retrain from sidenav
+    // Interactive view from sidenav
     $("input[name='interact'], button[name='interact']").on('click', function (event) {
+        console.log("Start interactive tree builder...")
         event.preventDefault();
         let configuration = {};
         configuration.id = idUnderInspection;
@@ -2014,6 +2085,44 @@ $(document).ready(function () {
             console.assert(selectedNode);
         }
      });
+
+    // Replot from sidenav
+    $("input[name='replot'], button[name='replot']").on('click', function (event) {
+        console.log("Replot partial dataset...")
+        event.preventDefault();
+
+        let configuration = {};
+        configuration.id = idUnderInspection;
+        configuration.controller = controllerFile;
+        configuration.config = $('#config').val();
+        configuration.determinize = $('#determinize').val();
+        configuration.numeric_predicates = $('#numeric-predicates').val();
+        configuration.categorical_predicates = $('#categorical-predicates').val();
+        configuration.impurity = $('#impurity').val();
+        configuration.tolerance = $('#tolerance').val();
+        configuration.safe_pruning = $('#safe-pruning').val();
+        configuration.user_predicates = "";
+
+        if (configuration.config === "algebraic") {
+            configuration.config += " (Fallback: " + $("#fallback").val() + ")";
+            configuration.numeric_predicates = [""];
+            configuration.categorical_predicates = [""];
+            configuration.user_predicates = $('#userPredicatesInput').val();
+        }
+
+
+        if (selectedNode) {
+            configuration.selected_node = selectedNode.data.address;
+            get_partial_plot(configuration);
+            console.log("Plot data from node " + selectedNode.data.address);
+        }
+        else {
+            // Nothing to do if node is not selected
+            // Control must not come here
+            console.assert(selectedNode);
+        }
+     });
+
 
 
 
@@ -2056,6 +2165,7 @@ $(document).ready(function () {
             document.getElementById("advanced-options-edit").classList.remove("d-none");
             document.getElementById("retrain-button").classList.remove("d-none");
             document.getElementById("interactive-button").classList.remove("d-none");
+            document.getElementById("replot-button").classList.remove("d-none");
 
             document.getElementById("expandAllButton").disabled = "true";
             document.getElementById("collapseAllButton").disabled = "true";

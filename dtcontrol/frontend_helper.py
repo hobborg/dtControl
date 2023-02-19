@@ -280,6 +280,38 @@ def get_mask_given_address(existing_tree=None, node_address=None, dataset=None):
 def mask_as_int(mask):
     return int("".join([str(e) for e in [1] + list(map(int, mask))]), 2)
 
+def get_dataset_from_address_node(args):
+    # args will be passed as a dict to this function
+    # works like train fct at the beginning
+    file = args["controller"]
+    is_valid_file_or_folder(file)
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    logging.info("Frontend (replot): loading dataset...")
+    ds.load_if_necessary()
+
+    if "existing_tree" in args:
+        if args["base_node_address"]:
+            mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
+                                          dataset=ds)
+            ds = ds.from_mask(mask)
+            ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    classifier_root = args["existing_tree"]
+    # existing_tree is the saved_tree of class Node, not of class DecisionTree
+
+    # TODO T: plot corresponding tree?
+    return {
+        "dataset_x": ds.x.tolist(),
+        "index_to_actual": ds.index_to_actual,
+        "predicted_labels": classifier_root.predict(ds.x, actual_values=False)
+    }
+
 def train(args):
     # args will be passed as a dict to this function
     # works exactly like core_parser in cli.py

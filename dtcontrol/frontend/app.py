@@ -185,6 +185,7 @@ def construct():
         classifier = frontend_helper.train(to_parse_dict)
         print("got classifier in app.py in construct")
         # root is saved in a global variable for use later
+        # note: saved_tree (added to dict completed_experiment[id] below) is of class Node, not DecisionTree
         saved_tree = classifier["classifier"].root
 
         num_vars = len(classifier["x_metadata"]["min_inner"])
@@ -321,6 +322,7 @@ def partial_construct():
 
 @app.route("/construct-partial/interactive", methods=['POST'])
 def interactive_construct():
+    print("INTERACTIVE CONSTRUCT")
     global completed_experiments, results
     data = request.get_json()
     id = int(data['id'])
@@ -379,6 +381,55 @@ def interactive_construct():
 
     return jsonify({"partial_json": partial_json, "full_json": updated_json})
 
+@app.route("/plot-partial", methods=['POST'])
+def plot_partial():
+    print("PARTIAL PLOT")
+
+    global completed_experiments
+    data = request.get_json()
+    id = int(data['id'])
+    controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
+    config = data['config']
+
+    if config == "custom":
+        to_parse_dict = {"controller": controller_file, "determinize": data['determinize'],
+                         "numeric-predicates": data['numeric_predicates'],
+                         "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
+                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
+    elif config.startswith("algebraic"):
+        # algebraic strategy with user predicates
+        to_parse_dict = {"controller": controller_file, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
+                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
+                         "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
+    else:
+        to_parse_dict = {"controller": controller_file, "config": config}
+
+    try:
+        node_address = data["selected_node"]
+        saved_tree = completed_experiments[id]["saved_tree"]
+        # saved_tree is the root of class Node, not of class DecisionTree
+        to_parse_dict["existing_tree"] = saved_tree
+        to_parse_dict["base_node_address"] = node_address
+    except KeyError:
+        print("KeyError when trying to create to_parse_dict for frontend_helper")
+        pass
+
+    try:
+        classifier_partial = frontend_helper.get_dataset_from_address_node(to_parse_dict)
+        # returns [dataset_x, index_to_actual, predicted_labels]
+
+        returnDict = {
+            "dataset_x": classifier_partial["dataset_x"],
+            # convert values in the dict index_to_actual to strings (values can be floats, "Object of type float32 is not JSON serializable")
+            "index_to_actual": {key: str(value) for key, value in classifier_partial["index_to_actual"].items()},
+            # convert values in the list predicted_labels to strings ("Object of type int32 is not JSON serializable")
+            "predicted_labels": predicted_labels_to_JSON(classifier_partial["predicted_labels"])
+        }
+
+    except Exception as e:
+        print_exc()
+
+    return jsonify(returnDict)
 
 @app.route("/interact", methods=['POST'])
 def interact_with_fit():
@@ -425,7 +476,7 @@ def computed():
         # also return all points for the visualization:
         "dataset_x": selected_experiment["dataset_x"],
         # conversions necessary bc returnDict is jsonified in return statement
-        # convert values in the dict index_to_acutal to strings (values can be floats, "Object of type float32 is not JSON serializable")
+        # convert values in the dict index_to_actual to strings (values can be floats, "Object of type float32 is not JSON serializable")
         "index_to_actual": {key: str(value) for key, value in selected_experiment["index_to_actual"].items()},
         # convert values in the list predicted_labels to strings ("Object of type int32 is not JSON serializable")
         "predicted_labels": predicted_labels_to_JSON(selected_experiment["predicted_labels"])

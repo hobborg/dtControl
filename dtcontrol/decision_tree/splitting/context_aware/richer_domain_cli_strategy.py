@@ -463,7 +463,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                 index = int(command["body"])
                 # Index out of range check
                 if index < 0 or index >= (len(self.standard_alt_predicates_imp) + len(self.recently_added_predicates_imp)):
-                    interactive_queue(error_wrapper("Invalid index."))
+                    interactive_queue.send_to_front(error_wrapper("Invalid index."))
                 else:
                     users_choice = self.index_predicate_mapping(index)
                     if users_choice[1] < np.inf:
