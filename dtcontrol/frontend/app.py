@@ -46,6 +46,11 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
+# to keep track of the number of experiments added so far
+# so we can assign a new id to every experiment that is newly added
+# note: experiments can be deleted, so counting the experiments in currently in the table does not give us a unique id
+global_exp_counter = 0;
+
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
     global tau, lambda_list
@@ -130,15 +135,18 @@ def experimentsRoute():
     if request.method == 'GET':
         return jsonify(experiments)
     else:
-        experiments.append(request.get_json())
-        return jsonify(success=True)
+        global global_exp_counter
+        global_exp_counter += 1;
+        exp_data = [global_exp_counter] + request.get_json()
+        experiments.append(exp_data)
+        return jsonify(exp_data)
 
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
     global experiments
     experiment_to_delete = request.get_json()
-
+    experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
     """
     experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
     """

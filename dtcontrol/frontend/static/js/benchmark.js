@@ -311,7 +311,10 @@ $(document).ready(function () {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(row_contents),
-            success: () => addToExperimentsTable(row_contents)
+            // the row_contents are sent to /experiments in app.py
+            // there, they are added to the backend experiments table with a id
+            // the returned exp_data are identical to row_contents, but with the id appended at the beginning
+            success: (exp_data) => addToExperimentsTable(exp_data)
         });
     });
 
@@ -324,12 +327,14 @@ $(document).ready(function () {
         // Create an empty <tr> element and add it to the 1st position of the table:
         var row = table.insertRow(-1);
         var firstCell = row.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+        // firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
+        // taking String(table.rows.length - 2) as experiment id gets inconsistent when you delete experiments/ refresh the site etc...
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        for (let j = 0; j < 10; j++) {
+        for (let j = 1; j < 11; j++) {
             var c = row.insertCell(-1);
-            if (j == 0 || j == 9) {
+            if (j == 1 || j == 10) {
                 c.style = "display: none";
             }
             c.innerHTML = row_contents[j];
@@ -423,9 +428,9 @@ $(document).ready(function () {
             row_items.each(function (k, v) {
                 row_content.push(v.innerHTML);
             });
-            row_content = row_content.slice(1, -1); // Drop the index and the actions
-            row_content[4] = row_content[4].split(","); // Numerical
-            row_content[5] = row_content[5].split(","); // and categorical predicates as arrays
+            row_content = row_content.slice(0,-1); // Drop actions
+            row_content[5] = row_content[5].split(","); // Numerical
+            row_content[6] = row_content[6].split(","); // and categorical predicates as arrays
 
             $.ajax('/experiments/delete', {
                 type: 'POST',
