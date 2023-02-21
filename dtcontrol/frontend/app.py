@@ -46,6 +46,11 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
+# to keep track of the number of experiments added so far
+# so we can assign a new id to every experiment that is newly added
+# note: experiments can be deleted, so counting the experiments in currently in the table does not give us a unique id
+global_exp_counter = 0;
+
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
     global tau, lambda_list
@@ -130,15 +135,18 @@ def experimentsRoute():
     if request.method == 'GET':
         return jsonify(experiments)
     else:
-        experiments.append(request.get_json())
-        return jsonify(success=True)
+        global global_exp_counter
+        global_exp_counter += 1;
+        exp_data = [global_exp_counter] + request.get_json()
+        experiments.append(exp_data)
+        return jsonify(exp_data)
 
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
     global experiments
     experiment_to_delete = request.get_json()
-
+    experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
     """
     experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
     """
@@ -159,12 +167,13 @@ def construct():
     global completed_experiments
     data = request.get_json()
     logging.info("Request: \n", data)
-    id = int(data['id'])
+    exp_id = int(data['id'])     # experiment id
+    id = int(data['results_id']) # results id
     cont = os.path.join(UPLOAD_FOLDER, data['controller'])
     nice_name = data['nice_name']
     config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    results[id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
+    results[id] = {"id": exp_id, "controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
                    "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
@@ -182,8 +191,9 @@ def construct():
 
     # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
     try:
+        print("call train in frontend_helper")
         classifier = frontend_helper.train(to_parse_dict)
-        print("got classifier in app.py in construct")
+        print("training done: got classifier in app.py in construct")
         # root is saved in a global variable for use later
         # note: saved_tree (added to dict completed_experiment[id] below) is of class Node, not DecisionTree
         saved_tree = classifier["classifier"].root
@@ -222,6 +232,7 @@ def construct():
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
         # this_result = results[id]
         results[id]["status"] = "Completed"
+        print("status updated to completed")
         results[id]["inner_nodes"] = new_stats[0]
         results[id]["leaf_nodes"] = new_stats[1]
         results[id]["construction_time"] = new_stats[2]
@@ -258,7 +269,7 @@ def partial_construct():
     print("PARTIAL CONSTRUCT")
     global completed_experiments, results
     data = request.get_json()
-    id = int(data['id'])
+    id = int(data['id']) # results_id
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
     config = data['config']
 
@@ -449,22 +460,31 @@ def interact_with_fit():
 @app.route('/select', methods=['POST'])
 def select():
     global selected_computation_id
+    print("in select")
+    # selected_computation_id = int(request.form['runConfigIndex'])
     selected_computation_id = int(request.form['runConfigIndex'])
+    print("selected_computation_id:")
+    print(selected_computation_id)
     return jsonify(success=True)
 
 
 # route when loading default simulator
 @app.route("/simulator")
 def simulator():
+    print("default simulator")
     return render_template("simulator.html")
 
 
 # returns the computed tree
 @app.route("/computed")
 def computed():
-    global selected_computation_id
-    selected_experiment = completed_experiments[selected_computation_id]
     print("/computed in app.py is called")
+    global selected_computation_id
+    print("in computed: selected_computation_id:", selected_computation_id)
+    selected_experiment = completed_experiments[selected_computation_id]
+    print("selected exp:")
+    print(selected_experiment)
+    # TODO can we index the completed experiments with results id? probabaly
     returnDict = {
         "idUnderInspection": selected_computation_id,
         "classifier": selected_experiment["classifier_as_json"],

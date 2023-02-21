@@ -2027,7 +2027,7 @@ $(document).ready(function () {
         console.log("Retrain...")
         event.preventDefault();
         let configuration = {};
-        configuration.id = idUnderInspection;
+        configuration.id = idUnderInspection;     // results_id
         configuration.controller = controllerFile;
         configuration.config = $('#config').val();
         configuration.determinize = $('#determinize').val();
