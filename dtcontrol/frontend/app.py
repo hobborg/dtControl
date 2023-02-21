@@ -166,12 +166,13 @@ def construct():
     global completed_experiments
     data = request.get_json()
     logging.info("Request: \n", data)
-    id = int(data['id'])
+    exp_id = int(data['id'])     # experiment id
+    id = int(data['results_id']) # results id
     cont = os.path.join(UPLOAD_FOLDER, data['controller'])
     nice_name = data['nice_name']
     config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    results[id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
+    results[id] = {"id": exp_id, "controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
                    "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
@@ -253,7 +254,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 def partial_construct():
     global completed_experiments, results
     data = request.get_json()
-    id = int(data['id'])
+    id = int(data['id']) # results_id
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
     config = data['config']
 

@@ -43,6 +43,9 @@ function loadControllers(path) {
     http.send(params);
 }
 
+/* not needed anymore with unique id for every result that is also row id
+just use: $("#result_"+id)[0]
+instead of: getResultsTableRow(id)
 function getResultsTableRow(id) {
     let rows = $("#results-table tbody tr");
     for (let j = 0; j < rows.length; j++) {
@@ -52,15 +55,17 @@ function getResultsTableRow(id) {
         }
     }
 }
+*/
 
 function addToResultsTable(id, result) {
+    // first argument id is the result id
     // This function is called both when
     // 1. a new experiment is started
     // 2. to populate the results table when results arrive from polling
     // 3. to populate the results table when the page is refreshed
 
     // Table columns
-    // 0: id
+    // 0: id (experiment id)
     // 1: controller
     // 2: nice_name
     // 3: preset
@@ -70,8 +75,9 @@ function addToResultsTable(id, result) {
     // 7: construction_time
     function createRow(table_selector, id, row_data) {
         let experimentRow = table_selector.insertRow(-1);
+        experimentRow.id = "result_" + String(id);
         let firstCell = experimentRow.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(id) + "</th>";
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_data.id) + "</th>";
         for (let j = 1; j <= 7; j++) {
             const cell = experimentRow.insertCell(-1);
             switch (j) {
@@ -108,7 +114,8 @@ function addToResultsTable(id, result) {
     var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
 
     if (result.status === "Completed" || result.status === "Edited") {
-        let experimentRow = getResultsTableRow(id);
+        // let experimentRow = getResultsTableRow(id);
+        let experimentRow = $("#result_"+id)[0]
         if (!experimentRow) {
             experimentRow = createRow(table, id, result);
         }
@@ -118,8 +125,7 @@ function addToResultsTable(id, result) {
             experimentRow.children[5].innerHTML = result.inner_nodes;
             experimentRow.children[6].innerHTML = result.leaf_nodes;
             experimentRow.children[7].innerHTML = result.construction_time.milliSecondsToHHMMSS();
-        }
-        else {
+        } else { // status: edited
             experimentRow.children[5].innerHTML = "";
             experimentRow.children[6].innerHTML = "";
             experimentRow.children[7].innerHTML = "";
@@ -136,7 +142,8 @@ function addToResultsTable(id, result) {
         }
     }
     else if (result.status.startsWith("Error")) {
-        let experimentRow = getResultsTableRow(id);
+        // let experimentRow = getResultsTableRow(id);
+        let experimentRow = $("#result_"+results_id)[0]
         if (experimentRow) {
             experimentRow.children[4].innerHTML = result.status;
         } else {
@@ -152,9 +159,10 @@ function startPolling() {
                 console.log(results);
                 let filtered = Object.fromEntries(Object.entries(results).filter(([k, v]) => v.status === "Completed"));
                 for (const [id, result] of Object.entries(filtered)) {
-                    const row = getResultsTableRow(id);
+                    // const row = getResultsTableRow(id);
+                    const row = $("#result_"+id)[0]
                     if (row.children[3].innerHTML === 'Running...') {
-                        addToResultsTable(result);
+                        addToResultsTable(id, result);
                     }
                 }
                 if (results.every(r => r[3] === 'Completed')) {
@@ -363,10 +371,19 @@ $(document).ready(function () {
     }
 
     function run_single_benchmark(config) {
+        /* note: the same experiment can be executed multiple times
+        so we cannot use the experiment id to differentiate results
+        the results have a unique id i that is used as index in the python results table (see app.py)
+        and used as row.id of the form "result_i" in the displayed html results table (see initializeInResultsTable)
+        (bc numeric ids should be avoided and to ensure the ids are unique across the page)
+        */
+        var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
+        let results_id = String(table.rows.length)
+
         console.log(config);
         $.ajax({
             data: JSON.stringify({
-                id: config[0],
+                id: config[0],      // experiment id (there can be several results for the same exp --> with the same exp id)
                 controller: config[1],
                 nice_name: config[2],
                 config: config[3],
@@ -376,18 +393,19 @@ $(document).ready(function () {
                 impurity: config[7],
                 tolerance: config[8],
                 safe_pruning: config[9],
-                user_predicates: config[10]
+                user_predicates: config[10],
+                results_id: results_id, // unique for every entry in the results table
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
             url: '/construct',
-            beforeSend: initializeInResultsTable(config)
-        }).done(data => addToResultsTable(config[0], data));
+            beforeSend: initializeInResultsTable(config, results_id)
+        }).done(data => addToResultsTable(results_id, data));
     }
 
-    function initializeInResultsTable(row_contents) {
+    function initializeInResultsTable(row_contents, results_id) {
         /*
-                id: row_contents[0],
+                (experiment) id: row_contents[0],
                 controller: row_contents[1],
                 nice_name: row_contents[2],
                 config: row_contents[3],
@@ -397,11 +415,16 @@ $(document).ready(function () {
                 impurity: row_contents[7],
                 tolerance: row_contents[8],
                 safe_pruning: row_contents[9]
+
+                the same experiment can be executed multiple times
+                therefore, there can be several rows in the results table with the same experiment id
+                however, they all have a individual row id / results_id
              */
         // Create an empty <tr> element and add it to the 1st position of the table:
         $("#results-table tr.special").hide();
         let table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
         let row = table.insertRow(-1);
+        row.id = "result_" + String(results_id);
         let firstCell = row.insertCell(-1);
         firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
         for (let j = 1; j <= 7; j++) {
