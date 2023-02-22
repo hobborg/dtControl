@@ -421,7 +421,7 @@ function construct3DScatterPlot(data_dict){
 }
 
 function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin){
-    if(!classifier_node.children.length){   // only draw a split if node is not a leaf
+    if(is_leaf(classifier_node)){   // only draw a split if node is not a leaf
         return;
     }
     let array_of_split = classifier_node.name.split("<=");
@@ -458,6 +458,9 @@ function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, x
     }
 }
 
+function is_leaf(node) {
+    return !classifier_node.children.length
+}
 
 function setSelectedNode(d) {
     selectedNode = d;

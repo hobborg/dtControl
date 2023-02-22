@@ -483,7 +483,7 @@ def computed():
     print("in computed: selected_computation_id:", selected_computation_id)
     selected_experiment = completed_experiments[selected_computation_id]
     print("selected exp:")
-    print(selected_experiment)
+    #print(selected_experiment)
     # TODO can we index the completed experiments with results id? probabaly
     returnDict = {
         "idUnderInspection": selected_computation_id,
@@ -511,20 +511,27 @@ def predicted_labels_to_JSON(predicted_labels):
     # multi output dataset: entries are tuples or lists of tuples (can vary in the same list)
     l1 = []
     for i in range(len(predicted_labels)):
-        if isinstance(predicted_labels[i], list):
-            if isinstance(predicted_labels[i][0], tuple):
+        element_i = predicted_labels[i]
+        if isinstance(element_i, list):
+            if isinstance(element_i[0], tuple):
                 # element i is a list of tuples
-                l1.append(list(map(lambda x: tuple(map(int, x)), predicted_labels[i])))
-            else:
+                l1.append(list(map(lambda x: tuple(map(int, x)), element_i)))
+            elif isinstance(element_i[0], int):
                 # element i is a list of integers
-                l1.append(list(map(int, predicted_labels[i])))
-        else:
-            if isinstance(predicted_labels[i], tuple):
-                # element i is a tuple
-                l1.append(tuple(map(int, predicted_labels[i])))
+                l1.append(list(map(int, element_i)))
             else:
-                # element i is an integer
-                l1.append(int(predicted_labels[i]))
+                print("Error in predicted_labels_to_JSON (case list): predicted label is ", element_i)
+        elif isinstance(element_i, tuple):
+            # element i is a tuple
+            l1.append(tuple(map(int, element_i)))
+        elif isinstance(element_i, int):
+            # element i is an integer
+            l1.append(int(predicted_labels[i]))
+        elif element_i == None:
+            # element i is None (e.g. bc in edit mode there are nodes without prediction, not yet homogeneous)
+            l1.append(str(element_i))
+        else:
+            print("Error in predicted_labels_to_JSON: predicted label is ", element_i)
     return l1
 
 # Gets user input values to initialise the state variables
