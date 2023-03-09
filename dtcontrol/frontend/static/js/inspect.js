@@ -1606,6 +1606,12 @@ function add_predicate()
     });
 }
 
+function add_plot_predicate()
+{
+    // TODO, similar to add_predicate
+    console.log("add plot predicate")
+}
+
 function remove_predicate() {
     let selected_predicate_id = +document.querySelector('input[name = "abstract-predicate"]:checked').value;
     $.ajax({

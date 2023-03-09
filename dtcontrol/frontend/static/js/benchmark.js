@@ -142,11 +142,14 @@ function addToResultsTable(id, result) {
 
         if (experimentRow.children.length < 9) {
             let lastCell = experimentRow.insertCell(-1);
-            lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
+            lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>&nbsp;&nbsp;<i class="fa fa-pencil text-secondary" aria-hidden="true"></i>';
             $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
                 $.post('/select', {runConfigIndex: id}, () => {
                     window.location.href = 'simulator'
                 });
+            });
+            $(experimentRow.children[8]).find('i.fa-pencil').on('click', (event) => {
+                console.log("jump directly to editor")
             });
         }
     }
