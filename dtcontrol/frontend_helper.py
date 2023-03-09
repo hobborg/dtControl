@@ -15,6 +15,7 @@ from os import path
 from os.path import exists
 from typing import Tuple, Union
 
+import numpy as np
 import pkg_resources
 from pkg_resources import Requirement, resource_filename
 from ruamel.yaml import YAML
@@ -283,6 +284,7 @@ def mask_as_int(mask):
 def get_dataset_from_address_node(args):
     # args will be passed as a dict to this function
     # works like train fct at the beginning
+    print("get dataset from address node starts")
     file = args["controller"]
     is_valid_file_or_folder(file)
     ext = file.split(".")[-1]
@@ -304,13 +306,29 @@ def get_dataset_from_address_node(args):
 
     classifier_root = args["existing_tree"]
     # existing_tree is the saved_tree of class Node, not of class DecisionTree
+    predicted_labels = classifier_root.predict(ds.x, actual_values=False)
+
+    # if data in node not yet homogeneous (can happen in interactive tree builder):
+    # no predicted labels available, return all allowed labels (if non-deterministic) instead
+    y_reshaped = None
+    if all(i is None for i in predicted_labels):
+        # TODO is there a better way to test that we are really in non-homog node?
+        # to we want to introduce an attribute or sth? see intoJSON, there also not decided in a safe/ elegant way
+        print("only none predicted, return y_reshaped:")
+        y_reshaped = np.stack(ds.y, axis=2).tolist() # use tolist() so it can be jsonified for frontend later
+        print(np.stack(ds.y, axis=2))
+        print(np.stack(ds.y, axis=2).shape)
+        # TODO: hier schon alle -1 rausfiltern?
 
     # TODO T: plot corresponding tree?
-    return {
+
+    return_dict = {
         "dataset_x": ds.x.tolist(),
         "index_to_actual": ds.index_to_actual,
-        "predicted_labels": classifier_root.predict(ds.x, actual_values=False)
+        "predicted_labels": predicted_labels,
+        "y_reshaped": y_reshaped
     }
+    return return_dict
 
 def train(args):
     # args will be passed as a dict to this function
@@ -426,6 +444,7 @@ def train(args):
 
 
 def interactive(args):
+    print("start fct interactive")
     file = args["controller"]
     is_valid_file_or_folder(file)
 
@@ -438,11 +457,12 @@ def interactive(args):
     ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
 
     classifier = DecisionTree([RicherDomainCliStrategy()], Entropy(), 'Interactive-Entropy', early_stopping=True)
-
+    print("made classifier, load ds")
     logging.info("Frontend: loading dataset...")
     ds.load_if_necessary()
 
     if "existing_tree" in args:
+        print("existing tree in args")
         if args["base_node_address"]:
             mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
                                           dataset=ds)
@@ -453,8 +473,10 @@ def interactive(args):
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
 
     logging.info("Frontend: fitting dataset to tree...")
+    print("start fitting")
     classifier.fit(ds, caller=Caller.WEBUI, rounds=1)
     logging.info("Frontend: tree constructed.")
+    print("done fitting")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
     try:
@@ -462,6 +484,7 @@ def interactive(args):
     except KeyError:
         address = []
     classifier_as_json = intoJSON(classifier.root, "null", address, ds.y_metadata)
+    print("before return")
     return {
         "classifier": classifier, "classifier_as_json": classifier_as_json,
         "x_metadata": ds.x_metadata, "y_metadata": ds.y_metadata,

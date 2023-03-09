@@ -219,6 +219,8 @@ function checkInputDim(d){
 
 function construct2DScatterPlot(data_dict){
     console.log("construct 2D scatterplot");
+    console.log("y_reshaped:")
+    console.log(data_dict.y_reshaped)
 
     // get the data dimensions that will be plotted from the input form
     let xdim = document.getElementById('xdim').value;
@@ -226,6 +228,7 @@ function construct2DScatterPlot(data_dict){
 
     let data_x = data_dict.dataset_x;
     let predicted_labels = data_dict.predicted_labels;
+    let y_reshaped = "y_reshaped" in data_dict ? data_dict.y_reshaped : null
 
     console.log("number of data points to plot:")
     console.log(data_x.length)
@@ -238,7 +241,16 @@ function construct2DScatterPlot(data_dict){
         console.log("sampled indices:");
         console.log(random_indices)
         for(let i=0; i < max_plotted_datapoints; i++){   // for every data point
-            let c = predicted_labels_to_actual_JSON(predicted_labels[random_indices[i]]);
+            let c = null;
+            if(y_reshaped){
+                console.log("not homog")
+                filtered_label = y_reshaped[random_indices[i]].filter(x => (x.filter(x => (x != -1)).length != 0))
+                // filter out the lists that only contain -1
+                c = predicted_labels_to_actual_JSON(filtered_label);
+            } else {
+                console.log("homog")
+                c = predicted_labels_to_actual_JSON(predicted_labels[random_indices[i]]);
+            }
             // replace artificial indices with original actual class labels as string
             (c in classes) || (classes[c] = [[],[],[]]);    // start new trace if class c not already in dict classes
             classes[c][0].push(data_x[random_indices[i]][xdim]);
@@ -270,7 +282,7 @@ function construct2DScatterPlot(data_dict){
             mode: 'markers',
             marker: {
             	opacity: 0.7,
-                size: 5, //20,
+                size: 20,
                 line: {
                     color: 'rgba(217, 217, 217, 0.14)',
                     width: 0.5,
@@ -316,6 +328,7 @@ function construct3DScatterPlot(data_dict){
 
     let data_x = data_dict.dataset_x;
     let predicted_labels = data_dict.predicted_labels;
+    let y_reshaped = "y_reshaped" in data_dict ? data_dict.y_reshaped : null
 
     console.log("number of data points to plot:")
     console.log(data_x.length);
@@ -325,7 +338,14 @@ function construct3DScatterPlot(data_dict){
     if(data_x.length > max_plotted_datapoints){
         let random_indices = _.sample(_.range(data_x.length), max_plotted_datapoints)
         for(let i=0; i < max_plotted_datapoints; i++){   // for every data point
-            let c = predicted_labels_to_actual_JSON(predicted_labels[random_indices[i]]);
+            let c = null;
+            if(y_reshaped){
+                filtered_label = y_reshaped[random_indices[i]].filter(x => (x.filter(x => (x != -1)).length != 0))
+                // filter out the lists that only contain -1
+                c = predicted_labels_to_actual_JSON(filtered_label);
+            } else {
+                c = predicted_labels_to_actual_JSON(predicted_labels[random_indices[i]]);
+            }
             // TODO vlt doch lieber wenn dict fertig? dann nur |C| mal statt |X| mal?
             (c in classes) || (classes[c] = [[],[],[]]);    // start new trace if class c not already in dict classes
             classes[c][0].push(data_x[random_indices[i]][xdim]);
@@ -459,7 +479,7 @@ function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, x
 }
 
 function is_leaf(node) {
-    return !classifier_node.children.length
+    return !node.children.length
 }
 
 function setSelectedNode(d) {
@@ -1365,7 +1385,7 @@ function start_interactive_construction(configuration) {
         beforeSend: () => {
             document.getElementById("retrain-button").disabled = "true";
             document.getElementById("interactive-button").disabled = "true";
-            document.getElementById("replot-button").disabled = "true"; // TODO sinnvoll?
+            document.getElementById("replot-button").disabled = "true";
             },
     }).done(data => {
         // Change existing tree data at the necessary position to data
