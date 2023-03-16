@@ -5,8 +5,12 @@ import html
 
 import numpy as np
 import sympy as sp
-from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for
+from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for, session
 from werkzeug.utils import secure_filename
+
+from apscheduler.schedulers.background import BackgroundScheduler
+import datetime
+import uuid
 
 from dtcontrol import frontend_helper
 
@@ -18,43 +22,70 @@ UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
 
 app = Flask(__name__)
+app.secret_key = "dtControlRockzZ!"
+app.permanent_session_lifetime = datetime.timedelta(days=2)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 logging.basicConfig(format="%(threadName)s: %(message)s")
 
-# stored experiments
-experiments = []
-# stored results
-results = {}
+# stores all the data
+# consists of { key: ID value: [experiments, results, completed_experiments, selected_computation_id]}
+mainData = {}
 
-# computed configurations from the benchmark view
-completed_experiments = {}
-selected_computation_id = None
+# Session functions
+def initDataStorage():
+    global mainData
 
-# contains (variable_name, value) pairs obtained from dynamics.txt file present in examples folder
-variable_subs = []
+    # assign id and store id as cookie on client machine
+    if "id" not in session or session["id"] not in mainData:
+        # make sessions permanent (see also permanent_session_lifetime)
+        session.permanent = True
 
-# contains lambda functions generated from dynamics.txt file
-lambda_list = []
+        # storing the id (key to corresponding maindata value) in client session
+        session["id"] = str(uuid.uuid4())
 
-# number of decision variables (u's)
-numResults = 0
+        # initialize maindata for new user
+        mainData[session["id"]] = {}
+        # stored experiments
+        mainData[session["id"]]["experiments"] = []
+        # stored results
+        mainData[session["id"]]["results"] = {}
+        # computed configurations from the benchmark view
+        mainData[session["id"]]["completed_experiments"] = {}
+        mainData[session["id"]]["selected_computation_id"] = None
 
-# time discretisation parameter
-tau = 0
+        # contains (variable_name, value) pairs obtained from dynamics.txt file present in examples folder
+        mainData[session["id"]]["variable_subs"] = []
 
-# Saved domain knowledge predicates
-pred = []
+        # contains lambda functions generated from dynamics.txt file
+        mainData[session["id"]]["lambda_list"] = []
 
-# to keep track of the number of experiments added so far
-# so we can assign a new id to every experiment that is newly added
-# note: experiments can be deleted, so counting the experiments in currently in the table does not give us a unique id
-global_exp_counter = 0;
+        # time discretisation parameter
+        mainData[session["id"]]["tau"] = 0
+
+        # Saved domain knowledge predicates
+        mainData[session["id"]]["pred"] = []
+
+        # Track the number of experiments added to assign unique ids, accounting for possible deletions
+        mainData[session["id"]]["global_exp_counter"] = 0
+
+        # timestamp
+        mainData[session["id"]]["timestamp"] = datetime.datetime.now()
+
+        print("Registered new client with session ID:\n"+session["id"])
+    else:
+        print("Detected already registered user with session ID:\n"+session["id"])
+
+@app.route("/reset-hard")
+def resetHard():
+    # helper function to clear session data
+    session.clear()
+    return redirect(url_for("index"))
 
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
-    global tau, lambda_list
-    h = tau / nint
+    global mainData
+    h = mainData[session["id"]]["tau"] / nint
 
     k0 = [None] * len(x)
     k1 = [None] * len(x)
@@ -63,13 +94,13 @@ def runge_kutta(x, u, nint=15):
 
     for iter in range(1, nint + 1):
         for i in range(len(x)):
-            k0[i] = computation(i, x, u, list(lambda_list))
+            k0[i] = computation(i, x, u, list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
-            k1[i] = computation(i, [(x[j] + h * 0.5 * k0[j]) for j in range(len(x))], u, list(lambda_list))
+            k1[i] = computation(i, [(x[j] + h * 0.5 * k0[j]) for j in range(len(x))], u, list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
-            k2[i] = computation(i, [(x[j] + h * 0.5 * k1[j]) for j in range(len(x))], u, list(lambda_list))
+            k2[i] = computation(i, [(x[j] + h * 0.5 * k1[j]) for j in range(len(x))], u, list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
-            k3[i] = computation(i, [(x[j] + h * k2[j]) for j in range(len(x))], u, list(lambda_list))
+            k3[i] = computation(i, [(x[j] + h * k2[j]) for j in range(len(x))], u, list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
             x[i] = x[i] + (h * 1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
     return x
@@ -77,15 +108,16 @@ def runge_kutta(x, u, nint=15):
 
 # returns computed value of lambda function every time Runga-Kutta needs it
 def computation(index, x, u, lambda_list):
+    global mainData
     new_vl = []
-    for name in lambda_list[index][2]:
+    for name in mainData[session["id"]]["lambda_list"][index][2]:
         spilt_of_var = (str(name)).split('_')
         if spilt_of_var[0] == 'x':
             new_vl.append(x[int(spilt_of_var[1])])
         else:
             new_vl.append(u[int(spilt_of_var[1])])
     # Apply lambda function
-    return_float = float(lambda_list[index][1](*tuple(new_vl)))
+    return_float = float(mainData[session["id"]]["lambda_list"][index][1](*tuple(new_vl)))
     return return_float
 
 
@@ -94,13 +126,13 @@ def discretize(x):
     diff = []
 
     # step size (used in discretisation) for each of the state variables
-    step_size = completed_experiments[selected_computation_id]["step_size"]
+    step_size = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]["step_size"]
 
     # iterate over each state variables (x's)
-    num_vars = completed_experiments[selected_computation_id]["num_vars"]
+    num_vars = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]["num_vars"]
 
     # list of lower and upper bounds for each of the state variables
-    min_bounds_outer = completed_experiments[selected_computation_id]["min_bounds_outer"]
+    min_bounds_outer = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]["min_bounds_outer"]
 
     for i in range(num_vars):
         # SCOTS picks the closest grid point
@@ -122,6 +154,7 @@ def discretize(x):
 
 @app.route("/")
 def index():
+    initDataStorage()
     return render_template("index.html")
 
 @app.route('/favicon.ico')
@@ -131,39 +164,39 @@ def favicon():
 
 @app.route('/experiments', methods=['GET', 'POST'])
 def experimentsRoute():
-    global experiments
+    global mainData
     if request.method == 'GET':
-        return jsonify(experiments)
+        return jsonify(mainData[session["id"]]["experiments"])
     else:
-        global global_exp_counter
-        global_exp_counter += 1;
-        exp_data = [global_exp_counter] + request.get_json()
-        experiments.append(exp_data)
+
+        mainData[session["id"]]["global_exp_counter"] += 1
+        exp_data = [mainData[session["id"]]["global_exp_counter"]] + request.get_json()
+        mainData[session["id"]]["experiments"].append(exp_data)
         return jsonify(exp_data)
 
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
-    global experiments
+    global mainData
     experiment_to_delete = request.get_json()
     experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
     """
     experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
     """
     experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
-    experiments.remove(experiment_to_delete)
+    mainData[session["id"]]["experiments"].remove(experiment_to_delete)
     return jsonify(success=True)
 
 @app.route('/results', methods=['GET'])
 def resultsRoute():
-    global results
-    return jsonify(results)
+    global mainData
+    return jsonify(mainData[session["id"]]["results"])
 
 
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
 def construct():
-    global completed_experiments
+    global mainData
     data = request.get_json()
     logging.info("Request: \n", data)
     exp_id = int(data['id'])     # experiment id
@@ -172,7 +205,7 @@ def construct():
     nice_name = data['nice_name']
     config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    results[id] = {"id": exp_id, "controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
+    mainData[session["id"]]["results"][id] = {"id": exp_id, "controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
                    "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
@@ -204,7 +237,7 @@ def construct():
         run_time = round(classifier["run_time"], 2)
 
         # completed_experiments[id] = (classifier["classifier_as_json"], saved_tree, min_bounds_inner, max_bounds_inner, step_size, num_vars, num_results, cont)
-        completed_experiments[id] = {
+        mainData[session["id"]]["completed_experiments"][id] = {
             "classifier_as_json": classifier["classifier_as_json"],
             "saved_tree": saved_tree,
             "min_bounds_inner": min_bounds_inner,
@@ -219,17 +252,17 @@ def construct():
         stats = classifier["classifier"].get_stats()
         new_stats = [stats['inner nodes'], stats['nodes'] - stats['inner nodes'], run_time]
         # this_result = results[id]
-        results[id]["status"] = "Completed"
-        results[id]["inner_nodes"] = new_stats[0]
-        results[id]["leaf_nodes"] = new_stats[1]
-        results[id]["construction_time"] = new_stats[2]
+        mainData[session["id"]]["results"][id]["status"] = "Completed"
+        mainData[session["id"]]["results"][id]["inner_nodes"] = new_stats[0]
+        mainData[session["id"]]["results"][id]["leaf_nodes"] = new_stats[1]
+        mainData[session["id"]]["results"][id]["construction_time"] = new_stats[2]
 
 
     except Exception as e:
         print_exc()
-        results[id]["status"] = "Error / " + type(e).__name__
+        mainData[session["id"]]["results"][id]["status"] = "Error / " + type(e).__name__
 
-    return jsonify(results[id])
+    return jsonify(mainData[session["id"]]["results"][id])
 
 
 # First call that receives controller and config and returns constructed tree
@@ -252,7 +285,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 
 @app.route("/construct-partial/from-preset", methods=['POST'])
 def partial_construct():
-    global completed_experiments, results
+    global mainData
     data = request.get_json()
     id = int(data['id']) # results_id
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -278,7 +311,7 @@ def partial_construct():
     saved_tree = None
     try:
         node_address = data["selected_node"]
-        saved_tree = completed_experiments[id]["saved_tree"]
+        saved_tree = mainData[session["id"]]["completed_experiments"][id]["saved_tree"]
         to_parse_dict["existing_tree"] = saved_tree
         to_parse_dict["base_node_address"] = node_address
     except KeyError:
@@ -295,7 +328,7 @@ def partial_construct():
             updated_tree = classifier["classifier"].root
 
         # Then re-generate the json
-        saved_json = completed_experiments[id]["classifier_as_json"]
+        saved_json = mainData[session["id"]]["completed_experiments"][id]["classifier_as_json"]
         if node_address:
             updated_json = insert_into_json_tree(node_address, saved_json, classifier["classifier_as_json"])
         else:
@@ -303,12 +336,12 @@ def partial_construct():
 
         partial_json = classifier["classifier_as_json"]
 
-        completed_experiments[id].update({
+        mainData[session["id"]]["completed_experiments"][id].update({
             "classifier_as_json": updated_json,
             "saved_tree": updated_tree
         })
 
-        results[id]["status"] = "Edited"
+        mainData[session["id"]]["results"][id]["status"] = "Edited"
 
     except Exception as e:
         print_exc()
@@ -318,7 +351,7 @@ def partial_construct():
 
 @app.route("/construct-partial/interactive", methods=['POST'])
 def interactive_construct():
-    global completed_experiments, results
+    global mainData
     data = request.get_json()
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
@@ -332,7 +365,7 @@ def interactive_construct():
     saved_tree = None
     try:
         node_address = data["selected_node"]
-        saved_tree = completed_experiments[id]["saved_tree"]
+        saved_tree = mainData[session["id"]]["completed_experiments"][id]["saved_tree"]
         to_parse_dict["existing_tree"] = saved_tree
         to_parse_dict["base_node_address"] = node_address
     except KeyError:
@@ -356,7 +389,7 @@ def interactive_construct():
             updated_tree = classifier["classifier"].root
 
         # Then re-generate the json
-        saved_json = completed_experiments[id]["classifier_as_json"]
+        saved_json = mainData[session["id"]]["completed_experiments"][id]["classifier_as_json"]
         if node_address:
             updated_json = insert_into_json_tree(node_address, saved_json, classifier["classifier_as_json"])
         else:
@@ -364,12 +397,12 @@ def interactive_construct():
 
         partial_json = classifier["classifier_as_json"]
 
-        completed_experiments[id].update({
+        mainData[session["id"]]["completed_experiments"][id].update({
             "classifier_as_json": updated_json,
             "saved_tree": updated_tree
         })
 
-        results[id]["status"] = "Edited"
+        mainData[session["id"]]["results"][id]["status"] = "Edited"
 
     except Exception as e:
         print_exc()
@@ -394,8 +427,8 @@ def interact_with_fit():
 # route for selecting one of the computed configs
 @app.route('/select', methods=['POST'])
 def select():
-    global selected_computation_id
-    selected_computation_id = int(request.form['runConfigIndex'])
+    global mainData
+    mainData[session["id"]]["selected_computation_id"] = int(request.form['runConfigIndex'])
     return jsonify(success=True)
 
 
@@ -408,10 +441,10 @@ def simulator():
 # returns the computed tree
 @app.route("/computed")
 def computed():
-    global selected_computation_id
-    selected_experiment = completed_experiments[selected_computation_id]
+    global mainData
+    selected_experiment = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]
     returnDict = {
-        "idUnderInspection": selected_computation_id,
+        "idUnderInspection": mainData[session["id"]]["selected_computation_id"],
         "classifier": selected_experiment["classifier_as_json"],
         "numVars": selected_experiment["num_vars"],
         "numResults": selected_experiment["num_results"],
@@ -425,12 +458,13 @@ def computed():
 # Gets user input values to initialise the state variables
 @app.route("/initRoute", methods=['POST'])
 def initroute():
+    global mainData
     data = request.get_json()
     id = int(data['id'])
     x = data['pass']
     dynamics_text = data['dynamics'].split('\n')
 
-    saved_tree = completed_experiments[id]["saved_tree"]
+    saved_tree = mainData[session["id"]]["completed_experiments"][id]["saved_tree"]
 
     # Predict_one_step returns the decision taken as well as the path (list of ints) to reach that decision
     initDecision = saved_tree.predict_one_step(np.array([discretize(x)]))
@@ -443,7 +477,6 @@ def initroute():
     # Opens dynamics file and saves obtained variables and lambda functions as lists (variable_subs and lambda_list)
     if 'Dynamics:' in dynamics_text and 'Parameters:' in dynamics_text:
         for line in dynamics_text:
-            global variable_subs, lambda_list, tau
             line = line.strip()
             if line == 'Dynamics:':
                 is_dynamics = True
@@ -453,16 +486,16 @@ def initroute():
                 if line != '':
                     if not is_dynamics:
                         lhs, rhs = line.split("=")
-                        variable_subs.append((lhs.strip(), float(rhs)))
+                        mainData[session["id"]]["variable_subs"].append((lhs.strip(), float(rhs)))
                         if lhs.strip() == "tau" or lhs.strip() == "Tau":
-                            tau = float(rhs)
+                            mainData[session["id"]]["tau"] = float(rhs)
                     else:
                         lhs, rhs = line.split("=")
                         tmp = sp.sympify(rhs.strip())
-                        tmp = tmp.subs(variable_subs)
+                        tmp = tmp.subs(mainData[session["id"]]["variable_subs"])
                         lam_1 = sp.lambdify(tmp.free_symbols, tmp)
-                        lambda_list.append((lhs.strip(), lam_1, tmp.free_symbols))
-        lambda_list = sorted(lambda_list, key=lambda x: int(x[0].split("_")[1]))
+                        mainData[session["id"]]["lambda_list"].append((lhs.strip(), lam_1, tmp.free_symbols))
+        mainData[session["id"]]["lambda_list"] = sorted(mainData[session["id"]]["lambda_list"], key=lambda x: int(x[0].split("_")[1]))
     else:
         # If dynamics is not present sets this to false and browser raises an exception
         returnDict["dynamics"] = False
@@ -478,7 +511,7 @@ def stepRoute():
     x = data['x_pass']
     u = data['u_pass']
 
-    saved_tree = completed_experiments[id]["saved_tree"]
+    saved_tree = mainData[session["id"]]["completed_experiments"][id]["saved_tree"]
     # Returns updated states variables
     x_new_non_classify = runge_kutta(list(x), u)
     newu_path = saved_tree.predict_one_step(np.array([discretize(list(x_new_non_classify))]))
@@ -496,7 +529,7 @@ def inStepRoute():
     x = data['x_pass']
     u = data['u_pass']
 
-    saved_tree = completed_experiments[id]["saved_tree"]
+    saved_tree = mainData[session["id"]]["completed_experiments"][id]["saved_tree"]
     x_new = []
     dummy = [x, u, "", False]
     for i in range(int(steps)):
@@ -525,8 +558,9 @@ def rc2():
 # Called when evaluating impurity of initially entered domain knowledge
 @app.route("/evaluatePredicateImpurity", methods=['POST'])
 def evalImpurityRoute():
+    global mainData
     data = request.get_json()
-    pred = data['predicate']
+    mainData[session["id"]]["pred"] = data['predicate']
 
     returnDict = {"impurity": 0.5}
     return jsonify(returnDict)
@@ -536,9 +570,9 @@ def evalImpurityRoute():
 @app.route("/featureLabelSpecifications", methods=['POST'])
 def returnFeaturesLabels():
     data = request.get_json()
-    global pred
+    global mainData
     # Contains finally selected domain knowledge, preferably store in some global variable
-    pred = data['domainKnowledge']
+    mainData[session["id"]]["pred"] = data['domainKnowledge']
 
     dummy_feature_specifications = [['x_0', 'Ego.Choose', '1', '1', '1', '1', '1'],
                                     ['x_1', 'Front.Choose', '0', '0', '0', '0', '1']]
@@ -551,11 +585,12 @@ def returnFeaturesLabels():
 # Called when trying to refresh impurities for different nodes
 @app.route("/refreshImpurities", methods=['POST'])
 def refreshImpurities():
+    global mainData
     data = request.get_json()
     # Contains address of node trying to build
     address = data['address']
 
-    dummy_domain_knowledge_updated_impurities = ['0.23'] * (len(pred))
+    dummy_domain_knowledge_updated_impurities = ['0.23'] * (len(mainData[session["id"]]["pred"]))
     dummy_computed_predicates = [['12', '0.57', 'x_1 + x_2 <= 0'], ['13', '0.651', 'x_3 + 5.0 <= 0']]
     returnDict = {"updated_impurities": dummy_domain_knowledge_updated_impurities,
                   "computed_predicates": dummy_computed_predicates}
@@ -565,10 +600,11 @@ def refreshImpurities():
 # Returns number of splits for a node on selecting appropriate predicate
 @app.route("/splitNode", methods=['POST'])
 def splitNode():
+    global mainData
     data = request.get_json()
     # Contains address of node trying to split and predicate
     address = data['address']
-    pred = data['predicate']
+    mainData[session["id"]]["pred"] = data['predicate']
 
     # Do processing here
 
@@ -580,8 +616,8 @@ def splitNode():
 def pick_random_point():
     data = request.get_json()
     id = data['id']
-    if selected_computation_id == id:
-        controller_file = completed_experiments[id]["controller"]
+    if mainData[session["id"]]["selected_computation_id"] == id:
+        controller_file = mainData[session["id"]]["completed_experiments"][id]["controller"]
         point = frontend_helper.get_random_point_from_dataset(controller_file)
 
         # # Perturbed point randomly
