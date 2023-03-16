@@ -30,6 +30,34 @@
 
 <body id="bootstrap-override">
 
+<!-- Help Button -->
+    <div class="modal fade" id="helpModal" tabindex="2" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">Welcome to dtControl</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="helpTextBody">
+                    If you're looking for some guidance on how to use dtControl, you've come to the right place!<br>
+                    We've put together a series of tutorial videos that will walk you through the features and functions of dtControl step-by-step.<br>
+                    To access the tutorial videos, please click on the following link to visit our <a href="https://dtcontrol.model.in.tum.de/tutorials/">tutorial page</a>.<br>
+                    From there, you'll find a variety of tutorial videos that cover everything from the basics to more advanced features.<br>
+                    <br>
+                    If you have any additional questions or feedback, please don't hesitate to reach out to me via: <br>
+                    <a href="mailto:christoph.weinhuber@tum.de">christoph.weinhuber@tum.de</a>
+                </div>
+
+                <div class="modal-footer" id="tutorialFooter">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 <!-- Navbar at top -->
 <nav class="navbar navbar-expand-xl navbar-light">
     {% block hamburger %}
@@ -45,6 +73,8 @@
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
+
+    <button type="button" id="helpButton" data-toggle="modal" data-target="#helpModal" class="btn btn-outline-info">Help</button>
 </nav>
 
 <!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->
