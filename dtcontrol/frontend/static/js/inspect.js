@@ -614,7 +614,7 @@ function checkBounds() {
 }
 
 function tableScroller () {
-    tab.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
+    //tab.querySelector("thead").style.transform = "translate(0," + this.scrollTop + "px)";
 }
 
 function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
