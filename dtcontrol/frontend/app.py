@@ -76,6 +76,21 @@ def initDataStorage():
     else:
         print("Detected already registered user with session ID:\n"+session["id"])
 
+def cleanupMainData():
+    # function to delete old data
+    global mainData
+    for sessionID in list(mainData.keys()):
+        delta = mainData[sessionID]["timestamp"] - datetime.datetime.now()
+        days = delta.days
+        hours = delta.total_seconds() / 3600
+        if days > 0 and hours > 1:
+            del mainData[sessionID]
+
+
+# scheduler to delete old mainData every 6hours check
+clean_up_scheduler = BackgroundScheduler(daemon=True)
+clean_up_scheduler.add_job(func=cleanupMainData, trigger="interval", hours=6)
+
 @app.route("/reset-hard")
 def resetHard():
     # helper function to clear session data
