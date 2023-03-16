@@ -32,6 +32,7 @@ logging.basicConfig(format="%(threadName)s: %(message)s")
 # consists of { key: ID value: [experiments, results, completed_experiments, selected_computation_id]}
 mainData = {}
 
+
 # Session functions
 def initDataStorage():
     global mainData
@@ -72,9 +73,10 @@ def initDataStorage():
         # timestamp
         mainData[session["id"]]["timestamp"] = datetime.datetime.now()
 
-        print("Registered new client with session ID:\n"+session["id"])
+        print("Registered new client with session ID:\n" + session["id"])
     else:
-        print("Detected already registered user with session ID:\n"+session["id"])
+        print("Detected already registered user with session ID:\n" + session["id"])
+
 
 def cleanupMainData():
     # function to delete old data
@@ -91,11 +93,13 @@ def cleanupMainData():
 clean_up_scheduler = BackgroundScheduler(daemon=True)
 clean_up_scheduler.add_job(func=cleanupMainData, trigger="interval", hours=6)
 
+
 @app.route("/reset-hard")
 def resetHard():
     # helper function to clear session data
     session.clear()
     return redirect(url_for("index"))
+
 
 def runge_kutta(x, u, nint=15):
     # nint is number of times to run Runga-Kutta loop
@@ -111,11 +115,14 @@ def runge_kutta(x, u, nint=15):
         for i in range(len(x)):
             k0[i] = computation(i, x, u, list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
-            k1[i] = computation(i, [(x[j] + h * 0.5 * k0[j]) for j in range(len(x))], u, list(mainData[session["id"]]["lambda_list"]))
+            k1[i] = computation(i, [(x[j] + h * 0.5 * k0[j]) for j in range(len(x))], u,
+                                list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
-            k2[i] = computation(i, [(x[j] + h * 0.5 * k1[j]) for j in range(len(x))], u, list(mainData[session["id"]]["lambda_list"]))
+            k2[i] = computation(i, [(x[j] + h * 0.5 * k1[j]) for j in range(len(x))], u,
+                                list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
-            k3[i] = computation(i, [(x[j] + h * k2[j]) for j in range(len(x))], u, list(mainData[session["id"]]["lambda_list"]))
+            k3[i] = computation(i, [(x[j] + h * k2[j]) for j in range(len(x))], u,
+                                list(mainData[session["id"]]["lambda_list"]))
         for i in range(len(x)):
             x[i] = x[i] + (h * 1.0 / 6.0) * (k0[i] + 2 * k1[i] + 2 * k2[i] + k3[i])
     return x
@@ -141,13 +148,17 @@ def discretize(x):
     diff = []
 
     # step size (used in discretisation) for each of the state variables
-    step_size = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]["step_size"]
+    step_size = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]][
+        "step_size"]
 
     # iterate over each state variables (x's)
-    num_vars = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]["num_vars"]
+    num_vars = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]][
+        "num_vars"]
 
     # list of lower and upper bounds for each of the state variables
-    min_bounds_outer = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]["min_bounds_outer"]
+    min_bounds_outer = \
+    mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]][
+        "min_bounds_outer"]
 
     for i in range(num_vars):
         # SCOTS picks the closest grid point
@@ -163,7 +174,8 @@ def discretize(x):
 
         # Reference: https://gitlab.lrz.de/matthias/SCOTSv0.2/-/blob/master/src/UniformGrid.hh#L234
         half_step_size = (step_size[i] / 2.0)
-        diff.append((((x[i] - min_bounds_outer[i]) + half_step_size) // step_size[i]) * step_size[i] + min_bounds_outer[i])
+        diff.append(
+            (((x[i] - min_bounds_outer[i]) + half_step_size) // step_size[i]) * step_size[i] + min_bounds_outer[i])
     return diff
 
 
@@ -172,10 +184,12 @@ def index():
     initDataStorage()
     return render_template("index.html")
 
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static/images'),
                                'favicon-32.png', mimetype='image/png')
+
 
 @app.route('/experiments', methods=['GET', 'POST'])
 def experimentsRoute():
@@ -194,13 +208,14 @@ def experimentsRoute():
 def deleteExperimentsRoute():
     global mainData
     experiment_to_delete = request.get_json()
-    experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
+    experiment_to_delete[0] = int(experiment_to_delete[0])  # turn the jsonified id back into an int
     """
     experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
     """
     experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
     mainData[session["id"]]["experiments"].remove(experiment_to_delete)
     return jsonify(success=True)
+
 
 @app.route('/results', methods=['GET'])
 def resultsRoute():
@@ -214,14 +229,15 @@ def construct():
     global mainData
     data = request.get_json()
     logging.info("Request: \n", data)
-    exp_id = int(data['id'])     # experiment id
-    id = int(data['results_id']) # results id
+    exp_id = int(data['id'])  # experiment id
+    id = int(data['results_id'])  # results id
     cont = os.path.join(UPLOAD_FOLDER, data['controller'])
     nice_name = data['nice_name']
     config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    mainData[session["id"]]["results"][id] = {"id": exp_id, "controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
-                   "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
+    mainData[session["id"]]["results"][id] = {"id": exp_id, "controller": cont, "nice_name": nice_name,
+                                              "preset": config, "status": "Running...",
+                                              "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
         to_parse_dict = {"controller": cont, "determinize": data['determinize'],
@@ -231,7 +247,8 @@ def construct():
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
         to_parse_dict = {"controller": cont, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
-                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
+                         "tolerance": data['tolerance'], "determinize": data['determinize'],
+                         "safe-pruning": data['safe_pruning'],
                          "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
         to_parse_dict = {"controller": cont, "config": config}
@@ -302,7 +319,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 def partial_construct():
     global mainData
     data = request.get_json()
-    id = int(data['id']) # results_id
+    id = int(data['id'])  # results_id
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
     config = data['config']
 
@@ -316,8 +333,10 @@ def partial_construct():
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
-        to_parse_dict = {"controller": controller_file, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
-                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
+        to_parse_dict = {"controller": controller_file, "config": "algebraic",
+                         "fallback": config.split("Fallback: ")[1][:-1],
+                         "tolerance": data['tolerance'], "determinize": data['determinize'],
+                         "safe-pruning": data['safe_pruning'],
                          "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
     else:
         to_parse_dict = {"controller": controller_file, "config": config}
@@ -457,7 +476,8 @@ def simulator():
 @app.route("/computed")
 def computed():
     global mainData
-    selected_experiment = mainData[session["id"]]["completed_experiments"][mainData[session["id"]]["selected_computation_id"]]
+    selected_experiment = mainData[session["id"]]["completed_experiments"][
+        mainData[session["id"]]["selected_computation_id"]]
     returnDict = {
         "idUnderInspection": mainData[session["id"]]["selected_computation_id"],
         "classifier": selected_experiment["classifier_as_json"],
@@ -510,7 +530,8 @@ def initroute():
                         tmp = tmp.subs(mainData[session["id"]]["variable_subs"])
                         lam_1 = sp.lambdify(tmp.free_symbols, tmp)
                         mainData[session["id"]]["lambda_list"].append((lhs.strip(), lam_1, tmp.free_symbols))
-        mainData[session["id"]]["lambda_list"] = sorted(mainData[session["id"]]["lambda_list"], key=lambda x: int(x[0].split("_")[1]))
+        mainData[session["id"]]["lambda_list"] = sorted(mainData[session["id"]]["lambda_list"],
+                                                        key=lambda x: int(x[0].split("_")[1]))
     else:
         # If dynamics is not present sets this to false and browser raises an exception
         returnDict["dynamics"] = False
@@ -648,15 +669,18 @@ def pick_random_point():
     else:
         return jsonify(None)
 
+
 @app.route("/sample-websocket")
 def start_websocket():
     frontend_helper.start_websocket_with_frontend()
     return "Starting websocket"
 
+
 def recursive_scan(baseDir):
     for entry in os.scandir(baseDir):
         if entry.is_file():
-            if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(".prism") or entry.name.endswith(
+            if (entry.name.endswith(".scs") or entry.name.endswith(".storm.json") or entry.name.endswith(
+                    ".prism") or entry.name.endswith(
                     ".csv") or entry.name.endswith(".dump")) and (
                     not entry.name.startswith(".")):
                 yield os.path.join(baseDir, entry.name)
@@ -684,7 +708,8 @@ def yamlread():
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -704,6 +729,7 @@ def upload_file():
         print("Successfully saved file", filename)
         return "Successfully saved file " + filename
     return "Invalid request"
+
 
 global http_server
 
