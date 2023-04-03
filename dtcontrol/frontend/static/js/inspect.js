@@ -1336,6 +1336,7 @@ function deactivateEdit()
     document.getElementById("interactive-button").classList.add("d-none");
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
+    document.getElementById("mainRow-interactive").classList.add("d-none");
     disableNodeSelect();
 }
 
