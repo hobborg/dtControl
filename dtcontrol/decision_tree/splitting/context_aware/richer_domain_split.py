@@ -27,14 +27,17 @@ class RicherDomainSplit(Split):
         coef_assignment     =       [(c_1,-8.23), (c_2,2), (c_3,40)]                  --> List containing substitution Tuples (Sympy Symbol, Value)
         It will be determined inside fit() and later used inside predict() (and get_masks())
         It describes a specific assignment of all variables to a value inside their interval in order to achieve the lowest impurity.
+
+        pred_name: name of the predicate given by the user in interactive tree builder
     """
 
-    def __init__(self, column_interval, coef_interval, term, relation, debug=False, priority=1):
+    def __init__(self, column_interval, coef_interval, term, relation, pred_name=None, debug=False, priority=1):
         self.priority = priority
         self.column_interval = column_interval
         self.coef_interval = coef_interval
         self.term = term
         self.relation = relation
+        self.name = pred_name
         self.coef_assignment = None
 
         # Helper attributes used to speedup calculations inside fit()

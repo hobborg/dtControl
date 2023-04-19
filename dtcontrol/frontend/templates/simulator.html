@@ -56,6 +56,38 @@
         </div>
     </div>
 
+   <!-- Modal form to add a predicate in Edit Mode in interactive tree builder -->
+    <div class="modal fade" id="add-predicate-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Predicate</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!--div class="modal-body"><p>Modal body text goes here.</p></div-->
+                <form id="add-predicate-form">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="pred-name">Predicate name:</label>
+                            <input type="text" class="form-control" id="pred-name" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-pred">Enter predicate:</label>
+                            <input type="text" class="form-control" id="input-pred" value="x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60, 80}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Ok</button>
+                        <!--button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button-->
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
     <div id="main" class="container-fluid simulator">
 

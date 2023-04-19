@@ -9,11 +9,12 @@ from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import
 class PredicateParser:
 
     @classmethod
-    def parse_single_predicate(cls, single_predicate, logger, debug=False):
+    def parse_single_predicate(cls, single_predicate, logger, pred_name=None, debug=False):
         """
         Function to parse a single predicate and return a RicherDomainSplitObject
         :param single_predicate: String containing the predicate
-        :param logger_name: String containing the logger name
+        :param logger: String containing the logger name
+        :param pred_name: predicate name given by the user in interactive tree builder
         :param debug: Bool for debug mode (see Logger)
 
         e.g.
@@ -163,7 +164,7 @@ class PredicateParser:
                                 str(all_interval_defs), str(single_predicate)))
                         raise RicherDomainPredicateParserException()
 
-                return RicherDomainSplit(column_interval, coef_interval, term, relation, debug)
+                return RicherDomainSplit(column_interval, coef_interval, term, relation, pred_name, debug)
 
         logger.root_logger.critical(
             "Aborting: one predicate did not contain any relation. Invalid predicate: {}".format(str(single_predicate)))

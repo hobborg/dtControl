@@ -12,7 +12,10 @@ from dtcontrol import frontend_helper
 
 from traceback import print_exc
 
-from dtcontrol.util import interactive_queue
+from dtcontrol.util import interactive_queue, error_wrapper, success_wrapper
+from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainPredicateParserException
 
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
@@ -222,7 +225,9 @@ def construct():
             # also return all points for the visualization:
             "dataset_x": classifier["dataset_x"],
             "index_to_actual": classifier["index_to_actual"],
-            "predicted_labels": classifier["predicted_labels"]
+            "predicted_labels": classifier["predicted_labels"],
+            # list of predicates added by user in edit mode:
+            "predicates_edit_mode": []
         }
         print("dataset_x: ", completed_experiments[id]["dataset_x"][:10])
         print("class of dataset_x", type(completed_experiments[id]["dataset_x"]))
@@ -455,6 +460,46 @@ def interact_with_fit():
         response = {"type": "warning", "body": "Queue not ready. The interactive mode has perhaps completed."}
     return response
 
+# generates a "printable" table like print_predicate_collections does for console users
+@app.route('/predicate-collection', methods=['GET'])
+def predicate_collection_for_table():
+    current_pred_collection = completed_experiments[selected_computation_id]["predicates_edit_mode"]
+    predicate_table = [[pred.name, str(pred.term) + " " + pred.relation + " 0",
+                             str(pred.column_interval), str(pred.coef_interval)] for pred in
+                            current_pred_collection]
+    return json.dumps(predicate_table)
+
+# process a predicate entered by a user in the edit mode / in the interactive tree builder
+@app.route("/process-predicate", methods=['POST'])
+def process_predicate():
+    data = request.get_json()
+    print("in process_predicate, process this predicate: ", data)
+    # TODO: app.logger
+    logger = RicherDomainLogger("RicherDomainCliStrategy_logger_process_pred", False)
+
+    # first check the name given to the predicate
+    pred_name = data["pred_name"]
+    if pred_name == "":
+        return error_wrapper("No predicate name entered.")
+    for pred in completed_experiments[selected_computation_id]["predicates_edit_mode"]:
+        if pred.name == pred_name:
+            logger.root_logger.info("User tried to add a duplicate name / id to 'recently_added_predicates'.")
+            return error_wrapper("Duplicate name found.")
+
+    # then check the predicate itself
+    try:
+        print("call predicate parser with this pred name:", data["pred_name"])
+        # TODO: debug
+        parsed_input = PredicateParser.parse_single_predicate(data["predicate"], logger, data["pred_name"])
+    except RicherDomainPredicateParserException:
+        print("error from predicate parser for this request: ", request)
+        return error_wrapper("Invalid predicate entered. Please check logger or comments for more information.")
+    for pred in completed_experiments[selected_computation_id]["predicates_edit_mode"]:
+        if pred.helper_equal(parsed_input):
+            logger.root_logger.info("User tried to add a duplicate predicate.")
+            return error_wrapper("Duplicate predicate found.")
+    completed_experiments[selected_computation_id]["predicates_edit_mode"].append(parsed_input)
+    return success_wrapper("")
 
 # route for selecting one of the computed configs
 @app.route('/select', methods=['POST'])

@@ -86,7 +86,6 @@ var highlighting_constraint_history = [];
 var redirect = false;
 
 // global var that stores dataset for rendering the plot (renderPlot)
-
 // data_dict is a dictionary with the following entries:
 // - dataset_x: has the form [[dim1, dim2, ...], [dim1, dim2, ...], ...], contains every data point, but not the labels
 // - predicted_labels: list, length corresponds to number of data points
@@ -100,6 +99,9 @@ var data_dict;
 // the maximal number of data points to be plotted
 // if dataset_x is bigger, a random subset of size max_plotted_datapoints is plotted
 var max_plotted_datapoints = 10000;
+
+// counter for increasing predicate ids of predicates added by user in interactive tree builder
+var predicate_id_counter = 1;
 
 function svgSetup() {
     zoom = d3.zoom()
@@ -1546,6 +1548,8 @@ function process_interaction_response(data) {
             document.getElementById("computed-predicates-table").getElementsByTagName("tbody")[0].innerHTML = "";
         }
         if (data.body.recently_added_predicates) {
+            //TODO what is this?
+            console.log("data.body contains recently added predicates:")
             let recently_added_predicates = data.body.recently_added_predicates;
             generate_html_table(document.getElementById("computed-predicates-table"),
                 1, recently_added_predicates.header, recently_added_predicates.body,
@@ -1555,6 +1559,7 @@ function process_interaction_response(data) {
             document.getElementById("computed-predicates-table").getElementsByTagName("tbody")[1].innerHTML = "";
         }
         if (data.body.standard_predicates_collection) {
+        // TODO what is ths1?
             let standard_predicates_collection = data.body.standard_predicates_collection;
             generate_html_table(document.getElementById("standard-predicates-collection"),
                 0, standard_predicates_collection.header, standard_predicates_collection.body,
@@ -1563,12 +1568,13 @@ function process_interaction_response(data) {
             // If return object doesn't contain this key-value pair, remove from table (1st tbody)
             document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[0].innerHTML = "";
         }
+        // TODO... this is not in this data anymore!
         if (data.body.recently_added_predicates_collection) {
             let recently_added_predicates_collection = data.body.recently_added_predicates_collection;
+            console.log("fill table std pred coll recently added preds");
             generate_html_table(document.getElementById("standard-predicates-collection"),
                 1, recently_added_predicates_collection.header, recently_added_predicates_collection.body,
                 true, "abstract-predicate");
-            // console.log(recently_added_predicates_collection.length);
             document.getElementById("delete-predicate-button").disabled = (recently_added_predicates_collection.length === 0);
         } else {
             // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
@@ -1579,35 +1585,60 @@ function process_interaction_response(data) {
     else if (data.type === "error") {
         console.error(data.body);
     }
-    $("body").css("cursor", "default");
 }
 
-function add_predicate()
-{
-    let predicate = window.prompt("Enter predicate", "x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60, 80}");
+function add_predicate(){
+    $('#add-predicate-form')[0].reset();
+    document.getElementById("pred-name").value = predicate_id_counter;
+    $('#add-predicate-modal').modal('show');
+}
+
+
+$('#add-predicate-modal').on('submit', function (event) {
+    event.preventDefault();
+    $('#add-predicate-modal').modal('hide');
+    let pred_name = document.getElementById('pred-name').value;
+    let predicate = document.getElementById('input-pred').value;
+    console.log("got the inputs from modal:");
+    console.log(pred_name);
+    console.log(predicate);
+
     $.ajax({
-        data: JSON.stringify({"action": "add", "body": predicate}),
+        data: JSON.stringify({"pred_name": pred_name, "predicate": predicate}),
         type: 'POST',
         contentType: "application/json; charset=utf-8",
-        url: '/interact',
+        url: '/process-predicate',
         beforeSend: () => {
             $("body").css("cursor", "progress")
         },
     }).done(data => {
-        console.log("Return from add");
-        // console.log(data);
-        try {
-            let response = JSON.parse(data);
-            process_interaction_response(response);
+        let response = JSON.parse(data);
+        console.log("predicate was parsed, now refresh with this response:")
+        console.log(response)
+        if (response.type === "error") {
+            popupModal("Error: Adding failed", response.body);
+        } else if (response.type == "success") {
+            predicate_id_counter += 1;
+            refresh_predicate_collection_table();
         }
-        catch (error) {
-            console.error(error);
-        }
+        $("body").css("cursor", "default");
+    });
+}
+)
+
+// this fct refreshes only the Predicate Collection table
+// fct process_interaction_response refreshes other tables
+function refresh_predicate_collection_table(){
+    header = ["ID", "TERM", "COLUMN INTERVAL", "COEF INTERVAL"]
+    $.get('/predicate-collection', (data) => {
+    let response = JSON.parse(data);
+      generate_html_table(document.getElementById("standard-predicates-collection"),
+            1, header, response, true, "abstract-predicate");
+             // TODO: radio name abstract predicate
     });
 }
 
-function add_plot_predicate()
-{
+function add_plot_predicate() {
     // TODO, similar to add_predicate
     console.log("add plot predicate")
 }
@@ -1628,10 +1659,12 @@ function remove_predicate() {
         try {
             let response = JSON.parse(data);
             process_interaction_response(response);
+            refresh_predicate_collection_table();
         }
         catch (error) {
             console.error(error);
         }
+        $("body").css("cursor", "default");
     });
 }
 
@@ -1665,6 +1698,7 @@ function use_predicate() {
             } catch (error) {
                 console.error(error);
             }
+            $("body").css("cursor", "default");
         });
     }
 }
@@ -1686,10 +1720,13 @@ function refresh_interactive_tables() {
         try {
             let response = JSON.parse(data);
             process_interaction_response(response);
+            refresh_predicate_collection_table();
         }
         catch (error) {
             console.error(error);
         }
+        $("body").css("cursor", "default");
+
         // Scroll the interactive tree builder cards into view
         document.getElementById("mainRow-interactive").scrollIntoView({ behavior: 'smooth', block: "start"});
 
