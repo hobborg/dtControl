@@ -1631,12 +1631,11 @@ $('#add-predicate-modal').on('submit', function (event) {
 // this fct refreshes only the Predicate Collection table
 // fct process_interaction_response refreshes other tables
 function refresh_predicate_collection_table(){
-    header = ["ID", "TERM", "COLUMN INTERVAL", "COEF INTERVAL"]
+    header = ["ID", "TERM", "COLUMN INTERVAL", "COEF INTERVAL", "ACTIONS"]
     $.get('/predicate-collection', (data) => {
     let response = JSON.parse(data);
       generate_html_table(document.getElementById("standard-predicates-collection"),
-            1, header, response, true, "abstract-predicate");
-             // TODO: radio name abstract predicate
+            1, header, response, false, null, true);
     });
 }
 
