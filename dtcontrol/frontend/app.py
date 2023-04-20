@@ -226,8 +226,8 @@ def construct():
             "dataset_x": classifier["dataset_x"],
             "index_to_actual": classifier["index_to_actual"],
             "predicted_labels": classifier["predicted_labels"],
-            # list of predicates added by user in edit mode:
-            "predicates_edit_mode": []
+            # dict of predicates added by user in edit mode:
+            "predicates_edit_mode": {}
         }
         print("dataset_x: ", completed_experiments[id]["dataset_x"][:10])
         print("class of dataset_x", type(completed_experiments[id]["dataset_x"]))
@@ -464,9 +464,9 @@ def interact_with_fit():
 @app.route('/predicate-collection', methods=['GET'])
 def predicate_collection_for_table():
     current_pred_collection = completed_experiments[selected_computation_id]["predicates_edit_mode"]
-    predicate_table = [[pred.name, str(pred.term) + " " + pred.relation + " 0",
-                             str(pred.column_interval), str(pred.coef_interval)] for pred in
-                            current_pred_collection]
+    predicate_table = [[key, str(pred.term) + " " + pred.relation + " 0",
+                             str(pred.column_interval), str(pred.coef_interval)] for key, pred in
+                            current_pred_collection.items()]
     return json.dumps(predicate_table)
 
 # process a predicate entered by a user in the edit mode / in the interactive tree builder
@@ -481,10 +481,9 @@ def process_predicate():
     pred_name = data["pred_name"]
     if pred_name == "":
         return error_wrapper("No predicate name entered.")
-    for pred in completed_experiments[selected_computation_id]["predicates_edit_mode"]:
-        if pred.name == pred_name:
-            logger.root_logger.info("User tried to add a duplicate name / id to 'recently_added_predicates'.")
-            return error_wrapper("Duplicate name found.")
+    if pred_name in completed_experiments[selected_computation_id]["predicates_edit_mode"]:
+        logger.root_logger.info("User tried to add a duplicate name / id to 'recently_added_predicates'.")
+        return error_wrapper("Duplicate name found.")
 
     # then check the predicate itself
     try:
@@ -494,12 +493,19 @@ def process_predicate():
     except RicherDomainPredicateParserException:
         print("error from predicate parser for this request: ", request)
         return error_wrapper("Invalid predicate entered. Please check logger or comments for more information.")
-    for pred in completed_experiments[selected_computation_id]["predicates_edit_mode"]:
+    for key, pred in completed_experiments[selected_computation_id]["predicates_edit_mode"].items():
         if pred.helper_equal(parsed_input):
             logger.root_logger.info("User tried to add a duplicate predicate.")
             return error_wrapper("Duplicate predicate found.")
-    completed_experiments[selected_computation_id]["predicates_edit_mode"].append(parsed_input)
+    completed_experiments[selected_computation_id]["predicates_edit_mode"].update({pred_name: parsed_input})
     return success_wrapper("")
+
+@app.route('/delete-predicate', methods=['POST'])
+def delete_predicate():
+    pred_to_delete = request.get_json()
+    # TODO treat case if not in dict? pass to front, then console.log(error), like it was done before... "invalid predicate"...
+    del completed_experiments[selected_computation_id]["predicates_edit_mode"][pred_to_delete]
+    return jsonify(success=True)
 
 # route for selecting one of the computed configs
 @app.route('/select', methods=['POST'])

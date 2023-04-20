@@ -473,9 +473,7 @@ $(document).ready(function () {
     function initTableListeners() {
         $("table").on("click", "i.fa-trash", function () {
             const row = $(this).parent().parent();
-            const index = parseInt(row.find('th').textContent, 10) - 1;
-
-            var row_items = $(this).parent().parent().find('th,td');
+            var row_items = row.find('th,td');
             var row_content = [];
             row_items.each(function (k, v) {
                 row_content.push(v.innerHTML);

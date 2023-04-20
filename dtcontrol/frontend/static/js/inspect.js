@@ -1459,7 +1459,7 @@ function titleCase(str) {
   }).join(' ');
 }
 
-function generate_html_table(table_selector, body_index, header, body, add_radio=false, radio_name=null) {
+function generate_html_table(table_selector, body_index, header, body, add_radio=false, radio_name=null, add_actions=false) {
     /*
     For certain tables, we have two tbodys. The body_index allows to choose which tbody to insert the data into.
      */
@@ -1501,6 +1501,11 @@ function generate_html_table(table_selector, body_index, header, body, add_radio
             let cell = row.insertCell();
             let text = document.createTextNode(val);
             cell.appendChild(text);
+        }
+
+        if (add_actions) {
+            let cell = row.insertCell();
+            cell.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
         }
     }
 }
@@ -1575,11 +1580,9 @@ function process_interaction_response(data) {
             generate_html_table(document.getElementById("standard-predicates-collection"),
                 1, recently_added_predicates_collection.header, recently_added_predicates_collection.body,
                 true, "abstract-predicate");
-            document.getElementById("delete-predicate-button").disabled = (recently_added_predicates_collection.length === 0);
         } else {
             // If return object doesn't contain this key-value pair, remove from table (2nd tbody)
             document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[1].innerHTML = "";
-            document.getElementById("delete-predicate-button").disabled = true;
         }
     }
     else if (data.type === "error") {
@@ -1592,7 +1595,6 @@ function add_predicate(){
     document.getElementById("pred-name").value = predicate_id_counter;
     $('#add-predicate-modal').modal('show');
 }
-
 
 $('#add-predicate-modal').on('submit', function (event) {
     event.preventDefault();
@@ -1643,30 +1645,19 @@ function add_plot_predicate() {
     console.log("add plot predicate")
 }
 
-function remove_predicate() {
-    let selected_predicate_id = +document.querySelector('input[name = "abstract-predicate"]:checked').value;
-    $.ajax({
-        data: JSON.stringify({"action": "del", "body": selected_predicate_id}),
-        type: 'POST',
-        contentType: "application/json; charset=utf-8",
-        url: '/interact',
-        beforeSend: () => {
-            $("body").css("cursor", "progress")
-        },
-    }).done(data => {
-        console.log("Return from del");
-        // console.log(data);
-        try {
-            let response = JSON.parse(data);
-            process_interaction_response(response);
-            refresh_predicate_collection_table();
-        }
-        catch (error) {
-            console.error(error);
-        }
-        $("body").css("cursor", "default");
-    });
-}
+        $("table").on("click", "i.fa-trash", function () {
+            let row = $(this).parent().parent();
+            let row_items = row.find('td');
+            let id = row_items[0].innerHTML;
+            $.ajax('/delete-predicate', {
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(id),
+                success: () => {
+                    refresh_predicate_collection_table();
+                }
+            });
+        });
 
 function use_predicate() {
     let selected_predicate_id = +document.querySelector('input[name = "instantiated-predicate"]:checked').value;
@@ -1687,7 +1678,6 @@ function use_predicate() {
                 // // Disable Add/Del/Use Buttons
                 document.getElementById("use-predicate-button").disabled = true;
                 document.getElementById("add-predicate-button").disabled = true;
-                document.getElementById("delete-predicate-button").disabled = true;
             },
         }).done(data => {
             console.log("Return from use");
@@ -1733,7 +1723,6 @@ function refresh_interactive_tables() {
         // // Reactivate Add/Del/Use Buttons
         document.getElementById("use-predicate-button").removeAttribute("disabled");
         document.getElementById("add-predicate-button").removeAttribute("disabled");
-        document.getElementById("delete-predicate-button").removeAttribute("disabled");
     });
 }
 

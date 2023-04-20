@@ -486,6 +486,8 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                     else:
                         interactive_queue.send_to_front(self.webui_output(dataset))
             elif command["action"] == "add":
+                #TODO delete when also migrated part below, esp recently_added_predicates not need in webui anymore
+                print("ERROR: this point should not be reached anymore!")
                 # add an expression (to recently added predicates table)
                 user_input = command["body"]
                 try:
@@ -500,6 +502,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                             self.logger.root_logger.info("User tried to add a duplicate predicate to 'recently_added_predicates'.")
                             break
                     else:
+                        # TODO: this calculates impurity etc! still to migrate out of this fct
                         try:
                             all_pred = self.get_all_richer_domain_splits([parsed_input], dataset, impurity_measure)
                         except RicherDomainStrategyException:
@@ -516,6 +519,7 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                             # refresh console output
                             interactive_queue.send_to_front(self.webui_output(dataset))
             elif command["action"] == "add_standard":
+                #TODO T: I think this is not available in webui (but this whole function treats webui commands)
                 # add an expression to standard and alternative predicates
                 user_input = command["body"]
                 try:
@@ -559,15 +563,6 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
                         new_standard_alt_predicates_imp.append(pred)
                 self.standard_alt_predicates_imp = new_standard_alt_predicates_imp
                 interactive_queue.send_to_front(self.webui_output(dataset))
-            elif command["action"] == "del":
-                # select predicate VIA ID to be deleted
-                del_id = int(command["body"])
-                if del_id < 0 or del_id >= len(self.known_parent_id) or len(self.known_parent_id) == 0:
-                    interactive_queue.send_to_front(error_wrapper("Aborting: Invalid Id."))
-                else:
-                    real_del_id = self.known_parent_id[del_id]
-                    self.delete_parent_id(real_del_id)
-                interactive_queue.send_to_front(self.webui_output(dataset))
             elif command["action"] == "collection":
                 # display the collections of predicates
                 interactive_queue.send_to_front(self.print_predicate_collections(cli=False))
@@ -604,6 +599,8 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         self.recently_added_predicates_imp = new_recently_added_predicates_imp
 
     def print_predicate_collections(self, cli=True):
+        # TODO: I think we can change print_predicate_collections if only responsible for console output (remove else cases)
+        # TODO: but is it? what are the standard predicates?
         """
         Function to give a visual representation of the predicates collection.
         """
