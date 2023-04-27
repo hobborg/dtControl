@@ -1747,6 +1747,7 @@ function deactivateSimulator() {
     $("#formSecond-randomize-button").hide();
     $("#formSecond-submit-button").hide();
     $("#exampleModalLongTitle").html("Enter system dynamics");
+    $("#noContentAlert").hide();
 }
 
 function deactivateEdit()
@@ -2319,7 +2320,16 @@ $(document).ready(function () {
 
     // Submits popup modal form (for passing initial values of state variables)
     $('#formSecond').on('submit', function (event) {
-        // console.log('form is submitted');
+        // iterating through input to check whether there is an empty input
+        for (let i = 0; i < stateDimension; i++) {
+            if (document.getElementById('x' + i).value == ""){
+                document.getElementById("noContentAlert").innerHTML= "Please provide an initial value for all variables."
+                $("#noContentAlert").show();
+                event.preventDefault();
+                return;
+            }
+        }
+
         initializeSimulatorTablesAndCharts(stateDimension, actionDimension)
         let x_toPass = [];
         for (let i = 0; i < stateDimension; i++) {
@@ -2422,6 +2432,12 @@ $(document).ready(function () {
     });
 
     $("#formSecond-next-button").on("click", function (event) {
+        if ($("#dynamics-input").val() == ""){
+            document.getElementById("noContentAlert").innerHTML= "No Input Provided. Please enter or upload system dynamics."
+            $("#noContentAlert").show()
+            return;
+        }
+        $("#noContentAlert").hide()
         $("#dynamics-body").hide();
         $("#initial-values").show();
         $("#formSecond-next-button").hide();
@@ -2629,6 +2645,7 @@ $(document).ready(function () {
         reader.onload = function (e) {
             // The file's text will be printed here
             $("#dynamics-input").val(e.target.result);
+            $("#formSecond-next-button").prop('disabled', false);
         };
         reader.readAsText(file);
     });
