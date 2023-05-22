@@ -1,5 +1,6 @@
 C       = /usr/bin/gcc
-CFLAGS  = -O3 -w
+# -fcommon added due to issues starting from gcc10: https://gcc.gnu.org/gcc-10/porting_to.html
+CFLAGS  = -O3 -w -fcommon
 LIBS    = -lm
 
 SRC     = util.c tree_util.c load_data.c perturb.c \
