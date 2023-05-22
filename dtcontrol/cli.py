@@ -546,9 +546,9 @@ def main():
                                             "    dtcontrol --input examples/cartpole.scs --config user-config.yml --use-preset my-config")
     parser.set_defaults(func=core_parser)
 
-    version = pkg_resources.require("dtcontrol")[0].version
+    # version = pkg_resources.require("dtcontrol")[0].version
     parser.add_argument("-v", "--version", action='version',
-                        version=f'%(prog)s {version}')
+                        version=f'SORRY! NO_VERSION')
 
     input_output = parser.add_argument_group('input/output')
     input_output.add_argument("--input", "-i", nargs="+", type=(lambda x: is_valid_file_or_folder(parser, x)),
