@@ -15,8 +15,9 @@ from collections import namedtuple, OrderedDict
 from os import makedirs, remove
 from os.path import exists, isfile, splitext
 from typing import Tuple, Union, List
+from pathlib import Path
 
-import pkg_resources
+#import pkg_resources
 from pkg_resources import Requirement, resource_filename
 from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
@@ -64,12 +65,15 @@ def main():
             return arg
 
     def load_default_config() -> OrderedDict:
-        try:
+        # TODO: check that it doesn't break anything
+        default_config_file = Path(__file__).parent / "config.yml"
+        """try:
             default_config_file = resource_filename(Requirement.parse("dtcontrol"),
                                                     "dtcontrol/config.yml")  # System-level config file
         except pkg_resources.DistributionNotFound:
             sys.exit(
                 f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
+        """
 
         try:
             yaml = YAML()
