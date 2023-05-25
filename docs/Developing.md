@@ -1,4 +1,3 @@
-
 ## Setting up the dev environment
 ```bash
 # Clone the repo 
@@ -25,6 +24,12 @@ cd ../..
 ./bin/dtControl --input examples/cps/10rooms.scs
 ```
 
+## Running the Web App
+The following command should start the GUI Web App for dtControl:
+```bash
+python -m dtcontrol.frontend.app
+```
+More information about using the web app [here](https://dtcontrol.readthedocs.io/en/latest/userman.html#web-based-graphical-user-interface)
+
 ## ToDos
-- Command to execute the web interface
 
