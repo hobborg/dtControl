@@ -182,12 +182,13 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
 
 
 def load_default_config() -> OrderedDict:
-    try:
-        default_config_file = resource_filename(Requirement.parse("dtcontrol"),
-                                                "dtcontrol/config.yml")  # System-level config file
-    except pkg_resources.DistributionNotFound:
-        sys.exit(
-            f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
+    default_config_file = "dtcontrol/config.yml"
+    # try:
+    #     default_config_file = resource_filename(Requirement.parse("dtcontrol"),
+    #                                             "dtcontrol/config.yml")  # System-level config file
+    # except pkg_resources.DistributionNotFound:
+    #     sys.exit(
+    #         f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
 
     try:
         yaml = YAML()
