@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>{{ page.title }}</title>
+
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/pygment_trac.css">
+    <link rel="icon" href="/assets/images/favicon-32.png" sizes="32x32">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="wrapper">
+    <header>
+        <div style="overflow:hidden">
+            <a href="/"><img src="{{ page.logo }}" alt="dtControl logo"
+                             style="max-height: 130px; margin-left: 0px; margin-bottom: 20px"></a>
+            <h1><a href="/">dtControl</a></h1>
+            <p>{{ page.summary }}</p>
+            <ul class="buttons">
+                <li><a href="https://pypi.org/project/dtcontrol/">Install<strong>using PIP</strong></a></li>
+                <li><a href="https://gitlab.lrz.de/i7/dtcontrol/-/archive/master/dtcontrol-master.zip">Download <strong>Latest ZIP</strong></a>
+                </li>
+                <li><a href="https://gitlab.lrz.de/i7/dtcontrol">View On <strong>GitLab</strong></a></li>
+            </ul>
+        </div>
+    </header>
+    <section>
+        <h1>Tutorials</h1>
+        <h2>Setup</h2>
+        <p>In this video, we provide a quick setup guide for dtControl.
+            Hereby, we recommend downloading dtControl from the <a href="https://pypi.org/project/dtcontrol/">Python Package Index (PyPI)</a>.
+            Before installing, we recommend creating a <a href="https://docs.python.org/3.8/tutorial/venv.html">virtual environment</a> so that dependencies of dtControl do not conflict with any other packages already installed on your local system.
+            However, we describe all necessary steps within this video.</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_0_Setup.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+        <h2>Get Experiments</h2>
+        <p>In case you don't have any controller files on your local machine, this video demonstrates how to download our commonly used controller files.
+            The same controller files are used throughout our tutorial series can be found in our <a href="https://gitlab.lrz.de/i7/dtcontrol-examples">repository</a>.</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_1_GetExperiments.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+        <h2>Add and Run Experiments</h2>
+        <p>Once the setup process is completed, this video shows how to add and run single experiments to dtControl.
+            The controller file used throughout this video can be found <a href="https://gitlab.lrz.de/i7/dtcontrol-examples/-/blob/master/cps/10rooms.scs.zip">here</a>.
+            However, before actually uploading the controller to dtControl, make sure it is unzipped as shown in the previous video "Get Experiments".</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_2_AddAndRunExperiments.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+        <h2>Algebraic Predicates</h2>
+        <p>As shown in our recent <a href="https://doi.org/10.1007/978-3-030-72013-1_17">paper</a>, it is possible to derive algebraic predicates from domain knowledge for the cruise-control model.
+            Hereby, we were able to construct a decision tree representing the whole permissive controller for the cruise-control model with 11 nodes.
+            This video demonstrates how to enter those algebraic predicates, which can be found <a href="https://mediatum.ub.tum.de/doc/1617115/1617115.pdf">here (Appendix A.1)</a>.</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_3_algebraicPredicates.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+        <h2>Inspect Result</h2>
+        <p>Once the result of an experiment is available, this video demonstrates all available features to inspect and understand the resulting decision tree.</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_4_Inspect.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+        <h2>Edit Result</h2>
+        <p>In case one might not be 100% satisfied with the obtained result, this video exemplifies how to edit and reconstruct parts of the resulting decision tree.
+            Hereby, we demonstrate the interactive tree builder, as well as the retrain-from-node feature.</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_5_Edit.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+        <h2>Simulate Result</h2>
+        <p>This video provides a quick introduction to our simulation mode, in which one can simulate a run of the system under the control of the decision tree and visualize the decisions made. The system dynamics file used throughout this video, can be found <a href="/assets/files/cartpoledynamics.txt" download>here</a>.</p>
+        <video width="560" height="340" controls>
+            <source src="/assets/videos/dtControlTutorial_6_Simulation.mov" type=video/mp4>
+        </video>
+        <hr class="divider">
+
+    </section>
+    <footer>
+        <p><small>Theme adapted from <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+    </footer>
+</div>
+<script src="/assets/js/scale.fix.js"></script>
+</body>
+</html>

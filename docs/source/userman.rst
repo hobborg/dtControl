@@ -178,7 +178,7 @@ This configuration provides the information that the two variables are ``clock``
 
 .. _the-command-line-interface:
 
-The Command-line Interface
+The command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This section shows how to configure and run dtControl. For this purpose, we assume that you have an ``examples`` folder
@@ -488,7 +488,7 @@ For example, to assign a priority of 0.5 to :code:`AxisAlignedSplittingStrategy`
     logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
     logreg = 0.7
 
-Web-based graphical user interface
+Web-Based Graphical User Interface
 -----------------------------------
 The interface is is powered by `flask <https://flask.palletsprojects.com/en/1.1.x/>`_ and `d3.js <https://d3js.org/>`_.
 After succesfully installing the latest version of `dtControl 2.0` the user can access the web-based graphical user interface by running::
@@ -575,7 +575,7 @@ Editing your first result
 
         The user can now provide for the selected node, a custom predicate. For this purpose, additional information about the current state of the dataset at the current node is displayed. A user defined predicate can be added by pressing the :guilabel:`Add predicate` Button. The Syntax is described in the :ref:`algebraic-predicates` section. In the 'Instantiated Predicates', the user can now select the wanted predicate. Child nodes containing a inhomogeneous set of labels will be labeled with 'Not yet homogeneous'. For those nodes, the user can again either decide to use the 'Retrain from selected node' functionality or start again the 'interactive tree builder'.
 
-Simulate your first result
+Simulating your first result
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Simulation mode:** The simulation mode can be entered by clicking the :guilabel:`Simulate` Button. To start the simulation, the user has to enter a system dynamics file. For this purpose we provide following two example files:
@@ -594,7 +594,7 @@ Simulate your first result
 
 .. _semi-automatic-cli:
 
-Semi-automatic command-line user interface
+Semi-automatic Command-Line User Interface
 --------------------------------------------
 In order the utilize the semi-automatic user interface the user has to import the command-line interface by adding following line to :ref:`quick-start-python-interface`::
 
@@ -619,7 +619,7 @@ After adding these lines of code, the user can follow the commands (which you ma
 
 .. _algebraic-predicates:
 
-Algebraic user-defined predicates
+Algebraic User-Defined Predicates
 -----------------------------------
 The support for algebraic user-defined predicates forms one of the cornerstones of ``dtControl 2.0``. In this subsection we introduce several different extensions for predicates. The most simplified predicate structure can be summarized as follows:
 
@@ -702,7 +702,7 @@ Coefficients overcome the limitations of standard predicates by enabling the usa
             #. :math:`x_1 * 2 >= 3`
 
 
-Feature Constraints
+Feature constraints
 ^^^^^^^^^^^^^^^^^^^^^^^
 The concept of Feature Constraints is provided for explicit situations where the usage of a predicate is only valid under certain constraints within the current controller file. Similar to the previous sections of coefficient predicates, predicates using Feature Constraints can be described as the following:
 

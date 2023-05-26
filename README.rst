@@ -80,7 +80,19 @@ Further, you may either manually unzip the specific case study you would like to
 
 However, be warned that this would use up about 13GB of space.
 
-To execute a single algorithm on a single model, run a command like::
+Web-Based Graphical User Interface
+###################################
+In order to set up the web-based graphical user interface on a local machine, simply run the following command::
+
+    $ dtcontrol-frontend
+
+If run successfully, this command should start the web interface of ``dtcontrol``, which is now easily accessible via your favorite browser at `http://127.0.0.1:5000 <http://127.0.0.1:5000>`_.
+
+
+Command Line Interface
+########################
+
+To execute a single algorithm on a single model via the command line, run a command like::
 
     $ dtcontrol --input ./dtcontrol/examples/cartpole.scs --use-preset maxfreq --timeout 30m
 

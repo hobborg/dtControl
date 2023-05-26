@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 
 <head>
     <meta charset="UTF-8">
@@ -30,20 +30,51 @@
 
 <body id="bootstrap-override">
 
+<!-- Help Button -->
+    <div class="modal fade" id="helpModal" tabindex="2" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">Welcome to dtControl</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="helpTextBody">
+                    If you're looking for some guidance on how to use dtControl, you've come to the right place!<br>
+                    We've put together a series of tutorial videos that will walk you through the features and functions of dtControl step-by-step.<br>
+                    To access the tutorial videos, please click on the following link to visit our <a href="https://dtcontrol.model.in.tum.de/tutorials/" target="_blank">tutorial page</a>.<br>
+                    From there, you'll find a variety of tutorial videos that cover everything from the basics to more advanced features.<br>
+                    <br>
+                    If you have any additional questions or feedback, please don't hesitate to reach out to me via: <br>
+                    <a href="mailto:christoph.weinhuber@tum.de">christoph.weinhuber@tum.de</a>
+                </div>
+
+                <div class="modal-footer" id="tutorialFooter">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 <!-- Navbar at top -->
 <nav class="navbar navbar-expand-xl navbar-light">
-    <button id="navbar-hamburger" class="hamburger hamburger--spin" type="button" onClick="openNav()">
+    {% block hamburger %}
+    <button id="navbar-hamburger" class="hamburger hamburger--spin" type="button">
       <span class="hamburger-box">
         <span class="hamburger-inner"></span>
       </span>
     </button>
-    {% block hamburger %}{% endblock %}
+    {% endblock %}
     <a class="navbar-brand ml-0" href="/"><img class="logo"
                                                src="{{ url_for('static', filename='images/logo.png') }}"/>dtControl</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
+
+    <button type="button" id="helpButton" data-toggle="modal" data-target="#helpModal" class="btn btn-outline-info">Help</button>
 </nav>
 
 <!-- Sidenav that is used for selecting controller, config and other fine tuning properties -->
@@ -120,7 +151,7 @@
 
             <!-- Divider -->
 
-            <div class="row mt-3">
+            <div id="advanced-options-edit" class="row mt-3">
                 <div id="accordion">
                     <button id="accordionButton" type="button" class="btn btn-link collapsed" data-toggle="collapse"
                             data-target="#advancedOptions">
@@ -226,7 +257,7 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-primary btn-lg btn-block" type="submit" name="add" style="margin-top: 1.25rem;"
+            <button class="btn btn-primary btn-lg btn-block" type="submit" name="add" style="margin-top: 1.25rem; margin-bottom: 10rem;"
                     id="add-experiments-button">Add
             </button>
             <button class="btn btn-primary btn-lg btn-block d-none" type="submit" name="retrain" style="margin-top: 1.25rem;"
@@ -240,6 +271,88 @@
     </form>
 
 
+    <div id="inspect-field" class="container search-box row d-none">
+
+        <div class="row mt-3">
+            <div class="col-12">
+
+                <div class="input-group mb-3">
+                    <label for="inputGroupSelect02">Highlight the path to leaf nodes where</label>
+                    <select class="custom-select" id="inputGroupSelect02">
+                        <option selected value="all">all</option>
+                        <option value="some" id="permissiveSomeHighlight" class="d-none">some</option>
+                    </select>
+                    <div class="input-group-append">
+                        <label class="input-group-text" for="inputGroupSelect02" id="availableActions1">actions</label>
+                    </div>
+                </div>
+
+
+                <label for="highlight-input">satisfy following constraint: </label>
+                <div>
+                    <input class="input-group-text" type="text" id="highlight-input" name="highlight" value="a_0 >= 0">
+                </div>
+                <pre style="color:red;" id="highlight-error-message"></pre>
+
+
+
+            </div>
+
+
+            <div class="col-9">
+                <button id="highlight-form-button" type="button" class="btn btn-primary btn-block">Find</button>
+            </div>
+
+            <div class="col-2">
+                <button id="highlight-undo-button" type="button" class="btn btn-secondary" disabled="" onclick="highlight_undo_button()">
+                    <i class="fa fa-undo"></i>
+                </button>
+            </div>
+        </div>
+
+
+        <div id="advanced-options-inspect" class="row mt-3">
+                <div id="accordion-inspect">
+                    <button id="accordionButton-inspect" type="button" class="btn btn-link collapsed" data-toggle="collapse"
+                            data-target="#advancedHelp">
+                        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-right-fill"
+                             fill="currentColor"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.14 8.753l-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"></path>
+                        </svg>
+                        <span>Show help</span>
+                    </button>
+                </div>
+            </div>
+
+        <div id="advancedHelp" class="collapse" data-parent="#accordion">
+
+
+            <div class="row mt-3">
+                <div class="col-12">
+
+                    <p class="font-weight-bold">Help menu</p>
+                    <p class="text-md-left">Within the current decision tree you can highlight various different paths to leaf nodes.</p>
+                    <p class="font-weight-bold">Detailed statistic</p>
+                    <ul>
+                        <li>The current decision tree is:</li>
+                        <pre id="permissiveHere"></pre>
+                        <li>The action-dimension is:</li>
+                        <pre id="dimensionHere"></pre>
+                        <li>Available symbols to reference actions:</li>
+                        <pre id="availableActions2"></pre>
+                        <li>Available relations:</li>
+                        <pre><=, >=, =</pre>
+                        <li>Available boolean operations:</li>
+                        <pre>&, and, |, or </pre>
+                        <li>Example input:</li>
+                        <pre id="exampleActionHere"></pre>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal -->

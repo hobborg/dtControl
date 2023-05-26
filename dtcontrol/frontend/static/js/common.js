@@ -264,4 +264,21 @@ $(document).ready(function () {
     $("#tolerance").on("input", function () {
         document.getElementById("config").value = "custom";
     });
+
+    $('button.hamburger').on('click', function (event) {
+        if ($(this).hasClass("is-active")) {
+            closeNav();
+        } else {
+            openNav();
+        }
+
+        $(this).toggleClass("is-active");
+    });
+
+    const accordionButton = $('#accordionButton');
+    accordionButton.on('click', event => {
+        const wasCollapsed = accordionButton.hasClass('collapsed');
+        accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
+        accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});
+    });
 });
