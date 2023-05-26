@@ -50,8 +50,6 @@ In case of problems, the Common Installation Issues section in the [ReadMe file]
 
 Using `$ pip install dtcontrol` might seem tempting, but it will not give you a modifiable version of dtControl. We also don't recommend trying to install the requirements this way.
 
-There is a [requirements.txt](https://gitlab.com/live-lab/software/dtcontrol/-/blob/master/docs/requirements.txt) file in /dtcontrol/docs. These requirements are only related to the maintenance of the documenation and are not needed for the installation process described here.
-
 # Further Onboarding
 
 The first chapter of the [documentation](https://dtcontrol.readthedocs.io/en/latest/index.html), the [tutorial videos](https://dtcontrol.model.in.tum.de/tutorials/) on our website and the [related publications](https://dtcontrol.model.in.tum.de/#related-publications) serve as an introduction to new developers and new users alike.
