@@ -55,4 +55,16 @@ presets:
     determinize: none
     numeric-predicates: ['axisonly', 'linear-logreg']
     impurity: 'auroc'
+# Advanced Options
+advanced:
+  # Determinize Configurations
+  determinize: ['maxfreq','minnorm','maxnorm','random','none','auto']
 
+  # Numerical Predicates
+  numeric-predicates: ['axisonly','linear-logreg','linear-linsvm','oc1','polynomial']
+
+  # Categorical Predicates
+  categorical-predicates: ['multisplit','singlesplit','valuegrouping']
+
+  # Impurity Measures
+  impurity: ['auroc','entropy','gini','maxminority','twoing','multilabelentropy','multilabelgini','multilabeltwoing']

@@ -173,7 +173,7 @@ def construct():
                    "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
     if config == "custom":
-        to_parse_dict = {"controller": cont, "determinize": data['determinize'],
+        to_parse_dict = {"controller": cont, "config": "custom", "determinize": data['determinize'],
                          "numeric-predicates": data['numeric_predicates'],
                          "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
@@ -259,7 +259,7 @@ def partial_construct():
     # results.append([id, controller_file, nice_name, config, 'Running...', None, None, None])
 
     if config == "custom":
-        to_parse_dict = {"controller": controller_file, "determinize": data['determinize'],
+        to_parse_dict = {"controller": controller_file, "config": "custom", "determinize": data['determinize'],
                          "numeric-predicates": data['numeric_predicates'],
                          "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
