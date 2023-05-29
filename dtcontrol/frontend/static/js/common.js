@@ -113,6 +113,21 @@ function fillYML(preset_json) {
         }
         iter++;
     }
+    for (x in preset_json.advanced) {
+        console.log(x)
+        //loop over properties
+        var values = preset_json.advanced[x]
+        console.log(values)
+        for (y in values) {
+            console.log(allConfig[x])
+            //loop over all possible values allowed for the property
+            if (!allConfig[x].includes(values[y])) {
+                console.log(y)
+                console.log(values[y])
+                allConfig[x].push(values[y])
+            }
+        }
+    }
 
     var det = document.getElementById("determinize");
     for (var i = 0; i < allConfig['determinize'].length; i++) {
