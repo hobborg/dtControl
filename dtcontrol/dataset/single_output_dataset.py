@@ -60,6 +60,3 @@ class SingleOutputDataset(Dataset):
         empty_object.parent_mask = mask
         empty_object.get_single_labels = lambda: self.y[mask]
         return empty_object
-
-    def calc_single_feature_importance(self, featureInd, ignoredFeatures):
-        return self.calc_feature_importance_for_y(featureInd, self.y, ignoredFeatures)

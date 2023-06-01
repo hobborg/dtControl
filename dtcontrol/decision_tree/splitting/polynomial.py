@@ -2,9 +2,12 @@ from abc import ABC
 import numpy as np
 from sklearn import svm
 import math, logging
+import pandas as pd
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
+from dtcontrol.dataset.single_output_dataset import SingleOutputDataset
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
@@ -267,9 +270,80 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         except AttributeError:
             dataset.transformed_x = {key: transformer(dataset.get_numeric_x())}
         return dataset.transformed_x[key]
+    
+    def calc_all_feature_importance(self, dataset):
+        """
+        Returns an array of values ∈ [0., 1.] for every feature with 
+        0.0: the feature has no impact
+        1.0: the feature is very important
+
+        Note that this only gives an approximation for the *most permissive* controller.
+        """
+        # Keep track of already ignored features so that we do not ignore both
+        # features in this example:
+        # |    X
+        # | O   
+        # +----->
+        featureImportance = []
+        ignoredFeatures = [] 
+        for i in range(dataset.x.shape[1]):
+            imp = self.calc_single_feature_importance(dataset, i, ignoredFeatures)
+            featureImportance.append(imp)
+            if imp == 0:
+                ignoredFeatures.append(i)
+        return featureImportance
+    
+    def calc_single_feature_importance(self, dataset, featureInd, ignoredFeatures):
+        # implementation depends on whether ys is single or multi output
+        if isinstance(dataset, MultiOutputDataset):
+            # take maximum over all y labels
+            return max([
+                self.calc_feature_importance_for_y(
+                    dataset, featureInd, dataset.y[i], ignoredFeatures
+                ) for i in range(dataset.y.shape[0])
+        ])
+        else:
+            return self.calc_feature_importance_for_y(dataset, featureInd, dataset.y, ignoredFeatures)
+
+    def calc_feature_importance_for_y(self, dataset, featureInd, y, ignoredFeatures):
+        x = dataset.x
+        fVals = np.unique(x[:, featureInd])
+        if len(fVals) <= 1:
+            return 0 # feature is constant -> no information
+        # leave out the feature (and all already ignored ones)
+        # group same x-values
+        # then see if all those have the same label
+        xInds = [i for i in range(x.shape[1])
+                    if i != featureInd and not i in ignoredFeatures]
+        yInds = list(range(x.shape[1], x.shape[1] + y.shape[1]))
+        xy = np.concatenate((x,y), axis=1)
+        df = pd.DataFrame(xy)
+        df = df.groupby(xInds).nunique()[yInds]
+        # df : y1, y2, y3
+        #    :  1,  3,  2
+        #    :  1,  1,  1
+        df = (df == [1 for _ in yInds]).all(axis=1)
+        eqCnt = df.sum()
+        nonEqCnt = (~df).sum()
+        tot = eqCnt + nonEqCnt
+        return nonEqCnt / tot
+    
+    def get_relevant_numeric_x(self, dataset, min_feature_importance=1e-9):
+        if dataset.numeric_x is None:
+            if dataset.treat_categorical_as_numeric:
+                dataset.numeric_columns = set(range(dataset.x.shape[1]))
+            else:
+                dataset.numeric_columns = set(range(dataset.x.shape[1])).difference(set(dataset.x_metadata['categorical']))
+            dataset.feature_importance = self.calc_all_feature_importance(dataset)
+            irrelevant_cols = {col for col in range(dataset.x.shape[1]) if dataset.feature_importance[col] < min_feature_importance}
+            dataset.numeric_columns -= irrelevant_cols
+            dataset.numeric_columns = sorted(list(dataset.numeric_columns))
+            dataset.numeric_feature_mapping = {i: dataset.numeric_columns[i] for i in range(len(dataset.numeric_columns))}
+            dataset.numeric_x = dataset.x[:, dataset.numeric_columns]
+        return dataset.numeric_x
 
     def find_split(self, dataset, impurity_measure, **kwargs):
-        x_numeric = dataset.get_numeric_x()
+        x_numeric = self.get_relevant_numeric_x(dataset)
         if x_numeric.shape[1] == 0:
             return None
 
