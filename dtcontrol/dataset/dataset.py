@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-import pandas as pd
 
 from dtcontrol.dataset.csv_dataset_loader import CSVDatasetLoader
 from dtcontrol.dataset.prism_dataset_loader import PrismDatasetLoader
@@ -87,7 +86,6 @@ class Dataset(ABC):
         self.categorical_columns = None
         self.is_deterministic = None
         self.parent_mask = None  # if this is a subset, parent_mask saves the mask into the parent dataset
-        self.feature_importance = None
 
     def get_name(self):
         return self.name
@@ -105,7 +103,6 @@ class Dataset(ABC):
         self.categorical_feature_mapping = ds.categorical_feature_mapping
         self.is_deterministic = ds.is_deterministic
         self.treat_categorical_as_numeric = ds.treat_categorical_as_numeric
-        self.feature_importance = ds.feature_importance
 
     def load_if_necessary(self):
         if self.x is None:
@@ -115,7 +112,6 @@ class Dataset(ABC):
             self.y_metadata['num_rows'] = len(self.x)
             self.y_metadata['num_flattened'] = sum(1 for row in self.y for y in row)
             self.y_metadata['num_unique_labels'] = len(np.unique(self.get_unique_labels()))
-            self.feature_importance = self.calc_all_feature_importance()
 
     def load_metadata_from_json(self, json_object):
         metadata = json_object['metadata']
@@ -126,14 +122,12 @@ class Dataset(ABC):
         if self.x is None:
             raise RuntimeError('Dataset is not loaded.')
 
-    def get_numeric_x(self, min_feature_importance=1e-9):
+    def get_numeric_x(self):
         if self.numeric_x is None:
             if self.treat_categorical_as_numeric:
                 self.numeric_columns = set(range(self.x.shape[1]))
             else:
                 self.numeric_columns = set(range(self.x.shape[1])).difference(set(self.x_metadata['categorical']))
-            irrelevant_cols = {col for col in range(self.x.shape[1]) if self.feature_importance[col] < min_feature_importance} 
-            self.numeric_columns -= irrelevant_cols
             self.numeric_columns = sorted(list(self.numeric_columns))
             self.numeric_feature_mapping = {i: self.numeric_columns[i] for i in range(len(self.numeric_columns))}
             self.numeric_x = self.x[:, self.numeric_columns]
@@ -151,60 +145,10 @@ class Dataset(ABC):
         self.treat_categorical_as_numeric = True
 
     def map_numeric_feature_back(self, feature):
-        return self.numeric_feature_mapping[feature] 
+        return self.numeric_feature_mapping[feature]
 
     def map_categorical_feature_back(self, feature):
         return self.categorical_feature_mapping[feature]
-
-    def calc_all_feature_importance(self):
-        """
-        Returns an array of values ∈ [0., 1.] for every feature with 
-        0.0: the feature has no impact
-        1.0: the feature is very important
-
-        Note that this only gives an approximation for the *most permissive* controller.
-        """
-        # Keep track of already ignored features so that we do not ignore both
-        # features in this example:
-        # |    X
-        # | O   
-        # +----->
-        featureImportance = []
-        ignoredFeatures = [] 
-        for i in range(self.x.shape[1]):
-            imp = self.calc_single_feature_importance(i, ignoredFeatures)
-            featureImportance.append(imp)
-            if imp == 0:
-                ignoredFeatures.append(i)
-        return featureImportance
-    
-    @abstractmethod
-    def calc_single_feature_importance(self, featureInd, ignoredFeatures):
-        # implementation depends on whether ys is single or multi output
-        pass
-
-    def calc_feature_importance_for_y(self, featureInd, y, ignoredFeatures):
-        x = self.x
-        fVals = np.unique(x[:, featureInd])
-        if len(fVals) <= 1:
-            return 0 # feature is constant -> no information
-        # leave out the feature (and all already ignored ones)
-        # group same x-values
-        # then see if all those have the same label
-        xInds = [i for i in range(x.shape[1])
-                    if i != featureInd and not i in ignoredFeatures]
-        yInds = list(range(x.shape[1], x.shape[1] + y.shape[1]))
-        xy = np.concatenate((x,y), axis=1)
-        df = pd.DataFrame(xy)
-        df = df.groupby(xInds).nunique()[yInds]
-        # df : y1, y2, y3
-        #    :  1,  3,  2
-        #    :  1,  1,  1
-        df = (df == [1 for _ in yInds]).all(axis=1)
-        eqCnt = df.sum()
-        nonEqCnt = (~df).sum()
-        tot = eqCnt + nonEqCnt
-        return nonEqCnt / tot
 
     def __len__(self):
         return len(self.x)
