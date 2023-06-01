@@ -259,6 +259,14 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             self.logger.warn(f"New coefs: {eqCoef}")
 
         return eqCoef
+    
+    def transform_x(self, dataset, transformer, key):
+        try:
+            if dataset.tranformed_x.get(key) is None:
+                dataset.tranformed_x[key] = transformer(dataset.get_numeric_x())
+        except AttributeError:
+            dataset.transformed_x = {key: transformer(dataset.get_numeric_x())}
+        return dataset.transformed_x[key]
 
     def find_split(self, dataset, impurity_measure, **kwargs):
         x_numeric = dataset.get_numeric_x()
@@ -267,8 +275,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
 
         y = self.determinizer.determinize(dataset)
         splits = []
-        x_high_dim = dataset.get_transformed_x( # get the cached transformed dataset
-            self.transform_quadratic, KEY_QUAD)
+        x_high_dim = self.transform_x( # get the cached transformed dataset
+            dataset, self.transform_quadratic, KEY_QUAD)
         labels, counts = np.unique(y, return_counts=True)
         # sort labels by count, descending
         # (order only matters if we find multiple prefect splits)
@@ -331,9 +339,7 @@ class PolynomialSplit(Split, ABC):
         self.priority = priority
 
     def get_masks(self, dataset):
-        x_transf = dataset.get_transformed_x( # try to use the cached transformation
-            PolynomialClassifierSplittingStrategy.transform_quadratic, KEY_QUAD
-        )
+        x_transf = PolynomialClassifierSplittingStrategy().transform_x(dataset, PolynomialClassifierSplittingStrategy.transform_quadratic, KEY_QUAD)
         mask = np.dot(x_transf, self.coefficients) <= 0
         return [mask, ~mask]
 

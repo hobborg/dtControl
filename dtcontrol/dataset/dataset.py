@@ -87,7 +87,6 @@ class Dataset(ABC):
         self.categorical_columns = None
         self.is_deterministic = None
         self.parent_mask = None  # if this is a subset, parent_mask saves the mask into the parent dataset
-        self.tranformed_x = {} # numeric_x transformed to higher dimensional space: {key -> transformed data set}
         self.feature_importance = None
 
     def get_name(self):
@@ -96,7 +95,6 @@ class Dataset(ABC):
     def copy_from_other_dataset(self, ds):
         self.x = ds.x
         self.numeric_x = None
-        self.tranformed_x = {}
         self.numeric_columns = None
         self.categorical_x = None
         self.x_metadata = ds.x_metadata
@@ -149,18 +147,11 @@ class Dataset(ABC):
             self.categorical_x = self.x[:, self.categorical_columns]
         return self.categorical_x
 
-    def get_transformed_x(self, transformer, key):
-        # returns a cached transformed dataset (e.g. with add. features x1^2)
-        # or calculates it and caches it then
-        if self.tranformed_x.get(key) is None:
-            self.tranformed_x[key] = transformer(self.get_numeric_x())
-        return self.tranformed_x[key]
-
     def set_treat_categorical_as_numeric(self):
         self.treat_categorical_as_numeric = True
 
     def map_numeric_feature_back(self, feature):
-        return self.numeric_feature_mapping[feature]
+        return self.numeric_feature_mapping[feature] 
 
     def map_categorical_feature_back(self, feature):
         return self.categorical_feature_mapping[feature]
