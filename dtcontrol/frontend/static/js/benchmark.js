@@ -166,6 +166,7 @@ function startPolling() {
 
 $(document).ready(function () {
     // Disable Add-Button until controller directory is loaded
+    // TODO T change here?
     document.getElementById("add-experiments-button").disabled = true;
     $(".runall").hide();
 
@@ -181,12 +182,62 @@ $(document).ready(function () {
     });
 
     // Load Button pressed
+    /* TODO T: this is never used bc id is in div in base.html that is commented out...
+        delete? delete all the commented out html stuff?
     $("#controller-directory-load").click(function () {
         // Reactive Add-Button
         document.getElementById("add-experiments-button").disabled = false;
         loadControllers($("#controller-search-directory").val());
     });
+    */
 
+    $('#add-controller-input').on("change", function (){
+        console.log("in controller-file change new:")
+        console.log(this)
+        // TODO T: upload progress (Strc+F controller-file-upload-progress)
+        let formData = new FormData();
+        formData.append("file", document.getElementById("add-controller-input").files[0]);
+        $.ajax({
+            // From https://stackoverflow.com/a/8758614
+            // Your server script to process the upload
+            url: '/upload',
+            type: 'POST',
+            // Form data
+            data: formData,
+            // Tell jQuery not to process data or worry about content-type
+            // You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+            beforeSend: () => {
+                $('#add-controller-button').text("Uploading...")
+                document.getElementById("add-controller-button").disabled = true;
+            },
+        }).done(() => {
+            btn = document.getElementById('add-controller-button')
+            btn.innerHTML = '<i class = "fa fa-plus" style="font-size: 80%"></i> Add new controller file'
+            document.getElementById("add-controller-button").disabled = false;
+            add_controller_file()
+        });
+    })
+
+    function add_controller_file() {
+        var nice_name = $("#add-controller-input").val().replace('C:\\fakepath\\', "");
+        if (nice_name.startsWith("/")) {
+            nice_name = nice_name.substr(1);
+        }
+        var row_contents = [nice_name, "42 (TODO)", "numerical, categorical... (TODO)"];
+        console.log("row contents of controller file:")
+        console.log(row_contents)
+        $.ajax('/experiments', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(row_contents),
+            success: () => addToControllerTable(row_contents)
+        });
+    }
+
+    // TODO T: refers to sidebar, delete when we get rid of it
     $('#controller-file').on('change', function () {
         //get the file name
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
@@ -282,6 +333,7 @@ $(document).ready(function () {
     });
 
     // Add from sidenav
+    // TODO T: delete when we delete sidebar
     $("input[name='add'], button[name='add']").on('click', function (event) {
         event.preventDefault();
         var controller = $("#controller-file").val().replace('C:\\fakepath\\', "");
@@ -315,6 +367,7 @@ $(document).ready(function () {
         });
     });
 
+    // TODO T: delete later
     function addToExperimentsTable(row_contents) {
         $("#experiments-table tr.special").hide();
         $(".runall").show();
@@ -337,6 +390,29 @@ $(document).ready(function () {
 
         var icon = row.insertCell(-1);
         icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
+    }
+
+    function addToControllerTable(row_contents) {
+        $("#controller-table tr.special").hide();
+        //$(".runall").show();
+        // TODO do we want that? yes i think so but not here
+
+        var table = document.getElementById("controller-table").getElementsByTagName('tbody')[0];
+
+        // Create an empty <tr> element and add it to the last position of the table:
+        var row = table.insertRow(-1);
+        var firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
+
+        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
+        // new revision gets rid of invisible cell at beginning of row containing the controller name without leading /
+        for (let j = 0; j < 3; j++) {
+            var c = row.insertCell(-1);
+            c.innerHTML = row_contents[j];
+        }
+
+        var icon = row.insertCell(-1);
+        icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\"></i><i class=\"fa fa-tree text-success\"></i><i class=\"fa fa-gears\"></i><i class=\"fa fa-wrench\"></i><i class=\"fa fa-sitemap\"></i>";
     }
 
     Number.prototype.milliSecondsToHHMMSS = function () {
@@ -449,6 +525,16 @@ $(document).ready(function () {
                 row_content.push(v.innerHTML);
             });
             run_single_benchmark(row_content.slice(0, -1));
+        });
+
+        $("#controller-table").on("click", "i.fa-play", function (event) {
+            console.log("start tree builder modal")
+            //$('#tree-builder-modal').modal('show');
+
+            // TODO cont here
+
+
+
         });
 
         $('#runall').on('click', event => {
