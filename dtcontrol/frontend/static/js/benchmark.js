@@ -237,6 +237,11 @@ $(document).ready(function () {
         });
     }
 
+    $('#add-controller-metadata-button').on('click', function () {
+        console.log("add controller and metadata file");
+        $('#upload-modal').modal('show');
+    });
+
     // TODO T: refers to sidebar, delete when we get rid of it
     $('#controller-file').on('change', function () {
         //get the file name
@@ -527,14 +532,9 @@ $(document).ready(function () {
             run_single_benchmark(row_content.slice(0, -1));
         });
 
-        $("#controller-table").on("click", "i.fa-play", function (event) {
+        $("#controller-table").on("click", "i.fa-gears", function (event) {
             console.log("start tree builder modal")
-            //$('#tree-builder-modal').modal('show');
-
-            // TODO cont here
-
-
-
+            $('#tree-builder-modal').modal('show');
         });
 
         $('#runall').on('click', event => {

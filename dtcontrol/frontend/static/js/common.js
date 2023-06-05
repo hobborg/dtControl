@@ -81,6 +81,30 @@ function loadPresets() {
     xhr.send();
 }
 
+function makeCheckbox(options, parent_div, default_option=null){
+    for (var i = 0; i < options.length; i++) {
+        var checkbox = document.createElement('input');
+        checkbox.classList.add('form-check-input');
+        checkbox.type = 'checkbox';
+        checkbox.id = options[i];
+        if(options[i] == default_option){
+            checkbox.checked = true;
+        }
+
+        var label = document.createElement('label');
+        label.classList.add('form-check-label');
+        label.htmlFor = options[i];
+        label.innerHTML = options[i];
+
+        var container = document.createElement('div');
+        container.classList.add("form-check");
+        container.appendChild(checkbox);
+        container.appendChild(label);
+        parent_div.appendChild(container);
+    }
+    parent_div.appendChild(document.createElement('br'));
+}
+
 function fillYML(preset_json) {
     // Uses DOM manipulation to populate required forms after reading config.yml
 
@@ -114,6 +138,21 @@ function fillYML(preset_json) {
         iter++;
     }
 
+    var det = document.getElementById("option-determinize");
+    for (var i = 0; i < allConfig['determinize'].length; i++) {
+        // don't add the "auto" option, use maxfreq as default:
+        if(allConfig['determinize'][i] != "auto"){
+            var opt = document.createElement('option');
+            opt.textContent = allConfig['determinize'][i];
+            opt.setAttribute('value', allConfig['determinize'][i]);
+            opt.setAttribute('id', allConfig['determinize'][i]);
+            if(allConfig['determinize'][i] == "maxfreq"){
+                opt.setAttribute('selected', 'selected')
+            }
+            det.appendChild(opt);
+        }
+    }
+
     var det = document.getElementById("determinize");
     for (var i = 0; i < allConfig['determinize'].length; i++) {
         var opt = document.createElement('option');
@@ -121,16 +160,6 @@ function fillYML(preset_json) {
         opt.setAttribute('value', allConfig['determinize'][i]);
         opt.setAttribute('id', allConfig['determinize'][i]);
         det.appendChild(opt);
-    }
-    var det = document.getElementById("determinize_3");
-    if (det) {
-        for (var i = 0; i < allConfig['determinize'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['determinize'][i];
-            opt.setAttribute('value', allConfig['determinize'][i]);
-            opt.setAttribute('id', allConfig['determinize'][i] + "_3");
-            det.appendChild(opt);
-        }
     }
 
     var det = document.getElementById("numeric-predicates");
@@ -141,16 +170,12 @@ function fillYML(preset_json) {
         opt.setAttribute('id', allConfig['numeric-predicates'][i] + "_3");
         det.appendChild(opt);
     }
-    var det = document.getElementById("numeric-predicates_3");
-    if (det) {
-        for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['numeric-predicates'][i];
-            opt.setAttribute('value', allConfig['numeric-predicates'][i]);
-            opt.setAttribute('id', allConfig['numeric-predicates'][i]);
-            det.appendChild(opt);
-        }
-    }
+
+    var div_num_pred = document.getElementById("option-numeric-predicates");
+    makeCheckbox(allConfig['numeric-predicates'], div_num_pred, "axisonly");
+
+    var div_cat_pred = document.getElementById("option-categorical-predicates");
+    makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, "multisplit");
 
     var det = document.getElementById("categorical-predicates");
     for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
@@ -159,17 +184,6 @@ function fillYML(preset_json) {
         opt.setAttribute('value', allConfig['categorical-predicates'][i]);
         opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
         det.appendChild(opt);
-    }
-
-    var det = document.getElementById("categorical-predicates_3");
-    if (det) {
-        for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
-            var opt = document.createElement('option');
-            opt.textContent = allConfig['categorical-predicates'][i];
-            opt.setAttribute('value', allConfig['categorical-predicates'][i]);
-            opt.setAttribute('id', allConfig['categorical-predicates'][i]);
-            det.appendChild(opt);
-        }
     }
 
     var det = document.getElementById("impurity");

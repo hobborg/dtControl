@@ -15,9 +15,14 @@
                         <div class="col d-flex">
                             <h4 class="card-title">Controllers</h4>
                             <input type="file" id="add-controller-input" style="display: none">
-                            <button class="btn btn-primary ml-auto" id="add-controller-button" onclick="document.getElementById('add-controller-input').click()">
-                                <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file </i>
-                            </button>
+                            <div class="ml-auto">
+                                <button class="btn btn-secondary" id="add-controller-metadata-button">
+                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller and metadata file </i>
+                                </button>
+                                <button class="btn btn-primary" id="add-controller-button" onclick="document.getElementById('add-controller-input').click()">
+                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file </i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <table id="controller-table" class="table rounded table-hover">
@@ -68,6 +73,100 @@
                     </tr>
                     </tbody>
                 </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modal form to choose advanced options for experiment -->
+    <div class="modal fade" id="tree-builder-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"> Advanced Options</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!--div class="modal-body"><p>Modal body text goes here.</p></div-->
+                <form id="tree-builder-form">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <h5><label for="option-determinize">Determinize </label></h5>
+                            <div class="select">
+                                <select class="propList custom-select" id="option-determinize" name="option-determinize">
+                                </select>
+                            </div>
+                        </div>
+                        <h5><label for="option-predicates">Predicates</label></h5>
+                        <div class="form-group" id="option-predicates">
+                            <label for="option-numeric-predicates">Numerical</label>
+                            <div id="option-numeric-predicates">
+                                    <!--div class="form-check">
+                                      <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
+                                      <label class="form-check-label" for="defaultCheck1">
+                                        Default checkbox: the real checkboxes are added in this format in common.js
+                                      </label>
+                                    </div-->
+                            </div>
+                            <label for="option-categorical-predicates">Categorical</label>
+                            <div id="option-categorical-predicates">
+                            </div>
+                        </div>
+
+                        <div id="option-userPredicatesInputRow">
+                            <h5><label for="option-userPredicatesInput">User Predicates</label></h5>
+                            <textarea id="option-userPredicatesInput" name="userPredicates" rows="3" style="width: 100%"
+                          placeholder="Enter higher algebraic predicates here..."></textarea>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary">Restore default values</button>
+                        <button type="button" class="btn btn-secondary">Assign priorities</button>
+                        <button type="submit" class="btn btn-primary">Ok</button>
+                        <!--button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button-->
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="upload-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"> Upload</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!--div class="modal-body"><p>Modal body text goes here.</p></div-->
+                <div class="col-12">
+                    <br>
+                    <label for="controller-file-upload">Controller File</label>
+                    <div class="input-group mt-1 mb-4">
+                        <div class="custom-file">
+                            <input id="controller-file-upload" type="file" name="file" class="custom-file-input">
+                            <label class="custom-file-label" for="controller-file-upload">Choose controller file</label>
+                        </div>
+                    </div>
+                    <div class="progress mb-4" style="height: 5px;">
+                        <div id="controller-file-upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <br>
+                    <label for="metadata-file-upload">Metadata File (Optional)</label>
+                    <div class="input-group mt-1 mb-4">
+                        <div class="custom-file">
+                            <input id="metadata-file-upload" type="file" name="metadata-file" class="custom-file-input">
+                            <label class="custom-file-label" for="controller-file-upload">Choose metadata file</label>
+                        </div>
+                    </div>
+                    <div class="progress mb-4" style="height: 5px;">
+                        <div id="metadata-file-upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
                 </div>
             </div>
         </div>
