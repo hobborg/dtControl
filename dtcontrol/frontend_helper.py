@@ -38,6 +38,7 @@ from dtcontrol.decision_tree.impurity.multi_label_entropy import MultiLabelEntro
 from dtcontrol.decision_tree.impurity.multi_label_gini_index import MultiLabelGiniIndex
 from dtcontrol.decision_tree.impurity.multi_label_twoing_rule import MultiLabelTwoingRule
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
+from dtcontrol.decision_tree.impurity.min_label_entropy import MinLabelEntropy
 # Import splitting strategies
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
@@ -113,6 +114,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'multilabelentropy': lambda x: MultiLabelEntropy(),
         'multilabelgini': lambda x: MultiLabelGiniIndex(),
         'multilabeltwoing': lambda x: MultiLabelTwoingRule(),
+        'minlabelentropy': lambda x: MinLabelEntropy(determinizer=x)
     }
 
     # Sanity check
