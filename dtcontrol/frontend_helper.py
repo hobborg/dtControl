@@ -38,6 +38,7 @@ from dtcontrol.decision_tree.impurity.multi_label_entropy import MultiLabelEntro
 from dtcontrol.decision_tree.impurity.multi_label_gini_index import MultiLabelGiniIndex
 from dtcontrol.decision_tree.impurity.multi_label_twoing_rule import MultiLabelTwoingRule
 from dtcontrol.decision_tree.impurity.twoing_rule import TwoingRule
+from dtcontrol.decision_tree.impurity.min_label_entropy import MinLabelEntropy
 # Import splitting strategies
 from dtcontrol.decision_tree.splitting.axis_aligned import AxisAlignedSplittingStrategy
 from dtcontrol.decision_tree.splitting.categorical_multi import CategoricalMultiSplittingStrategy
@@ -45,6 +46,7 @@ from dtcontrol.decision_tree.splitting.categorical_single import CategoricalSing
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy import RicherDomainCliStrategy
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
+from dtcontrol.decision_tree.splitting.polynomial import PolynomialClassifierSplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
 from dtcontrol.decision_tree.splitting.split import Split
@@ -97,6 +99,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
                                                                      solver='lbfgs', penalty='none'),
         'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
         'oc1': lambda x: OC1SplittingStrategy(determinizer=x),
+        'polynomial': lambda x: PolynomialClassifierSplittingStrategy(determinizer=x),
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
@@ -111,6 +114,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'multilabelentropy': lambda x: MultiLabelEntropy(),
         'multilabelgini': lambda x: MultiLabelGiniIndex(),
         'multilabeltwoing': lambda x: MultiLabelTwoingRule(),
+        'minlabelentropy': lambda x: MinLabelEntropy(determinizer=x)
     }
 
     # Sanity check
@@ -150,7 +154,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     # if using logreg/svm/oc1, then determinizer must be passed to the split
     splitting_strategy = []
     for sp in combined_split:
-        if sp in ['linear-logreg', 'linear-linsvm', 'oc1']:
+        if sp in ['linear-logreg', 'linear-linsvm', 'oc1', 'polynomial']:
             splitting_strategy.append(splitting_map[sp](determinization_map[determinize](None)))
         elif sp in ['richer-domain']:
             splitting_strategy.append(splitting_map[sp](user_predicates, determinization_map[determinize](None)))
@@ -327,6 +331,13 @@ def train(args):
             fallback_numeric = get_preset(args["fallback"], user_config, default_config)[0]
             fallback_categorical = get_preset(args["fallback"], user_config, default_config)[1]
             user_predicates = args["user_predicates"]
+        elif "custom" in presets:
+            numeric_split = [args["numeric-predicates"]]
+            categorical_split = [args["categorical-predicates"]]
+            determinize = args["determinize"]
+            impurity = args["impurity"]
+            tolerance = float(args["tolerance"])
+            safe_pruning = (args["safe-pruning"] == "true")
         else:
             numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
                                                                                                           user_config,

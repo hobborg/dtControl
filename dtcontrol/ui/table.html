@@ -40,9 +40,10 @@
         </div>
     </div>
     <table class="table table-bordered table-hover mt-4" id="table">
-        <caption><span class="code">#(s,a)</span> refers to the number of state-action pairs (or state-input pairs).
-            <span class="code">#doc</span> refers to the size of
-            the domain of controller.
+        <caption>
+            <span class="code">#(s,a)</span> refers to the number of state-action pairs (or state-input pairs).
+            <span class="code">#doc</span> refers to the size of the domain of controller.
+            <span class="code">#act</span> refers to the number of unique action-sets in the most-permissive controller.
         </caption>
         <thead>
         <tr>
@@ -64,6 +65,7 @@
             {% set r = row_metadata[i]["name"] %}
             {% set n_sa = row_metadata[i]["state_action_pairs"] %}
             {% set n_doc = row_metadata[i]["domain_of_controller"] %}
+            {% set n_actions = row_metadata[i]["unique_action_sets"] %}
             <tr>
                 <th scope="row"
                     style="text-align:center; vertical-align: middle"
@@ -77,6 +79,8 @@
                         <span class="code">#(s,a)</span>: {{ n_sa }}
                         <br/>
                         <span class="code">#doc</span>: {{ n_doc }}
+                        <br/>
+                        <span class="code">#act</span>: {{ n_actions }}
                     </span>
                 </th>
                 {% for j in range(table[i]|length) %}

@@ -22,6 +22,9 @@ class LinearSplit(Split, ABC):
         self.intercept = intercept
         self.real_coefficients = real_coefficients
         self.numeric_columns = numeric_columns
+    
+    def __repr__(self):
+        return "LinearSplit: " + self.get_hyperplane_str(rounded=True)
 
     @staticmethod
     def map_numeric_coefficients_back(numeric_coefficients, dataset):
