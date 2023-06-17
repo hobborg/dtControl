@@ -86,6 +86,7 @@ function makeCheckbox(options, parent_div, default_option=null){
         var checkbox = document.createElement('input');
         checkbox.classList.add('form-check-input');
         checkbox.type = 'checkbox';
+        checkbox.name = options[i];
         checkbox.id = options[i];
         if(options[i] == default_option){
             checkbox.checked = true;
@@ -152,6 +153,13 @@ function fillYML(preset_json) {
             det.appendChild(opt);
         }
     }
+    // add safe-pruning as a determinizer:
+    var opt = document.createElement('option');
+    opt.textContent = "safe-pruning";
+    opt.setAttribute('value', "safe-pruning");
+    opt.setAttribute('id', "safe-pruning");
+    det.appendChild(opt);
+    // TODO T: test!!!
 
     var det = document.getElementById("determinize");
     for (var i = 0; i < allConfig['determinize'].length; i++) {
@@ -176,6 +184,20 @@ function fillYML(preset_json) {
 
     var div_cat_pred = document.getElementById("option-categorical-predicates");
     makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, "multisplit");
+    // add tolerance field
+    var valuegrouping_checkbox = document.getElementById("valuegrouping");
+    var option_cat_pred = document.getElementById("option-categorical-predicates");
+    if(valuegrouping_checkbox) {
+        console.log("valuegrouping checkbox exists");
+        var tolerance_textfield = document.createElement('input');
+        tolerance_textfield.classList.add('form-control');
+        tolerance_textfield.type = 'number';
+        tolerance_textfield.value = '0.00001';
+        tolerance_textfield.id = 'tolerance-field';
+        option_cat_pred.appendChild(tolerance_textfield);
+        $('#tolerance-field').css('visibility', 'hidden');
+        // ^ use this instead of hide() / show() to set visibility propoerty instead of display property
+    }
 
     var det = document.getElementById("categorical-predicates");
     for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {

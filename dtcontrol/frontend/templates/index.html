@@ -14,13 +14,13 @@
                     <div class="row mb-4">
                         <div class="col d-flex">
                             <h4 class="card-title">Controllers</h4>
-                            <input type="file" id="add-controller-input" style="display: none">
+                            <input type="file" id="add-controller-file" style="display: none">
                             <div class="ml-auto">
-                                <button class="btn btn-secondary" id="add-controller-metadata-button">
-                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller and metadata file </i>
+                                <button class="btn btn-primary" id="add-controller-button" onclick="document.getElementById('add-controller-file').click()">
+                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file
                                 </button>
-                                <button class="btn btn-primary" id="add-controller-button" onclick="document.getElementById('add-controller-input').click()">
-                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file </i>
+                                <button class="btn btn-secondary" id="add-controller-metadata-button">
+                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller and metadata file
                                 </button>
                             </div>
                         </div>
@@ -42,9 +42,9 @@
                         </tr>
                         </tbody>
                     </table>
-                    <div class="row justify-content-center">
+                    <!--div class="row justify-content-center">
                         <button class="btn btn-primary" type="submit" name="add-controller-bottom" id="add-controller-button-bottom"> <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file</button>
-                    </div>
+                    </div-->
                 </div>
             </div>
         </div>
@@ -115,7 +115,7 @@
                         </div>
 
                         <div id="option-userPredicatesInputRow">
-                            <h5><label for="option-userPredicatesInput">User Predicates</label></h5>
+                            <label for="option-userPredicatesInput">User Predicates</label>
                             <textarea id="option-userPredicatesInput" name="userPredicates" rows="3" style="width: 100%"
                           placeholder="Enter higher algebraic predicates here..."></textarea>
                         </div>
@@ -154,6 +154,7 @@
                     <div class="progress mb-4" style="height: 5px;">
                         <div id="controller-file-upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
+                    <h6 id="controller-type-help" class="text-danger" style="visibility: hidden"> Supported file formats: .scs, .dump, .csv, .prism, .storm.json </h6>
                 </div>
                 <div class="col-12">
                     <br>
@@ -167,6 +168,11 @@
                     <div class="progress mb-4" style="height: 5px;">
                         <div id="metadata-file-upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
+                    <h6 id="metadata-type-help" class="text-danger" style="visibility: hidden"> Invalid: The metadata file has to be a .json file. </h6>
+                </div>
+                <div class="modal-footer">
+                        <button id="submit-file-button" type="submit" class="btn btn-primary" disabled>Ok</button>
+                        <!--button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button-->
                 </div>
             </div>
         </div>

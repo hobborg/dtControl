@@ -1,3 +1,8 @@
+// supported file formats for the controller files
+inputFormats = [".scs", ".dump", ".csv", ".prism", ".storm.json"]
+// see extension_to_loader in dataset.py and get_files(path) in benchmark_suite.py
+// TODO: if not p.endswith('_states.prism') ?
+
 function loadControllers(path) {
     console.log(path);
 
@@ -43,6 +48,7 @@ function loadControllers(path) {
     http.send(params);
 }
 
+// TODO: not needed anymore
 function getResultsTableRow(id) {
     let rows = $("#results-table tbody tr");
     for (let j = 0; j < rows.length; j++) {
@@ -191,12 +197,24 @@ $(document).ready(function () {
     });
     */
 
-    $('#add-controller-input').on("change", function (){
-        console.log("in controller-file change new:")
-        console.log(this)
-        // TODO T: upload progress (Strc+F controller-file-upload-progress)
+    function validControllerFile(fileName) {
+        for (let i = 0; i < inputFormats.length; i++) {
+            if (fileName.endsWith(inputFormats[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // add a controller file
+    $('#add-controller-file').on("change", function (){
+        let fileName = $(this).val().replace('C:\\fakepath\\', "");
+        if (! validControllerFile(fileName)) {
+            popupModal("Error: Invalid Controller File", "Supported file formats: .scs, .dump, .csv, .prism, .storm.json")
+            return ;
+        }
         let formData = new FormData();
-        formData.append("file", document.getElementById("add-controller-input").files[0]);
+        formData.append("file", document.getElementById("add-controller-file").files[0]);
         $.ajax({
             // From https://stackoverflow.com/a/8758614
             // Your server script to process the upload
@@ -210,19 +228,26 @@ $(document).ready(function () {
             contentType: false,
             processData: false,
             beforeSend: () => {
-                $('#add-controller-button').text("Uploading...")
-                document.getElementById("add-controller-button").disabled = true;
+                // add loading animation in button
+                var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
+                btn = $('#add-controller-button');
+                btn.html(spinner);
+                btn.append(" Uploading...");
+                btn[0].disabled = true;
             },
         }).done(() => {
-            btn = document.getElementById('add-controller-button')
-            btn.innerHTML = '<i class = "fa fa-plus" style="font-size: 80%"></i> Add new controller file'
-            document.getElementById("add-controller-button").disabled = false;
+            // reset the button
+            var plus = $('<i>', {class: 'fa fa-plus', style: 'font-size: 80%', 'aria-hidden': 'true'});
+            btn = $('#add-controller-button');
+            btn.html(plus);
+            btn.append(" Add new controller file");
+            btn[0].disabled = false;
             add_controller_file()
         });
     })
 
     function add_controller_file() {
-        var nice_name = $("#add-controller-input").val().replace('C:\\fakepath\\', "");
+        var nice_name = $("#add-controller-file").val().replace('C:\\fakepath\\', "");
         if (nice_name.startsWith("/")) {
             nice_name = nice_name.substr(1);
         }
@@ -238,7 +263,6 @@ $(document).ready(function () {
     }
 
     $('#add-controller-metadata-button').on('click', function () {
-        console.log("add controller and metadata file");
         $('#upload-modal').modal('show');
     });
 
@@ -292,6 +316,108 @@ $(document).ready(function () {
         });
     });
 
+    // add a controller file from modal where controller file and metadata file can be added
+    $('#controller-file-upload').on('change', function () {
+        //get the file name
+        let fileName = $(this).val().replace('C:\\fakepath\\', "");
+        if (! validControllerFile(fileName)) {
+            $('#controller-type-help')[0].style.visibility = 'visible';
+            return ;
+        } else {
+            $('#controller-type-help')[0].style.visibility = 'hidden';
+        }
+        //replace the "Choose controller file" label
+        $(this).next('.custom-file-label').html(fileName);
+        $('#controller-file-upload-progress-bar').attr({
+            'aria-valuenow': 0
+        })
+            .width("0%");
+        let formData = new FormData();
+        formData.append("file", document.getElementById("controller-file-upload").files[0]);
+        $.ajax({
+            // From https://stackoverflow.com/a/8758614
+            // Your server script to process the upload
+            url: '/upload',
+            type: 'POST',
+
+            // Form data
+            data: formData,
+
+            // Tell jQuery not to process data or worry about content-type
+            // You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('#controller-file-upload-progress-bar').attr({
+                                'aria-valuenow': Math.round(e.loaded * 100 / e.total)
+                            })
+                                .width(Math.round(e.loaded * 100 / e.total)+"%");
+                        }
+                    }, false);
+                }
+                return myXhr;
+            }
+        }).done(() => {
+            document.getElementById("submit-file-button").disabled = false;
+        });
+    });
+
+    $('#metadata-file-upload').on('change', function () {
+        //get the file name
+        let fileName = $(this).val().replace('C:\\fakepath\\', "");
+        if (!fileName.endsWith(".json")) {
+            $('#metadata-type-help')[0].style.visibility = 'visible';
+            return ;
+        } else {
+            $('#metadata-type-help')[0].style.visibility = 'hidden';
+        }
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+        let formData = new FormData();
+        formData.append("file", document.getElementById("metadata-file-upload").files[0]);
+        $.ajax({
+            // From https://stackoverflow.com/a/8758614
+            // Your server script to process the upload
+            url: '/upload',
+            type: 'POST',
+
+            // Form data
+            data: formData,
+
+            // Tell jQuery not to process data or worry about content-type
+            // You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('#metadata-file-upload-progress-bar').attr({
+                                'aria-valuenow': Math.round(e.loaded * 100 / e.total)
+                            })
+                                .width(Math.round(e.loaded * 100 / e.total)+"%");
+                        }
+                    }, false);
+                }
+                return myXhr;
+            }
+        });
+    });
+
+    // TODO: delete
     $('#metadata-file').on('change', function () {
         //get the file name
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
@@ -397,6 +523,16 @@ $(document).ready(function () {
         icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
     }
 
+    function makeButton(text, id, fa_symbol=null, font_size=80) {
+        // e.g. "fa-plus" as fa-simbol
+        if (fa_symbol) {
+            return "<button class=\"btn btn-light \" id=\"" + String(id) + "\"> <i class=\"fa " + String(fa_symbol) +
+                " \" style=\"font-size: " + String(80) + " % \"> </i>" + String(text) + "</button>";
+        } else {
+            return "<button class=\"btn btn-light \" id=\"" + String(id) + "\">" + String(text) + "</button>";
+        }
+    }
+
     function addToControllerTable(row_contents) {
         $("#controller-table tr.special").hide();
         //$(".runall").show();
@@ -417,7 +553,15 @@ $(document).ready(function () {
         }
 
         var icon = row.insertCell(-1);
-        icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\"></i><i class=\"fa fa-tree text-success\"></i><i class=\"fa fa-gears\"></i><i class=\"fa fa-wrench\"></i><i class=\"fa fa-sitemap\"></i>";
+        simple_tree_button = makeButton(" simple tree", "build-button-cont-table", "fa-play text-success", 80);
+        permissive_tree_button = makeButton(" permissive tree", "permissive-build-button-cont-table", "fa-play text-success", 80);
+        advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", 80);
+        edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", 80);
+        delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", 80);
+        space = "&nbsp;&nbsp;"
+        // other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
+        icon.innerHTML = simple_tree_button + space + permissive_tree_button + space + advanced_settings_button +
+                            space + edit_button + space + delete_button;
     }
 
     Number.prototype.milliSecondsToHHMMSS = function () {
@@ -495,7 +639,8 @@ $(document).ready(function () {
     }
 
     function initTableListeners() {
-        $("table").on("click", "i.fa-trash", function () {
+        // TODO delete
+        $("#experiments-table").on("click", "i.fa-trash", function () {
             const row = $(this).parent().parent();
             const index = parseInt(row.find('th').textContent, 10) - 1;
 
@@ -537,6 +682,17 @@ $(document).ready(function () {
             $('#tree-builder-modal').modal('show');
         });
 
+        $("#option-categorical-predicates").on("change", "#valuegrouping", function (event) {
+            console.log("sth changed about valuegrouping checkbox");
+            if ($(this).prop('checked')) {
+                console.log("valuegrouping checkbox is now checked");
+                $('#tolerance-field').css('visibility', 'visible');
+            } else {
+                $('#tolerance-field').css('visibility', 'hidden');
+            }
+        });
+
+        // TODO T: delete if we delete runall
         $('#runall').on('click', event => {
             $("table i.fa-play").each((_, btn) => {
                 if (btn.id === 'runall-icon') return;
