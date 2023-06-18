@@ -46,6 +46,9 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
+# keep track of the number of controllers added so far to assign a unique id to every new controller
+global_exp_counter = 0;
+
 def runge_kutta(x, u, nint=100):
     global selected_computation_id, tau, lambda_list
     selected_experiment = completed_experiments[selected_computation_id]
@@ -136,18 +139,29 @@ def experimentsRoute():
     if request.method == 'GET':
         return jsonify(experiments)
     else:
-        experiments.append(request.get_json())
-        return jsonify(success=True)
-
+        # add controller to controller table
+        # TODO: rename? or also used by command line?
+        controller_name = request.get_json()[0]
+        for i in range(len(experiments)):
+            if experiments[i][1] == controller_name:
+                print("Duplicate detected! This is the current experiments table:", experiments)
+                return jsonify(error="duplicate"), 500
+        global global_exp_counter
+        global_exp_counter += 1;
+        exp_data = [global_exp_counter] + request.get_json()
+        experiments.append(exp_data)
+        return jsonify(exp_data)
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
     global experiments
     experiment_to_delete = request.get_json()
+    experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
 
     """
     experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
     """
+    # TODO T: do we still need this? did we need this before?
     experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
     experiments.remove(experiment_to_delete)
     return jsonify(success=True)

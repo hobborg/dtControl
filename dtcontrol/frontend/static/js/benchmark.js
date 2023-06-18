@@ -66,9 +66,9 @@ function addToResultsTable(id, result) {
     // 3. to populate the results table when the page is refreshed
 
     // Table columns
-    // 0: id
+    // 0: experiment id
     // 1: controller
-    // 2: nice_name
+    // 2: nice_name     # TODO: what is this? get rid of it?
     // 3: preset
     // 4: status
     // 5: inner_nodes
@@ -210,7 +210,7 @@ $(document).ready(function () {
     $('#add-controller-file').on("change", function (){
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
         if (! validControllerFile(fileName)) {
-            popupModal("Error: Invalid Controller File", "Supported file formats: .scs, .dump, .csv, .prism, .storm.json")
+            popupModal("Error: Invalid controller file", "Supported file formats: .scs, .dump, .csv, .prism, .storm.json")
             return ;
         }
         let formData = new FormData();
@@ -254,12 +254,20 @@ $(document).ready(function () {
         var row_contents = [nice_name, "42 (TODO)", "numerical, categorical... (TODO)"];
         console.log("row contents of controller file:")
         console.log(row_contents)
+        // TODO: before, row_contents = [controller, nice_name, ...]
         $.ajax('/experiments', {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(row_contents),
-            success: () => addToControllerTable(row_contents)
+            // row_contents are sent to /experiments in app.py, added to the backend table with an id
+            // returned data is identical to row_contents, but with the id appended at the beginning
+            success: (row_contents_including_id) => addToControllerTable(row_contents_including_id),
+            error: duplicate_check_popup
         });
+    }
+
+    function duplicate_check_popup() {
+        popupModal("Error: Duplicate found", "A controller with this name was already uploaded.");
     }
 
     $('#add-controller-metadata-button').on('click', function () {
@@ -322,9 +330,14 @@ $(document).ready(function () {
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
         if (! validControllerFile(fileName)) {
             $('#controller-type-help')[0].style.visibility = 'visible';
+            $(this).removeClass('is-valid');
+            $(this).addClass('is-invalid');
+            document.getElementById("submit-file-button").disabled = true;
             return ;
         } else {
             $('#controller-type-help')[0].style.visibility = 'hidden';
+            $(this).removeClass('is-invalid');
+            $(this).addClass('is-valid');
         }
         //replace the "Choose controller file" label
         $(this).next('.custom-file-label').html(fileName);
@@ -375,9 +388,13 @@ $(document).ready(function () {
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
         if (!fileName.endsWith(".json")) {
             $('#metadata-type-help')[0].style.visibility = 'visible';
+            $(this).removeClass('is-valid');
+            $(this).addClass('is-invalid');
             return ;
         } else {
             $('#metadata-type-help')[0].style.visibility = 'hidden';
+            $(this).removeClass('is-invalid');
+            $(this).addClass('is-valid');
         }
         //replace the "Choose a file" label
         $(this).next('.custom-file-label').html(fileName);
@@ -533,7 +550,7 @@ $(document).ready(function () {
         }
     }
 
-    function addToControllerTable(row_contents) {
+    function addToControllerTable(row_contents_including_id) {
         $("#controller-table tr.special").hide();
         //$(".runall").show();
         // TODO do we want that? yes i think so but not here
@@ -543,13 +560,13 @@ $(document).ready(function () {
         // Create an empty <tr> element and add it to the last position of the table:
         var row = table.insertRow(-1);
         var firstCell = row.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 1) + "</th>";
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents_including_id[0]) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
         // new revision gets rid of invisible cell at beginning of row containing the controller name without leading /
-        for (let j = 0; j < 3; j++) {
+        for (let j = 1; j < 4; j++) {
             var c = row.insertCell(-1);
-            c.innerHTML = row_contents[j];
+            c.innerHTML = row_contents_including_id[j];
         }
 
         var icon = row.insertCell(-1);
@@ -667,7 +684,31 @@ $(document).ready(function () {
             });
         });
 
-        $("table").on("click", "i.fa-play", function (event) {
+        $("#controller-table").on("click", "#delete-button-cont-table", function () {
+            const row = $(this).parent().parent();
+
+            var row_items = $(this).parent().parent().find('th,td');
+            var row_content = [];
+            row_items.each(function (k, v) {
+                row_content.push(v.innerHTML);
+            });
+            row_content = row_content.slice(0, -1); // Drop the actions
+
+            $.ajax('/experiments/delete', {
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(row_content),
+                success: () => {
+                    row.remove();
+                    if (document.getElementById("controller-table").getElementsByTagName('tbody')[0].children.length == 1) {
+                        $("#controller-table tr.special").show();      // show instruction when table empty
+                    }
+                }
+            });
+        });
+
+        // TODO: delete
+        $("#experiments-table").on("click", "i.fa-play", function (event) {
             if ($(this).id === 'runall-icon') return;
             var row_items = $(this).parent().parent().find('th,td');
             var row_content = []
@@ -677,7 +718,7 @@ $(document).ready(function () {
             run_single_benchmark(row_content.slice(0, -1));
         });
 
-        $("#controller-table").on("click", "i.fa-gears", function (event) {
+        $('#controller-table').on('click', '#advanced-button-cont-table', function () {
             console.log("start tree builder modal")
             $('#tree-builder-modal').modal('show');
         });
