@@ -242,27 +242,90 @@ $(document).ready(function () {
             btn.html(plus);
             btn.append(" Add new controller file");
             btn[0].disabled = false;
-            add_controller_file()
+            // initialize controller table
+            var controller = $("#add-controller-file").val().replace('C:\\fakepath\\', "");
+            var nice_name = controller;
+            if (nice_name.startsWith("/")) {
+                nice_name = nice_name.substr(1);
+            }
+            initialize_controller_table([controller, nice_name]);
         });
     })
 
-    function add_controller_file() {
-        var nice_name = $("#add-controller-file").val().replace('C:\\fakepath\\', "");
-        if (nice_name.startsWith("/")) {
-            nice_name = nice_name.substr(1);
-        }
-        var row_contents = [nice_name, "42 (TODO)", "numerical, categorical... (TODO)"];
-        console.log("row contents of controller file:")
-        console.log(row_contents)
-        // TODO: before, row_contents = [controller, nice_name, ...]
-        $.ajax('/experiments', {
+    function initialize_controller_table(row_contents) {
+        // Row contents at this point is [controller_name, nice_name]
+        $.ajax('/controllers/initialize', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(row_contents[0]),
+            success: function(cont_id) {
+
+                $("#controller-table tr.special").hide();
+
+                var table = document.getElementById("controller-table");
+                var thead = table.getElementsByTagName('thead')[0];
+                var tbody = table.getElementsByTagName('tbody')[0];
+
+                var row = tbody.insertRow(-1);
+                var firstCell = row.insertCell(-1);
+                firstCell.outerHTML = "<th scope=\"row\">" + String(cont_id) + "</th>";
+
+                var secondCell = row.insertCell(-1);
+                secondCell.innerHTML = row_contents[0];
+                secondCell.style = "display: none";
+
+                var thirdCell = row.insertCell(-1);
+                thirdCell.innerHTML = row_contents[1];
+
+                // Insert a cell that spans multiple columns
+                var spanningCell = row.insertCell(-1);
+                var numColumns = thead.rows[0].cells.length;
+                spanningCell.colSpan = numColumns;
+                var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
+                $(spanningCell).html(spinner);
+                $(spanningCell).append(" Parse dataset...");
+
+                row_contents = [cont_id].concat(row_contents)
+                 parse_controller_file(row_contents, row)
+            },
+            error: function(xhr, status, error) {
+                if (xhr.status === 500 && xhr.responseJSON && xhr.responseJSON.error === "duplicate") {
+                    duplicate_check_popup()
+                }
+            }
+        });
+    }
+
+    function parse_controller_file(row_contents, row) {
+        // Row contents at this point is [controller_id, controller_name, nice_name]
+        //$(".runall").show();
+        // TODO T: do we want that? yes i think so but not here
+
+        $.ajax('/controllers', {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(row_contents),
-            // row_contents are sent to /experiments in app.py, added to the backend table with an id
-            // returned data is identical to row_contents, but with the id appended at the beginning
-            success: (row_contents_including_id) => addToControllerTable(row_contents_including_id),
-            error: duplicate_check_popup
+            // controller data is added to the backend table
+        }).done(function(row_contents) {
+
+        // Delete the last cell in the row (displays that parsing in progress)
+        row.deleteCell(row.cells.length - 1);
+
+        for (let j = 3; j < 8; j++) {
+            var c = row.insertCell(-1);
+            c.innerHTML = row_contents[j];
+        }
+
+        var icon = row.insertCell(-1);
+        simple_tree_button = makeButton(" simple tree", "build-button-cont-table", "fa-play text-success", 80);
+        permissive_tree_button = makeButton(" permissive tree", "permissive-build-button-cont-table", "fa-play text-success", 80);
+        advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", 80);
+        edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", 80);
+        delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", 80);
+        space = "&nbsp;&nbsp;"
+        // other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
+        icon.innerHTML = simple_tree_button + space + permissive_tree_button + space + advanced_settings_button +
+                            space + edit_button + space + delete_button;
         });
     }
 
@@ -550,37 +613,6 @@ $(document).ready(function () {
         }
     }
 
-    function addToControllerTable(row_contents_including_id) {
-        $("#controller-table tr.special").hide();
-        //$(".runall").show();
-        // TODO do we want that? yes i think so but not here
-
-        var table = document.getElementById("controller-table").getElementsByTagName('tbody')[0];
-
-        // Create an empty <tr> element and add it to the last position of the table:
-        var row = table.insertRow(-1);
-        var firstCell = row.insertCell(-1);
-        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents_including_id[0]) + "</th>";
-
-        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        // new revision gets rid of invisible cell at beginning of row containing the controller name without leading /
-        for (let j = 1; j < 4; j++) {
-            var c = row.insertCell(-1);
-            c.innerHTML = row_contents_including_id[j];
-        }
-
-        var icon = row.insertCell(-1);
-        simple_tree_button = makeButton(" simple tree", "build-button-cont-table", "fa-play text-success", 80);
-        permissive_tree_button = makeButton(" permissive tree", "permissive-build-button-cont-table", "fa-play text-success", 80);
-        advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", 80);
-        edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", 80);
-        delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", 80);
-        space = "&nbsp;&nbsp;"
-        // other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
-        icon.innerHTML = simple_tree_button + space + permissive_tree_button + space + advanced_settings_button +
-                            space + edit_button + space + delete_button;
-    }
-
     Number.prototype.milliSecondsToHHMMSS = function () {
         var sec_num = this;
         var hours = Math.floor(sec_num / 3600);
@@ -656,7 +688,7 @@ $(document).ready(function () {
     }
 
     function initTableListeners() {
-        // TODO delete
+        // TODO T: delete
         $("#experiments-table").on("click", "i.fa-trash", function () {
             const row = $(this).parent().parent();
             const index = parseInt(row.find('th').textContent, 10) - 1;
@@ -694,7 +726,9 @@ $(document).ready(function () {
             });
             row_content = row_content.slice(0, -1); // Drop the actions
 
-            $.ajax('/experiments/delete', {
+            row_content[4] = row_content[4].split(","); // convert the variable types to an array
+
+            $.ajax('/controllers/delete', {
                 type: 'POST',
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(row_content),

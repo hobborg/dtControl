@@ -7,7 +7,7 @@
 <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
 <div id="main" class="container-fluid">
 
-    <div id="controller-row" class="row">
+    <div id="controller-row" class="row ml-5 mr-5">
         <div class="col-lg-12">
             <div class="card border-secondary mb-4">
                 <div class="card-body h-100">
@@ -17,10 +17,10 @@
                             <input type="file" id="add-controller-file" style="display: none">
                             <div class="ml-auto">
                                 <button class="btn btn-primary" id="add-controller-button" onclick="document.getElementById('add-controller-file').click()">
-                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file
+                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add controller file
                                 </button>
                                 <button class="btn btn-secondary" id="add-controller-metadata-button">
-                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller and metadata file
+                                    <i class="fa fa-plus" style="font-size: 80%"></i> Add controller and metadata file
                                 </button>
                             </div>
                         </div>
@@ -31,8 +31,11 @@
                             <th scope="col">#</th>
                             <!--th scope="col" style="display:none">Full Path</th-->
                             <th scope="col">Controller</th>
-                            <th scope="col">State-Actions-Pairs</th>
+                            <th scope="col">State-Actions Pairs NO just # of states</th>
                             <th scope="col">Variable Types</th>
+                            <th scope="col">NEW: State Variables</th>
+                            <th scope="col">NEW: Output Variables</th>
+                            <th scope="col">NEW: Maximum Non-Determinism</th>
                             <th scope="col">Actions</th>
                         </tr>
                         </thead>
@@ -50,7 +53,7 @@
         </div>
     </div>
 
-    <div id="results-row-new" class="row">
+    <div id="results-row-new" class="row ml-5 mr-5">
         <div class="col-lg-12">
             <div class="card border-secondary mb-4">
                 <div class="card-body h-100">

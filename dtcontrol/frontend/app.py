@@ -12,6 +12,7 @@ from dtcontrol import frontend_helper
 
 from traceback import print_exc
 
+from dtcontrol.frontend_helper import get_controller_data
 from dtcontrol.util import interactive_queue
 
 UPLOAD_FOLDER = '/tmp'
@@ -152,6 +153,43 @@ def experimentsRoute():
         experiments.append(exp_data)
         return jsonify(exp_data)
 
+@app.route('/controllers/initialize', methods=['POST'])
+def initializeControllersRoute():
+    global experiments
+    controller_name = request.get_json()
+    # duplicate check
+    for i in range(len(experiments)):
+        if experiments[i][1] == controller_name:
+            return jsonify(error="duplicate"), 500
+    # return a new id
+    global global_exp_counter
+    global_exp_counter += 1;
+    return jsonify(global_exp_counter)
+
+# TODO: delete /experiments, rename everything here to controller
+@app.route('/controllers', methods=['GET', 'POST'])
+def controllersRoute():
+    global experiments
+    if request.method == 'GET':
+        return jsonify(experiments)
+    else:
+        # add controller to controller table
+        controller_id = request.get_json()[0]
+        controller_name = request.get_json()[1]
+        controller_nice_name = request.get_json()[2]
+        cont = os.path.join(UPLOAD_FOLDER, controller_name)
+        cont_dict = get_controller_data(cont)
+        exp_data = [controller_id,
+                    controller_name,
+                    controller_nice_name,
+                    cont_dict["state_action_pairs"],
+                    cont_dict["var_types"],
+                    cont_dict["num_vars"],
+                    cont_dict["num_results"],
+                    cont_dict["deterministic"]]
+        experiments.append(exp_data)
+        return jsonify(exp_data)
+
 @app.route('/experiments/delete', methods=['GET', 'POST'])
 def deleteExperimentsRoute():
     global experiments
@@ -163,6 +201,22 @@ def deleteExperimentsRoute():
     """
     # TODO T: do we still need this? did we need this before?
     experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
+    experiments.remove(experiment_to_delete)
+    return jsonify(success=True)
+
+@app.route('/controllers/delete', methods=['GET', 'POST'])
+def deleteControllersRoute():
+    global experiments
+    experiment_to_delete = request.get_json()
+   # turn the jsonified entries back to int
+    for i in [0, 3, 5, 6, 7]:
+        experiment_to_delete[i] = int(experiment_to_delete[i])
+
+    """
+    experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
+    """
+    # TODO T: do we still need this? did we need this before?
+    #experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
     experiments.remove(experiment_to_delete)
     return jsonify(success=True)
 

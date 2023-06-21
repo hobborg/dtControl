@@ -182,6 +182,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
 
 
 def load_default_config() -> OrderedDict:
+    # TODO T: use this?
     try:
         default_config_file = resource_filename(Requirement.parse("dtcontrol"),
                                                 "dtcontrol/config.yml")  # System-level config file
@@ -247,6 +248,48 @@ def is_valid_file_or_folder(arg):
     else:
         return arg
 
+def get_controller_data(file):
+    # this first part was done in train(args) before new frontend
+    is_valid_file_or_folder(file)
+
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    logging.info("Frontend: loading dataset...")
+    ds.load_if_necessary()
+
+    # get the dataset properties that we are interested in:
+    var_types = ["numerical"]  # TODO T: obvs adapt when we find sth with cat var/ metadata file!
+    if ds.x_metadata["categorical"] != []:
+        var_types += ["categorical"]
+        # TODO T: look at entry of x_metadata["categorical"]!
+
+    assert len(ds.x_metadata["min_inner"]) == ds.x.shape[1]
+
+    num_results = len(ds.y_metadata["variables"]) if "variables" in ds.y_metadata else 0
+    # TODO T: when is num_results 0? ^ done like this in construct()...
+    if BenchmarkSuite.is_multiout(file, ext):
+        assert num_results >= 2
+        assert num_results == ds.y.shape[0]
+    else:
+        assert num_results == 1
+
+    if ds.is_deterministic:
+        assert ds.y.shape[-1] == 1
+    else:
+        assert ds.y.shape[-1] >= 2
+
+    controller_data = {"state_action_pairs": ds.x.shape[0],     # TODO T: just number of states
+                       "var_types": var_types,                  # numerical, categorical
+                       "num_vars": ds.x.shape[1],               # number of state dimensions, e.g. 10 for 10rooms
+                       "num_results": num_results,              # number of input dimensions for controller, e.g. 2 for 10rooms
+                       "deterministic": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
+    return controller_data
 
 def intoJSON(rt, parent, address, y_metadata):
     # returns a string (JSON format that we need)
@@ -286,6 +329,8 @@ def train(args):
     # kwargs = dict()
 
     file = args["controller"]
+
+    # TODO T: don't repeat all of this bc done in get_controller_data, esp loading
     is_valid_file_or_folder(file)
 
     # kwargs["timeout"] = 20 * 60 * 60
