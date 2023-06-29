@@ -85,3 +85,7 @@ class LinearClassifierSplit(LinearSplit):
 
     def predict(self, features):
         return 0 if self.classifier.predict(features[:, self.numeric_columns])[0] == -1 else 1
+    
+    def predict_multi(self, x, ind):
+        pred = (self.classifier.predict(x[ind][:, self.numeric_columns])[0] == -1)
+        return pred

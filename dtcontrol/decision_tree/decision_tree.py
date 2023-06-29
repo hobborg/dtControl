@@ -85,6 +85,30 @@ class DecisionTree(BenchmarkSuiteClassifier):
 
     def predict(self, dataset, actual_values=True):
         return self.root.predict(dataset.x, actual_values)
+    
+    def predict_all(self, dataset, actual_values=True):
+        x = dataset.x
+        pred = [[] for i in range(len(x))]
+        q = [(self.root, np.array(range(len(x))))]
+        while len(q) > 0:
+            curr, ind = q.pop()
+            if curr.is_leaf():
+                for i in ind:
+                    pred[i] = curr.actual_label if actual_values else curr.index_label
+            else:
+                if isinstance(curr, CategoricalMultiSplit):
+                    cats = curr.predict_multi(x, ind)
+                    for i in range(len(cats)):
+                        q.append((curr.children[i],cats[i]))
+                    continue
+                mask = curr.split.predict_multi(x, ind)
+                logging.debug(f"{curr.split} {mask} with shape {mask.shape} & True count {np.sum(mask)}")
+                input()
+                left = ind[mask]
+                right = ind[~mask]
+                q.append((curr.children[0], left))
+                q.append((curr.children[1], right))
+        return pred
 
     def get_stats(self):
         return {

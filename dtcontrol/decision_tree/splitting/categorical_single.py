@@ -30,6 +30,10 @@ class CategoricalSingleSplit(Split):
     def predict(self, features):
         v = features[:, self.feature][0]
         return 0 if v == self.value else 1
+    
+    def predict_multi(self, x, ind):
+        pred = (x[ind][:,self.feature] == self.value)
+        return pred
 
     def get_masks(self, dataset):
         mask = dataset.x[:, self.feature] == self.value

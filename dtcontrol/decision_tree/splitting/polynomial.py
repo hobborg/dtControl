@@ -265,8 +265,8 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
     
     def transform_x(self, dataset, transformer, key):
         try:
-            if dataset.tranformed_x.get(key) is None:
-                dataset.tranformed_x[key] = transformer(dataset.get_numeric_x())
+            if dataset.transformed_x.get(key) is None:
+                dataset.transformed_x[key] = transformer(dataset.get_numeric_x())
         except AttributeError:
             dataset.transformed_x = {key: transformer(dataset.get_numeric_x())}
         return dataset.transformed_x[key]
@@ -421,6 +421,12 @@ class PolynomialSplit(Split, ABC):
         x_transf = PolynomialClassifierSplittingStrategy.transform_quadratic(
                                             features[:, self.relevant_columns])
         return 0 if np.dot(x_transf, self.coefficients) <= 0 else 1
+    
+    def predict_multi(self, x, ind):
+        x_transf = PolynomialClassifierSplittingStrategy.transform_quadratic(
+                                            x[ind][:, self.relevant_columns])
+        pred = np.dot(x_transf, self.coefficients) <= 0
+        return pred
 
     def __repr__(self):
         return "PolynomialSplit: " + self.get_equation_str(rounded=True)

@@ -152,11 +152,12 @@ class BenchmarkSuite:
             run_time = time.time() - start
             success = True
         if success:
+            logging.debug("Checking accuracy")
             accuracy_start = time.time()
             if isinstance(classifier, BDD):
                 acc = 1.0  # TODO: make BDD checking code work with multi-output datasets
             else:
-                acc = dataset.compute_accuracy(classifier.predict(dataset, actual_values=False))
+                acc = dataset.compute_accuracy(classifier.predict_all(dataset, actual_values=False))
             if acc is None:
                 cell = 'failed to fit'
             else:

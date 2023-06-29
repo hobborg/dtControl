@@ -38,6 +38,10 @@ class AxisAlignedSplit(Split):
 
     def predict(self, features):
         return 0 if features[:, self.feature][0] <= self.threshold else 1
+    
+    def predict_multi(self, x, ind):
+        pred = (x[ind][:, self.feature] <= self.threshold)
+        return pred
 
     def print_dot(self, variables=None, category_names=None):
         if variables:

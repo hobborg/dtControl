@@ -328,6 +328,23 @@ class RicherDomainSplit(Split):
 
         result = term.subs(subs_list).evalf()
         return 0 if self.check_offset(result) else 1
+    
+    def predict_multi(self, x, ind):
+        term = self.term.subs(self.coef_assignment) if self.coef_assignment is not None else self.term
+
+        all_subs_list = []
+        for j in range(len(ind)):
+            subs_list = []
+            # Iterating over every possible value and creating a substitution list
+            for i in range(len(x[ind][0, :])):
+                subs_list.append(("x_" + str(i), x[ind][j, i]))
+            all_subs_list.append(subs_list)
+
+        results = [term.subs(subs_list).evalf() for subs_list in all_subs_list]
+        pred = [self.check_offset(result) for result in results]
+        return pred
+    
+        return super().predict_multi(x, ind)
 
     def get_masks(self, dataset):
         """

@@ -83,6 +83,16 @@ class CategoricalMultiSplit(Split):
                 return i
         assert False
 
+    def predict_multi(self, x, ind):
+        v = x[ind][:, self.feature]
+        cats = [[] for i in range(len(self.value_groups))]
+        cats = np.empty()
+        for i in range(len(v)):
+            for j in range(len(self.value_groups)):
+                if v[i] in self.value_groups[j]:
+                    cats[j].append(i)
+        return [np.array(cat) for cat in cats]
+
     def get_masks(self, dataset):
         if not self.value_groups:
             self.value_groups = [[v] for v in sorted(set(dataset.x[:, self.feature]))]

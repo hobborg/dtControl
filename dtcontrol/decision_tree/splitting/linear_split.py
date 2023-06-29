@@ -41,6 +41,10 @@ class LinearSplit(Split, ABC):
     def predict(self, features):
         return 0 if np.dot(features[:, self.numeric_columns], self.coefficients) + self.intercept <= 0 else 1
 
+    def predict_multi(self, x, ind):
+        pred = (np.dot(x[ind][:, self.numeric_columns], self.coefficients) + self.intercept <= 0)
+        return pred
+    
     def print_dot(self, variables=None, category_names=None):
         return self.get_hyperplane_str(rounded=True, newlines=True, variables=variables)
 
