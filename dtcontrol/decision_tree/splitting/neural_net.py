@@ -14,17 +14,19 @@ from dtcontrol.dataset.multi_output_dataset import MultiOutputDataset
 from dtcontrol.decision_tree.determinization.label_powerset_determinizer import LabelPowersetDeterminizer
 from dtcontrol.decision_tree.splitting.split import Split
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
+from dtcontrol.decision_tree.splitting.user_split import UserSplit
 
 # seed_value = 42
 # np.random.seed(seed_value)
 # tf.random.set_seed(seed_value)
 
 class NeuralNetSplittingStrategy(SplittingStrategy):
-    def __init__(self, determinizer=LabelPowersetDeterminizer()):
+    def __init__(self, determinizer=LabelPowersetDeterminizer(), user_splits=[]):
         super().__init__()
         self.determinizer = determinizer
         self.logger = logging.getLogger("nn-Logger")
         self.logger.setLevel(logging.DEBUG)
+        self.user_splits = [UserSplit(user_split) for user_split in user_splits]
     def calc_all_feature_importance(self, dataset):
         """
         Returns an array of values ∈ [0., 1.] for every feature with 
@@ -126,16 +128,24 @@ class NeuralNetSplittingStrategy(SplittingStrategy):
         labels, counts = np.unique(y, return_counts=True)
         self.logger.debug(f"{labels, counts}")
         labels = labels[np.argsort(-counts)]
-        for label in labels:
-            label_mask = (y == label)
+        self.user_splits.sort(key = lambda split : impurity_measure.calculate_impurity(dataset, split))
+        single_label_masks = [((y == label), label) for label in labels]
+        user_masks = [(split.get_masks(dataset)[0], split.user_split) for split in self.user_splits]
+        masks = user_masks + single_label_masks
+        self.logger.debug(f"Masks : {masks}")
+        for mask in masks:
+            label_mask, label = mask
+            if len(np.unique(label_mask)) == 1:
+                self.logger.debug(f"Skipping poly split for label {label}")
+                continue
             self.logger.debug(np.sum(label_mask))
-            # input(f"Finding neural split for label {label}")
+            self.logger.debug(f"Finding neural split for label {label}")
             
             load = 0
-            if os.path.exists(f"NeuralModels/{dataset.filename}_label{label}_best_model"):
+            if os.path.exists(f"NeuralModels/{dataset.filename}_label{'_'.join([str(x) for x in label])}_best_model"):
                 load = int(input("Trained model found. Load preexisting model?"))
             if load:
-                model = keras.models.load_model(f"NeuralModels/{dataset.filename}_label{label}_best_model")
+                model = keras.models.load_model(f"NeuralModels/{dataset.filename}_label{'_'.join([str(x) for x in label])}_best_model")
             else:
                 model = tf.keras.Sequential()
                 normalizer = layers.Normalization(axis=1, input_shape=(x_numeric.shape[1],))
@@ -149,7 +159,7 @@ class NeuralNetSplittingStrategy(SplittingStrategy):
                 normalizer.adapt(x_numeric)
                 normalizer.trainable = False
                 model.fit(x_numeric, label_mask, epochs=10000, batch_size=len(x_numeric), callbacks=[earlystop])
-                model.save(f"NeuralModels/{dataset.filename}_label{label}_best_model")
+                model.save(f"NeuralModels/{dataset.filename}_label{'_'.join([str(x) for x in label])}_best_model")
             further = int(input("Train further (0/1)?"))
             while further:
                 model.fit(x_numeric, label_mask, epochs=5000, batch_size=len(x_numeric), callbacks=[earlystop, reduce_lr])

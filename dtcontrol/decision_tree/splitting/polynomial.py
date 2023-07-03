@@ -12,6 +12,7 @@ from dtcontrol.decision_tree.determinization.label_powerset_determinizer import 
 from dtcontrol.decision_tree.splitting.linear_split import LinearSplit
 from dtcontrol.decision_tree.splitting.splitting_strategy import SplittingStrategy
 from dtcontrol.decision_tree.splitting.split import Split
+from dtcontrol.decision_tree.splitting.user_split import UserSplit
 
 # we transform the dataset to a higher dimesion by added features such aus x_0^2, x_0*x_1, ...
 # as this is rather costly, we save the transformed dataset in the dataset object
@@ -22,7 +23,7 @@ FLOAT_PRECISION = 1e-12
 
 
 class PolynomialClassifierSplittingStrategy(SplittingStrategy):
-    def __init__(self, prettify=True, determinizer=LabelPowersetDeterminizer(), linear_svc_params={}):
+    def __init__(self, prettify=True, determinizer=LabelPowersetDeterminizer(), linear_svc_params={}, user_splits=[]):
         """ Args:
         prettify: Disabling prettify can give a ~2x speed-up.
         determinizer: Default is LabelPowersetDeterminizer.
@@ -31,7 +32,7 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         """
         super().__init__()
         self.logger = logging.getLogger("poly_logger")
-        self.logger.setLevel(logging.ERROR)
+        self.logger.setLevel(logging.DEBUG)
         self.determinizer = determinizer
         self.prettify = prettify
         # C scales the error term when data is misclassified. Set it so something very high
@@ -42,6 +43,7 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
             "C": 1e6,
             **linear_svc_params
         }
+        self.user_splits = [UserSplit(user_split) for user_split in user_splits]
 
     @staticmethod
     def transform_quadratic(X):
@@ -355,8 +357,17 @@ class PolynomialClassifierSplittingStrategy(SplittingStrategy):
         # sort labels by count, descending
         # (order only matters if we find multiple prefect splits)
         labels = labels[np.argsort(-counts)]
-        for label in labels:
-            label_mask = (y == label)
+        self.user_splits.sort(key = lambda split : impurity_measure.calculate_impurity(dataset, split))
+        single_label_masks = [((y == label), label) for label in labels]
+        user_masks = [(split.get_masks(dataset)[0], split.user_split) for split in self.user_splits]
+        masks = user_masks + single_label_masks
+        self.logger.debug(f"{masks}")
+        for mask in masks:
+            label_mask, label = mask
+            if len(np.unique(label_mask)) == 1:
+                self.logger.debug(f"Skipping poly split for label {label}")
+                continue
+            self.logger.debug(f"Finding poly split for label {label}")
             standardizer = StandardScaler()  # LinearSVC needs standardized values
             svc = svm.LinearSVC(**self.linear_svc_params)
             pipeline = make_pipeline(standardizer, svc)

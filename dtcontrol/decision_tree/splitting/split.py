@@ -13,6 +13,10 @@ class Split(ABC):
         """
         pass
 
+    @abstractmethod
+    def predict_multi(self, x, ind):
+        pass
+
     def split(self, dataset):
         """
         Splits the dataset into subsets.
