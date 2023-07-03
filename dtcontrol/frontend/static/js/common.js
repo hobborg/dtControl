@@ -103,7 +103,6 @@ function makeCheckbox(options, parent_div, default_option=null){
         container.appendChild(label);
         parent_div.appendChild(container);
     }
-    parent_div.appendChild(document.createElement('br'));
 }
 
 function fillYML(preset_json) {
@@ -182,20 +181,30 @@ function fillYML(preset_json) {
     var div_num_pred = document.getElementById("option-numeric-predicates");
     makeCheckbox(allConfig['numeric-predicates'], div_num_pred, "axisonly");
 
-    var div_cat_pred = document.getElementById("option-categorical-predicates");
+    var div_cat_pred = document.getElementById("cat-pred-div");
     makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, "multisplit");
     // add tolerance field
     var valuegrouping_checkbox = document.getElementById("valuegrouping");
-    var option_cat_pred = document.getElementById("option-categorical-predicates");
+    var div_tolerance = document.getElementById("cat-pred-col2");
     if(valuegrouping_checkbox) {
-        console.log("valuegrouping checkbox exists");
+        // create input box
         var tolerance_textfield = document.createElement('input');
         tolerance_textfield.classList.add('form-control');
         tolerance_textfield.type = 'number';
         tolerance_textfield.value = '0.00001';
         tolerance_textfield.id = 'tolerance-field';
-        option_cat_pred.appendChild(tolerance_textfield);
+        tolerance_textfield.step = 'any';
+
+        // create label
+        var tolerance_label = document.createElement('label');
+        tolerance_label.id = 'tolerance-label';
+        tolerance_label.setAttribute('for', 'tolerance-field');
+        tolerance_label.textContent = "Tolerance";
+        // insert text field, then label
+        div_tolerance.appendChild(tolerance_textfield);
+        div_tolerance.insertBefore(tolerance_label, tolerance_textfield);
         $('#tolerance-field').css('visibility', 'hidden');
+        $('#tolerance-label').css('visibility', 'hidden');
         // ^ use this instead of hide() / show() to set visibility propoerty instead of display property
     }
 

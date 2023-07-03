@@ -16,10 +16,10 @@
                             <h4 class="card-title">Controllers</h4>
                             <input type="file" id="add-controller-file" style="display: none">
                             <div class="ml-auto">
-                                <button class="btn btn-primary" id="add-controller-button" onclick="document.getElementById('add-controller-file').click()">
+                                <button class="btn btn-primary m-1" id="add-controller-button" onclick="document.getElementById('add-controller-file').click()">
                                     <i class="fa fa-plus" style="font-size: 80%"></i> Add controller file
                                 </button>
-                                <button class="btn btn-secondary" id="add-controller-metadata-button">
+                                <button class="btn btn-secondary m-1" id="add-controller-metadata-button">
                                     <i class="fa fa-plus" style="font-size: 80%"></i> Add controller and metadata file
                                 </button>
                             </div>
@@ -33,9 +33,9 @@
                             <th scope="col">Controller</th>
                             <th scope="col">State-Actions Pairs NO just # of states</th>
                             <th scope="col">Variable Types</th>
-                            <th scope="col">NEW: State Variables</th>
-                            <th scope="col">NEW: Output Variables</th>
-                            <th scope="col">NEW: Maximum Non-Determinism</th>
+                            <th scope="col">State Variables</th>
+                            <th scope="col">Output Variables</th>
+                            <th scope="col">Maximum Non-Determinism</th>
                             <th scope="col">Actions</th>
                         </tr>
                         </thead>
@@ -61,12 +61,12 @@
                 <table id="results-table-new" class="table rounded table-hover">
                     <thead class="custom-thead">
                     <tr>
-                        <th scope="col">Experiment #</th>
+                        <th scope="col">Controller #</th>
                         <th scope="col">Controller</th>
                         <th scope="col">Determinize</th>
                         <th scope="col">Predicates</th>
-                        <th scope="col">Construction Time</th>
                         <th scope="col"># Nodes</th>
+                        <th scope="col">Construction Time</th>
                         <th scope="col">Actions</th>
                     </tr>
                     </thead>
@@ -82,17 +82,23 @@
     </div>
 
         <!-- Modal form to choose advanced options for experiment -->
-    <div class="modal fade" id="tree-builder-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade" id="advanced-options-modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"> Advanced Options</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                <div class="modal-header d-block">
+                    <div class="d-flex">
+                        <h3 class="modal-title">Advanced Options</h3>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <h5 class="modal-title" id="modal-subtitle"></h5>
                 </div>
                 <!--div class="modal-body"><p>Modal body text goes here.</p></div-->
                 <form id="tree-builder-form">
+                    <!-- Hidden fields to store which for which controller the modal was opened -->
+                    <input type="hidden" id="hidden-controller-id" value="42">
+                    <input type="hidden" id="hidden-controller-name" value="my-controller">
                     <div class="modal-body">
                         <div class="form-group">
                             <h5><label for="option-determinize">Determinize </label></h5>
@@ -112,20 +118,34 @@
                                       </label>
                                     </div-->
                             </div>
-                            <label for="option-categorical-predicates">Categorical</label>
-                            <div id="option-categorical-predicates">
+                            <h6 id="num-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> At least one option must be chosen. </h6>
+                            <div id="option-categorical-predicates" class="row">
+                                <div id="cat-pred-col1" class="col">
+                                    <label for="option-categorical-predicates">Categorical</label>
+                                    <div id="cat-pred-div"></div>
+                                </div>
+                                <div id="cat-pred-col2" class="col">
+                                </div>
                             </div>
-                        </div>
-
-                        <div id="option-userPredicatesInputRow">
-                            <label for="option-userPredicatesInput">User Predicates</label>
-                            <textarea id="option-userPredicatesInput" name="userPredicates" rows="3" style="width: 100%"
-                          placeholder="Enter higher algebraic predicates here..."></textarea>
+                            <h6 id="cat-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> At least one option must be chosen. </h6>
+                            <label for="option-user-pred">User Predicates</label>
+                            <table id="user-pred-table-modal" class="table table-hover">
+                                <tbody></tbody>
+                            </table>
+                            <div class="form-row align-items-center" id="user-pred-form">
+                                    <div class="col">
+                                        <input type="text" class="form-control" id="option-user-pred" value="x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60}">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="button" class="btn btn-primary" id="add-pred">Add</button>
+                                    </div>
+                            </div>
+                            <h6 id="user-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> The predicate does not have a valid structure. </h6>
                         </div>
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary">Restore default values</button>
+                        <button type="button" class="btn btn-secondary" id="restore-default-button">Restore default values</button>
                         <button type="button" class="btn btn-secondary">Assign priorities</button>
                         <button type="submit" class="btn btn-primary">Ok</button>
                         <!--button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button-->

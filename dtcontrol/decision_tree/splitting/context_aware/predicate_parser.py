@@ -50,6 +50,113 @@ class PredicateParser:
 
         """
         logger.root_logger.info("Predicate to parse: " + str(single_predicate))
+        try:
+            term, relation, split_pred = cls.preprocess_single_predicate(single_predicate, logger)
+        except RicherDomainPredicateParserException:
+            print("Invalid predicate entered. Please check logger or comments for more information.")
+        else:
+            all_interval_defs = {}
+            column_interval = {}
+            coef_interval = {}
+
+            # Parsing all additional given intervals and storing them inside --> all_interval_defs
+            try:
+                for i in range(1, len(split_pred)):
+                    split_coef_definition = split_pred[i].split("in", 1)
+                    interval = cls.parse_user_interval(split_coef_definition[1], logger)
+                    symbol = sp.sympify(split_coef_definition[0])
+                    all_interval_defs[symbol] = interval
+            except Exception:
+                logger.root_logger.critical(
+                    "Aborting: one predicate does not have a valid structure. Invalid predicate: {}. Please check for typos and read the comments inside predicate_parser.py. For more information take a look at the sympy library (https://docs.sympy.org/latest/tutorial/basic_operations.html#converting-strings-to-sympy-expressions).".format(
+                        str(single_predicate)))
+                raise RicherDomainPredicateParserException()
+
+            """
+            ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
+            |                  COLUMN REFERENCING ONLY WITH VARIABLES OF STRUCTURE: x_i                |
+            |                  COEFS ONLY WITH VARIABLES OF STRUCTURE: c_j                             |
+            --------------------------------------------------------------------------------------------
+            """
+            # Iterating over every symbol/variable and deciding whether it is a column reference or a coef
+            infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
+            for var in term.free_symbols:
+                # Type: x_i -> column reference
+                if re.match(r"x_\d+", str(var)):
+                    if not all_interval_defs.__contains__(var):
+                        column_interval[var] = infinity
+                    else:
+                        column_interval[var] = all_interval_defs[var]
+                        all_interval_defs.__delitem__(var)
+                # Type: c_i --> coef
+                elif re.match(r"c_\d+", str(var)):
+                    if not all_interval_defs.__contains__(var):
+                        coef_interval[var] = infinity
+                    else:
+                        # CHECKING: coefs are only allowed to have 2 kinds of intervals: FiniteSet or (-Inf,Inf)
+                        check_interval = all_interval_defs[var]
+                        all_interval_defs.__delitem__(var)
+                        if isinstance(check_interval, sp.FiniteSet) or check_interval == infinity:
+                            coef_interval[var] = check_interval
+                        else:
+                            # coef interval is not FiniteSet or (-Inf,Inf)
+                            logger.root_logger.critical(
+                                "Aborting: invalid interval for a coefficient declared. Only finite or (-Inf,Inf) allowed. Coefficient: {} with invalid interval: {} from predicate: {}".format(
+                                    str(var), str(check_interval), str(single_predicate)))
+                            raise RicherDomainPredicateParserException()
+                else:
+                    logger.root_logger.critical(
+                        "Aborting: one symbol inside one predicate does not have a valid structure. Column refs only with x_i. Coefs only with c_i. Invalid symbol: '{}' inside predicate {}".format(
+                            str(var), str(single_predicate)))
+                    raise RicherDomainPredicateParserException()
+
+            # Hidden edge case1: Undefined functions.
+            # e.g. f(x) * c1 * x_3 >= 1 <--> f(x) is an undefined function.
+            if term.atoms(AppliedUndef):
+                logger.root_logger.critical(
+                    "Aborting: one predicate contains an undefined function. Undefined function: {}. Invalid predicate: {}".format(
+                        str(term.atoms(AppliedUndef)), str(single_predicate)))
+                raise RicherDomainPredicateParserException()
+            # Hidden edge case2: No symbols to reference columns used.
+            # e.g. c_0 >= 1; c_0 in {5,7}
+            elif not column_interval:
+                logger.root_logger.critical(
+                    "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: {}".format(
+                        str(single_predicate)))
+                raise RicherDomainPredicateParserException()
+            # Hidden edge case3: Term evaluates to zero.
+            # e.g. 3-1.5*2 <= 0
+            elif term == 0 or term.evalf() == 0:
+                logger.root_logger.critical(
+                    "Aborting: one predicate does evaluate to zero. Invalid predicate: {}".format(str(single_predicate)))
+                raise RicherDomainPredicateParserException()
+            # Hidden edge case4: Invalid states for important key variables reached.
+            elif not split_pred or not term or not column_interval:
+                logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: {}".format(
+                    str(single_predicate)))
+                raise RicherDomainPredicateParserException()
+
+            # Checking if every interval-Definition, actually occurs in in the term.
+            # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term.
+            for var in all_interval_defs:
+                # additional column restrictions are allowed
+                if re.match(r"x_\d+", str(var)):
+                    column_interval[var] = all_interval_defs[var]
+                else:
+                    logger.root_logger.critical(
+                        "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
+                            str(all_interval_defs), str(single_predicate)))
+                    raise RicherDomainPredicateParserException()
+
+            return RicherDomainSplit(column_interval, coef_interval, term, relation, debug)
+
+
+    @classmethod
+    def preprocess_single_predicate(cls, single_predicate, logger):
+        """
+        First part of parse_single_predicate:
+        Rearrange the predicate to get 0 on the right-hand side, e.g. x_1 + 2 <= 42 becomes x_1 + 2 - 42 <= 0.
+        """
 
         # Currently supported types of relations
         supported_relation = ["<=", ">=", "<", ">", "="]
@@ -70,100 +177,7 @@ class PredicateParser:
                             str(single_predicate)))
                     raise RicherDomainPredicateParserException()
 
-                all_interval_defs = {}
-                column_interval = {}
-                coef_interval = {}
-
-                # Parsing all additional given intervals and storing them inside --> all_interval_defs
-                try:
-                    for i in range(1, len(split_pred)):
-                        split_coef_definition = split_pred[i].split("in", 1)
-                        interval = cls.parse_user_interval(split_coef_definition[1], logger)
-                        symbol = sp.sympify(split_coef_definition[0])
-                        all_interval_defs[symbol] = interval
-                except Exception:
-                    logger.root_logger.critical(
-                        "Aborting: one predicate does not have a valid structure. Invalid predicate: {}. Please check for typos and read the comments inside predicate_parser.py. For more information take a look at the sympy library (https://docs.sympy.org/latest/tutorial/basic_operations.html#converting-strings-to-sympy-expressions).".format(
-                            str(single_predicate)))
-                    raise RicherDomainPredicateParserException()
-
-                """
-                ----------------    !!!!!!!!!!!!!!!!    C A U T I O N    !!!!!!!!!!!!!!!!   ----------------
-                |                  COLUMN REFERENCING ONLY WITH VARIABLES OF STRUCTURE: x_i                |
-                |                  COEFS ONLY WITH VARIABLES OF STRUCTURE: c_j                             |
-                --------------------------------------------------------------------------------------------
-                """
-                # Iterating over every symbol/variable and deciding whether it is a column reference or a coef
-                infinity = sp.Interval(sp.S.NegativeInfinity, sp.S.Infinity)
-                for var in term.free_symbols:
-                    # Type: x_i -> column reference
-                    if re.match(r"x_\d+", str(var)):
-                        if not all_interval_defs.__contains__(var):
-                            column_interval[var] = infinity
-                        else:
-                            column_interval[var] = all_interval_defs[var]
-                            all_interval_defs.__delitem__(var)
-                    # Type: c_i --> coef
-                    elif re.match(r"c_\d+", str(var)):
-                        if not all_interval_defs.__contains__(var):
-                            coef_interval[var] = infinity
-                        else:
-                            # CHECKING: coefs are only allowed to have 2 kinds of intervals: FiniteSet or (-Inf,Inf)
-                            check_interval = all_interval_defs[var]
-                            all_interval_defs.__delitem__(var)
-                            if isinstance(check_interval, sp.FiniteSet) or check_interval == infinity:
-                                coef_interval[var] = check_interval
-                            else:
-                                # coef interval is not FiniteSet or (-Inf,Inf)
-                                logger.root_logger.critical(
-                                    "Aborting: invalid interval for a coefficient declared. Only finite or (-Inf,Inf) allowed. Coefficient: {} with invalid interval: {} from predicate: {}".format(
-                                        str(var), str(check_interval), str(single_predicate)))
-                                raise RicherDomainPredicateParserException()
-                    else:
-                        logger.root_logger.critical(
-                            "Aborting: one symbol inside one predicate does not have a valid structure. Column refs only with x_i. Coefs only with c_i. Invalid symbol: '{}' inside predicate {}".format(
-                                str(var), str(single_predicate)))
-                        raise RicherDomainPredicateParserException()
-
-                # Hidden edge case1: Undefined functions.
-                # e.g. f(x) * c1 * x_3 >= 1 <--> f(x) is an undefined function.
-                if term.atoms(AppliedUndef):
-                    logger.root_logger.critical(
-                        "Aborting: one predicate contains an undefined function. Undefined function: {}. Invalid predicate: {}".format(
-                            str(term.atoms(AppliedUndef)), str(single_predicate)))
-                    raise RicherDomainPredicateParserException()
-                # Hidden edge case2: No symbols to reference columns used.
-                # e.g. c_0 >= 1; c_0 in {5,7}
-                elif not column_interval:
-                    logger.root_logger.critical(
-                        "Aborting: one predicate does not contain variables to reference columns. Invalid predicate: {}".format(
-                            str(single_predicate)))
-                    raise RicherDomainPredicateParserException()
-                # Hidden edge case3: Term evaluates to zero.
-                # e.g. 3-1.5*2 <= 0
-                elif term == 0 or term.evalf() == 0:
-                    logger.root_logger.critical(
-                        "Aborting: one predicate does evaluate to zero. Invalid predicate: {}".format(str(single_predicate)))
-                    raise RicherDomainPredicateParserException()
-                # Hidden edge case4: Invalid states for important key variables reached.
-                elif not split_pred or not term or not column_interval:
-                    logger.root_logger.critical("Aborting: one predicate does not have a valid structure. Invalid predicate: {}".format(
-                        str(single_predicate)))
-                    raise RicherDomainPredicateParserException()
-
-                # Checking if every interval-Definition, actually occurs in in the term.
-                # e.g. x_0 <= c_0; c_5 in {1}  --> c_5 doesn't even occur in the term.
-                for var in all_interval_defs:
-                    # additional column restrictions are allowed
-                    if re.match(r"x_\d+", str(var)):
-                        column_interval[var] = all_interval_defs[var]
-                    else:
-                        logger.root_logger.critical(
-                            "Aborting: invalid symbol in interval definition without symbol usage in the term found. Invalid symbol(s): {} inside predicate: {}".format(
-                                str(all_interval_defs), str(single_predicate)))
-                        raise RicherDomainPredicateParserException()
-
-                return RicherDomainSplit(column_interval, coef_interval, term, relation, debug)
+                return term, relation, split_pred
 
         logger.root_logger.critical(
             "Aborting: one predicate did not contain any relation. Invalid predicate: {}".format(str(single_predicate)))

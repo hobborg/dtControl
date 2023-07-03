@@ -14,6 +14,10 @@ from traceback import print_exc
 
 from dtcontrol.frontend_helper import get_controller_data
 from dtcontrol.util import interactive_queue
+from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
+from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainPredicateParserException
+
 
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
@@ -296,6 +300,24 @@ def construct():
 
     return jsonify(results[id])
 
+@app.route("/check-user-predicate", methods=['POST'])
+def process_predicate():
+    data = request.get_json()
+    # Logger Init
+    # TODO T: logger
+    logger = RicherDomainLogger("GetDomainKnowledge_Logger", False)
+    logger.root_logger.info("Starting Domain Knowledge Parser.")
+
+    # check the predicate
+    try:
+        term, relation, split_pred = PredicateParser.preprocess_single_predicate(data["predicate"], logger)
+    except RicherDomainPredicateParserException:
+        return json.dumps({"type": "error"})
+
+    pred = str(term) + " " + str(relation) + " 0"
+    if len(split_pred[1:]) > 0:
+        pred += " ;" + ";".join(split_pred[1:])
+    return json.dumps({"type": "success", "body": pred})
 
 # First call that receives controller and config and returns constructed tree
 def insert_into_tree(node_address, saved_tree, partial_tree):

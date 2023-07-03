@@ -177,12 +177,34 @@ $(document).ready(function () {
     $(".runall").hide();
 
     //MJ load data and init listeners
-    $.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e))).then(() => initTableListeners());
+    //$.get('/experiments', experiments => experiments.forEach(e => addToExperimentsTable(e)));.then(() => initTableListeners());
+    $.get('/controllers', controllers => controllers.forEach(e => addToControllersTable(e))).then(() => initTableListeners());
     $.get('/results', results => {
         for (const [id, result] of Object.entries(results)) {
             addToResultsTable(id, result);
             if (result.status === "Running...") {
                 startPolling();
+            }
+        }
+    });
+
+    $('[data-toggle="tooltip"]').tooltip();
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            if ($('#messageModal').hasClass('show')) {
+                // if Enter key is pressed and message modal (popup used for error messages) is open -> trigger close
+                $('#messageModal button[data-dismiss="modal"]').trigger('click');
+            } else if ($('#advanced-options-modal').hasClass('show')) {
+                // if Enter key is pressed and Advanced Options modal is open
+                if (document.activeElement.id == "option-user-pred") {
+                    // if text field to add new predicates is active -> submit predicate
+                    $('#add-pred').trigger('click');
+                    event.stopPropagation();
+                } else {
+                    // submit modal / form data
+                    $('#advanced-options-modal button[type="submit"]').trigger('click');
+                }
             }
         }
     });
@@ -259,25 +281,17 @@ $(document).ready(function () {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(row_contents[0]),
             success: function(cont_id) {
-
-                $("#controller-table tr.special").hide();
+                row_contents = [cont_id].concat(row_contents)
+                // Row contents is now [controller_id, controller_name, nice_name]
 
                 var table = document.getElementById("controller-table");
                 var thead = table.getElementsByTagName('thead')[0];
                 var tbody = table.getElementsByTagName('tbody')[0];
 
                 var row = tbody.insertRow(-1);
-                var firstCell = row.insertCell(-1);
-                firstCell.outerHTML = "<th scope=\"row\">" + String(cont_id) + "</th>";
+                addToControllersTable(row_contents, row);
 
-                var secondCell = row.insertCell(-1);
-                secondCell.innerHTML = row_contents[0];
-                secondCell.style = "display: none";
 
-                var thirdCell = row.insertCell(-1);
-                thirdCell.innerHTML = row_contents[1];
-
-                // Insert a cell that spans multiple columns
                 var spanningCell = row.insertCell(-1);
                 var numColumns = thead.rows[0].cells.length;
                 spanningCell.colSpan = numColumns;
@@ -285,8 +299,7 @@ $(document).ready(function () {
                 $(spanningCell).html(spinner);
                 $(spanningCell).append(" Parse dataset...");
 
-                row_contents = [cont_id].concat(row_contents)
-                 parse_controller_file(row_contents, row)
+                parse_controller_file(row_contents, row)
             },
             error: function(xhr, status, error) {
                 if (xhr.status === 500 && xhr.responseJSON && xhr.responseJSON.error === "duplicate") {
@@ -294,6 +307,48 @@ $(document).ready(function () {
                 }
             }
         });
+    }
+
+    function addToControllersTable(row_contents, row=null) {
+        $("#controller-table tr.special").hide();
+
+        if (row == null) {
+            var table = document.getElementById("controller-table");
+            var tbody = table.getElementsByTagName('tbody')[0];
+            var row = tbody.insertRow(-1);
+        } else {
+            // delete everything currently in that row:
+            while (row.cells.length > 0) {
+                row.deleteCell(0);
+            }
+        }
+
+        var firstCell = row.insertCell(-1);
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+
+        var secondCell = row.insertCell(-1);
+        secondCell.innerHTML = row_contents[1];
+        secondCell.style = "display: none";
+
+        var thirdCell = row.insertCell(-1);
+        thirdCell.innerHTML = row_contents[2];
+
+        if (row_contents.length > 3) {
+            for (let j = 3; j < 8; j++) {
+                var c = row.insertCell(-1);
+                c.innerHTML = row_contents[j];
+            }
+            var icon = row.insertCell(-1);
+            det_tree_button = makeButton(" deterministic", "det-build-button-cont-table", "fa-play text-success", "build a deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
+            aa_permissive_tree_button = makeButton(" axis-aligned permissive", "aa_permissive-build-button-cont-table", "fa-play text-success", "build a permissive tree using only axis-aligned splits");
+            logreg_permissive_tree_button = makeButton(" logreg permissive", "logreg_permissive-build-button-cont-table", "fa-play text-success", "build non-deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
+            advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", "choose from the advanced settings");
+            edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", "jump directly to the interactive tree builder");
+            delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", "delete this controller file");
+            // other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
+            icon.innerHTML = det_tree_button + aa_permissive_tree_button + logreg_permissive_tree_button +
+                            advanced_settings_button +  edit_button + delete_button;
+        }
     }
 
     function parse_controller_file(row_contents, row) {
@@ -308,24 +363,8 @@ $(document).ready(function () {
             // controller data is added to the backend table
         }).done(function(row_contents) {
 
-        // Delete the last cell in the row (displays that parsing in progress)
-        row.deleteCell(row.cells.length - 1);
+            addToControllersTable(row_contents, row);
 
-        for (let j = 3; j < 8; j++) {
-            var c = row.insertCell(-1);
-            c.innerHTML = row_contents[j];
-        }
-
-        var icon = row.insertCell(-1);
-        simple_tree_button = makeButton(" simple tree", "build-button-cont-table", "fa-play text-success", 80);
-        permissive_tree_button = makeButton(" permissive tree", "permissive-build-button-cont-table", "fa-play text-success", 80);
-        advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", 80);
-        edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", 80);
-        delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", 80);
-        space = "&nbsp;&nbsp;"
-        // other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
-        icon.innerHTML = simple_tree_button + space + permissive_tree_button + space + advanced_settings_button +
-                            space + edit_button + space + delete_button;
         });
     }
 
@@ -603,10 +642,10 @@ $(document).ready(function () {
         icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>&nbsp;&nbsp;<i class=\"fa fa-play text-success\" aria-hidden=\"true\"></i>";
     }
 
-    function makeButton(text, id, fa_symbol=null, font_size=80) {
+    function makeButton(text, id, fa_symbol=null, description="", font_size=80) {
         // e.g. "fa-plus" as fa-simbol
         if (fa_symbol) {
-            return "<button class=\"btn btn-light \" id=\"" + String(id) + "\"> <i class=\"fa " + String(fa_symbol) +
+            return "<button class=\"btn btn-light m-1 \"  data-toggle=\"tooltip\" title=\"" + String(description) + "\" id=\"" + String(id) + "\"> <i class=\"fa " + String(fa_symbol) +
                 " \" style=\"font-size: " + String(80) + " % \"> </i>" + String(text) + "</button>";
         } else {
             return "<button class=\"btn btn-light \" id=\"" + String(id) + "\">" + String(text) + "</button>";
@@ -631,6 +670,7 @@ $(document).ready(function () {
         return hours + ':' + minutes + ':' + seconds;
     }
 
+    // TODO: delete, rename other one
     function run_single_benchmark(config) {
         console.log(config);
         $.ajax({
@@ -652,6 +692,68 @@ $(document).ready(function () {
             url: '/construct',
             beforeSend: initializeInResultsTable(config)
         }).done(data => addToResultsTable(config[0], data));
+    }
+
+       function run_single_benchmark_new(config) {
+        console.log(config);
+        $.ajax({
+            data: JSON.stringify({
+                id: config[0],
+                controller: config[1],
+                nice_name: config[2],
+                config: config[3],
+                determinize: config[4],
+                numeric_predicates: config[5],
+                categorical_predicates: config[6],
+                impurity: config[7],
+                tolerance: config[8],
+                safe_pruning: config[9],
+                user_predicates: config[10]
+            }),
+            type: 'POST',
+            contentType: "application/json; charset=utf-8",
+            url: '/construct',
+            beforeSend: initializeInResultsTable_new(config)
+        }).done(data => addToResultsTable_new(config[0], data));
+    }
+
+    function initializeInResultsTable_new(row_contents) {
+        /*
+                id: row_contents[0],
+                controller: row_contents[1],
+                nice_name: row_contents[2],
+                config: row_contents[3],
+                determinize: row_contents[4],
+                numeric_predicates: row_contents[5],
+                categorical_predicates: row_contents[6],
+                impurity: row_contents[7],
+                tolerance: row_contents[8],
+                safe_pruning: row_contents[9]
+             */
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        $("#results-table-new tr.special").hide();
+        let table = document.getElementById("results-table-new").getElementsByTagName('tbody')[0];
+        let row = table.insertRow(-1);
+        let firstCell = row.insertCell(-1);
+        // TODO T: don't display id?
+        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+        for (let j = 1; j <= 7; j++) {
+            if (j == 3) {
+                continue;
+            }
+            const cell = row.insertCell(-1);
+            if (j === 1) {
+                cell.style = "display: none";
+            }
+            if (j <= 4) {
+                cell.innerHTML = row_contents[j];
+            }
+            if (j === 5) {
+                var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
+                $(cell).html(spinner);
+                $(cell).append(" Running...")
+            }
+        }
     }
 
     function initializeInResultsTable(row_contents) {
@@ -753,20 +855,150 @@ $(document).ready(function () {
         });
 
         $('#controller-table').on('click', '#advanced-button-cont-table', function () {
-            console.log("start tree builder modal")
-            $('#tree-builder-modal').modal('show');
+            $('#advanced-options-modal').modal('show');
+            var row_items = $(this).parent().parent().find('th,td');
+            document.getElementById("hidden-controller-id").value = row_items[0].innerHTML;
+            document.getElementById("hidden-controller-name").value = row_items[1].innerHTML;
+            document.getElementById("modal-subtitle").innerHTML = row_items[2].innerHTML;
         });
+
+        $('#controller-table').on('click', '#edit-button-cont-table', function () {
+            console.log("jump to tree builder");
+        });
+
 
         $("#option-categorical-predicates").on("change", "#valuegrouping", function (event) {
             console.log("sth changed about valuegrouping checkbox");
             if ($(this).prop('checked')) {
                 console.log("valuegrouping checkbox is now checked");
+                $('#tolerance-label').css('visibility', 'visible');
                 $('#tolerance-field').css('visibility', 'visible');
             } else {
+                $('#tolerance-label').css('visibility', 'hidden');
                 $('#tolerance-field').css('visibility', 'hidden');
             }
         });
 
+        $('#tree-builder-form').on('submit', function (event) {
+            event.preventDefault();
+            if (document.activeElement.id == "option-user-pred") {
+                return;
+            }
+            document.getElementById('cat-pred-error-msg').style.visibility = 'hidden';
+            document.getElementById('num-pred-error-msg').style.visibility = 'hidden';
+
+            var selected_num_predicates = [];
+            $('#option-numeric-predicates .form-check-input:checked').each(function() {
+                var checkboxValue = $(this).attr('name');
+                selected_num_predicates.push(checkboxValue);
+            });
+            if (selected_num_predicates.length == 0) {
+                document.getElementById('num-pred-error-msg').style.visibility = 'visible';
+                return;
+            }
+
+            var selected_cat_predicates = [];
+            $('#option-categorical-predicates .form-check-input:checked').each(function() {
+                checkboxValue = $(this).attr('name');
+                selected_cat_predicates.push(checkboxValue);
+            });
+            if (selected_cat_predicates.length == 0) {
+               document.getElementById('cat-pred-error-msg').style.visibility = 'visible';
+                return;
+            }
+
+            var determinizer = document.getElementById("option-determinize").value;
+
+            $('#advanced-options-modal').modal('hide');
+            document.getElementById('user-pred-error-msg').style.visibility = 'hidden';
+
+            var controller_id = parseInt(document.getElementById("hidden-controller-id").value);
+            var controller_name = document.getElementById("hidden-controller-name").value;
+            var controller_nice_name = document.getElementById("modal-subtitle").innerHTML;
+
+            var tolerance = 0;  // tolerance is always 0 if valuegrouping not checked
+            if (selected_cat_predicates.includes('valuegrouping')) {
+                tolerance = document.getElementById('#tolerance-field').value
+            }
+
+            // TODO T: think about default choices, explain
+            config = [controller_id, controller_name, controller_nice_name, "custom", determinizer,
+                    selected_num_predicates, selected_cat_predicates, "multilabelentropy", tolerance, false, null]
+            run_single_benchmark_new(config);
+
+            return false;
+        });
+
+        $('#restore-default-button').on('click', function (event) {
+            if(document.getElementById("maxfreq") != null) {
+                document.getElementById("option-determinize").options["maxfreq"].selected = true;
+            }
+            // TODO T: check if numerical and cat predicates options present
+            if(document.getElementById("axisonly") != null) {
+                numeric_checkboxes = document.getElementById("option-numeric-predicates").children;
+                for (var i = 0; i < numeric_checkboxes.length; i++) {
+                    numeric_checkboxes[i].children[0].checked = false;
+                }
+                document.getElementById("axisonly").checked = true;
+            }
+            if(document.getElementById("multisplit") != null) {
+                cat_checkboxes = document.getElementById("cat-pred-div").children;
+                for (var i = 0; i < cat_checkboxes.length; i++) {
+                    cat_checkboxes[i].children[0].checked = false;
+                }
+                // Trigger the change event manually for event handler that makes Tolerance field (dis)appear
+                $("#cat-pred-div input[type='checkbox']").trigger('change');
+                document.getElementById("multisplit").checked = true;
+            }
+        });
+
+        $('#add-pred').on('click', function (event) {
+            event.preventDefault();
+            let predicate = document.getElementById('option-user-pred').value;
+
+            $.ajax({
+                data: JSON.stringify({"predicate": predicate}),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                url: '/check-user-predicate',
+            }).done(data => {
+                let response = JSON.parse(data);
+                if (response.type === "error") {
+                    $('#user-pred-error-msg')[0].innerText = "The predicate does not have a valid structure.";
+                    $('#user-pred-error-msg')[0].style.visibility = 'visible';
+                } else if (response.type === "success") {
+                    var pred = response["body"]
+                    // duplicate check
+                    var table = document.getElementById('user-pred-table-modal').getElementsByTagName('tbody')[0];
+                    for (var i = 0; i < table.rows.length; i++) {
+                        var entry = table.rows[i].cells[0].innerText;
+                        if (entry === pred) {
+                            $('#user-pred-error-msg')[0].innerText = "The predicate has already been added.";
+                            $('#user-pred-error-msg')[0].style.visibility = 'visible';
+                            return;
+                        }
+                    }
+                    $('#user-pred-error-msg')[0].style.visibility = 'hidden';
+                    add_to_predicate_collection_modal(pred);
+                }
+            });
+        });
+
+        function add_to_predicate_collection_modal(pred) {
+            var table_body = document.getElementById("user-pred-table-modal").getElementsByTagName('tbody')[0];
+            var row = table_body.insertRow(-1);
+            var pred_cell = row.insertCell(-1);
+            pred_cell.innerHTML = pred;
+            var icon = row.insertCell(-1);
+            icon.innerHTML = "<i class=\"fa fa-trash text-danger\"></i>";
+        }
+
+        $("#user-pred-table-modal").on("click", "i.fa-trash", function () {
+            const row = $(this).parent().parent();
+            row.remove();
+        });
+
+        /*
         // TODO T: delete if we delete runall
         $('#runall').on('click', event => {
             $("table i.fa-play").each((_, btn) => {
@@ -775,5 +1007,6 @@ $(document).ready(function () {
                 btn.click();
             });
         })
+        */
     }
 });
