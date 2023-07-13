@@ -2,6 +2,10 @@
 dtControl: Decision Tree Learning Algorithms for Controller Representation
 ***************************************************************************
 
+**This repository is no longer maintained since July, 2023.** The project has been moved to `https://gitlab.com/live-lab/software/dtcontrol <https://gitlab.com/live-lab/software/dtcontrol>`_.
+
+For questions regarding the status of the project, please contact `Maximilian Weininger <mailto:Weininger@ist.ac.at>`_.
+
 *******************
 System requirements
 *******************
