@@ -103,7 +103,6 @@ class DecisionTree(BenchmarkSuiteClassifier):
                     continue
                 mask = curr.split.predict_multi(x, ind)
                 logging.debug(f"{curr.split} {mask} with shape {mask.shape} & True count {np.sum(mask)}")
-                input()
                 left = ind[mask]
                 right = ind[~mask]
                 q.append((curr.children[0], left))

@@ -9,7 +9,9 @@ Run dtcontrol --help to see usage.
 import logging
 import random
 import sys
+import traceback
 import time
+import numpy as np
 from collections import namedtuple, OrderedDict
 from os import path
 from os.path import exists
@@ -47,6 +49,7 @@ from dtcontrol.decision_tree.splitting.context_aware.richer_domain_cli_strategy 
 from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifierSplittingStrategy
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.decision_tree.splitting.polynomial import PolynomialClassifierSplittingStrategy
+from dtcontrol.decision_tree.splitting.neural_net import NeuralNetSplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
 from dtcontrol.decision_tree.splitting.split import Split
@@ -60,7 +63,7 @@ from dtcontrol.util import Caller
 
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
-                   name=None, user_predicates=None, fallback=None):
+                   name=None, user_predicates=None, fallback=None, priorities=None):
     """
     Creates classifier objects for each method
 
@@ -78,6 +81,9 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     # Give the preset a name, if doesn't exist
     if not name:
         name = f"{determinize}-({','.join(combined_split)})-{impurity}"
+
+    if priorities:
+        strat_pri = {numeric_split[i]:priorities[i] for i in range(len(numeric_split))}
 
     if not isinstance(tolerance, float):
         raise ValueError(f"{tolerance} is not a valid tolerance value (enter a float, e.g., 1e-5). Exiting...")
@@ -100,6 +106,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
         'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
         'oc1': lambda x: OC1SplittingStrategy(determinizer=x),
         'polynomial': lambda x: PolynomialClassifierSplittingStrategy(determinizer=x),
+        'neural': lambda x: NeuralNetSplittingStrategy(determinizer=x),
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
@@ -154,7 +161,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     # if using logreg/svm/oc1, then determinizer must be passed to the split
     splitting_strategy = []
     for sp in combined_split:
-        if sp in ['linear-logreg', 'linear-linsvm', 'oc1', 'polynomial']:
+        if sp in ['linear-logreg', 'linear-linsvm', 'oc1', 'polynomial','neural']:
             splitting_strategy.append(splitting_map[sp](determinization_map[determinize](None)))
         elif sp in ['richer-domain']:
             splitting_strategy.append(splitting_map[sp](user_predicates, determinization_map[determinize](None)))
@@ -171,10 +178,13 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
                         splitting_strategy.append(f_sp)
         else:
             splitting_strategy.append(splitting_map[sp](None))
+        if sp in strat_pri:
+            splitting_strategy[-1].priority = strat_pri[sp]
+            print(f"sp: {splitting_strategy[-1]} with priority {splitting_strategy[-1].priority}")
 
     impurity_measure = impurity_map[impurity](determinization_map[determinize](None))
 
-    classifier = DecisionTree(splitting_strategy, impurity_measure, name,
+    classifier = DecisionTree(sorted(splitting_strategy, key=lambda x : x.priority, reverse=True), impurity_measure, name,
                               early_stopping=early_stopping, label_pre_processor=label_pre_processor)
 
     if safe_pruning:
@@ -332,8 +342,12 @@ def train(args):
             fallback_categorical = get_preset(args["fallback"], user_config, default_config)[1]
             user_predicates = args["user_predicates"]
         elif "custom" in presets:
-            numeric_split = [args["numeric-predicates"]]
-            categorical_split = [args["categorical-predicates"]]
+            numeric_split = args["numeric-predicates"].split(',') if args["numeric-predicates"] != "" else []
+            categorical_split = args["categorical-predicates"].split(',') if args["categorical-predicates"] != "" else []
+            if args["priorities"] == "":
+                priorities = None
+            else:
+                priorities = [float(x) for x in args["priorities"].split(",")]
             determinize = args["determinize"]
             impurity = args["impurity"]
             tolerance = float(args["tolerance"])
@@ -356,12 +370,13 @@ def train(args):
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
                                     tolerance=tolerance,
                                     safe_pruning=safe_pruning, name=presets, user_predicates=user_predicates,
-                                    fallback=(fallback_numeric, fallback_categorical))
+                                    fallback=(fallback_numeric, fallback_categorical), priorities=priorities)
     except EnvironmentError:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. This could be "
                         f"because the preset '{presets}' is not supported on this platform. Skipping...\n")
     except Exception:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. Skipping...\n")
+        traceback.print_exc()
 
     if not classifier:
         logging.warning(

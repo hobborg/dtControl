@@ -61,7 +61,7 @@ advanced:
   determinize: ['maxfreq','minnorm','random','none','auto']
 
   # Numerical Predicates
-  numeric-predicates: ['axisonly','linear-logreg','linear-linsvm','oc1','polynomial']
+  numeric-predicates: ['axisonly','linear-logreg','linear-linsvm','oc1','polynomial', 'neural']
 
   # Categorical Predicates
   categorical-predicates: ['multisplit','singlesplit','valuegrouping']

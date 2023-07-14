@@ -297,6 +297,12 @@ $(document).ready(function () {
         var tolerance = $('#tolerance').val();
         var safe_pruning = $('#safe-pruning').val();
         var user_predicates = "";
+        var user_splits = $('#userSplitsInput').val();
+        var priorities = [];
+        for (let i = 0; i<numeric_predicates.length; i++) {
+            priorities[i] = $('#'+numeric_predicates[i]+'Priority').val();
+        }
+        console.log(priorities);
 
         if (config == "algebraic") {
             config += " (Fallback: " + $("#fallback").val() + ")";
@@ -305,7 +311,7 @@ $(document).ready(function () {
             user_predicates = $('#userPredicatesInput').val();
         }
 
-        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, impurity, tolerance, safe_pruning, user_predicates];
+        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, priorities, impurity, tolerance, safe_pruning, user_predicates];
 
         $.ajax('/experiments', {
             type: 'POST',
@@ -327,9 +333,9 @@ $(document).ready(function () {
         firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        for (let j = 0; j < 10; j++) {
+        for (let j = 0; j < 11; j++) {
             var c = row.insertCell(-1);
-            if (j == 0 || j == 9) {
+            if (j == 0 || j == 10) {
                 c.style = "display: none";
             }
             c.innerHTML = row_contents[j];
@@ -368,10 +374,11 @@ $(document).ready(function () {
                 determinize: config[4],
                 numeric_predicates: config[5],
                 categorical_predicates: config[6],
-                impurity: config[7],
-                tolerance: config[8],
-                safe_pruning: config[9],
-                user_predicates: config[10]
+                priorities: config[7],
+                impurity: config[8],
+                tolerance: config[9],
+                safe_pruning: config[10],
+                user_predicates: config[11]
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
@@ -426,6 +433,7 @@ $(document).ready(function () {
             row_content = row_content.slice(1, -1); // Drop the index and the actions
             row_content[4] = row_content[4].split(","); // Numerical
             row_content[5] = row_content[5].split(","); // and categorical predicates as arrays
+            row_content[6] = row_content[6].split(","); // priorities as arrays
 
             $.ajax('/experiments/delete', {
                 type: 'POST',

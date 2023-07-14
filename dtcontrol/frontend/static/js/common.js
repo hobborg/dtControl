@@ -205,6 +205,31 @@ function fillYML(preset_json) {
             det.appendChild(opt);
         }
     }
+    
+    var det = document.getElementById("priorities");
+    if (det) {
+        for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
+            var strategy = allConfig['numeric-predicates'][i];
+            var pri = document.createElement('div');
+            var lab = document.createElement('label');
+            var bar = document.createElement('input');
+            lab.setAttribute('for', strategy + "Priority");
+            lab.classList.add('form-label');
+            lab.innerHTML = strategy;
+            bar.setAttribute('type', 'range');
+            bar.setAttribute('min', 0);
+            bar.setAttribute('max', 1);
+            bar.setAttribute('step', 0.1)
+            bar.setAttribute('id', strategy + "Priority");
+            bar.classList.add('form-range');
+            pri.appendChild(lab);
+            pri.appendChild(bar);
+            pri.setAttribute('id', strategy + "PriorityBar");
+            pri.classList.add('collapse');
+            // var pri = createPriorityBar(allConfig['numeric-predicates'][i]);
+            det.appendChild(pri);
+        }
+    }
 
     $("#config").trigger("change");
 
@@ -260,6 +285,11 @@ $(document).ready(function () {
         else if ($(this).val() == "custom") {
             // In case custom is selected
             $('#accordionButton').click();
+            document.getElementById("userPredicatesInputRow").classList.add("collapse");
+            document.getElementById("fallbackSelectRow").classList.add("collapse");
+            document.getElementById("numericPredicatesSelectRow").classList.remove("collapse");
+            document.getElementById("categoricalPredicatesSelectRow").classList.remove("collapse");
+            
         }
         else if ($(this).val() == "algebraic") {
             document.getElementById("userPredicatesInputRow").classList.remove("collapse");
@@ -275,6 +305,23 @@ $(document).ready(function () {
     $(".propList").change(function () {
         document.getElementById("config").value = "custom";
     });
+
+    $("#numeric-predicates").change(function () {
+        var preds = $(this)[0];
+        if ($(this).val().includes("polynomial") || $(this).val().includes("neural")) {
+            document.getElementById("userSplitsInputRow").classList.remove("collapse");
+        } else {
+            document.getElementById("userSplitsInputRow").classList.add("collapse");
+        }
+        for (var i = 0; i < preds.length; i++) {
+            strategy = preds.options[i].text;
+            if ($(this).val().includes(strategy)) {
+                document.getElementById(strategy + "PriorityBar").classList.remove("collapse");
+            } else {
+                document.getElementById(strategy + "PriorityBar").classList.add("collapse");
+            }
+        }
+    })
 
     $("#tolerance").on("input", function () {
         document.getElementById("config").value = "custom";

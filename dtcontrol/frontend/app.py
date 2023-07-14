@@ -8,7 +8,7 @@ import sympy as sp
 from flask import Flask, render_template, json, jsonify, request, send_from_directory, redirect, url_for
 from werkzeug.utils import secure_filename
 
-from dtcontrol import frontend_helper
+import dtcontrol.frontend_helper as frontend_helper
 
 from traceback import print_exc
 
@@ -175,7 +175,7 @@ def construct():
     if config == "custom":
         to_parse_dict = {"controller": cont, "config": "custom", "determinize": data['determinize'],
                          "numeric-predicates": data['numeric_predicates'],
-                         "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
+                         "categorical-predicates": data['categorical_predicates'], "priorities": data['priorities'], "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
@@ -260,8 +260,8 @@ def partial_construct():
 
     if config == "custom":
         to_parse_dict = {"controller": controller_file, "config": "custom", "determinize": data['determinize'],
-                         "numeric-predicates": data['numeric_predicates'],
-                         "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
+                         "numeric-predicates": ','.join(data['numeric_predicates']),
+                         "categorical-predicates": ','.join(data['categorical_predicates']), "priorities": ','.join(data['priorities']), "impurity": data['impurity'],
                          "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
@@ -279,6 +279,7 @@ def partial_construct():
         to_parse_dict["existing_tree"] = saved_tree
         to_parse_dict["base_node_address"] = node_address
     except KeyError:
+        print_exc()
         pass
 
     # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]

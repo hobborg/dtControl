@@ -129,14 +129,14 @@ class NeuralNetSplittingStrategy(SplittingStrategy):
         self.logger.debug(f"{labels, counts}")
         labels = labels[np.argsort(-counts)]
         self.user_splits.sort(key = lambda split : impurity_measure.calculate_impurity(dataset, split))
-        single_label_masks = [((y == label), label) for label in labels]
+        single_label_masks = [((y == label), [label]) for label in labels]
         user_masks = [(split.get_masks(dataset)[0], split.user_split) for split in self.user_splits]
         masks = user_masks + single_label_masks
         self.logger.debug(f"Masks : {masks}")
         for mask in masks:
             label_mask, label = mask
             if len(np.unique(label_mask)) == 1:
-                self.logger.debug(f"Skipping poly split for label {label}")
+                self.logger.debug(f"Skipping neural split for label {label}")
                 continue
             self.logger.debug(np.sum(label_mask))
             self.logger.debug(f"Finding neural split for label {label}")
@@ -229,11 +229,13 @@ class NeuralSplit(Split):
         pred = (self.model(x[ind][:,self.relevant_columns])>0.5)
         return pred.numpy().flatten()
     def print_c(self):
-        return super().print_c()
+        return f"Neural Network with hidden layers {[32,64,32]}"
     def print_dot(self, variables=None, category_names=None):
         return f"Neural Network with hidden layers {[32,64,32]}"
     def print_vhdl(self):
-        return super().print_vhdl()
+        return f"Neural Network with hidden layers {[32,64,32]}"
     def to_json_dict(self, **kwargs):
-        return super().to_json_dict(**kwargs)
+        return {"lhs": "Neural Network",
+                "op": "",
+                "rhs": ""}
 

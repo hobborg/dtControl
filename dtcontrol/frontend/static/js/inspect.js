@@ -1662,11 +1662,16 @@ $(document).ready(function () {
         configuration.config = $('#config').val();
         configuration.determinize = $('#determinize').val();
         configuration.numeric_predicates = $('#numeric-predicates').val();
+        console.log(configuration.numeric_predicates);
         configuration.categorical_predicates = $('#categorical-predicates').val();
         configuration.impurity = $('#impurity').val();
         configuration.tolerance = $('#tolerance').val();
         configuration.safe_pruning = $('#safe-pruning').val();
         configuration.user_predicates = "";
+        configuration.priorities = [];
+        for (let i = 0; i<configuration.numeric_predicates.length; i++) {
+            configuration.priorities[i] = $('#'+configuration.numeric_predicates[i]+'Priority').val();
+        }
 
         if (configuration.config === "algebraic") {
             configuration.config += " (Fallback: " + $("#fallback").val() + ")";
