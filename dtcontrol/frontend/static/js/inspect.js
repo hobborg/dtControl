@@ -1669,6 +1669,7 @@ $(document).ready(function () {
         configuration.safe_pruning = $('#safe-pruning').val();
         configuration.user_predicates = "";
         configuration.priorities = [];
+        configuration.user_splits = $('#userSplitsInput').val();
         for (let i = 0; i<configuration.numeric_predicates.length; i++) {
             configuration.priorities[i] = $('#'+configuration.numeric_predicates[i]+'Priority').val();
         }

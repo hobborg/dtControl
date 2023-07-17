@@ -63,7 +63,7 @@ from dtcontrol.util import Caller
 
 
 def get_classifier(numeric_split, categorical_split, determinize, impurity, tolerance=1e-5, safe_pruning=False,
-                   name=None, user_predicates=None, fallback=None, priorities=None):
+                   name=None, user_predicates=None, fallback=None, priorities=None, user_splits=[]):
     """
     Creates classifier objects for each method
 
@@ -105,8 +105,8 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
                                                                      solver='lbfgs', penalty='none'),
         'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
         'oc1': lambda x: OC1SplittingStrategy(determinizer=x),
-        'polynomial': lambda x: PolynomialClassifierSplittingStrategy(determinizer=x),
-        'neural': lambda x: NeuralNetSplittingStrategy(determinizer=x),
+        'polynomial': lambda x: PolynomialClassifierSplittingStrategy(determinizer=x, user_splits=[user_splits]),
+        'neural': lambda x: NeuralNetSplittingStrategy(determinizer=x, user_splits=[user_splits]),
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),
         'singlesplit': lambda x: CategoricalSingleSplittingStrategy(),
         'valuegrouping': lambda x: CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=tolerance),
@@ -352,6 +352,7 @@ def train(args):
             impurity = args["impurity"]
             tolerance = float(args["tolerance"])
             safe_pruning = (args["safe-pruning"] == "true")
+            user_splits = list(map(int, args["user_splits"].split()))
         else:
             numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
                                                                                                           user_config,
@@ -370,7 +371,7 @@ def train(args):
         classifier = get_classifier(numeric_split, categorical_split, determinize, impurity,
                                     tolerance=tolerance,
                                     safe_pruning=safe_pruning, name=presets, user_predicates=user_predicates,
-                                    fallback=(fallback_numeric, fallback_categorical), priorities=priorities)
+                                    fallback=(fallback_numeric, fallback_categorical), priorities=priorities, user_splits=user_splits)
     except EnvironmentError:
         logging.warning(f"WARNING: Could not instantiate a classifier for preset '{presets}'. This could be "
                         f"because the preset '{presets}' is not supported on this platform. Skipping...\n")
@@ -479,3 +480,19 @@ def start_websocket_with_frontend():
         print("Received '%s'" % result)
         ws.send(f"Thanks for {result}")
     ws.close()
+
+def get_action_labels(file):
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+    ds.load_if_necessary()
+    y = LabelPowersetDeterminizer().determinize(ds)
+    labels, counts = np.unique(y, return_counts=True)
+    counts = counts.astype(int).tolist()
+    labels = labels.astype(int).tolist()
+    labelmap = [ds.index_label_to_actual(ds.map_unique_label_back(x)) for x in labels]
+    return labels, labelmap, counts

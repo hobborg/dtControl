@@ -229,12 +229,23 @@ $(document).ready(function () {
                     }, false);
                 }
                 return myXhr;
+            },
+            success: function(data) {
+                document.getElementById("actionlabels").classList.remove("collapse");
+                document.getElementById("labelnos").innerHTML = "Label Numbers : " + data.labels.toString();
+                document.getElementById("labels").innerHTML = "Labels : " + data.maps.map(a => a.join(',')).join(' | ');
+                document.getElementById("counts").innerHTML = "Counts : " + data.counts.toString();
+                console.log(data.maps);
             }
         }).done(() => {
             document.getElementById("add-experiments-button").disabled = false;
             $('#add-experiments-button').text("Add");
         });
     });
+
+    function displayActionLabels(data) {
+        console.log(data);
+    }
 
     $('#metadata-file').on('change', function () {
         //get the file name
@@ -311,7 +322,7 @@ $(document).ready(function () {
             user_predicates = $('#userPredicatesInput').val();
         }
 
-        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, priorities, impurity, tolerance, safe_pruning, user_predicates];
+        var row_contents = [controller, nice_name, config, determinize, numeric_predicates, categorical_predicates, priorities, impurity, tolerance, safe_pruning, user_splits, user_predicates];
 
         $.ajax('/experiments', {
             type: 'POST',
@@ -333,9 +344,9 @@ $(document).ready(function () {
         firstCell.outerHTML = "<th scope=\"row\">" + String(table.rows.length - 2) + "</th>";
 
         // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
-        for (let j = 0; j < 11; j++) {
+        for (let j = 0; j < 12; j++) {
             var c = row.insertCell(-1);
-            if (j == 0 || j == 10) {
+            if (j == 0 || j == 11) {
                 c.style = "display: none";
             }
             c.innerHTML = row_contents[j];
@@ -378,7 +389,8 @@ $(document).ready(function () {
                 impurity: config[8],
                 tolerance: config[9],
                 safe_pruning: config[10],
-                user_predicates: config[11]
+                user_splits: config[11],
+                user_predicates: config[12]
             }),
             type: 'POST',
             contentType: "application/json; charset=utf-8",

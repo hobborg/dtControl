@@ -176,7 +176,7 @@ def construct():
         to_parse_dict = {"controller": cont, "config": "custom", "determinize": data['determinize'],
                          "numeric-predicates": data['numeric_predicates'],
                          "categorical-predicates": data['categorical_predicates'], "priorities": data['priorities'], "impurity": data['impurity'],
-                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
+                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning'], "user_splits": data['user_splits']}
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
         to_parse_dict = {"controller": cont, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
@@ -262,7 +262,7 @@ def partial_construct():
         to_parse_dict = {"controller": controller_file, "config": "custom", "determinize": data['determinize'],
                          "numeric-predicates": ','.join(data['numeric_predicates']),
                          "categorical-predicates": ','.join(data['categorical_predicates']), "priorities": ','.join(data['priorities']), "impurity": data['impurity'],
-                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
+                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning'], "user_splits": data['user_splits']}
     elif config.startswith("algebraic"):
         # algebraic strategy with user predicates
         to_parse_dict = {"controller": controller_file, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
@@ -654,7 +654,14 @@ def upload_file():
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         print("Successfully saved file", filename)
-        return "Successfully saved file " + filename
+        labels, labelmaps, counts = frontend_helper.get_action_labels(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        print(labelmaps)
+        print([type(x) for x in labelmaps[0]])
+        return jsonify({"labels": labels,
+                       "maps": labelmaps,
+                       "counts": counts
+                       })
+        # return "Successfully saved file " + filename
     return "Invalid request"
 
 global http_server
