@@ -2,7 +2,7 @@ alabaster==0.7.12
 recommonmark==0.6.0
 Sphinx==3.0.2
 sphinx-rtd-theme==0.4.3
-sphinxcontrib.yt
+sphinxcontrib-youtube
 sphinx_fontawesome
 sphinxcontrib.asciinema
 jinja2<3.1
