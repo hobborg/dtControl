@@ -5,3 +5,4 @@ sphinx-rtd-theme==0.4.3
 sphinxcontrib.yt
 sphinx_fontawesome
 sphinxcontrib.asciinema
+jinja2<3.1
