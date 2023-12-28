@@ -18,7 +18,7 @@ import subprocess
 # -- Project information -----------------------------------------------------
 
 project = 'dtcontrol'
-copyright = '2021, Mathias Jackermeier, Pranav Ashok, Christoph Weinhuber, Maximilian Weininger'
+copyright = '2024, Mathias Jackermeier, Pranav Ashok, Christoph Weinhuber, Maximilian Weininger'
 author = 'Mathias Jackermeier, Pranav Ashok, Christoph Weinhuber, Maximilian Weininger'
 
 # The full version, including alpha/beta/rc tags
@@ -30,7 +30,7 @@ release = version
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinxcontrib.yt', 'sphinx_fontawesome', 'sphinxcontrib.asciinema']
+extensions = ['sphinxcontrib.youtube', 'sphinx_fontawesome', 'sphinxcontrib.asciinema']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
