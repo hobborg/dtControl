@@ -109,13 +109,18 @@ class ScotsDatasetLoader(DatasetLoader):
             for i in range(controller_start):
                 f.readline()
 
+
+            # construct metadata
+            x_metadata = dict()
+            x_metadata["state_mapping"] = []
+
             logging.info("Extracting states and control inputs from SCOTS dump")
             for i, line in enumerate(tqdm(f, total=controller_lines)):
                 if i == controller_lines:
                     break
                 idxu = np.fromstring(line, dtype=np.int32, sep=' ')
                 idx = idxu[0]
-
+                x_metadata["state_mapping"].append(idx)
                 k = state_dim - 1
                 x2 = np.zeros(state_dim)
                 while k > 0:
@@ -150,7 +155,7 @@ class ScotsDatasetLoader(DatasetLoader):
 
             # inverse map
             unique_label_to_float = {y: x for (x, y) in float_to_unique_label.items()}
-
+            print(unique_label_to_float)
             # if only single control input, do not wrap it in another array
             if y.shape[0] == 1:
                 y = y[0]
@@ -158,7 +163,6 @@ class ScotsDatasetLoader(DatasetLoader):
             logging.info("Constructed training set with %s datapoints" % x.shape[0])
 
             # construct metadata
-            x_metadata = dict()
             x_metadata["categorical"] = []
 
             # The safe set

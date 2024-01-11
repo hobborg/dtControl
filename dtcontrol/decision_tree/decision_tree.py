@@ -513,3 +513,18 @@ class Node:
             "children": children,
             "split": self.split.to_json_dict(variables=variables, category_names=category_names)
         }
+
+    # helper function for bdd dt project. Collects all predicates which are used in this tree
+    def collect_predicates(self):
+        # Initialize an empty list to store the split objects
+        splits = []
+
+        # Check if the current node has a split defined
+        if self.split is not None:
+            splits.append(self.split)
+
+        # Recursively collect splits from the children nodes
+        for child in self.children:
+            splits.extend(child.collect_predicates())
+
+        return splits
