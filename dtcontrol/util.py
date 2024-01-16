@@ -155,7 +155,7 @@ def is_int(s):
 
 
 def convert(o):
-    if isinstance(o, np.int64):
+    if isinstance(o, np.int64) or isinstance(o, np.int32):
         return int(o)
     if isinstance(o, np.float32):
         return float(o)
