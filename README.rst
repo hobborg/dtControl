@@ -72,7 +72,7 @@ Running the experiments
 This section assumes you have installed *dtControl* so that upon entering dtControl in your command line, the help text is displayed. Additionally it assumes that you have unzip-ed all examples in ``./dtcontrol/examples``. You can `download dtControl examples <https://gitlab.lrz.de/i7/dtcontrol-examples/-/archive/master/dtcontrol-examples-master.zip>`_ and extract them into `./dtcontrol/examples` or run the following from the terminal::
 
     $ cd ./dtcontrol
-    $ git clone https://gitlab.lrz.de/i7/dtcontrol-examples.git examples
+    $ git clone https://gitlab.com/live-lab/software/dtcontrol-examples.git examples
 
 Further, you may either manually unzip the specific case study you would like to run or use the following command to unzip all case studies at once::
 
