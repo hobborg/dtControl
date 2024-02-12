@@ -1,0 +1,14 @@
+# docker build -t registry.gitlab.com/live-lab/software/dtcontrol/test:python-3.10 - < Dockerfile.python-3.10
+# docker login registry.gitlab.com/live-lab/software/dtcontrol
+# docker push registry.gitlab.com/live-lab/software/dtcontrol/test:python-3.10
+
+FROM python:3.10-bullseye
+
+ENV PYTHONUNBUFFERED=1
+
+# in the following, we need to manually install Cython and numpy because of some bug in pip/pandas where the install fails
+# Also, right now installing dependencies from requirements.txy
+RUN \
+  apt update && apt upgrade -y && apt install -y \
+  python3-pip \
+  && python -m pip install --no-cache-dir dd Flask pandas ruamel.yaml scikit-learn sympy tabulate tqdm

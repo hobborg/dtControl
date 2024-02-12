@@ -1,10 +1,11 @@
+image: "registry.gitlab.com/live-lab/software/dtcontrol/test:python-3.10"
+
 stages:
   - test
   #- version
   #- deploy
 
 test:python3.8:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: test
   script:
     - /usr/bin/python3.8 --version
@@ -18,7 +19,6 @@ test:python3.8:
       - decision_trees/
 
 test:python3.9:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: test
   script:
     - /usr/bin/python3.9 --version
@@ -32,7 +32,6 @@ test:python3.9:
       - decision_trees/
 
 .version:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: version
   script:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -47,7 +46,6 @@ test:python3.9:
     - master
 
 .deploy_staging:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: deploy
   environment: "staging"
   script:
@@ -59,7 +57,6 @@ test:python3.9:
     - tags
 
 .deploy_release:
-  image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: deploy
   environment: "release"
   script:
