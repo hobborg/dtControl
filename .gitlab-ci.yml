@@ -6,27 +6,12 @@ stages:
   #- version
   #- deploy
 
-test:python3.8:
+test:python:
   stage: test
   script:
-    - /usr/bin/python3.8 --version
-    - pwd
-    - /usr/bin/python3.8 -m unittest discover -s test
+    - python -m unittest discover -s test
   artifacts:
-    name: "$CI_JOB_NAME-Python3.8"
-    when: on_failure
-    expire_in: '20 min'
-    paths:
-      - decision_trees/
-
-test:python3.9:
-  stage: test
-  script:
-    - /usr/bin/python3.9 --version
-    - pwd
-    - /usr/bin/python3.9 -m unittest discover -s test
-  artifacts:
-    name: "$CI_JOB_NAME-Python3.9"
+    name: "$CI_JOB_NAME-Python"
     when: on_failure
     expire_in: '20 min'
     paths:
