@@ -22,7 +22,7 @@ If you get no pop-up, PyCharm will still propose "Create a virtual environment u
    Now you can run dtControl directly from the command-line without opening PyCharm.
 
 
-## Version 2: pip
+## Version 2: using virtual environment
 
 
 1. Use a virtual environment to make sure that the installation is clean and easy, and does not interfere with any other python packages installed in your system. Create a new folder `dtcontrol`, create a virtual environment inside it and activate the virtual environment:
@@ -47,7 +47,7 @@ Now you can also run the project in PyCharm using the same virtual environment.
 
 ## Version 3: requirements.txt
 
-Instead of setup.py, you can also use requirements.txt to install the dtControl dependencies. The instructions can be found [here](https://gitlab.com/live-lab/software/dtcontrol/-/blob/live-brno/docs/Developing.md).
+Instead of setup.py, you can also use requirements.txt to install the dtControl dependencies. The instructions can be found [here](Developing.md).
 
 
 ## Notes

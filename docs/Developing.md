@@ -8,7 +8,7 @@ cd dtcontrol
 git submodule update --init examples
 
 # Install the python dependencies
-pip install -r docs/requirements.txt
+pip install -r requirements.txt
 # Run dtControl
 ./bin/dtcontrol
 ```
