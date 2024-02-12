@@ -1,7 +1,7 @@
 stages:
   - test
-  - version
-  - deploy
+  #- version
+  #- deploy
 
 test:python3.8:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
@@ -31,7 +31,7 @@ test:python3.9:
     paths:
       - decision_trees/
 
-version:
+.version:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: version
   script:
@@ -46,7 +46,7 @@ version:
   only:
     - master
 
-deploy_staging:
+.deploy_staging:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: deploy
   environment: "staging"
@@ -58,7 +58,7 @@ deploy_staging:
   only:
     - tags
 
-deploy_release:
+.deploy_release:
   image: gitlab.lrz.de:5005/i7/dtcontrol:1.8
   stage: deploy
   environment: "release"
@@ -70,7 +70,7 @@ deploy_release:
   only:
     - tags
     
-deploy_website:
+.deploy_website:
   stage: deploy
   image: ruby:2.7
   cache:
