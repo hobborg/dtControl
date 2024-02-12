@@ -1,6 +1,7 @@
 image: "registry.gitlab.com/live-lab/software/dtcontrol/test:python-3.10"
 
 stages:
+  - images
   - test
   #- version
   #- deploy
@@ -91,3 +92,26 @@ test:python3.9:
     - rsync -avz _site/* dtcontrol@vmesparza11:/var/www/dtcontrol
   only:
     - master
+  
+  # Build Docker images
+# following this guideline: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+.build-docker:
+  stage: images
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /root/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --dockerfile $CI_PROJECT_DIR/$DOCKERFILE --destination $CI_REGISTRY_IMAGE/$IMAGE
+  rules:
+    - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+      changes:
+        - $DOCKERFILE
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $BUILD_DOCKER == "true"'
+
+build-docker:test:python-3.10:
+  extends: .build-docker
+  variables:
+    DOCKERFILE: Dockerfile.python-3.10
+    IMAGE: test:python-3.10
