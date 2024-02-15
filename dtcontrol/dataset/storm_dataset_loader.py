@@ -48,14 +48,20 @@ class StormDatasetLoader(DatasetLoader):
                 # elif "action-label" in non_deterministic_choice["origin"] and non_deterministic_choice["origin"]["action-label"]:
                 #     choice_string = non_deterministic_choice["origin"]["action-label"]
                 else:
-                    if json.dumps(non_deterministic_choice["origin"], ensure_ascii=False) not in long_action:
-                        long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)] = new_long_action
+                    # considering two actions same if they have same update and label (ignoring the guard)
+                    jsonOrigin = json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)
+                    choice_string = self._create_choice_string(jsonOrigin)
+                    if choice_string not in long_action:
+                        long_action[choice_string] = new_long_action
                         new_long_action = new_long_action + 1
-                    if "action-label" in non_deterministic_choice["origin"] and non_deterministic_choice["origin"]["action-label"]:
-                        choice_string_prefix = non_deterministic_choice["origin"]["action-label"]
-                    else:
-                        choice_string_prefix = "act"
-                    choice_string = f'{choice_string_prefix}{long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)]}'
+                    # if json.dumps(non_deterministic_choice["origin"], ensure_ascii=False) not in long_action:
+                    #     long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)] = new_long_action
+                    #     new_long_action = new_long_action + 1
+                    # if "action-label" in non_deterministic_choice["origin"] and non_deterministic_choice["origin"]["action-label"]:
+                    #     choice_string_prefix = non_deterministic_choice["origin"]["action-label"]
+                    # else:
+                    #     choice_string_prefix = "act"
+                    # choice_string = f'{choice_string_prefix}{long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)]}'
 
                 if choice_string not in choice_to_index:
                     index_to_choice[new_action_index] = choice_string
@@ -102,3 +108,33 @@ class StormDatasetLoader(DatasetLoader):
         logging.debug(y_metadata)
 
         return (x, x_metadata, y, y_metadata, index_to_actual)
+
+    def _create_choice_string(self, jsonString: str):
+            s = ""
+            keyJson = json.loads(jsonString)
+            actionName = keyJson["action-label"]
+            if len(actionName) > 0:
+                s += f"{actionName}" + "\n"
+            else:
+                s += "__no_label__\n"
+            s+=("---------------\n")
+            transitions = keyJson["transitions"]
+            for t in transitions:
+                automaton = t["automaton"]
+                # if "guard" in t:
+                #     guard = t["guard"]["comment"]
+                # else:
+                #     guard = "__no_guard__"
+                # s+=f"{guard}\n"
+                s+= f"{automaton} :\n"
+                updates = t["destinations"]
+                for u in updates:
+                    destinations = u['assignments']
+                    if "probability" in u:
+                        probability = u["probability"]['comment']
+                    else:
+                        probability = "1"
+                    s += f"{probability} : {[d['comment'].replace('<-',':=') for d in destinations]}\n".replace("'", "").replace(" ", "")
+                s+=("---------------\n")
+            return s
+
