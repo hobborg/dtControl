@@ -129,11 +129,14 @@ class StormDatasetLoader(DatasetLoader):
                 s+= f"{automaton} :\n"
                 updates = t["destinations"]
                 for u in updates:
-                    destinations = u['assignments']
                     if "probability" in u:
                         probability = u["probability"]['comment']
                     else:
                         probability = "1"
+                    if "assignments" in u:
+                        destinations = u['assignments']
+                    else:
+                        destinations = []
                     s += f"{probability} : {[d['comment'].replace('<-',':=') for d in destinations]}\n".replace("'", "").replace(" ", "")
                 s+=("---------------\n")
             return s
