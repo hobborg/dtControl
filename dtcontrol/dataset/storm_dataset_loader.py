@@ -51,9 +51,9 @@ class StormDatasetLoader(DatasetLoader):
                     # considering two actions same if they have same update and label (ignoring the guard)
                     jsonOrigin = json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)
                     choice_string = self._create_choice_string(jsonOrigin)
-                    if choice_string not in long_action:
-                        long_action[choice_string] = new_long_action
-                        new_long_action = new_long_action + 1
+                    # if choice_string not in long_action:
+                    #     long_action[choice_string] = new_long_action
+                    #     new_long_action = new_long_action + 1
                     # if json.dumps(non_deterministic_choice["origin"], ensure_ascii=False) not in long_action:
                     #     long_action[json.dumps(non_deterministic_choice["origin"], ensure_ascii=False)] = new_long_action
                     #     new_long_action = new_long_action + 1
