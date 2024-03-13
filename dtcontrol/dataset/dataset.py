@@ -114,26 +114,7 @@ class Dataset(ABC):
             
             self.y_metadata['num_state_action_pairs'] = self.get_num_state_action_pairs()
             # compute number of state-action-pairs
-    # TODO put is somewhere else
-    # TODO T: for other file types/ examples?
-    # NOT ds.y_metadata['num_flattened'] although used as that
-            #if isinstance(self.y, MultiOutputDataset):
-             #   self.y_metadata['num_state_action_pairs'] = sum(y != -1 for row in self.y[0] for y in row)
-                # count amount of entries that are not -1 in first row... TODO
-            #elif isinstance(self.y, SingleOutputDataset):
-            #    self.y_metadata['num_state_action_pairs'] = sum(y != -1 for row in self.y for y in row)
-            #print("num rows: ", self.y_metadata['num_rows'] )
-            
-            #print("num flattened: ", self.y_metadata['num_flattened'] )
-            #print("len y: ", len(self.y))
-            #print("len(y[0]): ", len(self.y[0]))
-            #print("len(y[0][0])", len(self.y[0][0]))
-            #print("y[0][0:10]", self.y[0][0:10])
-            # TODO T: I think this will get us the state action pairs
-            # no, e.g. for 10 rooms, y.self has shape 2 x 26244 x 9, so 
-            # self.y_metadata['num_flattened'] is just 2 * 26244 = 52488
-            # so we cannot use this as number of state-action-pairs
-            # TODO now metadata has another entry, oh well
+            # TODO T: for other file types/ examples? + also ds.y_metadata['num_flattened'] used...
 
     def load_metadata_from_json(self, json_object):
         metadata = json_object['metadata']
@@ -254,11 +235,11 @@ class Dataset(ABC):
         int_to_label = {}
         next_unused_int = 1  # OC1 expects labels starting with 1
         label_str_to_int = {}
-        for i in range(len(labels)):
-            label_str = ','.join(sorted([str(i) for i in labels[i] if i != -1]))
+        for i, label in enumerate(labels):
+            label_str = ','.join(sorted([str(i) for i in label if i != -1]))
             if label_str not in label_str_to_int:
                 label_str_to_int[label_str] = next_unused_int
-                int_to_label[next_unused_int] = labels[i]
+                int_to_label[next_unused_int] = label
                 next_unused_int += 1
             new_label = label_str_to_int[label_str]
             l.append(new_label)

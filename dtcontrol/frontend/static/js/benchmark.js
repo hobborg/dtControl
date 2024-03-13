@@ -1,8 +1,9 @@
 // supported file formats for the controller files
 var inputFormats = [".scs", ".dump", ".csv", ".prism", ".storm.json"]
 // see extension_to_loader in dataset.py and get_files(path) in benchmark_suite.py
-// TODO T: if not p.endswith('_states.prism') ?
+// TODO T: if not p.endswith('_states.prism') ? + put somewhere else...
 
+    /* TODO T: this is never used bc only used in: $("#controller-directory-load").click(function () {
 function loadControllers(path) {
     console.log(path);
 
@@ -16,14 +17,14 @@ function loadControllers(path) {
 
     http.onreadystatechange = function () {//Call a function when the state changes.
         if (http.readyState == 4 && http.status == 200) {
-            data1 = JSON.parse(http.responseText);
+            let data1 = JSON.parse(http.responseText);
             if (data1["status"] == 1) {
-                select_menu = document.getElementById("controller");
+                let select_menu = document.getElementById("controller");
                 select_menu.innerHTML = "";
-                files = data1["files"];
+                let files = data1["files"];
                 for (var i = 0; i < files.length; i++) {
                     const option = document.createElement('option');
-                    controller_name = files[i].replace(path, "");
+                    let controller_name = files[i].replace(path, "");
                     if (controller_name.startsWith("/")) {
                         controller_name = controller_name.substr(1);
                     }
@@ -39,7 +40,7 @@ function loadControllers(path) {
                 const option = document.createElement("option");
                 option.textContent = "Enter valid controller directory";
                 option.setAttribute('selected', 'selected');
-                select_menu = document.getElementById("controller");
+                let select_menu = document.getElementById("controller");
                 select_menu.innerHTML = "";
                 select_menu.appendChild(option);
             }
@@ -47,6 +48,7 @@ function loadControllers(path) {
     }
     http.send(params);
 }
+*/
 
 // TODO T: not needed anymore
 function getResultsTableRow(id) {
@@ -253,7 +255,7 @@ $(document).ready(function () {
             beforeSend: () => {
                 // add loading animation in button
                 var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
-                var btn = $('#add-controller-button');
+                let btn = $('#add-controller-button');
                 btn.html(spinner);
                 btn.append(" Uploading...");
                 btn[0].disabled = true;
@@ -271,11 +273,11 @@ $(document).ready(function () {
             if (nice_name.startsWith("/")) {
                 nice_name = nice_name.substr(1);
             }
-            initialize_controller_table([controller, nice_name]);
+            initializeControllerTable([controller, nice_name]);
         });
     })
 
-    function initialize_controller_table(row_contents) {
+    function initializeControllerTable(row_contents) {
         // Row contents at this point is [controller_name, nice_name]
         $.ajax('/controllers/initialize', {
             type: 'POST',
@@ -299,11 +301,11 @@ $(document).ready(function () {
                 $(spanningCell).html(spinner);
                 $(spanningCell).append(" Parse dataset...");
 
-                parse_controller_file(row_contents, row)
+                parseControllerFile(row_contents, row)
             },
             error: function(xhr) {
                 if (xhr.status === 500 && xhr.responseJSON && xhr.responseJSON.error === "duplicate") {
-                    duplicate_check_popup()
+                    popupModal("Error: Duplicate found", "A controller with this name was already uploaded.");
                 }
             }
         });
@@ -351,7 +353,7 @@ $(document).ready(function () {
         }
     }
 
-    function parse_controller_file(row_contents, row) {
+    function parseControllerFile(row_contents, row) {
         // Row contents at this point is [controller_id, controller_name, nice_name]
         //$(".runall").show();
         // TODO T: do we want that? yes i think so but not here
@@ -366,10 +368,6 @@ $(document).ready(function () {
             addToControllersTable(row_contents, row);
 
         });
-    }
-
-    function duplicate_check_popup() {
-        popupModal("Error: Duplicate found", "A controller with this name was already uploaded.");
     }
 
     $('#add-controller-metadata-button').on('click', function () {
@@ -671,7 +669,7 @@ $(document).ready(function () {
     }
 
     // TODO: delete, rename other one
-    function run_single_benchmark(config) {
+    function runSingleBenchmark(config) {
         console.log(config);
         $.ajax({
             data: JSON.stringify({
@@ -694,7 +692,7 @@ $(document).ready(function () {
         }).done(data => addToResultsTable(config[0], data));
     }
 
-    function run_single_benchmark_new(config) {
+    function runSingleBenchmark_new(config) {
         console.log(config);
         $.ajax({
             data: JSON.stringify(config),
@@ -748,12 +746,8 @@ $(document).ready(function () {
 
         let cell_nodes = row.insertCell(-1);
         let cell_construction_time = row.insertCell(-1);
-        var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
-        $(cell_construction_time).html(spinner);
-        $(cell_construction_time).append(" Running...")
+        cell_construction_time.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...`;
         let cell_actions = row.insertCell(-1);
-
-
 
         /*
         for (let j = 1; j <= 7; j++) {
@@ -863,7 +857,7 @@ $(document).ready(function () {
             });
         });
 
-        // TODO: delete
+        // TODO T: delete
         $("#experiments-table").on("click", "i.fa-play", function () {
             if ($(this).id === 'runall-icon') return;
             var row_items = $(this).parent().parent().find('th,td');
@@ -871,16 +865,14 @@ $(document).ready(function () {
             row_items.each(function (k, v) {
                 row_content.push(v.innerHTML);
             });
-            run_single_benchmark(row_content.slice(0, -1));
+            runSingleBenchmark(row_content.slice(0, -1));
         });
 
+        // TODO T: put these three blocks together?
         $("#controller-table").on("click", "#det-build-button-cont-table", function () {
             $(this).blur();
-            console.log("run default deterministic experiment")
             var row_items = $(this).parent().parent().find('th,td');
-            console.log("row_items: ")
-            console.log(row_items)
-                        // TODO T: think about default choices, explain, only give cat preds if cat vars present
+            // TODO T: think about default choices, explain, only give cat preds if cat vars present
             let config = {
                 id: row_items[0].innerHTML,
                 controller: row_items[1].innerHTML,
@@ -890,27 +882,12 @@ $(document).ready(function () {
                 categorical_predicates: ["multisplit"],
                 impurity: "multilabelentropy",
             };
-            /*config["id"] = ;
-            config["controller"] = row_items[1].innerHTML
-            config["nice_name"] = row_items[2].innerHTML
-            // TODO T: find structure for which id is what
-            //row_content.push(row_items[0].innerHTML);   // id
-            //row_content.push(row_items[1].innerHTML);   // controller
-            //row_content.push(row_items[2].innerHTML);   // nice_name
-            // TODO T: hardcoded here?
-            config["determinize"] = "maxfreq";
-            config["numeric_predicates"] = ["axisonly", "linear-logreg"];
-            config["categorical_predicates"] = ["axisonly", "linear-logreg"];
-            */
-            run_single_benchmark_new(config);
+            runSingleBenchmark_new(config);
         });
 
         $("#controller-table").on("click", "#aa-permissive-build-button-cont-table", function () {
             $(this).blur();
-            console.log("run aa permissive experiment")
             var row_items = $(this).parent().parent().find('th,td');
-            console.log("row_items: ")
-            console.log(row_items)
             // TODO T: think about default choices, explain, only give cat preds if cat vars present
             let config = {
                 id: row_items[0].innerHTML,
@@ -921,15 +898,12 @@ $(document).ready(function () {
                 categorical_predicates: ["multisplit"],
                 impurity: "multilabelentropy",
             };
-            run_single_benchmark_new(config);
+            runSingleBenchmark_new(config);
         });
 
         $("#controller-table").on("click", "#logreg-permissive-build-button-cont-table", function () {
             $(this).blur();
-            console.log("run logreg permissive experiment")
             var row_items = $(this).parent().parent().find('th,td');
-            console.log("row_items: ")
-            console.log(row_items)
             // TODO T: think about default choices, explain, only give cat preds if cat vars present
             let config = {
                 id: row_items[0].innerHTML,
@@ -940,7 +914,7 @@ $(document).ready(function () {
                 categorical_predicates: ["multisplit"],
                 impurity: "multilabelentropy",
             };
-            run_single_benchmark_new(config);
+            runSingleBenchmark_new(config);
         });
 
         $('#controller-table').on('click', '#advanced-button-cont-table', function () {
@@ -976,7 +950,7 @@ $(document).ready(function () {
             document.getElementById('cat-pred-error-msg').style.visibility = 'hidden';
             document.getElementById('num-pred-error-msg').style.visibility = 'hidden';
 
-            let selected_num_predicates = [];
+            var selected_num_predicates = [];
             $('#option-numeric-predicates .form-check-input:checked').each(function() {
                 var checkboxValue = $(this).attr('name');
                 selected_num_predicates.push(checkboxValue);
@@ -1018,7 +992,7 @@ $(document).ready(function () {
                 //safe_pruning: false,
                 user_predicates: null // TODO
             };
-            run_single_benchmark_new(config);
+            runSingleBenchmark_new(config);
 
             return false;
         });
@@ -1074,12 +1048,12 @@ $(document).ready(function () {
                         }
                     }
                     $('#user-pred-error-msg')[0].style.visibility = 'hidden';
-                    add_to_predicate_collection_modal(pred);
+                    addToPredicateCollectionModal(pred);
                 }
             });
         });
 
-        function add_to_predicate_collection_modal(pred) {
+        function addToPredicateCollectionModal(pred) {
             var table_body = document.getElementById("user-pred-table-modal").getElementsByTagName('tbody')[0];
             var row = table_body.insertRow(-1);
             var pred_cell = row.insertCell(-1);

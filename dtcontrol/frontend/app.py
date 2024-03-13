@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import html
+from traceback import print_exc
 
 import numpy as np
 import sympy as sp
@@ -9,9 +10,6 @@ from flask import Flask, render_template, json, jsonify, request, send_from_dire
 from werkzeug.utils import secure_filename
 
 from dtcontrol import frontend_helper
-
-from traceback import print_exc
-
 from dtcontrol.frontend_helper import get_controller_data
 from dtcontrol.util import interactive_queue
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
@@ -85,16 +83,16 @@ def runge_kutta(x, u, nint=100):
 
 
 # returns computed value of lambda function every time Runga-Kutta needs it
-def computation(index, x, u, lambda_list):
+def computation(ind, x, u, lambda_list):
     new_vl = []
-    for name in lambda_list[index][2]:
+    for name in lambda_list[ind][2]:
         spilt_of_var = (str(name)).split('_')
         if spilt_of_var[0] == 'x':
             new_vl.append(x[int(spilt_of_var[1])])
         else:
             new_vl.append(u[int(spilt_of_var[1])])
     # Apply lambda function
-    return_float = float(lambda_list[index][1](*tuple(new_vl)))
+    return_float = float(lambda_list[ind][1](*tuple(new_vl)))
     return return_float
 
 
@@ -139,7 +137,7 @@ def favicon():
                                'favicon-32.png', mimetype='image/png')
 
 @app.route('/experiments', methods=['GET', 'POST'])
-def experimentsRoute():
+def experiments_route():
     global experiments
     if request.method == 'GET':
         return jsonify(experiments)
@@ -158,7 +156,7 @@ def experimentsRoute():
         return jsonify(exp_data)
 
 @app.route('/controllers/initialize', methods=['POST'])
-def initializeControllersRoute():
+def initialize_controllers_route():
     global experiments
     controller_name = request.get_json()
     # duplicate check
@@ -172,7 +170,7 @@ def initializeControllersRoute():
 
 # TODO: delete /experiments, rename everything here to controller
 @app.route('/controllers', methods=['GET', 'POST'])
-def controllersRoute():
+def controllers_route():
     global experiments
     if request.method == 'GET':
         return jsonify(experiments)
@@ -183,7 +181,6 @@ def controllersRoute():
         controller_nice_name = request.get_json()[2]
         cont = os.path.join(UPLOAD_FOLDER, controller_name)
         cont_dict = get_controller_data(cont)
-        print("state action pairs: ", cont_dict["state_action_pairs"])
         exp_data = [controller_id,
                     controller_name,
                     controller_nice_name,
@@ -197,7 +194,7 @@ def controllersRoute():
         return jsonify(exp_data)
 
 @app.route('/experiments/delete', methods=['GET', 'POST'])
-def deleteExperimentsRoute():
+def delete_experiments_route():
     global experiments
     experiment_to_delete = request.get_json()
     experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
@@ -211,7 +208,7 @@ def deleteExperimentsRoute():
     return jsonify(success=True)
 
 @app.route('/controllers/delete', methods=['GET', 'POST'])
-def deleteControllersRoute():
+def delete_controllers_route():
     global experiments
     experiment_to_delete = request.get_json()
    # turn the jsonified entries back to int
@@ -227,14 +224,14 @@ def deleteControllersRoute():
     return jsonify(success=True)
 
 @app.route('/results', methods=['GET'])
-def resultsRoute():
+def results_route():
     global results
     return jsonify(results)
 
 
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
-def construct():
+def construct_route():
     global completed_experiments
     data = request.get_json()
     logging.info("Request: \n", data)
@@ -303,7 +300,7 @@ def construct():
     return jsonify(results[id])
 
 @app.route("/check-user-predicate", methods=['POST'])
-def process_predicate():
+def check_user_predicate_route():
     data = request.get_json()
     # Logger Init
     # TODO T: logger
@@ -513,7 +510,7 @@ def computed():
 
 # Gets user input values to initialise the state variables
 @app.route("/initRoute", methods=['POST'])
-def initroute():
+def init_route():
     # reset previous used variables
     global variable_subs, lambda_list, tau
     variable_subs = []
@@ -566,7 +563,7 @@ def initroute():
 
 # Called on each step of the simulation
 @app.route("/stepRoute", methods=['POST'])
-def stepRoute():
+def step_route():
     data = request.get_json()
     id = int(data['id'])
     x = data['x_pass']

@@ -38,7 +38,7 @@ function loadPresets() {
         // Reads the config.yml file
         preset_json = JSON.parse(this.response);
         if (xhr.status >= 200 && xhr.status < 400) {
-            for (x in preset_json.presets) {
+            for (let x in preset_json.presets) {
                 const option = document.createElement('option');
                 option.textContent = x;
                 option.setAttribute('value', x);
@@ -82,7 +82,7 @@ function loadPresets() {
 }
 
 function makeCheckbox(options, parent_div, default_option=null){
-    for (var i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
         var checkbox = document.createElement('input');
         checkbox.classList.add('form-check-input');
         checkbox.type = 'checkbox';
@@ -109,20 +109,19 @@ function fillYML(preset_json) {
     // Uses DOM manipulation to populate required forms after reading config.yml
 
     defConf = (preset_json.presets.default);
-    var iter = 0;
-    for (y in defConf) {
+    for (let y in defConf) {
         allConfig[y] = [];
     }
 
-    for (x in preset_json.presets) {
+    for (let x in preset_json.presets) {
         //loop over preset names
-        for (y in defConf) {
+        for (let y in defConf) {
             //loop over properties
             if (y in preset_json.presets[x]) {
                 //if that preset contains that property
                 var valu = preset_json.presets[x][y];
                 if (Array.isArray(valu)) {
-                    for (z in valu) {
+                    for (let z in valu) {
                         if (!allConfig[y].includes(valu[z])) {
                             allConfig[y].push(valu[z]);
                         }
@@ -135,7 +134,6 @@ function fillYML(preset_json) {
 
             }
         }
-        iter++;
     }
 
     var det = document.getElementById("option-determinize");
@@ -161,7 +159,7 @@ function fillYML(preset_json) {
     // TODO T: test!!!
 
     var det = document.getElementById("determinize");
-    for (var i = 0; i < allConfig['determinize'].length; i++) {
+    for (let i = 0; i < allConfig['determinize'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['determinize'][i];
         opt.setAttribute('value', allConfig['determinize'][i]);
@@ -170,7 +168,7 @@ function fillYML(preset_json) {
     }
 
     var det = document.getElementById("numeric-predicates");
-    for (var i = 0; i < allConfig['numeric-predicates'].length; i++) {
+    for (let i = 0; i < allConfig['numeric-predicates'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['numeric-predicates'][i];
         opt.setAttribute('value', allConfig['numeric-predicates'][i]);
@@ -209,7 +207,7 @@ function fillYML(preset_json) {
     }
 
     var det = document.getElementById("categorical-predicates");
-    for (var i = 0; i < allConfig['categorical-predicates'].length; i++) {
+    for (let i = 0; i < allConfig['categorical-predicates'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['categorical-predicates'][i];
         opt.setAttribute('value', allConfig['categorical-predicates'][i]);
@@ -218,7 +216,7 @@ function fillYML(preset_json) {
     }
 
     var det = document.getElementById("impurity");
-    for (var i = 0; i < allConfig['impurity'].length; i++) {
+    for (let i = 0; i < allConfig['impurity'].length; i++) {
         var opt = document.createElement('option');
         opt.textContent = allConfig['impurity'][i];
         opt.setAttribute('value', allConfig['impurity'][i]);
@@ -227,7 +225,7 @@ function fillYML(preset_json) {
     }
     var det = document.getElementById("impurity_3");
     if (det) {
-        for (var i = 0; i < allConfig['impurity'].length; i++) {
+        for (let i = 0; i < allConfig['impurity'].length; i++) {
             var opt = document.createElement('option');
             opt.textContent = allConfig['impurity'][i];
             opt.setAttribute('value', allConfig['impurity'][i]);
@@ -249,11 +247,11 @@ $(document).ready(function () {
     $("#config").change(function () {
         if ($(this).val() != "custom" && $(this).val() != "algebraic") {
             // clearCheckBoxes();
-            for (x in preset_json.presets) {
+            for (let x in preset_json.presets) {
                 //x is  preset names
                 if ($(this).val() == x) {
                     //x is now selected preset
-                    for (y in defConf) {
+                    for (let y in defConf) {
                         //y is  property names
                         if (y in preset_json.presets[x]) {
                             if (y == "tolerance") {
@@ -310,7 +308,7 @@ $(document).ready(function () {
         document.getElementById("config").value = "custom";
     });
 
-    $('button.hamburger').on('click', function (event) {
+    $('button.hamburger').on('click', function () {
         if ($(this).hasClass("is-active")) {
             closeNav();
         } else {
@@ -321,7 +319,7 @@ $(document).ready(function () {
     });
 
     const accordionButton = $('#accordionButton');
-    accordionButton.on('click', event => {
+    accordionButton.on('click', function () {
         const wasCollapsed = accordionButton.hasClass('collapsed');
         accordionButton.find('span').text(`${wasCollapsed ? 'Hide' : 'Show'} advanced options`);
         accordionButton.find('svg').css({'transform': 'rotate(' + (wasCollapsed ? 90 : 0) + 'deg)'});

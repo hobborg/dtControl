@@ -10,13 +10,12 @@ import logging
 import random
 import sys
 import time
-from collections import namedtuple, OrderedDict
-from os import path
+from collections import OrderedDict
 from os.path import exists
 from typing import Tuple, Union
-
 import pkg_resources
 from pkg_resources import Requirement, resource_filename
+
 from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
 from sklearn.linear_model import LogisticRegression
@@ -47,7 +46,6 @@ from dtcontrol.decision_tree.splitting.linear_classifier import LinearClassifier
 from dtcontrol.decision_tree.splitting.oc1 import OC1SplittingStrategy
 from dtcontrol.post_processing.safe_pruning import SafePruning
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_splitting_strategy import RicherDomainSplittingStrategy
-from dtcontrol.decision_tree.splitting.split import Split
 # Import preprocessing strategies
 from dtcontrol.pre_processing.norm_pre_processor import NormPreProcessor
 from dtcontrol.pre_processing.random_pre_processor import RandomPreProcessor
@@ -135,7 +133,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
 
     # determinizer must be auto when using multilablestuff
     if 'multilabel' in impurity:
-        if not determinize == "auto":
+        if determinize != "auto":
             logging.error(
                 f"{impurity} impurity measure automatically determinizes. Please use 'determinize: auto' when defining the preset.")
             sys.exit(-1)
@@ -144,7 +142,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     if 'multilabel' not in impurity:
         if determinize == "auto":
             logging.info(
-                f"INFO: Using the recommended maxfreq determinizer since the preset contained 'determinize: auto'.")
+                "INFO: Using the recommended maxfreq determinizer since the preset contained 'determinize: auto'.")
             determinize = "maxfreq"
 
     # if using logreg/svm/oc1, then determinizer must be passed to the split
@@ -188,13 +186,13 @@ def load_default_config() -> OrderedDict:
                                                 "dtcontrol/config.yml")  # System-level config file
     except pkg_resources.DistributionNotFound:
         sys.exit(
-            f"pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
+            "pkg_resources could not find a distribution called 'dtcontrol'. Please report this error to the developers.")
 
     try:
         yaml = YAML()
         default_config = yaml.load(open(default_config_file))
     except FileNotFoundError:
-        sys.exit(f"Error finding the default config file. Please raise an issue with the developers.")
+        sys.exit("Error finding the default config file. Please raise an issue with the developers.")
     except ScannerError:
         sys.exit(
             f"Scan error in the default YAML configuration file '{default_config_file}'. Please raise an issue with the developers.")
@@ -290,7 +288,7 @@ def get_controller_data(file):
                        "var_types": var_types,                  # numerical, categorical
                        "num_vars": ds.x.shape[1],               # number of state dimensions, e.g. 10 for 10rooms
                        "num_results": num_results,              # number of input dimensions for controller, e.g. 2 for 10rooms
-                       "deterministic": ds.y.shape[-1]}         # maximum number of non-deterministic choices per state (1 if deterministic)
+                       "deterministic": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
     return controller_data
 
 def intoJSON(rt, parent, address, y_metadata):
@@ -307,8 +305,8 @@ def intoJSON(rt, parent, address, y_metadata):
             # for such trees, print_c_label() throws an exception.
             rt_name = "Not yet homogeneous"
     strdummy = {"name": rt_name, "parent": parent, "coleur": "white", "children": [], "address": address}
-    for i in range(len(rt.children)):
-        strdummy["children"].append(intoJSON(rt.children[i], rt_name, address + [i], y_metadata))
+    for i, child in enumerate(rt.children):
+        strdummy["children"].append(intoJSON(child, rt_name, address + [i], y_metadata))
     return strdummy
 
 def get_mask_given_address(existing_tree=None, node_address=None, dataset=None):
