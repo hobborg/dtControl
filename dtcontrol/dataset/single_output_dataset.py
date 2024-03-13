@@ -41,6 +41,9 @@ class SingleOutputDataset(Dataset):
             self.unique_labels, self.unique_mapping = self.get_unique_labels_from_2d(self.y)
         return self.unique_labels
 
+    def get_num_state_action_pairs(self):
+        return int(sum(y != -1 for row in self.y for y in row))
+
     def map_unique_label_back(self, label):
         return [i for i in self.unique_mapping[label] if i != -1]
 

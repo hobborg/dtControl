@@ -284,11 +284,13 @@ def get_controller_data(file):
     else:
         assert ds.y.shape[-1] >= 2
 
-    controller_data = {"state_action_pairs": ds.x.shape[0],     # TODO T: just number of states
+    # TODO T: check state action pairs for single output dataset, ask if computed correctly / that is what we mean
+    controller_data = {"num_states": ds.x.shape[0],             # number of states
+                       "state_action_pairs": ds.y_metadata['num_state_action_pairs'],         # number of state-action pairs
                        "var_types": var_types,                  # numerical, categorical
                        "num_vars": ds.x.shape[1],               # number of state dimensions, e.g. 10 for 10rooms
                        "num_results": num_results,              # number of input dimensions for controller, e.g. 2 for 10rooms
-                       "deterministic": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
+                       "deterministic": ds.y.shape[-1]}         # maximum number of non-deterministic choices per state (1 if deterministic)
     return controller_data
 
 def intoJSON(rt, parent, address, y_metadata):

@@ -183,9 +183,11 @@ def controllersRoute():
         controller_nice_name = request.get_json()[2]
         cont = os.path.join(UPLOAD_FOLDER, controller_name)
         cont_dict = get_controller_data(cont)
+        print("state action pairs: ", cont_dict["state_action_pairs"])
         exp_data = [controller_id,
                     controller_name,
                     controller_nice_name,
+                    cont_dict["num_states"],
                     cont_dict["state_action_pairs"],
                     cont_dict["var_types"],
                     cont_dict["num_vars"],

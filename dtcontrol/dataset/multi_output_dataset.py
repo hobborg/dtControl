@@ -64,6 +64,9 @@ class MultiOutputDataset(Dataset):
     def get_single_labels(self):
         return self.get_tuple_ids()
 
+    def get_num_state_action_pairs(self):
+        return int(sum(y != -1 for row in self.y[0] for y in row))
+
     def map_single_label_back(self, single_label):
         return self.map_tuple_id_back(single_label)
 

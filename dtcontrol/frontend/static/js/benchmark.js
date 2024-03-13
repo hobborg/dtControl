@@ -1,7 +1,7 @@
 // supported file formats for the controller files
-inputFormats = [".scs", ".dump", ".csv", ".prism", ".storm.json"]
+var inputFormats = [".scs", ".dump", ".csv", ".prism", ".storm.json"]
 // see extension_to_loader in dataset.py and get_files(path) in benchmark_suite.py
-// TODO: if not p.endswith('_states.prism') ?
+// TODO T: if not p.endswith('_states.prism') ?
 
 function loadControllers(path) {
     console.log(path);
@@ -48,7 +48,7 @@ function loadControllers(path) {
     http.send(params);
 }
 
-// TODO: not needed anymore
+// TODO T: not needed anymore
 function getResultsTableRow(id) {
     let rows = $("#results-table tbody tr");
     for (let j = 0; j < rows.length; j++) {
@@ -134,7 +134,7 @@ function addToResultsTable(id, result) {
         if (experimentRow.children.length < 9) {
             let lastCell = experimentRow.insertCell(-1);
             lastCell.innerHTML = '<i class="fa fa-eye text-primary"></i>';
-            $(experimentRow.children[8]).find('i.fa-eye').on('click', (event) => {
+            $(experimentRow.children[8]).find('i.fa-eye').on('click', () => {
                 $.post('/select', {runConfigIndex: id}, () => {
                     window.location.href = 'simulator'
                 });
@@ -156,7 +156,7 @@ function startPolling() {
         const interval = setInterval(() => {
             $.get('/results', results => {
                 console.log(results);
-                let filtered = Object.fromEntries(Object.entries(results).filter(([k, v]) => v.status === "Completed"));
+                let filtered = Object.fromEntries(Object.entries(results).filter(([, v]) => v.status === "Completed"));
                 for (const [id, result] of Object.entries(filtered)) {
                     const row = getResultsTableRow(id);
                     if (row.children[3].innerHTML === 'Running...') {
@@ -233,6 +233,7 @@ $(document).ready(function () {
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
         if (! validControllerFile(fileName)) {
             popupModal("Error: Invalid controller file", "Supported file formats: .scs, .dump, .csv, .prism, .storm.json")
+            // TODO T: test formats...
             return ;
         }
         let formData = new FormData();
@@ -252,7 +253,7 @@ $(document).ready(function () {
             beforeSend: () => {
                 // add loading animation in button
                 var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
-                btn = $('#add-controller-button');
+                var btn = $('#add-controller-button');
                 btn.html(spinner);
                 btn.append(" Uploading...");
                 btn[0].disabled = true;
@@ -260,7 +261,7 @@ $(document).ready(function () {
         }).done(() => {
             // reset the button
             var plus = $('<i>', {class: 'fa fa-plus', style: 'font-size: 80%', 'aria-hidden': 'true'});
-            btn = $('#add-controller-button');
+            let btn = $('#add-controller-button');
             btn.html(plus);
             btn.append(" Add new controller file");
             btn[0].disabled = false;
@@ -291,7 +292,6 @@ $(document).ready(function () {
                 var row = tbody.insertRow(-1);
                 addToControllersTable(row_contents, row);
 
-
                 var spanningCell = row.insertCell(-1);
                 var numColumns = thead.rows[0].cells.length;
                 spanningCell.colSpan = numColumns;
@@ -301,7 +301,7 @@ $(document).ready(function () {
 
                 parse_controller_file(row_contents, row)
             },
-            error: function(xhr, status, error) {
+            error: function(xhr) {
                 if (xhr.status === 500 && xhr.responseJSON && xhr.responseJSON.error === "duplicate") {
                     duplicate_check_popup()
                 }
@@ -315,7 +315,7 @@ $(document).ready(function () {
         if (row == null) {
             var table = document.getElementById("controller-table");
             var tbody = table.getElementsByTagName('tbody')[0];
-            var row = tbody.insertRow(-1);
+            row = tbody.insertRow(-1);
         } else {
             // delete everything currently in that row:
             while (row.cells.length > 0) {
@@ -334,17 +334,17 @@ $(document).ready(function () {
         thirdCell.innerHTML = row_contents[2];
 
         if (row_contents.length > 3) {
-            for (let j = 3; j < 8; j++) {
+            for (let j = 3; j < 9; j++) {
                 var c = row.insertCell(-1);
                 c.innerHTML = row_contents[j];
             }
             var icon = row.insertCell(-1);
-            det_tree_button = makeButton(" deterministic", "det-build-button-cont-table", "fa-play text-success", "build a deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
-            aa_permissive_tree_button = makeButton(" axis-aligned permissive", "aa_permissive-build-button-cont-table", "fa-play text-success", "build a permissive tree using only axis-aligned splits");
-            logreg_permissive_tree_button = makeButton(" logreg permissive", "logreg_permissive-build-button-cont-table", "fa-play text-success", "build non-deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
-            advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", "choose from the advanced settings");
-            edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", "jump directly to the interactive tree builder");
-            delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", "delete this controller file");
+            var det_tree_button = makeButton(" deterministic", "det-build-button-cont-table", "fa-play text-success", "build a deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
+            var aa_permissive_tree_button = makeButton(" axis-aligned permissive", "aa-permissive-build-button-cont-table", "fa-play text-success", "build a permissive tree using only axis-aligned splits");
+            var logreg_permissive_tree_button = makeButton(" logreg permissive", "logreg-permissive-build-button-cont-table", "fa-play text-success", "build non-deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
+            var advanced_settings_button = makeButton(" advanced", "advanced-button-cont-table", "fa-gears", "choose from the advanced settings");
+            var edit_button =  makeButton(" tree builder", "edit-button-cont-table", "fa-wrench", "jump directly to the interactive tree builder");
+            var delete_button = makeButton(" delete", "delete-button-cont-table", "fa-trash text-danger", "delete this controller file");
             // other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
             icon.innerHTML = det_tree_button + aa_permissive_tree_button + logreg_permissive_tree_button +
                             advanced_settings_button +  edit_button + delete_button;
@@ -643,10 +643,10 @@ $(document).ready(function () {
     }
 
     function makeButton(text, id, fa_symbol=null, description="", font_size=80) {
-        // e.g. "fa-plus" as fa-simbol
+        // e.g. "fa-plus" as fa_symbol
         if (fa_symbol) {
             return "<button class=\"btn btn-light m-1 \"  data-toggle=\"tooltip\" title=\"" + String(description) + "\" id=\"" + String(id) + "\"> <i class=\"fa " + String(fa_symbol) +
-                " \" style=\"font-size: " + String(80) + " % \"> </i>" + String(text) + "</button>";
+                " \" style=\"font-size: " + String(font_size) + " % \"> </i>" + String(text) + "</button>";
         } else {
             return "<button class=\"btn btn-light \" id=\"" + String(id) + "\">" + String(text) + "</button>";
         }
@@ -694,22 +694,10 @@ $(document).ready(function () {
         }).done(data => addToResultsTable(config[0], data));
     }
 
-       function run_single_benchmark_new(config) {
+    function run_single_benchmark_new(config) {
         console.log(config);
         $.ajax({
-            data: JSON.stringify({
-                id: config[0],
-                controller: config[1],
-                nice_name: config[2],
-                config: config[3],
-                determinize: config[4],
-                numeric_predicates: config[5],
-                categorical_predicates: config[6],
-                impurity: config[7],
-                tolerance: config[8],
-                safe_pruning: config[9],
-                user_predicates: config[10]
-            }),
+            data: JSON.stringify(config),
             type: 'POST',
             contentType: "application/json; charset=utf-8",
             url: '/construct',
@@ -717,7 +705,7 @@ $(document).ready(function () {
         }).done(data => addToResultsTable_new(config[0], data));
     }
 
-    function initializeInResultsTable_new(row_contents) {
+    function initializeInResultsTable_new(config) {
         /*
                 id: row_contents[0],
                 controller: row_contents[1],
@@ -734,9 +722,40 @@ $(document).ready(function () {
         $("#results-table-new tr.special").hide();
         let table = document.getElementById("results-table-new").getElementsByTagName('tbody')[0];
         let row = table.insertRow(-1);
+
         let firstCell = row.insertCell(-1);
         // TODO T: don't display id?
-        firstCell.outerHTML = "<th scope=\"row\">" + String(row_contents[0]) + "</th>";
+        console.log("config: ")
+        console.log(config)
+        firstCell.outerHTML = "<th scope=\"row\">" + config["id"] + "</th>";
+
+        let cell_controller = row.insertCell(-1);
+        cell_controller.innerHTML = config["controller"];
+        cell_controller.style = "display: none";
+
+        let cell_nice_name = row.insertCell(-1);
+        cell_nice_name.innerHTML = config["nice_name"];
+
+        let cell_det = row.insertCell(-1);
+        cell_det.innerHTML = config["determinize"];
+
+        let cell_preds = row.insertCell(-1);
+        cell_preds.innerHTML = config["numeric_predicates"].join(', ');
+
+        if ("categorical_predicates" in config) {
+            cell_preds.innerHTML += ", " + config["categorical_predicates"];
+        }
+
+        let cell_nodes = row.insertCell(-1);
+        let cell_construction_time = row.insertCell(-1);
+        var spinner = $('<span>', {class: 'spinner-border spinner-border-sm', role: 'status', 'aria-hidden': 'true'});
+        $(cell_construction_time).html(spinner);
+        $(cell_construction_time).append(" Running...")
+        let cell_actions = row.insertCell(-1);
+
+
+
+        /*
         for (let j = 1; j <= 7; j++) {
             if (j == 3) {
                 continue;
@@ -754,6 +773,7 @@ $(document).ready(function () {
                 $(cell).append(" Running...")
             }
         }
+        */
     }
 
     function initializeInResultsTable(row_contents) {
@@ -844,7 +864,7 @@ $(document).ready(function () {
         });
 
         // TODO: delete
-        $("#experiments-table").on("click", "i.fa-play", function (event) {
+        $("#experiments-table").on("click", "i.fa-play", function () {
             if ($(this).id === 'runall-icon') return;
             var row_items = $(this).parent().parent().find('th,td');
             var row_content = []
@@ -852,6 +872,75 @@ $(document).ready(function () {
                 row_content.push(v.innerHTML);
             });
             run_single_benchmark(row_content.slice(0, -1));
+        });
+
+        $("#controller-table").on("click", "#det-build-button-cont-table", function () {
+            $(this).blur();
+            console.log("run default deterministic experiment")
+            var row_items = $(this).parent().parent().find('th,td');
+            console.log("row_items: ")
+            console.log(row_items)
+                        // TODO T: think about default choices, explain, only give cat preds if cat vars present
+            let config = {
+                id: row_items[0].innerHTML,
+                controller: row_items[1].innerHTML,
+                nice_name: row_items[2].innerHTML,
+                determinize: "maxfreq",
+                numeric_predicates: ["axisonly", "linear-logreg"],
+                categorical_predicates: ["multisplit"],
+                impurity: "multilabelentropy",
+            };
+            /*config["id"] = ;
+            config["controller"] = row_items[1].innerHTML
+            config["nice_name"] = row_items[2].innerHTML
+            // TODO T: find structure for which id is what
+            //row_content.push(row_items[0].innerHTML);   // id
+            //row_content.push(row_items[1].innerHTML);   // controller
+            //row_content.push(row_items[2].innerHTML);   // nice_name
+            // TODO T: hardcoded here?
+            config["determinize"] = "maxfreq";
+            config["numeric_predicates"] = ["axisonly", "linear-logreg"];
+            config["categorical_predicates"] = ["axisonly", "linear-logreg"];
+            */
+            run_single_benchmark_new(config);
+        });
+
+        $("#controller-table").on("click", "#aa-permissive-build-button-cont-table", function () {
+            $(this).blur();
+            console.log("run aa permissive experiment")
+            var row_items = $(this).parent().parent().find('th,td');
+            console.log("row_items: ")
+            console.log(row_items)
+            // TODO T: think about default choices, explain, only give cat preds if cat vars present
+            let config = {
+                id: row_items[0].innerHTML,
+                controller: row_items[1].innerHTML,
+                nice_name: row_items[2].innerHTML,
+                determinize: "none",
+                numeric_predicates: ["axisonly"],
+                categorical_predicates: ["multisplit"],
+                impurity: "multilabelentropy",
+            };
+            run_single_benchmark_new(config);
+        });
+
+        $("#controller-table").on("click", "#logreg-permissive-build-button-cont-table", function () {
+            $(this).blur();
+            console.log("run logreg permissive experiment")
+            var row_items = $(this).parent().parent().find('th,td');
+            console.log("row_items: ")
+            console.log(row_items)
+            // TODO T: think about default choices, explain, only give cat preds if cat vars present
+            let config = {
+                id: row_items[0].innerHTML,
+                controller: row_items[1].innerHTML,
+                nice_name: row_items[2].innerHTML,
+                determinize: "none",
+                numeric_predicates: ["axisonly", "linear-logreg"],
+                categorical_predicates: ["multisplit"],
+                impurity: "multilabelentropy",
+            };
+            run_single_benchmark_new(config);
         });
 
         $('#controller-table').on('click', '#advanced-button-cont-table', function () {
@@ -867,7 +956,7 @@ $(document).ready(function () {
         });
 
 
-        $("#option-categorical-predicates").on("change", "#valuegrouping", function (event) {
+        $("#option-categorical-predicates").on("change", "#valuegrouping", function () {
             console.log("sth changed about valuegrouping checkbox");
             if ($(this).prop('checked')) {
                 console.log("valuegrouping checkbox is now checked");
@@ -887,7 +976,7 @@ $(document).ready(function () {
             document.getElementById('cat-pred-error-msg').style.visibility = 'hidden';
             document.getElementById('num-pred-error-msg').style.visibility = 'hidden';
 
-            var selected_num_predicates = [];
+            let selected_num_predicates = [];
             $('#option-numeric-predicates .form-check-input:checked').each(function() {
                 var checkboxValue = $(this).attr('name');
                 selected_num_predicates.push(checkboxValue);
@@ -899,7 +988,7 @@ $(document).ready(function () {
 
             var selected_cat_predicates = [];
             $('#option-categorical-predicates .form-check-input:checked').each(function() {
-                checkboxValue = $(this).attr('name');
+                let checkboxValue = $(this).attr('name');
                 selected_cat_predicates.push(checkboxValue);
             });
             if (selected_cat_predicates.length == 0) {
@@ -907,43 +996,49 @@ $(document).ready(function () {
                 return;
             }
 
-            var determinizer = document.getElementById("option-determinize").value;
-
             $('#advanced-options-modal').modal('hide');
             document.getElementById('user-pred-error-msg').style.visibility = 'hidden';
-
-            var controller_id = parseInt(document.getElementById("hidden-controller-id").value);
-            var controller_name = document.getElementById("hidden-controller-name").value;
-            var controller_nice_name = document.getElementById("modal-subtitle").innerHTML;
 
             var tolerance = 0;  // tolerance is always 0 if valuegrouping not checked
             if (selected_cat_predicates.includes('valuegrouping')) {
                 tolerance = document.getElementById('#tolerance-field').value
             }
 
-            // TODO T: think about default choices, explain
-            config = [controller_id, controller_name, controller_nice_name, "custom", determinizer,
-                    selected_num_predicates, selected_cat_predicates, "multilabelentropy", tolerance, false, null]
+            // TODO T: think about default choices, explain, only give cat preds if cat vars present
+            let config = {
+                id: parseInt(document.getElementById("hidden-controller-id").value),
+                controller: document.getElementById("hidden-controller-name").value,
+                nice_name: document.getElementById("modal-subtitle").innerHTML,
+                //config: "custom",
+                determinize: document.getElementById("option-determinize").value,
+                numeric_predicates: selected_num_predicates,
+                categorical_predicates: selected_cat_predicates,
+                impurity: "multilabelentropy",
+                tolerance: tolerance,
+                //safe_pruning: false,
+                user_predicates: null // TODO
+            };
             run_single_benchmark_new(config);
 
             return false;
         });
 
-        $('#restore-default-button').on('click', function (event) {
+        $('#restore-default-button').on('click', function () {
+            $(this).blur();
             if(document.getElementById("maxfreq") != null) {
                 document.getElementById("option-determinize").options["maxfreq"].selected = true;
             }
             // TODO T: check if numerical and cat predicates options present
             if(document.getElementById("axisonly") != null) {
-                numeric_checkboxes = document.getElementById("option-numeric-predicates").children;
-                for (var i = 0; i < numeric_checkboxes.length; i++) {
+                let numeric_checkboxes = document.getElementById("option-numeric-predicates").children;
+                for (let i = 0; i < numeric_checkboxes.length; i++) {
                     numeric_checkboxes[i].children[0].checked = false;
                 }
                 document.getElementById("axisonly").checked = true;
             }
             if(document.getElementById("multisplit") != null) {
-                cat_checkboxes = document.getElementById("cat-pred-div").children;
-                for (var i = 0; i < cat_checkboxes.length; i++) {
+                let cat_checkboxes = document.getElementById("cat-pred-div").children;
+                for (let i = 0; i < cat_checkboxes.length; i++) {
                     cat_checkboxes[i].children[0].checked = false;
                 }
                 // Trigger the change event manually for event handler that makes Tolerance field (dis)appear

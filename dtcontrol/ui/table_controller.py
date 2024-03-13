@@ -42,6 +42,7 @@ class TableController:
         else:
             table, row_metadata, column_names = self.get_table_data(results)
         with open(self.html_file, 'w+') as out:
+            # TODO T: ask christoph to check/test this bc state-action-pairs in row_metadata wrong I think
             out.write(template.render(
                 column_names=column_names,
                 row_metadata=row_metadata,
@@ -78,6 +79,7 @@ class TableController:
         row_metadata = [{'name': r, 'domain_of_controller': results[r]['metadata']['Y_metadata']['num_rows'],
                          'state_action_pairs': results[r]['metadata']['Y_metadata']['num_flattened']}
                         for r in row_names]
+        # TODO T: this is where num_flattened becomes state_action_pairs, not correct, I think
         return table, row_metadata, column_names
 
     @staticmethod

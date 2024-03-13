@@ -31,7 +31,8 @@
                             <th scope="col">#</th>
                             <!--th scope="col" style="display:none">Full Path</th-->
                             <th scope="col">Controller</th>
-                            <th scope="col">State-Actions Pairs NO just # of states</th>
+                            <th scope="col">#&nbsp;States</th>
+                            <th scope="col">#&nbsp;State-Actions Pairs</th>
                             <th scope="col">Variable Types</th>
                             <th scope="col">State Variables</th>
                             <th scope="col">Output Variables</th>
@@ -127,6 +128,7 @@
                                 <div id="cat-pred-col2" class="col">
                                 </div>
                             </div>
+                          <!--   TODO T: only one option must be chosen if categorical variables present + aussagekraeftigere tags + beschreibung bei hovern -->
                             <h6 id="cat-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> At least one option must be chosen. </h6>
                             <label for="option-user-pred">User Predicates</label>
                             <table id="user-pred-table-modal" class="table table-hover">
@@ -147,7 +149,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="restore-default-button">Restore default values</button>
                         <button type="button" class="btn btn-secondary">Assign priorities</button>
-                        <button type="submit" class="btn btn-primary">Ok</button>
+                        <button type="submit" class="btn btn-primary">Run</button>
                         <!--button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button-->
                     </div>
                 </form>
