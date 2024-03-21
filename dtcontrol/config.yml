@@ -56,3 +56,28 @@ presets:
     numeric-predicates: ['axisonly', 'linear-logreg']
     impurity: 'auroc'
 
+  # New presets for new GUI
+  # TODO T: check again if this is what we want
+  deterministic:          
+    determinize: 'auto'
+    numeric-predicates: ['axisonly', 'linear-logreg']
+    impurity: 'multilabelentropy'
+
+  axisonly-permissive:    # same as default
+    determinize: none
+
+  logreg-permissive:      # same as logreg
+    numeric-predicates: ['axisonly', 'linear-logreg']
+
+
+
+
+
+
+
+
+
+
+
+
+

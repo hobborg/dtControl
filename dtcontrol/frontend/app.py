@@ -23,11 +23,13 @@ ALLOWED_EXTENSIONS = {'scs', 'dump', 'csv', 'json', 'prism'}
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-logging.basicConfig(format="%(threadName)s: %(message)s")
+logging.basicConfig(format="%(threadName)s: %(message)s", level=logging.INFO)
 
-# stored experiments
-experiments = []
-# stored results
+# stored controllers: controllers[nice_name] contains controller_id, controller_name, controller_nice_name, num_states, state_action_pairs, var_types, num_vars, num_results, max_non_det
+controllers = {}
+
+# stored results: results[res_id] contains res_id, cont_id, controller, nice_name, preset, status, determinize, numeric_predicates, categorical predicates, impurity, tolerance, safe_pruning, user_predicates,
+#  inner_nodes, leaf_nodes, construction_time
 results = {}
 
 # computed configurations from the benchmark view
@@ -49,8 +51,10 @@ tau = 0
 # Saved domain knowledge predicates
 pred = []
 
-# keep track of the number of controllers added so far to assign a unique id to every new controller
-global_exp_counter = 0;
+# conut controllers added so far to assign unique id to every new controller
+global_cont_counter = 0
+# count results added so far to assignunique id to every new result
+global_res_counter = 0
 
 def runge_kutta(x, u, nint=100):
     global selected_computation_id, tau, lambda_list
@@ -136,125 +140,136 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static/images'),
                                'favicon-32.png', mimetype='image/png')
 
-@app.route('/experiments', methods=['GET', 'POST'])
-def experiments_route():
-    global experiments
-    if request.method == 'GET':
-        return jsonify(experiments)
-    else:
-        # add controller to controller table
-        # TODO: rename? or also used by command line?
-        controller_name = request.get_json()[0]
-        for i in range(len(experiments)):
-            if experiments[i][1] == controller_name:
-                print("Duplicate detected! This is the current experiments table:", experiments)
-                return jsonify(error="duplicate"), 500
-        global global_exp_counter
-        global_exp_counter += 1;
-        exp_data = [global_exp_counter] + request.get_json()
-        experiments.append(exp_data)
-        return jsonify(exp_data)
-
 @app.route('/controllers/initialize', methods=['POST'])
 def initialize_controllers_route():
-    global experiments
-    controller_name = request.get_json()
+    controller_name = request.get_json()[0]
+    controller_nice_name = request.get_json()[1]
     # duplicate check
-    for i in range(len(experiments)):
-        if experiments[i][1] == controller_name:
+    global controllers
+    for controller in controllers:
+        if controller == controller_nice_name:
             return jsonify(error="duplicate"), 500
-    # return a new id
-    global global_exp_counter
-    global_exp_counter += 1;
-    return jsonify(global_exp_counter)
+    # use global_cont_counter to get a new id
+    global global_cont_counter
+    global_cont_counter += 1
+    # initialize in controller table
+    controllers[controller_nice_name] = [
+        global_cont_counter,
+        controller_name,
+        controller_nice_name]
+    return jsonify(global_cont_counter)
 
-# TODO: delete /experiments, rename everything here to controller
 @app.route('/controllers', methods=['GET', 'POST'])
 def controllers_route():
-    global experiments
+    global controllers
     if request.method == 'GET':
-        return jsonify(experiments)
-    else:
-        # add controller to controller table
-        controller_id = request.get_json()[0]
-        controller_name = request.get_json()[1]
-        controller_nice_name = request.get_json()[2]
-        cont = os.path.join(UPLOAD_FOLDER, controller_name)
-        cont_dict = get_controller_data(cont)
-        exp_data = [controller_id,
-                    controller_name,
-                    controller_nice_name,
-                    cont_dict["num_states"],
-                    cont_dict["state_action_pairs"],
-                    cont_dict["var_types"],
-                    cont_dict["num_vars"],
-                    cont_dict["num_results"],
-                    cont_dict["deterministic"]]
-        experiments.append(exp_data)
-        return jsonify(exp_data)
+        return jsonify(controllers)
+    # add controller to controller table/dict
+    controller_id = request.get_json()[0]
+    controller_name = request.get_json()[1]
+    controller_nice_name = request.get_json()[2]
+    assert controller_nice_name in controllers
+    assert controllers[controller_nice_name] == request.get_json()
+    cont = os.path.join(UPLOAD_FOLDER, controller_name)
+    cont_dict = get_controller_data(cont)
+    cont_data = [controller_id,
+                controller_name,
+                controller_nice_name,
+                cont_dict["num_states"],
+                cont_dict["state_action_pairs"],
+                cont_dict["var_types"],
+                cont_dict["num_vars"],
+                cont_dict["num_results"],
+                cont_dict["max_non_det"]]
+    controllers[controller_nice_name] = cont_data
+    return jsonify(cont_data)
 
-@app.route('/experiments/delete', methods=['GET', 'POST'])
-def delete_experiments_route():
-    global experiments
-    experiment_to_delete = request.get_json()
-    experiment_to_delete[0] = int(experiment_to_delete[0]) # turn the jsonified id back into an int
-
-    """
-    experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
-    """
-    # TODO T: do we still need this? did we need this before?
-    experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
-    experiments.remove(experiment_to_delete)
-    return jsonify(success=True)
-
-@app.route('/controllers/delete', methods=['GET', 'POST'])
+@app.route('/controllers/delete', methods=['POST'])
 def delete_controllers_route():
-    global experiments
-    experiment_to_delete = request.get_json()
+    global controllers
+    controller_to_delete = request.get_json()
+    nice_name = controller_to_delete[2]
    # turn the jsonified entries back to int
-    for i in [0, 3, 5, 6, 7]:
-        experiment_to_delete[i] = int(experiment_to_delete[i])
-
-    """
-    experiments_to_delete = [ ... , 'x_1 &gt;= 123']  ----> unescape ----> [... , 'x_1 >= 123']
-    """
-    # TODO T: do we still need this? did we need this before?
-    #experiment_to_delete[-1] = html.unescape(experiment_to_delete[-1])
-    experiments.remove(experiment_to_delete)
+    for i in [0, 3, 4, 6, 7, 8]:
+        controller_to_delete[i] = int(controller_to_delete[i])
+    assert controllers[nice_name] == controller_to_delete
+    del controllers[nice_name]
     return jsonify(success=True)
+
+@app.route('/results/initialize', methods=['POST'])
+def initialize_results_route():
+    data = request.get_json()
+    if data["config"] == "custom":
+        numeric_split = data["numeric_predicates"]
+        categorical_split = data["categorical_predicates"]
+        determinize = data["determinize"]
+        impurity = data["impurity"]
+        tolerance = data["tolerance"]
+        safe_pruning = data["safe_pruning"]
+        user_predicates = data["user_predicates"]
+    else:
+        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = frontend_helper.get_preset(data["config"])
+        user_predicates = None
+    # TODO T: do we want a duplicate check?
+    # use global_res_counter to get a new id
+    global global_res_counter
+    global_res_counter += 1
+    # initialize in controller table
+    config = {
+        "res_id": global_res_counter,
+        "cont_id": data["id"],
+        "controller": data["controller"],
+        "nice_name": data["nice_name"],
+        "config": data["config"],
+        "determinize": determinize,
+        "numeric_predicates": numeric_split,
+        "categorical_predicates": categorical_split,
+        "impurity": impurity,
+        "tolerance": tolerance,
+        "safe_pruning": safe_pruning,    # TODO
+        "user_predicates": user_predicates,
+        "status": "Running" 
+    }
+    results[global_res_counter] = config
+    return jsonify(config)
 
 @app.route('/results', methods=['GET'])
 def results_route():
-    global results
     return jsonify(results)
 
+@app.route('/results/delete', methods=['POST'])
+def delete_results_route():
+    global results
+    result_to_delete = int(request.form['id'])
+    del results[result_to_delete]
+    return jsonify(success=True)
 
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
 def construct_route():
+    # TODO T: continue here, compare with original
     global completed_experiments
     data = request.get_json()
-    logging.info("Request: \n", data)
-    id = int(data['id'])
+    logging.info(f"Request: \n {data}")
+    id = int(data['res_id'])
     cont = os.path.join(UPLOAD_FOLDER, data['controller'])
-    nice_name = data['nice_name']
-    config = data['config']
     # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    results[id] = {"controller": cont, "nice_name": nice_name, "preset": config, "status": "Running...",
-                   "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
+    #results[id] = {"controller": cont, "nice_name": data['nice_name'], "status": "Running...",
+    #               "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
 
-    if config == "custom":
-        to_parse_dict = {"controller": cont, "determinize": data['determinize'],
-                         "numeric-predicates": data['numeric_predicates'],
-                         "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
-                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
-    elif config.startswith("algebraic"):
-        # algebraic strategy with user predicates
-        to_parse_dict = {"controller": cont, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
-                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
-                         "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
+    if data["config"] == "custom":
+        to_parse_dict = {
+            "controller": cont,
+            "config": "custom",
+            "determinize": data['determinize'],
+            "numeric-predicates": data['numeric_predicates'],
+            "categorical-predicates": data['categorical_predicates'], 
+            "impurity": data['impurity'],
+            "tolerance": data['tolerance'],  # TODO T
+            "safe-pruning": False   # TODO T
+            }
     else:
-        to_parse_dict = {"controller": cont, "config": config}
+        to_parse_dict = {"controller": cont, "config": data["config"]}
 
     # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
     try:

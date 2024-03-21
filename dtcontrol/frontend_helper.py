@@ -6,6 +6,8 @@ README
 Run dtcontrol --help to see usage.
 """
 
+# TODO T: change README in frontend: not subset of cli.py anymore...
+
 import logging
 import random
 import sys
@@ -206,10 +208,11 @@ def get_key_or_default(preset_dict: OrderedDict, default_dict: OrderedDict, key:
         return default_dict[key]
 
 
-def get_preset(preset: str, user_config: OrderedDict, default_config: OrderedDict) -> Tuple:
-    if user_config and preset in user_config['presets']:
-        value = user_config['presets'][preset]
-    elif preset in default_config['presets']:
+def get_preset(preset):
+    # Parse config files
+    default_config = load_default_config()  # OrderedDict
+
+    if preset in default_config['presets']:
         value = default_config['presets'][preset]
     else:
         sys.exit(f"Preset '{preset}' not found.\n"
@@ -288,7 +291,8 @@ def get_controller_data(file):
                        "var_types": var_types,                  # numerical, categorical
                        "num_vars": ds.x.shape[1],               # number of state dimensions, e.g. 10 for 10rooms
                        "num_results": num_results,              # number of input dimensions for controller, e.g. 2 for 10rooms
-                       "deterministic": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
+                       "max_non_det": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
+    # TODO T: if 1, we dont need/cannot determize, so dont show field in modal
     return controller_data
 
 def intoJSON(rt, parent, address, y_metadata):
@@ -347,35 +351,32 @@ def train(args):
 
     ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
 
-    # Parse config files
-    default_config: OrderedDict = load_default_config()
-    user_config: Union[None, OrderedDict] = None
-
     fallback_numeric, fallback_categorical = None, None
     user_predicates = None
-
-    # if "partial" in args.keys():
-    #     if args["partial"]["address"]:
-    #         ds.from_mask()
 
     if "config" in args.keys():
         presets = args["config"]
 
         if "algebraic" in presets:
-            presets = args["config"]
             numeric_split = ["richer-domain"]
             categorical_split = []
             determinize = args["determinize"]
             impurity = args["impurity"]
             tolerance = float(args["tolerance"])
             safe_pruning = (args["safe-pruning"] == "true")
-            fallback_numeric = get_preset(args["fallback"], user_config, default_config)[0]
-            fallback_categorical = get_preset(args["fallback"], user_config, default_config)[1]
+            fallback_numeric = get_preset(args["fallback"])[0]
+            fallback_categorical = get_preset(args["fallback"])[1]
             user_predicates = args["user_predicates"]
+        elif "custom" in presets:
+            # TODO T: compare with original: why did I have to change this?
+            numeric_split = args["numeric-predicates"]
+            categorical_split = args["categorical-predicates"]
+            determinize = args["determinize"]
+            impurity = args["impurity"]
+            tolerance = float(args["tolerance"])
+            safe_pruning = (args["safe-pruning"] == "true")
         else:
-            numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets,
-                                                                                                          user_config,
-                                                                                                          default_config)
+            numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets)
     else:
         presets = "default"
         numeric_split = args["numeric-predicates"]
@@ -402,7 +403,7 @@ def train(args):
             "No valid preset selected. Please try again with the correct preset name. Use 'dtcontrol preset --list' to see valid presets.")
         sys.exit("Exiting...")
 
-    logging.info("Frontend: loading dataset...")
+    logging.info("Frontend: Loading dataset...")
     ds.load_if_necessary()
 
     if "existing_tree" in args:
@@ -415,9 +416,9 @@ def train(args):
     start = time.time()
     # benchmark does a lot of other stuff as well, we just need load if necessary from it
 
-    logging.info("Frontend: fitting dataset to tree...")
+    logging.info("Frontend: Fitting dataset to tree...")
     classifier.fit(ds)
-    logging.info("Frontend: tree constructed.")
+    logging.info("Frontend: Tree constructed.")
     run_time = time.time() - start
     # intoJSON takes the classifier root and returns a JSON in required format
     try:

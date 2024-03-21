@@ -29,7 +29,7 @@
                         <thead class="thead-light">
                         <tr>
                             <th scope="col">#</th>
-                            <!--th scope="col" style="display:none">Full Path</th-->
+                            <th scope="col" style="display:none">Full Path</th>
                             <th scope="col">Controller</th>
                             <th scope="col">#&nbsp;States</th>
                             <th scope="col">#&nbsp;State-Actions Pairs</th>
@@ -54,19 +54,22 @@
         </div>
     </div>
 
-    <div id="results-row-new" class="row ml-5 mr-5">
+    <div id="results-row" class="row ml-5 mr-5">
         <div class="col-lg-12">
             <div class="card border-secondary mb-4">
                 <div class="card-body h-100">
                 <h4 class="card-title">Results</h4>
-                <table id="results-table-new" class="table rounded table-hover">
+                <table id="results-table" class="table rounded table-hover">
                     <thead class="custom-thead">
                     <tr>
+                        <th scope="col" style="display:none">Result #</th>
                         <th scope="col">Controller #</th>
+                        <th scope="col" style="display:none">Full Path</th>
                         <th scope="col">Controller</th>
                         <th scope="col">Determinize</th>
                         <th scope="col">Predicates</th>
                         <th scope="col"># Nodes</th>
+                        <th scope="col">Status</th>
                         <th scope="col">Construction Time</th>
                         <th scope="col">Actions</th>
                     </tr>
@@ -134,6 +137,16 @@
                             <table id="user-pred-table-modal" class="table table-hover">
                                 <tbody></tbody>
                             </table>
+
+                            <!--table id="user-pred-table-modal" class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">User Predicates</th>
+                                        <td scope="col"><i class="fa fa-trash text-danger" style="visibility: hidden"></i></td>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table-->
                             <div class="form-row align-items-center" id="user-pred-form">
                                     <div class="col">
                                         <input type="text" class="form-control" id="option-user-pred" value="x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60}">
@@ -239,12 +252,12 @@
             </div>
         </div>
     </div>
-    <div id="results-row" class="row ml-2">
+    <div id="results-row-old" class="row ml-2">
         <div class="col-lg-12">
             <div class="card border-secondary mb-4">
                 <div class="card-body h-100">
                 <h4 class="card-title">Results</h4>
-                <table id="results-table" class="table rounded">
+                <table id="results-table-old" class="table rounded">
                     <thead class="thead-light">
                     <tr>
                         <th scope="col">Experiment #</th>
