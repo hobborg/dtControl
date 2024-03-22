@@ -50,9 +50,9 @@ $(document).ready(function () {
                     $('#advanced-options-modal button[type="submit"]').trigger('click');
                 }
             } else if ($('#upload-modal').hasClass('show')) {
-                // if Enter key is pressed and Upload modal is open
-                // TODO T: if sth uploaded... or highlight if not?
-                $('#upload-modal').modal('hide');
+                // if Enter key is pressed and upload modal is open -> trigger submit
+                $('#upload-modal button[type="submit"]').trigger('click');
+                event.preventDefault();
             }
         }
     });
@@ -105,6 +105,7 @@ $(document).ready(function () {
         });
     })
 
+    // show modal to upload controller and metadata file
     $('#add-controller-metadata-button').on('click', function () {
         $('#upload-modal').modal('show');
     });
@@ -119,6 +120,7 @@ $(document).ready(function () {
             $(this).removeClass('is-valid');
             $(this).addClass('is-invalid');
             document.getElementById("submit-file-button").disabled = true;
+            $('#controller-file-upload').val('');
             return ;
         } else {
             $('#controller-type-help')[0].style.visibility = 'hidden';
@@ -172,11 +174,21 @@ $(document).ready(function () {
     // add a metadata file from modal where controller file and metadata file can be added
     $('#metadata-file-upload').on('change', function () {
         //get the file name
-        let fileName = $(this).val().replace('C:\\fakepath\\', "");
-        if (!fileName.endsWith(".json")) {
+        let metadataFileName = $(this).val().replace('C:\\fakepath\\', "");
+        let fileName = $('#controller-file-upload').val().replace('C:\\fakepath\\', "");
+        let correctName = fileName.substr(0, fileName.lastIndexOf('.')) + "_config.json";
+        if (fileName != "" && metadataFileName != correctName) {
+            $('#metadata-type-help')[0].innerText = "The metadata file has to be named '" + correctName + "'.";
+            $('#metadata-type-help')[0].style.visibility = 'visible';
+            $(this).addClass('is-invalid');
+            $(this).removeClass('is-valid');
+            $('#metadata-file-upload').val('');
+            return ;
+        } else if (!metadataFileName.endsWith(".json")) {
             $('#metadata-type-help')[0].style.visibility = 'visible';
             $(this).removeClass('is-valid');
             $(this).addClass('is-invalid');
+            $('#metadata-file-upload').val('');
             return ;
         } else {
             $('#metadata-type-help')[0].style.visibility = 'hidden';
@@ -184,7 +196,7 @@ $(document).ready(function () {
             $(this).addClass('is-valid');
         }
         //replace the "Choose a file" label
-        $(this).next('.custom-file-label').html(fileName);
+        $(this).next('.custom-file-label').html(metadataFileName);
         let formData = new FormData();
         formData.append("file", document.getElementById("metadata-file-upload").files[0]);
         $.ajax({
@@ -230,10 +242,66 @@ $(document).ready(function () {
         return false;
     }
 
+    // reset the upload modal when it is closed
+    $('#upload-modal').on('hidden.bs.modal', function () {
+        // clear input fields
+        $('#controller-file-upload').val('');
+        $('#metadata-file-upload').val('');
+
+        // reset the custom file labels
+        $('.custom-file-label[for="controller-file-upload"]').text('Choose controller file');
+        $('.custom-file-label[for="metadata-file-upload"]').text('Choose metadata file');
+    
+        // reset progress bars
+        $('#controller-file-upload-progress-bar').css('width', '0%');
+        $('#metadata-file-upload-progress-bar').css('width', '0%');
+    
+        // reset error messages
+        $('#metadata-type-help')[0].style.visibility = 'hidden';
+        $('#controller-type-help')[0].style.visibility = 'hidden';
+        $('#metadata-file-upload').removeClass('is-invalid');
+        $('#metadata-file-upload').removeClass('is-valid');
+        $('#controller-file-upload').removeClass('is-invalid');
+        $('#controller-file-upload').removeClass('is-valid');
+
+        // disable submit button
+        document.getElementById("submit-file-button").disabled = true;
+    });
+
     $('#submit-file-button').on('click', function() {
+        let fileName = $('#controller-file-upload').val().replace('C:\\fakepath\\', "");
+
+        // check if controller file uploaded
+        if (fileName == "") {
+            // submit button should not even be activated if no file uploaded
+            console.error("Error when submitting file: No file uploaded.")
+            return ;
+        }
+
+        // check if metadata file has correct name
+        let metadataFileName = $('#metadata-file-upload').val().replace('C:\\fakepath\\', "");
+        let correctName = fileName.substr(0, fileName.lastIndexOf('.')) + "_config.json";
+        if (metadataFileName != "" && metadataFileName != correctName) {
+            // metadata file was uploaded, but not right name
+            $('#metadata-type-help')[0].innerText = "The metadata file has to be named '" + correctName + "'.";
+            $('#metadata-type-help')[0].style.visibility = 'visible';
+            $('#metadata-file-upload').addClass('is-invalid');
+            $('#metadata-file-upload').removeClass('is-valid');
+            return ;
+        }
+
+        // controller file was uploaded and metadata file was either not uploaded or uploaded with correct name
+        var controller = $("#controller-file-upload").val().replace('C:\\fakepath\\', "");
+        var nice_name = controller;
+        if (nice_name.startsWith("/")) {
+            nice_name = nice_name.substr(1);
+        }
+        initializeControllerTable([controller, nice_name]);
         $('#upload-modal').modal('hide');
-        // TODO T: sth with initializeControllerTable...
-        // check if file uploaded...
+        
+        // TODO T: we are not doing anything with the metadata file!
+
+        return ;
     });
 
     function initializeControllerTable(row_contents) {
