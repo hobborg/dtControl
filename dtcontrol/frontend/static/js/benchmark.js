@@ -605,7 +605,9 @@ $(document).ready(function () {
                 selected_num_predicates.push(checkboxValue);
             });
 
-            // TODO: show numerical / categorical choices only if numerical/categorical variables present
+            // TODO T: show numerical / categorical choices only if numerical/categorical variables present
+            // + only one option must be chosen if categorical variables present + better names + better descr on hover?
+
             if (selected_num_predicates.length == 0) {
                 document.getElementById('num-pred-error-msg').style.visibility = 'visible';
                 return;

@@ -7,6 +7,7 @@
 <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
 <div id="main" class="container-fluid">
 
+    <!-- Table storing the controllers -->
     <div id="controller-row" class="row ml-5 mr-5">
         <div class="col-lg-12">
             <div class="card border-secondary mb-4">
@@ -46,6 +47,7 @@
                         </tr>
                         </tbody>
                     </table>
+                    <!--If we want the "Add controller file" button to be centered at the bottom of the table: -->
                     <!--div class="row justify-content-center">
                         <button class="btn btn-primary" type="submit" name="add-controller-bottom" id="add-controller-button-bottom"> <i class="fa fa-plus" style="font-size: 80%"></i> Add new controller file</button>
                     </div-->
@@ -54,6 +56,7 @@
         </div>
     </div>
 
+    <!-- Table storing the results -->
     <div id="results-row" class="row ml-5 mr-5">
         <div class="col-lg-12">
             <div class="card border-secondary mb-4">
@@ -85,7 +88,7 @@
         </div>
     </div>
 
-        <!-- Modal form to choose advanced options for experiment -->
+    <!-- Modal form to choose advanced options for experiment -->
     <div class="modal fade" id="advanced-options-modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -98,7 +101,7 @@
                     </div>
                     <h5 class="modal-title" id="modal-subtitle"></h5>
                 </div>
-                <!--div class="modal-body"><p>Modal body text goes here.</p></div-->
+                <!--div class="modal-body"><p>Modal body text goes here if we want any.</p></div-->
                 <form id="tree-builder-form">
                     <!-- Hidden fields to store which for which controller the modal was opened -->
                     <input type="hidden" id="hidden-controller-id" value="42">
@@ -131,7 +134,6 @@
                                 <div id="cat-pred-col2" class="col">
                                 </div>
                             </div>
-                          <!--   TODO T: only one option must be chosen if categorical variables present + aussagekraeftigere tags + beschreibung bei hovern -->
                             <h6 id="cat-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> At least one option must be chosen. </h6>
                             <label for="option-user-pred">User Predicates</label>
                             <table id="user-pred-table-modal" class="table table-hover">
@@ -170,6 +172,7 @@
         </div>
     </div>
 
+    <!-- Modal to upload a controller file + a metadata file -->
     <div class="modal fade" id="upload-modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content px-3">
