@@ -60,6 +60,11 @@ presets:
   # TODO T: check again if this is what we want
   deterministic:          
     determinize: 'auto'
+    numeric-predicates: ['axisonly']
+    impurity: 'multilabelentropy'
+
+  deterministic2:          
+    determinize: 'auto'
     numeric-predicates: ['axisonly', 'linear-logreg']
     impurity: 'multilabelentropy'
 
