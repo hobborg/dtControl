@@ -1561,6 +1561,8 @@ $(document).ready(function () {
     // unbind old event handler
     $('button.hamburger').off("click");
 
+    loadPresets();  // in common.js
+
     // create new event handler for hamburger
     $('button.hamburger').on('click', function (event) {
         if ($(this).hasClass("hamburger--spin")) {
@@ -1583,12 +1585,6 @@ $(document).ready(function () {
 
     // change navbar from hamburger--spin to hamburger--arrow
     document.getElementById("navbar-hamburger").classList.replace("hamburger--spin", "hamburger--arrow");
-
-    // If we are in the inspect/edit/simulate screen, there is no need for having the "load controller directory" etc available
-    document.getElementById("controller-upload-row").remove();
-    document.getElementById("metadata-upload-row").remove();
-    document.getElementById("add-experiments-button").remove();
-
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
 

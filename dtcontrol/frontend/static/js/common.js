@@ -26,17 +26,52 @@ function closeNav() {
     document.getElementById("main").style.paddingLeft = "0";
 }
 
+// new GUI: we could move this to inspect.js
 function loadPresets() {
+    const app = document.getElementById('config');
+
+    // All presets available for fallback
+    const  fallback_app = document.getElementById("fallback");
+
     let xhr = new XMLHttpRequest();
     xhr.open('GET', '/yml', true);
     xhr.onload = function () {
         // Reads the config.yml file
         preset_json = JSON.parse(this.response);
         if (xhr.status >= 200 && xhr.status < 400) {
-            fillAdvancedOptionsModal(preset_json);
+            for (let x in preset_json.presets) {
+                const option = document.createElement('option');
+                option.textContent = x;
+                option.setAttribute('value', x);
+                if (x === 'mlentropy') {
+                    option.setAttribute('selected', 'selected');
+                }
+
+                app.appendChild(option);
+                const option_copy = option.cloneNode(true);
+                fallback_app.appendChild(option_copy);
+
+            }
+
+            // Add custom to preset
+            const option = document.createElement('option');
+            option.textContent = "custom";
+            option.setAttribute('value', "custom");
+            app.appendChild(option);
+
+            // Add algebraic/user-defined mode to preset
+            const option2 = document.createElement('option');
+            option2.textContent = "algebraic / user-defined";
+            option2.setAttribute('value', "algebraic");
+            app.appendChild(option2);
+
+            fillYML(preset_json);
 
         } else {
-            console.error("YML to get presets not working");
+            console.log("YML not working");
+            const errorMessage = document.createElement('marquee');
+            errorMessage.textContent = `Gah, it's not working!`;
+            app.appendChild(errorMessage);
         }
     }
     xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -47,32 +82,8 @@ function loadPresets() {
     xhr.send();
 }
 
-function makeCheckbox(options, parent_div, default_option=null){
-    for (let option of options) {
-        var checkbox = document.createElement('input');
-        checkbox.classList.add('form-check-input');
-        checkbox.type = 'checkbox';
-        checkbox.name = option;
-        checkbox.id = option;
-        if(option == default_option){
-            checkbox.checked = true;
-        }
-
-        var label = document.createElement('label');
-        label.classList.add('form-check-label');
-        label.htmlFor = option;
-        label.innerHTML = option;
-
-        var container = document.createElement('div');
-        container.classList.add("form-check");
-        container.appendChild(checkbox);
-        container.appendChild(label);
-        parent_div.appendChild(container);
-    }
-}
-
-function fillAdvancedOptionsModal(preset_json) {
-    // fill the modal with all options available in config.yml
+function fillYML(preset_json) {
+    // Uses DOM manipulation to populate required forms after reading config.yml
 
     defConf = (preset_json.presets.default);
     for (let y in defConf) {
@@ -80,11 +91,11 @@ function fillAdvancedOptionsModal(preset_json) {
     }
 
     for (let x in preset_json.presets) {
-        // loop over preset names
+        //loop over preset names
         for (let y in defConf) {
-            // loop over properties
+            //loop over properties
             if (y in preset_json.presets[x]) {
-                // if that preset contains that property
+                //if that preset contains that property
                 var valu = preset_json.presets[x][y];
                 if (Array.isArray(valu)) {
                     for (let z in valu) {
@@ -97,82 +108,137 @@ function fillAdvancedOptionsModal(preset_json) {
                         allConfig[y].push(valu);
                     }
                 }
+
             }
         }
     }
-    
-    // fill determinize drop-down
-    // TODO T: only show if not deterministic
-    var det_dropdown = document.getElementById("option-determinize");
-    console.log("det options: ", allConfig.determinize)
-    for (let det of allConfig.determinize) {
-        // don't add the "auto" option, use maxfreq as default:
-        console.log("det: ", det)
-        if (det != "auto") {
-            let opt = document.createElement('option');
-            opt.textContent = det;
-            opt.setAttribute('value', det);
-            opt.setAttribute('id', det);
-            if (det == "maxfreq") {
-                opt.setAttribute('selected', 'selected');
+    for (let x in preset_json.advanced) {
+        console.log(x)
+        //loop over properties
+        var values = preset_json.advanced[x]
+        console.log(values)
+        for (let y in values) {
+            console.log(allConfig[x])
+            //loop over all possible values allowed for the property
+            if (!allConfig[x].includes(values[y])) {
+                console.log(y)
+                console.log(values[y])
+                allConfig[x].push(values[y])
             }
-            det_dropdown.appendChild(opt);
         }
     }
 
-    // add safe-pruning and multilabelentropy as a determinizer:
-    // TODO: does this make sense?
-    let other_determinizers = ["safe-pruning", "multilabelentropy"];
-    for (let det of other_determinizers) {
+    let det = document.getElementById("determinize");
+    for (let i = 0; i < allConfig['determinize'].length; i++) {
         let opt = document.createElement('option');
-        opt.textContent = det;
-        opt.setAttribute('value', det);
-        opt.setAttribute('id', det);
-        det_dropdown.appendChild(opt);
-    } 
-
-    // make checkbox for numerical predicates
-    var div_num_pred = document.getElementById("option-numeric-predicates");
-    makeCheckbox(allConfig['numeric-predicates'], div_num_pred, "axisonly");
-
-    // make checkbox for categorical predicates
-    var div_cat_pred = document.getElementById("cat-pred-div");
-    makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, "multisplit");
-    
-    // add tolerance field
-    var valuegrouping_checkbox = document.getElementById("valuegrouping");
-    var div_tolerance = document.getElementById("cat-pred-col2");
-    if (valuegrouping_checkbox) {
-        // create input box
-        var tolerance_textfield = document.createElement('input');
-        tolerance_textfield.classList.add('form-control');
-        tolerance_textfield.type = 'number';
-        tolerance_textfield.value = '0.00001';
-        tolerance_textfield.id = 'tolerance-field';
-        tolerance_textfield.step = 'any';
-        // create label
-        var tolerance_label = document.createElement('label');
-        tolerance_label.id = 'tolerance-label';
-        tolerance_label.setAttribute('for', 'tolerance-field');
-        tolerance_label.textContent = "Tolerance";
-        // insert text field, then label
-        div_tolerance.appendChild(tolerance_textfield);
-        div_tolerance.insertBefore(tolerance_label, tolerance_textfield);
-        if (! valuegrouping_checkbox.checked) {
-            // only show if "valuegrouping" checked (by default not checked)
-            $('#tolerance-field').css('visibility', 'hidden');
-            $('#tolerance-label').css('visibility', 'hidden');
-        // ^ use this instead of hide() / show() to set visibility property instead of display property
-        }
-    } else {
-        console.error("No checkbox for valuegrouping was created, so cannot create tolerance field.")
+        opt.textContent = allConfig['determinize'][i];
+        opt.setAttribute('value', allConfig['determinize'][i]);
+        opt.setAttribute('id', allConfig['determinize'][i]);
+        det.appendChild(opt);
     }
+
+    let num_pred = document.getElementById("numeric-predicates");
+    for (let i = 0; i < allConfig['numeric-predicates'].length; i++) {
+        let opt = document.createElement('option');
+        opt.textContent = allConfig['numeric-predicates'][i];
+        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
+        // TODO T: why is this with _3?
+        opt.setAttribute('id', allConfig['numeric-predicates'][i] + "_3");
+        num_pred.appendChild(opt);
+    }
+
+    let cat_pred = document.getElementById("categorical-predicates");
+    for (let i = 0; i < allConfig['categorical-predicates'].length; i++) {
+        let opt = document.createElement('option');
+        opt.textContent = allConfig['categorical-predicates'][i];
+        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
+        // TODO T: why is this with _3?
+        opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
+        cat_pred.appendChild(opt);
+    }
+
+    let imp = document.getElementById("impurity");
+    for (let i = 0; i < allConfig['impurity'].length; i++) {
+        let opt = document.createElement('option');
+        opt.textContent = allConfig['impurity'][i];
+        opt.setAttribute('value', allConfig['impurity'][i]);
+        opt.setAttribute('id', allConfig['impurity'][i]);
+        imp.appendChild(opt);
+    }
+
+    $("#config").trigger("change");
+
 }
 
 $(document).ready(function () {
     openNav();
     document.getElementById("navbar-hamburger").className += " is-active";
-    loadPresets();
+    //loadPresets(); // moved to inspect.js in newGUI
+
+    // Handles changing of form selections when different configs are changed
+    $("#config").change(function () {
+        if ($(this).val() != "custom" && $(this).val() != "algebraic") {
+            // clearCheckBoxes();
+            for (let x in preset_json.presets) {
+                //x is  preset names
+                if ($(this).val() == x) {
+                    //x is now selected preset
+                    for (let y in defConf) {
+                        //y is  property names
+                        if (y in preset_json.presets[x]) {
+                            if (y == "tolerance") {
+                                document.getElementById("tolerance").value = preset_json.presets[x][y];
+                            } else if (y == "safe-pruning") {
+                                if (preset_json.presets[x]["safe-pruning"]) {
+                                    $('#safe-pruning').val("true");
+                                } else {
+                                    $('#safe-pruning').val("false");
+                                }
+                            } else {
+                                $("#" + y).val(preset_json.presets[x][y]);
+                            }
+                        } else {
+                            if (y == "tolerance") {
+                                document.getElementById("tolerance").value = defConf[y];
+                            } else if (y == "safe-pruning") {
+                                if (preset_json.presets["default"]["safe-pruning"]) {
+                                    $('#safe-pruning').val("true");
+                                } else {
+                                    $('#safe-pruning').val("false");
+                                }
+                            } else {
+                                $("#" + y).val(preset_json.presets["default"][y]);
+                            }
+                        }
+                    }
+
+                    break;
+
+                }
+            }
+        }
+        else if ($(this).val() == "custom") {
+            // In case custom is selected
+            $('#accordionButton').click();
+        }
+        else if ($(this).val() == "algebraic") {
+            document.getElementById("userPredicatesInputRow").classList.remove("collapse");
+            document.getElementById("fallbackSelectRow").classList.remove("collapse");
+
+            document.getElementById("numericPredicatesSelectRow").classList.add("collapse");
+            document.getElementById("categoricalPredicatesSelectRow").classList.add("collapse");
+            document.getElementById("tolerance").value = 0.00001;
+        }
+    });
+
+    // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls
+    $(".propList").change(function () {
+        document.getElementById("config").value = "custom";
+    });
+
+    $("#tolerance").on("input", function () {
+        document.getElementById("config").value = "custom";
+    });
 
     $('button.hamburger').on('click', function () {
         if ($(this).hasClass("is-active")) {
