@@ -39,20 +39,15 @@ var nodeSelect = false;
 
 // Used as addressing for selected node in tree edit button
 var selectedNode = null;
-var lastNode = null;
 
-const simTableDiv = document.getElementById('tableHere');
-
-var isSimulator;
+// var isSimulator;
 
 var idUnderInspection;
-
-// Edit Mode activated?
-var editMode = false;
 
 // Global variables that store tree data for rendering
 var treeData = "",
     tree = "",
+    // TODO T: did you mean link_layer? node_layer?
     nodeLayer = {},
     linkLayer = {},
     controllerFile = "",
@@ -100,6 +95,7 @@ function svgSetup() {
         .attr("id", "mainDtContainer");
     svg.call(zoom);
 
+    // TODO T: did you mean linkLayer? nodeLayer?
     link_layer = d3.select("svg g").append("g");
     node_layer = d3.select("svg g").append("g");
 }
@@ -312,7 +308,7 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     let nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", d => {
+        .attr("transform", () => {
             return "translate(" + source.x + "," + source.y + ")";
         })  // Horizontal layout: flip x, y
         .remove();
@@ -347,7 +343,7 @@ function update(source) {
     // Transition exiting nodes to the parent's new position.
     link.exit().transition()
         .duration(duration)
-        .attr("d", d => {
+        .attr("d", () => {
             const o = {x: source.x, y: source.y};
             return diagonal({source: o, target: o});
         })
@@ -402,6 +398,7 @@ function getTransformation(transform) {
     var {a, b, c, d, e, f} = matrix;   // ES6, if this doesn't work, use below assignment
     // var a=matrix.a, b=matrix.b, c=matrix.c, d=matrix.d, e=matrix.e, f=matrix.f; // ES5
     var scaleX, scaleY, skewX;
+    // TODO T: did you mean ==?
     if (scaleX = Math.sqrt(a * a + b * b)) a /= scaleX, b /= scaleX;
     if (skewX = a * c + b * d) c -= a * skewX, d -= b * skewX;
     if (scaleY = Math.sqrt(c * c + d * d)) c /= scaleY, d /= scaleY, skewX /= scaleY;
@@ -489,7 +486,7 @@ function getLeaves(depthNode) {
 // Expands all tree nodes
 function expandAll() {
     function expandRecursive(node) {
-        node.descendants().forEach((d, i) => {
+        node.descendants().forEach((d, ) => {
             if (d._children && !d.children) {
                 d.children = d._children;
                 expandRecursive(d);
@@ -502,7 +499,7 @@ function expandAll() {
 
 // Collapses all tree nodes
 function collapseAll() {
-    root.descendants().forEach((d, i) => {
+    root.descendants().forEach((d, ) => {
        d.children = null;
     });
     update(root);
@@ -634,7 +631,6 @@ function initializeSimulatorTablesAndCharts(stateDimension, actionDimension, ) {
     }
     tab.deleteRow(-1);
     tab.tHead.appendChild(dumrow);
-    // simTableDiv.appendChild(tab);
 }
 
 function destroySimulatorTablesAndCharts() {
@@ -873,6 +869,7 @@ function assignParentsDfs(node, parent, address_prefix) {
 }
 
 function replaceInTree(selected, replacementData) {
+    // TODO T: never used?
     // Inspired by https://stackoverflow.com/a/43368677
 
     //Creates a Node from newNode object using d3.hierarchy(.)
@@ -1057,15 +1054,12 @@ function generate_html_table(table_selector, body_index, header, body, add_radio
 function process_interaction_response(data) {
     if (data.type === "error") {
         popupModal("Error", data.body);
-        // Show error in a modal?
-    }
-    else if (data.type === "success") {
+    } else if (data.type === "success") {
         if (data.body.includes("use")) {
             // Use succeeded
             document.getElementById("mainRow1").scrollIntoView({ behavior: 'smooth', block: "start"});
         }
-    }
-    else if (data.type === "update") {
+    } else if (data.type === "update") {
         if (data.body.feature_information || data.body.feature_specification) {
             let feature_specification = data.body.feature_information ? data.body.feature_information : data.body.feature_specification;
             generate_html_table(document.getElementById("feature-specification-table"),
@@ -1126,15 +1120,11 @@ function process_interaction_response(data) {
             document.getElementById("standard-predicates-collection").getElementsByTagName("tbody")[1].innerHTML = "";
             document.getElementById("delete-predicate-button").disabled = true;
         }
-    }
-    else if (data.type === "error") {
-        console.error(data.body);
-    }
+    } 
     $("body").css("cursor", "default");
 }
 
-function add_predicate()
-{
+function add_predicate() {
     let predicate = window.prompt("Enter predicate", "x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60, 80}");
     $.ajax({
         data: JSON.stringify({"action": "add", "body": predicate}),
@@ -1251,7 +1241,7 @@ function deactivateSimulator() {
     // Return node colors to white
     recolourPath();
     destroySimulatorTablesAndCharts();
-    isSimulator = false;
+    // isSimulator = false;
     document.getElementById("mainRow2").classList.add("d-none");
     document.getElementById("mainRow3").classList.add("d-none");
     //document.getElementById("expandThisDiv").style.height = "450px";
@@ -1292,7 +1282,7 @@ function deactivateInspect()
 
 
 // Highlighting functionality
-$("#highlight-form-button").on('click', function (event) {
+$("#highlight-form-button").on('click', function () {
     console.log(highlighting_results);
 
     let all_actions = (document.getElementById("inputGroupSelect02").value) === "all";
@@ -1564,7 +1554,7 @@ $(document).ready(function () {
     loadPresets();  // in common.js
 
     // create new event handler for hamburger
-    $('button.hamburger').on('click', function (event) {
+    $('button.hamburger').on('click', function () {
         if ($(this).hasClass("hamburger--spin")) {
             closeNav();
             document.getElementById("navbar-hamburger").classList.replace("hamburger--spin", "hamburger--arrow");
@@ -1657,7 +1647,7 @@ $(document).ready(function () {
 
 
     // Simulate Button
-    $("#operation-selector input").on("click", function (event) {
+    $("#operation-selector input").on("click", function () {
         let option = $("#operation-selector input:checked")[0].id;
         console.log("Selected " + option);
         if (option === "option-simulate") {
@@ -1667,7 +1657,7 @@ $(document).ready(function () {
             closeNav();
             document.getElementById("navbar-hamburger").classList.replace("hamburger--arrow", "hamburger--spin");
 
-            isSimulator = true;
+            // isSimulator = true;
             initializeSimulatorTablesAndCharts();
             deactivateInspect();
             deactivateEdit();
@@ -1699,7 +1689,6 @@ $(document).ready(function () {
             document.getElementById("expandAllButton").disabled = "true";
             document.getElementById("collapseAllButton").disabled = "true";
 
-            // editMode = true;
             enableNodeSelect();
             // update(root);
         }
@@ -1871,7 +1860,7 @@ $(document).ready(function () {
         event.preventDefault();
     });
 
-    $("#formSecond-next-button").on("click", function (event) {
+    $("#formSecond-next-button").on("click", function () {
         $("#dynamics-body").hide();
         $("#initial-values").show();
         $("#formSecond-next-button").hide();
@@ -2043,10 +2032,8 @@ if (slider) {
     }
 }
 
-
-var numDomainKnowledge = 0;
-
 // Contains [impurity,predicate] type objects
+// TODO T: never used
 var finalDomainKnowledge = [];
 
 // Randomize button in Modal for selecting initial values of state variables
