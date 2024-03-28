@@ -1551,8 +1551,6 @@ $(document).ready(function () {
     // unbind old event handler
     $('button.hamburger').off("click");
 
-    loadPresets();  // in common.js
-
     // create new event handler for hamburger
     $('button.hamburger').on('click', function () {
         if ($(this).hasClass("hamburger--spin")) {

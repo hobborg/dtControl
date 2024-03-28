@@ -200,13 +200,13 @@ def delete_controllers_route():
 def initialize_results_route():
     data = request.get_json()
     if data["config"] == "custom":
+        determinize = data["determinize"]
         numeric_split = data["numeric_predicates"]
         categorical_split = data["categorical_predicates"]
-        determinize = data["determinize"]
         impurity = data["impurity"]
         tolerance = data["tolerance"]
         safe_pruning = data["safe_pruning"]
-        user_predicates = data["user_predicates"]
+        user_predicates = html.unescape(data["user_predicates"])
     else:
         numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = frontend_helper.get_preset(data["config"])
         user_predicates = None
@@ -253,27 +253,12 @@ def construct_route():
     logging.info(f"Request: \n {data}")
     id = int(data['res_id'])
     cont = os.path.join(UPLOAD_FOLDER, data['controller'])
-    # results.append([id, cont, nice_name, config, 'Running...', None, None, None])
-    #results[id] = {"controller": cont, "nice_name": data['nice_name'], "status": "Running...",
-    #               "inner_nodes": None, "leaf_nodes": None, "construction_time": None}
+    data["controller"] = cont
 
-    if data["config"] == "custom":
-        to_parse_dict = {
-            "controller": cont,
-            "config": "custom",
-            "determinize": data['determinize'],
-            "numeric-predicates": data['numeric_predicates'],
-            "categorical-predicates": data['categorical_predicates'], 
-            "impurity": data['impurity'],
-            "tolerance": data['tolerance'],  # TODO T
-            "safe-pruning": False   # TODO T
-            }
-    else:
-        to_parse_dict = {"controller": cont, "config": data["config"]}
-
-    # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
+    # train returns dict with "classifier", "classifier_as_json", "x_metadata", "y_metadata", "run_time"
+    
     try:
-        classifier = frontend_helper.train(to_parse_dict)
+        classifier = frontend_helper.train(data)
         # root is saved in a global variable for use later
         saved_tree = classifier["classifier"].root
 

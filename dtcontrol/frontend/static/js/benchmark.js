@@ -94,10 +94,8 @@ $(document).ready(function () {
         // fill determinize drop-down
         // TODO T: only show if not deterministic
         var det_dropdown = document.getElementById("option-determinize");
-        console.log("det options: ", allConfig.determinize)
         for (let det of allConfig.determinize) {
             // don't add the "auto" option, use maxfreq as default:
-            console.log("det: ", det)
             if (det != "auto") {
                 let opt = document.createElement('option');
                 opt.textContent = det;
@@ -735,6 +733,9 @@ $(document).ready(function () {
                 $("#cat-pred-div input[type='checkbox']").trigger('change');
                 document.getElementById("multisplit").checked = true;
             }
+            // reset error messages
+            $('#cat-pred-error-msg')[0].style.visibility = 'hidden';
+            $('#num-pred-error-msg')[0].style.visibility = 'hidden';
             $('#user-pred-error-msg')[0].style.visibility = 'hidden';
             $('#option-user-pred')[0].value = "x_0 + 3*x_1 <= c_0; c_0 in {20, 40, 60}";
         });
@@ -748,20 +749,21 @@ $(document).ready(function () {
             document.getElementById('cat-pred-error-msg').style.visibility = 'hidden';
             document.getElementById('num-pred-error-msg').style.visibility = 'hidden';
 
+            // TODO T: show numerical / categorical choices only if numerical/categorical variables present
+            // + only one option must be chosen if categorical variables present? + better names + better descr on hover?
+
+            // find the selected options for the numerical predicates
             var selected_num_predicates = [];
             $('#option-numeric-predicates .form-check-input:checked').each(function() {
                 var checkboxValue = $(this).attr('name');
                 selected_num_predicates.push(checkboxValue);
             });
-
-            // TODO T: show numerical / categorical choices only if numerical/categorical variables present
-            // + only one option must be chosen if categorical variables present + better names + better descr on hover?
-
             if (selected_num_predicates.length == 0) {
                 document.getElementById('num-pred-error-msg').style.visibility = 'visible';
                 return;
             }
 
+            // find the selected options for the categorical predicates
             var selected_cat_predicates = [];
             $('#option-categorical-predicates .form-check-input:checked').each(function() {
                 let checkboxValue = $(this).attr('name');
@@ -771,9 +773,6 @@ $(document).ready(function () {
                document.getElementById('cat-pred-error-msg').style.visibility = 'visible';
                 return;
             }
-
-            $('#advanced-options-modal').modal('hide');
-            document.getElementById('user-pred-error-msg').style.visibility = 'hidden';
 
             var tolerance = -1;  // tolerance only used if valuegrouping checked
             if (selected_cat_predicates.includes('valuegrouping')) {
@@ -791,18 +790,29 @@ $(document).ready(function () {
                 chosen_impurity = "multilabelentropy";
             }
 
+            // get the user predicates
+            var user_preds = [];
+            $('#user-pred-table-modal tbody tr').each(function() {
+                var pred = $(this).find('td:first').text();
+                user_preds.push(pred.trim()); // trim() to remove leading and trailing whitespaces
+            });
+
+            $('#advanced-options-modal').modal('hide');
+
             let config = {
+                // these entries are also in the non-custom config
                 id: parseInt(document.getElementById("hidden-controller-id").value),
                 controller: document.getElementById("hidden-controller-name").value,
                 nice_name: document.getElementById("modal-subtitle").innerHTML,
                 config: "custom",
+                // these entries are only in the custom config
                 determinize: chosen_determinize,
                 numeric_predicates: selected_num_predicates,
                 categorical_predicates: selected_cat_predicates,
                 impurity: chosen_impurity,
                 tolerance: tolerance,
                 safe_pruning: false,    // TODO T
-                user_predicates: null   // TODO T
+                user_predicates: user_preds
             };
             $.ajax('/results/initialize', {
                 type: 'POST',
@@ -812,6 +822,11 @@ $(document).ready(function () {
                     runSingleBenchmark(row_contents);
                 }
             });
+        });
+
+        // reset advanced options modal when it is closed
+        $('#advanced-options-modal').on('hidden.bs.modal', function () {
+            $('#restore-default-button').trigger('click');
         });
     }
 
@@ -857,14 +872,17 @@ $(document).ready(function () {
         // 3: nice name 
         // 4: determinize
         // 5: predicates (numeric and categorical)
-        // 6: nodes (inner nodes and leaf nodes)
-        // 7: status
-        // 8: construction_time
-        // 9: actions
+        // 6: user predicates (hidden)
+        // 7: nodes (inner nodes and leaf nodes)
+        // 8: status
+        // 9: construction_time
+        // 10: actions
 
         // result is a dict with these possible keys:
         // res_id, cont_id, controller, nice_name, config, determinize, numeric_predicates, categorical_predicates,
         // impurity, tolerance, safe_pruning, inner_nodes, leaf_nodes, status, construction_time
+
+        console.log("Fill/update the results table with this entry:", result)
 
         $("#results-table tr.special").hide();
         var table = document.getElementById("results-table").getElementsByTagName('tbody')[0];
@@ -873,8 +891,13 @@ $(document).ready(function () {
 
         if (!resultsRow) {
             // create a new row and fill it
+
+            let num_preds = result["numeric_predicates"];
+            let cat_preds = result["categorical_predicates"];
+            let user_preds = (result["user_predicates"] && result["user_predicates"].length);
+
             resultsRow = table.insertRow(-1);
-            for (let j = 0; j <= 9; j++) {
+            for (let j = 0; j <= 10; j++) {
                 const cell = resultsRow.insertCell(-1);
                 switch (j) {        // feel free to refactor this...
                     case 0:
@@ -899,29 +922,41 @@ $(document).ready(function () {
                         }
                         break;
                     case 5:
-                        if ("numeric_predicates" in result) {
+                        if (num_preds) {
                             cell.innerHTML = result.numeric_predicates.join(', ');
                         }
-                        if ("numeric_predicates" in result && "categorical_predicates" in result) {
+                        if (num_preds && cat_preds) {
                             cell.innerHTML += ", ";
-                        }    
-                        if ("categorical_predicates" in result) {
+                        }
+                        if (cat_preds) {
                             cell.innerHTML += result.categorical_predicates.join(', ');
-                        }            
+                        }
+                        if (user_preds && (num_preds || cat_preds)) {
+                            cell.innerHTML += ", ";
+                        }
+                        if (user_preds) {
+                            cell.innerHTML += "<a class='link-offset-3-hover text-muted user-preds-link' id='user_preds' href='#'>user predicates</a>";
+                        }         
                         break;
                     case 6:
+                        if (user_preds) {
+                            cell.innerHTML = JSON.stringify(result.user_predicates);
+                        }
+                        cell.style = "display: none";
+                        break;
+                    case 7:
                         if (result.status === "Completed") {
                             cell.innerHTML = result.inner_nodes + " inner, " + result.leaf_nodes + " leafs";
                         }
                         break;
-                    case 7:
+                    case 8:
                         if (result.status === "Running") {
                             cell.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...';
                         } else {
                             cell.innerHTML = result.status;
                         }
                         break;
-                    case 8:
+                    case 9:
                         if (result.status === "Completed") {
                             cell.innerHTML = result.construction_time.milliSecondsToHHMMSS();
                         }
@@ -932,30 +967,30 @@ $(document).ready(function () {
             }
         } else if (result.status === "Completed") {
             // if row already existed: update it
-            resultsRow.children[6].innerHTML = result.inner_nodes + " inner, " + result.leaf_nodes + " leafs";
-            resultsRow.children[7].innerHTML = result.status;
-            resultsRow.children[8].innerHTML = result.construction_time.milliSecondsToHHMMSS();
+            resultsRow.children[7].innerHTML = result.inner_nodes + " inner, " + result.leaf_nodes + " leafs";
+            resultsRow.children[8].innerHTML = result.status;
+            resultsRow.children[9].innerHTML = result.construction_time.milliSecondsToHHMMSS();
         } else if (result.status === "Edited") {
             // TODO T: we don't know them?
-            resultsRow.children[6].innerHTML = "";
-            resultsRow.children[7].innerHTML = result.status;
-            resultsRow.children[8].innerHTML = "";
+            resultsRow.children[7].innerHTML = "";
+            resultsRow.children[8].innerHTML = result.status;
+            resultsRow.children[9].innerHTML = "";
         } else if (result.status.startsWith("Error")) {
             // don't overwrite other attributes with faulty values
             // depends on error what might make sense here
-            resultsRow.children[7].innerHTML = result.status;
+            resultsRow.children[8].innerHTML = result.status;
         }
         // no case for result.status === "Running" because the status of an existing row will never change to "Running"
 
         if (result.status != "Running") {
             // set up action buttons: eye and trash can
-            resultsRow.children[9].innerHTML = '<i class="fa fa-eye text-primary"></i>&nbsp;&nbsp;<i class="fa fa-trash text-danger"></i>';
-            $(resultsRow.children[9]).find('i.fa-eye').on('click', () => {
+            resultsRow.children[10].innerHTML = '<i class="fa fa-eye text-primary"></i>&nbsp;&nbsp;<i class="fa fa-trash text-danger"></i>';
+            $(resultsRow.children[10]).find('i.fa-eye').on('click', () => {
                 $.post('/select', {runConfigIndex: res_id}, () => {
                     window.location.href = 'simulator'
                 });
             });
-            $(resultsRow.children[9]).find('i.fa-trash').on('click', () => {
+            $(resultsRow.children[10]).find('i.fa-trash').on('click', () => {
                 $.post('/results/delete', {id: res_id}, () => {
                     resultsRow.remove();
                     if (document.getElementById("results-table").getElementsByTagName('tbody')[0].children.length == 1) {
@@ -976,6 +1011,29 @@ $(document).ready(function () {
             }
         }
     }
+
+    // show a modal with the user predicates
+    $('#results-table').on('click', '.user-preds-link', function() {
+        let row_items = $(this).parent().parent().find('th,td');
+        let user_predicates = JSON.parse(row_items[6].innerHTML);
+        var table_body = document.getElementById("results-user-preds-table").getElementsByTagName('tbody')[0];
+        
+        $.each(user_predicates, function(index, value) {
+            // fill the table with the user predicates
+            var row = table_body.insertRow(-1);
+            var id_cell = row.insertCell(-1);
+            id_cell.innerHTML = '<th scope="row">' + (JSON.parse(index)+1) + '</th>';
+            var pred_cell = row.insertCell(-1);
+            pred_cell.innerHTML = '<th scope="row">' + value + '</th>';
+        });
+
+        $('#user-preds-modal').modal('show');
+    });
+
+    $('#user-preds-modal').on('hidden.bs.modal', function () {
+        // delete the modal contents
+        $('#results-user-preds-table tbody').empty();
+    });
 
     Number.prototype.milliSecondsToHHMMSS = function () {
         var sec_num = this;

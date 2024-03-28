@@ -351,40 +351,30 @@ def train(args):
 
     ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
 
-    fallback_numeric, fallback_categorical = None, None
-    user_predicates = None
+    presets = args["config"]
 
-    if "config" in args.keys():
-        presets = args["config"]
-
-        if "algebraic" in presets:
-            numeric_split = ["richer-domain"]
-            categorical_split = []
-            determinize = args["determinize"]
-            impurity = args["impurity"]
-            tolerance = float(args["tolerance"])
-            safe_pruning = (args["safe-pruning"] == "true")
-            fallback_numeric = get_preset(args["fallback"])[0]
-            fallback_categorical = get_preset(args["fallback"])[1]
-            user_predicates = args["user_predicates"]
-        elif "custom" in presets:
-            # TODO T: compare with original: why did I have to change this?
-            numeric_split = args["numeric-predicates"]
-            categorical_split = args["categorical-predicates"]
-            determinize = args["determinize"]
-            impurity = args["impurity"]
-            tolerance = float(args["tolerance"])
-            safe_pruning = (args["safe-pruning"] == "true")
-        else:
-            numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = get_preset(presets)
+    # TODO T: test!
+    if "user_predicates" in args and args["user_predicates"]:
+        assert presets == "custom"      # algebraic predicates can only be added in custom mode
+        # TODO T: this construction with numeric_split, categorical_split, fallback numeric and categorical etc
+        # was added to the old GUI by Christoph, maybe we want to refactor this at some point
+        numeric_split = ["richer-domain"]       
+        categorical_split = []      
+        fallback_numeric = args["numeric_predicates"]
+        fallback_categorical = args["categorical_predicates"]
+        user_predicates = args["user_predicates"]
     else:
-        presets = "default"
-        numeric_split = args["numeric-predicates"]
-        categorical_split = args["categorical-predicates"]
-        determinize = args["determinize"]
-        impurity = args["impurity"]
-        tolerance = float(args["tolerance"])
-        safe_pruning = (args["safe-pruning"] == "true")
+        # preset is "custom" (but no user predicates were added) or a predefined one
+        numeric_split = args["numeric_predicates"]
+        categorical_split = args["categorical_predicates"]
+        user_predicates, fallback_numeric, fallback_categorical = None, None, None
+    
+    determinize = args["determinize"]
+    impurity = args["impurity"]
+    tolerance = float(args["tolerance"])
+    safe_pruning = (args["safe_pruning"] == "true")
+
+    assert "presets" != "default"       # we got rid of this preset in the new GUI
 
     classifier = None
     try:
@@ -407,6 +397,7 @@ def train(args):
     ds.load_if_necessary()
 
     if "existing_tree" in args:
+        # train is called from app.partial_construct
         if args["base_node_address"]:
             mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
                                           dataset=ds)

@@ -171,9 +171,12 @@ function fillYML(preset_json) {
 }
 
 $(document).ready(function () {
-    openNav();
-    document.getElementById("navbar-hamburger").className += " is-active";
-    //loadPresets(); // moved to inspect.js in newGUI
+    if (window.location.href.endsWith("simulator")) {
+        // TODO T: maybe refactor this whole common.js bc this stuff is only for simulator page
+        loadPresets();
+        openNav();
+        document.getElementById("navbar-hamburger").className += " is-active";
+    }
 
     // Handles changing of form selections when different configs are changed
     $("#config").change(function () {
