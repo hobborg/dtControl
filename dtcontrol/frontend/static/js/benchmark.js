@@ -119,7 +119,7 @@ $(document).ready(function () {
             det_dropdown.appendChild(opt);
         } 
     
-        // make checkbox for numerical predicates
+        // make checkbox for numeric predicates
         var div_num_pred = document.getElementById("option-numeric-predicates");
         makeCheckbox(allConfig['numeric-predicates'], div_num_pred, "axisonly");
     
@@ -531,16 +531,21 @@ $(document).ready(function () {
         if (row_contents.length > 3) {
             for (let j = 3; j < 9; j++) {
                 var c = row.insertCell(-1);
+                if (j == 5) {
+                    // join the variable types
+                    c.innerHTML = row_contents[j].join(', ');                   
+                } else {
                 c.innerHTML = row_contents[j];
+                }
             }
             // add the actions
             var icon = row.insertCell(-1);
-            var det_tree_button = makeButton("Run deterministic", "det-build-button-cont-table", "preset-btn", "fa-play text-success", "build a deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
-            var aa_permissive_tree_button = makeButton("Run axis-aligned permissive", "aa-permissive-build-button-cont-table", "preset-btn", "fa-play text-success", "build a permissive tree using only axis-aligned splits");
-            var logreg_permissive_tree_button = makeButton("Run logreg permissive", "logreg-permissive-build-button-cont-table", "preset-btn", "fa-play text-success", "build non-deterministic tree using the options 'axisonly' and 'linear-logreg' to find splits");
-            var advanced_settings_button = makeButton("Show advanced", "advanced-button-cont-table", "", "fa-gears", "choose from the advanced settings");
-            var edit_button =  makeButton("Go to tree builder", "edit-button-cont-table", "", "fa-wrench", "jump directly to the interactive tree builder");
-            var delete_button = makeButton("Delete", "delete-button-cont-table", "", "fa-trash text-danger", "delete this controller file");
+            var det_tree_button = makeButton("Run axis-aligned deterministic", "det-build-button-cont-table", "preset-btn", "fa-play text-success", "Use 'multilabelentropy' to determinize and the predicate classes 'axisonly' and 'multisplit'");
+            var aa_permissive_tree_button = makeButton("Run axis-aligned permissive", "aa-permissive-build-button-cont-table", "preset-btn", "fa-play text-success", "Use the predicate classes 'axisonly' and 'multisplit'");
+            var logreg_permissive_tree_button = makeButton("Run logreg permissive", "logreg-permissive-build-button-cont-table", "preset-btn", "fa-play text-success", "Use the predicate classes 'axisonly', 'linear-logreg' and 'multisplit'");
+            var advanced_settings_button = makeButton("Show advanced", "advanced-button-cont-table", "", "fa-gears", "Show advanced settings");
+            var edit_button =  makeButton("Go to tree builder", "edit-button-cont-table", "", "fa-wrench", "Go to interactive tree builder");
+            var delete_button = makeButton("Delete", "delete-button-cont-table", "", "fa-trash text-danger", "Delete");
             // we could also use other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
             icon.innerHTML = det_tree_button +
                 aa_permissive_tree_button +
@@ -624,7 +629,7 @@ $(document).ready(function () {
                 row_content.push(v.innerHTML);
             });
             row_content = row_content.slice(0, -1); // Drop the actions
-            row_content[5] = row_content[5].split(","); // convert the variable types to an array
+            row_content[5] = row_content[5].split(", "); // convert the variable types to an array
             $.ajax('/controllers/delete', {
                 type: 'POST',
                 contentType: 'application/json; charset=utf-8',
@@ -646,11 +651,30 @@ $(document).ready(function () {
 
         // open advanced options modal
         $('#controller-table').on('click', '#advanced-button-cont-table', function () {
-            $('#advanced-options-modal').modal('show');
             var row_items = $(this).parent().parent().find('th,td');
             document.getElementById("hidden-controller-id").value = row_items[0].innerHTML;
             document.getElementById("hidden-controller-name").value = row_items[1].innerHTML;
             document.getElementById("modal-subtitle").innerHTML = row_items[2].innerHTML;
+
+            // disable parts of the modal that don't apply
+            let variable_types = row_items[5].innerHTML.split(", ")
+            if (!variable_types.includes("categorical")) {
+                $('#option-categorical-predicates').addClass('disabled-row');
+                $('#cat-pred-div').addClass('disabled-input');
+                // TODO T: figure hovering out
+                //$('#option-categorical-predicates').title = "This controller has no categorical variables";
+                //$('#option-numeric-predicates-box').tooltip('dispose');
+                //$('#option-numeric-predicates-box').tooltip();
+            }
+            if (!variable_types.includes("numeric")) {
+                $('#option-numeric-predicates-box').addClass('disabled-row disabled-input');
+                //$('#option-numeric-predicates-box').title = "This controller has no numeric variables";
+                //$('#option-numeric-predicates-box').tooltip('dispose');
+                //$('#option-numeric-predicates-box').tooltip();
+            }
+            //$('[data-toggle="tooltip"]').tooltip();
+
+            $('#advanced-options-modal').modal('show');
         });
 
         // show the tolerance checkbox if (and only if) valuegrouping checked
@@ -713,10 +737,11 @@ $(document).ready(function () {
         // button to restore default values in advanced options modal
         $('#restore-default-button').on('click', function () {
             $(this).blur();
+            // maxfreq is the default determinizer choice (if maxfreq exists)
             if(document.getElementById("maxfreq") != null) {
-                document.getElementById("option-determinize").options["maxfreq"].selected = true;
+                document.getElementById("maxfreq").selected = true;
             }
-            // TODO T: check if numerical and cat predicates options present
+            // axisonly is default numeric choice (if axisonly exists)
             if(document.getElementById("axisonly") != null) {
                 let numeric_checkboxes = document.getElementById("option-numeric-predicates").children;
                 for (let i = 0; i < numeric_checkboxes.length; i++) {
@@ -749,10 +774,10 @@ $(document).ready(function () {
             document.getElementById('cat-pred-error-msg').style.visibility = 'hidden';
             document.getElementById('num-pred-error-msg').style.visibility = 'hidden';
 
-            // TODO T: show numerical / categorical choices only if numerical/categorical variables present
-            // + only one option must be chosen if categorical variables present? + better names + better descr on hover?
+            // TODO T: only one option must be chosen if categorical variables present? + better names + better descr on hover?
+            // TODO T: if no cat/num vars... don't show in results table... 
 
-            // find the selected options for the numerical predicates
+            // find the selected options for the numeric predicates
             var selected_num_predicates = [];
             $('#option-numeric-predicates .form-check-input:checked').each(function() {
                 var checkboxValue = $(this).attr('name');
@@ -826,7 +851,12 @@ $(document).ready(function () {
 
         // reset advanced options modal when it is closed
         $('#advanced-options-modal').on('hidden.bs.modal', function () {
+            // restore default values
             $('#restore-default-button').trigger('click');
+            // remove the disabled classes
+            $('#option-categorical-predicates').removeClass('disabled-row');
+            $('#cat-pred-div').removeClass('disabled-input'); 
+            $('#option-numeric-predicates-box').removeClass('disabled-row disabled-input');
         });
     }
 

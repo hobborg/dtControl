@@ -265,10 +265,15 @@ def get_controller_data(file):
     ds.load_if_necessary()
 
     # get the dataset properties that we are interested in:
-    var_types = ["numerical"]  # TODO T: obvs adapt when we find sth with cat var/ metadata file!
+    var_types = []
+    cat_columns = ds.x_metadata["categorical"]
+    if len(set(cat_columns)) < ds.x.shape[0]:
+        # not all columns are categorical
+        var_types += ["numeric"]
     if ds.x_metadata["categorical"] != []:
+        # some columns are categorical
         var_types += ["categorical"]
-        # TODO T: look at entry of x_metadata["categorical"]!
+    assert var_types # i.e. != []
 
     assert len(ds.x_metadata["min_inner"]) == ds.x.shape[1]
 

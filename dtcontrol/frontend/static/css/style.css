@@ -128,4 +128,12 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+/* classes for the advanced options modal */
+.disabled-row {
+    opacity: 0.5;
+}
+
+.disabled-input {
+    pointer-events: none;
+}
 

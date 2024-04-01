@@ -74,9 +74,9 @@ class DatasetLoader(ABC):
         with open(config_filename, 'r') as infile:
             config = json.load(infile)
         if 'x_column_types' in config:
-            DatasetLoader.update_column_types(config['x_column_types'], x_metadata, config_filename)
+            DatasetLoader.update_column_types(config['x_column_types'], x_metadata, config_filename, x.shape[1])
         if 'y_column_types' in config:
-            DatasetLoader.update_column_types(config['y_column_types'], y_metadata, config_filename)
+            DatasetLoader.update_column_types(config['y_column_types'], y_metadata, config_filename, None)
 
         if 'x_column_names' in config:
             column_names = config['x_column_names']
@@ -91,8 +91,11 @@ class DatasetLoader(ABC):
             DatasetLoader.update_category_names(config['y_category_names'], y_metadata, config_filename)
 
     @staticmethod
-    def update_column_types(column_types, metadata, config_filename):
+    def update_column_types(column_types, metadata, config_filename, number_of_columns):
         if 'categorical' in column_types:
+            if number_of_columns is not None and any(i < 0 or i >= number_of_columns for i in column_types["categorical"]):
+                    raise ValueError(f'\'{config_filename}\' contains columns marked as '
+                    f'categorical that do not exist.')
             metadata['categorical'] = column_types['categorical']
         if 'numeric' in column_types:
             # columns are numeric by default, we only need to check for conflicts here

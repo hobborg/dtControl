@@ -116,18 +116,22 @@
                             </div>
                         </div>
                         <h5><label for="option-predicates">Predicates</label></h5>
+                        <!--Choices for Predicates: Numeric, Categorical, User-defined-->
                         <div class="form-group" id="option-predicates">
-                            <label for="option-numeric-predicates">Numerical</label>
-                            <div id="option-numeric-predicates">
+                            <div id="option-numeric-predicates-box" data-toggle="tooltip" title="">
+                                <label for="option-numeric-predicates">Numeric</label>
+                                <div id="option-numeric-predicates">
                                     <!--div class="form-check">
-                                      <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
-                                      <label class="form-check-label" for="defaultCheck1">
+                                        <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
+                                        <label class="form-check-label" for="defaultCheck1">
                                         Default checkbox: the real checkboxes are added in this format in common.js
-                                      </label>
+                                        </label>
                                     </div-->
+                                </div>
                             </div>
                             <h6 id="num-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> At least one option must be chosen. </h6>
-                            <div id="option-categorical-predicates" class="row">
+                            
+                            <div id="option-categorical-predicates" class="row" data-toggle="tooltip" title="">
                                 <div id="cat-pred-col1" class="col">
                                     <label for="option-categorical-predicates">Categorical</label>
                                     <div id="cat-pred-div"></div>
@@ -136,6 +140,7 @@
                                 </div>
                             </div>
                             <h6 id="cat-pred-error-msg" class="mt-2 text-danger" style="visibility: hidden"> At least one option must be chosen. </h6>
+                            
                             <label for="option-user-pred">User Predicates</label>
                             <table id="user-pred-table-modal" class="table table-hover">
                                 <tbody></tbody>
