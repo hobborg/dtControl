@@ -26,7 +26,7 @@ tol_small = CategoricalMultiSplittingStrategy(value_grouping=True)
 tol_medium = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=.2)
 tol_inf = CategoricalMultiSplittingStrategy(value_grouping=True, tolerance=sys.maxsize)
 categorical_single = CategoricalSingleSplittingStrategy()
-logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
 oc1 = OC1SplittingStrategy()
 
 classifiers = [

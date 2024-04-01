@@ -94,7 +94,7 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
     splitting_map = {
         'axisonly': lambda x: AxisAlignedSplittingStrategy(),
         'linear-logreg': lambda x: LinearClassifierSplittingStrategy(LogisticRegression, determinizer=x,
-                                                                     solver='lbfgs', penalty='none'),
+                                                                     solver='lbfgs', penalty=None),
         'linear-linsvm': lambda x: LinearClassifierSplittingStrategy(LinearSVC, determinizer=x, max_iter=5000),
         'oc1': lambda x: OC1SplittingStrategy(determinizer=x),
         'multisplit': lambda x: CategoricalMultiSplittingStrategy(value_grouping=False),

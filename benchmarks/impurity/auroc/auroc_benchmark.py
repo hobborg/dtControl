@@ -30,7 +30,7 @@ suite.add_datasets(['../../../examples'],
                    )
 
 aa = AxisAlignedSplittingStrategy()
-logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
 
 classifiers = [
     DecisionTree([aa, logreg], Entropy(), 'logreg-ent'),

@@ -31,8 +31,8 @@ suite.add_datasets('../../../examples',
                    )
 
 aa = AxisAlignedSplittingStrategy()
-logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-classifiers = [
+logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
+classifiers = 
     DecisionTree(LabelPowersetDeterminizer(), [aa], Entropy(), 'CART-ent'),
     DecisionTree(LabelPowersetDeterminizer(), [aa], EntropyRatio(), 'CART-ratio'),
     DecisionTree(LabelPowersetDeterminizer(), [aa, logreg], Entropy(), 'logreg-ent'),

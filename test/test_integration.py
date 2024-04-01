@@ -84,7 +84,7 @@ class IntegrationTest(unittest.TestCase):
                                     early_stopping=True, early_stopping_optimized=True)
         self.minnorm = DecisionTree([AxisAlignedSplittingStrategy()], Entropy(), 'minnorm',
                                     label_pre_processor=NormPreProcessor(min))
-        logreg_strategy = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+        logreg_strategy = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
         self.logreg = DecisionTree([AxisAlignedSplittingStrategy(), logreg_strategy], Entropy(), 'logreg')
         self.maxfreq_logreg = DecisionTree([AxisAlignedSplittingStrategy(), logreg_strategy],
                                            Entropy(MaxFreqDeterminizer()),

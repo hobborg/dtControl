@@ -34,8 +34,8 @@ suite.add_datasets(['examples', 'examples/prism'],
                    )
 
 aa = AxisAlignedSplittingStrategy()
-logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
-only_leaf = LinearClassifierOnlyLeafSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
+only_leaf = LinearClassifierOnlyLeafSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
 classifiers = [
     DecisionTree(LabelPowersetDeterminizer(), [aa], Entropy(), 'CART'),
     DecisionTree(LabelPowersetDeterminizer(), [aa, logreg], Entropy(), 'logreg'),

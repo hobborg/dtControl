@@ -31,7 +31,7 @@ class AUROC(DeterminizingImpurityMeasure):
             label_mask = (new_y == label)
             new_y[label_mask] = 1
             new_y[~label_mask] = -1
-            logreg = LogisticRegression(solver='lbfgs', penalty='none')
+            logreg = LogisticRegression(solver='lbfgs', penalty=None)
             logreg.fit(x, new_y)
             auroc = roc_auc_score(new_y, logreg.decision_function(x))
             label_to_auroc[label] = auroc

@@ -92,12 +92,12 @@ class RicherDomainCliStrategy(ContextAwareSplittingStrategy):
         axis.priority = 1
 
         # Linear
-        logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+        logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
         logreg.priority = 1
 
         # TODO: Enable this when we are more sure
         # Linear Units (Only if there are units given)
-        # logreg_unit = LinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty='none')
+        # logreg_unit = LinearUnitsClassifier(LogisticRegression, self.dataset_units, solver='lbfgs', penalty=None)
         # logreg_unit.priority = 1
 
         # return [axis, logreg, logreg_unit] if self.dataset_units is not None else [axis, logreg]
