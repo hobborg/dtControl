@@ -673,6 +673,10 @@ $(document).ready(function () {
                 //$('#option-numeric-predicates-box').tooltip();
             }
             //$('[data-toggle="tooltip"]').tooltip();
+            let max_non_det = row_items[8].innerHTML;
+            if (max_non_det == 1) {
+                $('#option-determinize-box').addClass('disabled-row disabled-input');
+            }
 
             $('#advanced-options-modal').modal('show');
         });
@@ -857,6 +861,7 @@ $(document).ready(function () {
             $('#option-categorical-predicates').removeClass('disabled-row');
             $('#cat-pred-div').removeClass('disabled-input'); 
             $('#option-numeric-predicates-box').removeClass('disabled-row disabled-input');
+            $('#option-determinize-box').removeClass('disabled-row disabled-input');
         });
     }
 
