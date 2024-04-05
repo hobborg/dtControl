@@ -631,8 +631,7 @@ $(document).ready(function () {
             // disable parts of the modal that don't apply
             let variable_types = row_items[5].innerHTML.split(", ")
             if (!variable_types.includes("categorical")) {
-                $('#option-categorical-predicates').addClass('disabled-row');
-                $('#cat-pred-div').addClass('disabled-input');
+                $('#option-categorical-predicates').addClass('disabled-row disabled-input');
                 // TODO T: figure hovering out
                 //$('#option-categorical-predicates').title = "This controller has no categorical variables";
                 //$('#option-numeric-predicates-box').tooltip('dispose');
@@ -830,8 +829,7 @@ $(document).ready(function () {
             // restore default values
             $('#restore-default-button').trigger('click');
             // remove the disabled classes
-            $('#option-categorical-predicates').removeClass('disabled-row');
-            $('#cat-pred-div').removeClass('disabled-input'); 
+            $('#option-categorical-predicates').removeClass('disabled-row disabled-input');
             $('#option-numeric-predicates-box').removeClass('disabled-row disabled-input');
             $('#option-determinize-box').removeClass('disabled-row disabled-input');
         });

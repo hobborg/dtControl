@@ -511,6 +511,7 @@ def simulator():
 def computed():
     global selected_computation_id
     selected_experiment = completed_experiments[selected_computation_id]
+    selected_controller_name = results[selected_computation_id]["nice_name"]
     returnDict = {
         "idUnderInspection": selected_computation_id,
         "classifier": selected_experiment["classifier_as_json"],
@@ -518,7 +519,10 @@ def computed():
         "numResults": selected_experiment["num_results"],
         "boundInner": [selected_experiment["min_bounds_inner"], selected_experiment["max_bounds_inner"]],
         "boundOuter": [selected_experiment["min_bounds_outer"], selected_experiment["max_bounds_outer"]],
-        "controllerFile": selected_experiment["controller"]
+        "controllerFile": selected_experiment["controller"],
+        # TODO T: turn controller also into dict?
+        "max_non_det": controllers[selected_controller_name][8],
+        "variable_types": controllers[selected_controller_name][5]
     }
     return jsonify(returnDict)
 

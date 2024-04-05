@@ -1747,6 +1747,25 @@ $(document).ready(function () {
         actionDimension = data.numResults;
         controllerFile = data.controllerFile;
 
+        // disable parts of the advanced options that don't apply
+        let max_non_det = data.max_non_det;
+        let variable_types = data.variable_types;
+        if (!variable_types.includes("categorical")) {
+            $('#categorical-predicates-outer').addClass('disabled-row disabled-input');
+        } else {
+            $('#categorical-predicates-outer').removeClass('disabled-row disabled-input');
+        }
+        if (!variable_types.includes("numeric")) {
+            $('#numeric-predicates-outer').addClass('disabled-row disabled-input');
+        } else {
+            $('#numeric-predicates-outer').removeClass('disabled-row disabled-input');
+        }
+        if (max_non_det == 1) {
+            $('#determinize-outer').addClass('disabled-row disabled-input');
+        } else {
+            $('#determinize-outer').removeClass('disabled-row disabled-input');
+        }
+
         // console.log(treeData);
 
         // height = 50 * getLeaves(treeData);
