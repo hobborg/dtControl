@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 
 from dtcontrol import frontend_helper
 from dtcontrol.frontend_helper import get_controller_data
-from dtcontrol.util import interactive_queue
+from dtcontrol.util import interactive_queue, split_relevant_extension
 from dtcontrol.decision_tree.splitting.context_aware.predicate_parser import PredicateParser
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_logger import RicherDomainLogger
 from dtcontrol.decision_tree.splitting.context_aware.richer_domain_exceptions import RicherDomainPredicateParserException
@@ -188,12 +188,25 @@ def controllers_route():
 def delete_controllers_route():
     global controllers
     controller_to_delete = request.get_json()
+    controller_name = controller_to_delete[1]
     nice_name = controller_to_delete[2]
    # turn the jsonified entries back to int
     for i in [0, 3, 4, 6, 7, 8]:
         controller_to_delete[i] = int(controller_to_delete[i])
     assert controllers[nice_name] == controller_to_delete
     del controllers[nice_name]
+    # delete the metadata file from /tmp folder
+    # bc otherwise metadata file will be used automatically next time without being re-uploaded explicitely
+    filename = os.path.join(UPLOAD_FOLDER, controller_name)
+    name, _ = split_relevant_extension(filename)
+    config_name = name + '_config.json'
+    print("look for config name: ", config_name)
+    if os.path.exists(config_name) and os.path.isfile(config_name):
+        try:
+            os.remove(config_name)
+            logging.info(f"File '{config_name}' deleted successfully.")
+        except OSError as e:
+            logging.error(f"Error deleting file '{config_name}': {e}")
     return jsonify(success=True)
 
 @app.route('/results/initialize', methods=['POST'])
