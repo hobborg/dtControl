@@ -57,13 +57,13 @@ presets:
     impurity: 'auroc'
 
   # New presets for new GUI
-  # TODO T: check again if this is what we want
   deterministic:          
     determinize: 'auto'
     numeric-predicates: ['axisonly']
     impurity: 'multilabelentropy'
 
-  deterministic2:          
+  deterministic2: 
+    # discussed as preset at some point, not currently in use         
     determinize: 'auto'
     numeric-predicates: ['axisonly', 'linear-logreg']
     impurity: 'multilabelentropy'

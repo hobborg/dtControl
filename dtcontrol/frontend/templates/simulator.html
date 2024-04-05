@@ -375,32 +375,27 @@
                         </div>
 
                         <div id="numericPredicatesSelectRow" class="row mt-3">
-                            <div class="col-12">
+                            <div class="col-12 propList">
                                 <label for="numeric-predicates">Numeric Predicates</label>
-                                <div class="search_categories">
+                                <div id="numeric-predicates"></div>
+                                <!--div class="search_categories">
                                     <div class="select">
                                         <select class="propList custom-select" id="numeric-predicates" name="numeric-predicates"
                                                 multiple>
                                         </select>
                                     </div>
-                                </div>
+                                </div-->
                             </div>
                         </div>
 
                         <div id="categoricalPredicatesSelectRow" class="row mt-3">
-                            <div class="col-12">
+                            <div class="col-12 propList">
                                 <label for="categorical-predicates">Categorical Predicates</label>
-                                <div class="search_categories">
-                                    <div class="select">
-                                        <select class="propList custom-select" id="categorical-predicates"
-                                                name="categorical-predicates" multiple>
-                                        </select>
-                                    </div>
-                                </div>
+                                <div id="categorical-predicates"></div>
                             </div>
                         </div>
 
-                        <div class="row mt-3">
+                        <!--div class="row mt-3">
                             <div class="col-12">
                                 <label for="impurity">Impurity</label>
                                 <div class="search_categories">
@@ -411,12 +406,13 @@
 
                                 </div>
                             </div>
-                        </div>
+                        </div-->
                         <div class="row mt-3">
-                            <div class="col-12">
+                            <div class="col-12" id="tolerance-box">
                                 <label for="tolerance">Tolerance</label>
                                 <div>
-                                    <input class="input-group-text" type="text" id="tolerance" name="tolerance">
+                                    <!--input class="input-group-text" type="text" id="tolerance" name="tolerance"-->
+                                    <input class="form-control" type="number" id="tolerance" value="0.00001" step="any">
                                 </div>
                             </div>
                         </div>

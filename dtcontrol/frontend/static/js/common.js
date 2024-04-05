@@ -1,8 +1,7 @@
 // Stores default config in config.yml
 var defConf;
 
-// Union of all configs present in config.yml
-var allConfig = {};
+
 
 // preset data json
 var preset_json;
@@ -26,12 +25,45 @@ function closeNav() {
     document.getElementById("main").style.paddingLeft = "0";
 }
 
+function makeCheckbox(options, parent_div, default_options=[], custom=true, append_id=""){
+    // custom checkboxes provided by bootstrap: prettier, blue, fade effect etc
+    if (custom) {
+        options.forEach((opt) => {
+            var isChecked = (default_options.includes(opt)) ? 'checked' : '';
+            var checkboxHtml = '<div class="custom-control custom-checkbox">' +
+                                '<input type="checkbox" class="custom-control-input" name="' + opt + '" id="' + opt + append_id + '"' + isChecked + '>' +
+                                '<label class="custom-control-label" for="' + opt + append_id + '">' + opt + '</label>' +
+                              '</div>';
+            parent_div.innerHTML += checkboxHtml;
+          });
+    } else {
+        for (let option of options) {
+            var checkbox = document.createElement('input');
+            checkbox.classList.add('form-check-input');
+            checkbox.type = 'checkbox';
+            checkbox.name = option;
+            checkbox.id = option;
+            if(option in default_options){
+                checkbox.checked = true;
+            }
+
+            var label = document.createElement('label');
+            label.classList.add('form-check-label');
+            label.htmlFor = option;
+            label.innerHTML = option;
+
+            var container = document.createElement('div');
+            container.classList.add("form-check");
+            container.appendChild(checkbox);
+            container.appendChild(label);
+            parent_div.appendChild(container);
+        }
+    }
+}
+
+
 // new GUI: we could move this to inspect.js
 function loadPresets() {
-    const app = document.getElementById('config');
-
-    // All presets available for fallback
-    const  fallback_app = document.getElementById("fallback");
 
     let xhr = new XMLHttpRequest();
     xhr.open('GET', '/yml', true);
@@ -39,39 +71,11 @@ function loadPresets() {
         // Reads the config.yml file
         preset_json = JSON.parse(this.response);
         if (xhr.status >= 200 && xhr.status < 400) {
-            for (let x in preset_json.presets) {
-                const option = document.createElement('option');
-                option.textContent = x;
-                option.setAttribute('value', x);
-                if (x === 'mlentropy') {
-                    option.setAttribute('selected', 'selected');
-                }
-
-                app.appendChild(option);
-                const option_copy = option.cloneNode(true);
-                fallback_app.appendChild(option_copy);
-
-            }
-
-            // Add custom to preset
-            const option = document.createElement('option');
-            option.textContent = "custom";
-            option.setAttribute('value', "custom");
-            app.appendChild(option);
-
-            // Add algebraic/user-defined mode to preset
-            const option2 = document.createElement('option');
-            option2.textContent = "algebraic / user-defined";
-            option2.setAttribute('value', "algebraic");
-            app.appendChild(option2);
 
             fillYML(preset_json);
 
         } else {
-            console.log("YML not working");
-            const errorMessage = document.createElement('marquee');
-            errorMessage.textContent = `Gah, it's not working!`;
-            app.appendChild(errorMessage);
+            console.error("YML to get presets not working");
         }
     }
     xhr.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -85,17 +89,20 @@ function loadPresets() {
 function fillYML(preset_json) {
     // Uses DOM manipulation to populate required forms after reading config.yml
 
-    defConf = (preset_json.presets.default);
+    // Stores default config in config.yml
+    defConf = preset_json.presets.default;
+    // Union of all configs present in config.yml
+    let allConfig = {}
     for (let y in defConf) {
         allConfig[y] = [];
     }
 
     for (let x in preset_json.presets) {
-        //loop over preset names
+        // loop over preset names
         for (let y in defConf) {
-            //loop over properties
+            // loop over properties
             if (y in preset_json.presets[x]) {
-                //if that preset contains that property
+                // if that preset contains that property
                 var valu = preset_json.presets[x][y];
                 if (Array.isArray(valu)) {
                     for (let z in valu) {
@@ -112,59 +119,51 @@ function fillYML(preset_json) {
             }
         }
     }
-    for (let x in preset_json.advanced) {
-        console.log(x)
-        //loop over properties
-        var values = preset_json.advanced[x]
-        console.log(values)
-        for (let y in values) {
-            console.log(allConfig[x])
-            //loop over all possible values allowed for the property
-            if (!allConfig[x].includes(values[y])) {
-                console.log(y)
-                console.log(values[y])
-                allConfig[x].push(values[y])
-            }
+
+    // fill preset drop down
+    let presets_in_use = ["deterministic", "axisonly-permissive", "logreg-permissive", "custom"]
+    const app = document.getElementById('config');
+    for (let x of presets_in_use) {
+        const option = document.createElement('option');
+        option.textContent = x;
+        option.setAttribute('value', x);
+        if (x === 'deterministic') {
+            // set as default, advanced options are automatically selected accordingly
+            option.setAttribute('selected', 'selected');
+        }
+        app.appendChild(option);
+    }
+
+    // fill determinize drop-down
+    var det_dropdown = document.getElementById("determinize");
+    for (let det of allConfig.determinize) {
+        // don't add the "auto" option:
+        if (det != "auto") {
+            let opt = document.createElement('option');
+            opt.textContent = det;
+            opt.setAttribute('value', det);
+            opt.setAttribute('id', det + "_edit");
+            det_dropdown.appendChild(opt);
         }
     }
-
-    let det = document.getElementById("determinize");
-    for (let i = 0; i < allConfig['determinize'].length; i++) {
+    // add safe-pruning and multilabelentropy as a determinizer:
+    // TODO: does this make sense?
+    let other_determinizers = ["safe-pruning", "multilabelentropy"];
+    for (let det of other_determinizers) {
         let opt = document.createElement('option');
-        opt.textContent = allConfig['determinize'][i];
-        opt.setAttribute('value', allConfig['determinize'][i]);
-        opt.setAttribute('id', allConfig['determinize'][i]);
-        det.appendChild(opt);
-    }
+        opt.textContent = det;
+        opt.setAttribute('value', det);
+        opt.setAttribute('id', det + "_edit");
+        det_dropdown.appendChild(opt);
+    } 
 
-    let num_pred = document.getElementById("numeric-predicates");
-    for (let i = 0; i < allConfig['numeric-predicates'].length; i++) {
-        let opt = document.createElement('option');
-        opt.textContent = allConfig['numeric-predicates'][i];
-        opt.setAttribute('value', allConfig['numeric-predicates'][i]);
-        // TODO T: why is this with _3?
-        opt.setAttribute('id', allConfig['numeric-predicates'][i] + "_3");
-        num_pred.appendChild(opt);
-    }
+    // make checkbox for numeric predicates
+    var div_num_pred = document.getElementById("numeric-predicates");
+    makeCheckbox(allConfig['numeric-predicates'], div_num_pred, [], true, "_edit");
 
-    let cat_pred = document.getElementById("categorical-predicates");
-    for (let i = 0; i < allConfig['categorical-predicates'].length; i++) {
-        let opt = document.createElement('option');
-        opt.textContent = allConfig['categorical-predicates'][i];
-        opt.setAttribute('value', allConfig['categorical-predicates'][i]);
-        // TODO T: why is this with _3?
-        opt.setAttribute('id', allConfig['categorical-predicates'][i] + "_3");
-        cat_pred.appendChild(opt);
-    }
-
-    let imp = document.getElementById("impurity");
-    for (let i = 0; i < allConfig['impurity'].length; i++) {
-        let opt = document.createElement('option');
-        opt.textContent = allConfig['impurity'][i];
-        opt.setAttribute('value', allConfig['impurity'][i]);
-        opt.setAttribute('id', allConfig['impurity'][i]);
-        imp.appendChild(opt);
-    }
+    // make checkbox for categorical predicates
+    var div_cat_pred = document.getElementById("categorical-predicates");
+    makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, [], true, "_edit");
 
     $("#config").trigger("change");
 
@@ -180,67 +179,77 @@ $(document).ready(function () {
 
     // Handles changing of form selections when different configs are changed
     $("#config").change(function () {
-        if ($(this).val() != "custom" && $(this).val() != "algebraic") {
-            // clearCheckBoxes();
-            for (let x in preset_json.presets) {
-                //x is  preset names
-                if ($(this).val() == x) {
-                    //x is now selected preset
-                    for (let y in defConf) {
-                        //y is  property names
-                        if (y in preset_json.presets[x]) {
-                            if (y == "tolerance") {
-                                document.getElementById("tolerance").value = preset_json.presets[x][y];
-                            } else if (y == "safe-pruning") {
-                                if (preset_json.presets[x]["safe-pruning"]) {
-                                    $('#safe-pruning').val("true");
-                                } else {
-                                    $('#safe-pruning').val("false");
-                                }
-                            } else {
-                                $("#" + y).val(preset_json.presets[x][y]);
+        let selected_preset = $(this).val();
+        if (selected_preset == "custom") {
+            if ($('#accordionButton').hasClass('collapsed')) {
+                $('#accordionButton').click();
+            }
+        } else {
+            for (let prop in defConf) {
+                selected_preset = $(this).val();
+                if (!(prop in preset_json.presets[selected_preset])) {
+                    // if presets[selected_preset] has no entry for this property: use the default option for property
+                    selected_preset = "default";                       
+                }
+                switch (prop) {
+                    case "determinize":
+                        if (preset_json.presets[selected_preset][prop] == "auto") {
+                            if (preset_json.presets[selected_preset]["impurity"] != "multilabelentropy") {
+                                console.error("'determinize: auto' can only be used in combination with 'impurity: multilabelentropy'.");
                             }
+                            // new GUI uses displays multilabelentropy as a determinizer because it determinizes automatically
+                            $("#" + prop).val("multilabelentropy");
                         } else {
-                            if (y == "tolerance") {
-                                document.getElementById("tolerance").value = defConf[y];
-                            } else if (y == "safe-pruning") {
-                                if (preset_json.presets["default"]["safe-pruning"]) {
-                                    $('#safe-pruning').val("true");
-                                } else {
-                                    $('#safe-pruning').val("false");
-                                }
-                            } else {
-                                $("#" + y).val(preset_json.presets["default"][y]);
-                            }
+                            $("#" + prop).val(preset_json.presets[selected_preset][prop]);
                         }
-                    }
-
-                    break;
-
+                        break;
+                    case "tolerance":
+                        $("tolerance").val(preset_json.presets[selected_preset][prop]);
+                        break;
+                    case "safe-pruning":
+                        $('#safe-pruning').val(preset_json.presets[selected_preset][prop] + "");    // needs to be a String
+                        break;
+                    case "categorical-predicates":
+                    case "numeric-predicates":
+                        // numeric and categorical predicates are chosen with checkboxes bc can be more than one
+                        $("#" + prop + " input[type='checkbox']").each(function() {
+                            var checkboxId = $(this).attr("id");  
+                            if (preset_json.presets[selected_preset][prop].includes(checkboxId.split("_edit")[0])) {
+                                $(this).prop("checked", true);
+                            } else {
+                                $(this).prop("checked", false);
+                            }
+                        });
                 }
             }
         }
-        else if ($(this).val() == "custom") {
-            // In case custom is selected
-            $('#accordionButton').click();
-        }
-        else if ($(this).val() == "algebraic") {
-            document.getElementById("userPredicatesInputRow").classList.remove("collapse");
-            document.getElementById("fallbackSelectRow").classList.remove("collapse");
-
-            document.getElementById("numericPredicatesSelectRow").classList.add("collapse");
-            document.getElementById("categoricalPredicatesSelectRow").classList.add("collapse");
-            document.getElementById("tolerance").value = 0.00001;
+        if ($("valuegrouping_edit").checked) {
+            $('#tolerance-box').removeClass('disabled-row');
+            $('#tolerance').removeClass('disabled-input');
+        } else {
+            $('#tolerance-box').addClass('disabled-row');
+            $('#tolerance').addClass('disabled-input');
         }
     });
 
-    // The 4 functions handle changing the 'config' of form to custom whenever there's a change in finer controls
+    // These functions handle changing the 'config' of form to custom whenever there's a change in finer controls
     $(".propList").change(function () {
         document.getElementById("config").value = "custom";
     });
 
     $("#tolerance").on("input", function () {
         document.getElementById("config").value = "custom";
+    });
+
+    // check if we need to show tolerance box now
+    $("#categorical-predicates").on("change", "#valuegrouping_edit", function () {
+        if ($(this).prop('checked')) {
+            $('#tolerance-box').removeClass('disabled-row');
+            $('#tolerance').removeClass('disabled-input');
+        } else {
+            $('#tolerance-box').addClass('disabled-row');
+            $('#tolerance').addClass('disabled-input');
+        }
     });
 
     $('button.hamburger').on('click', function () {

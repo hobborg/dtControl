@@ -303,7 +303,6 @@ def construct_route():
 def check_user_predicate_route():
     data = request.get_json()
     # Logger Init
-    # TODO T: logger
     logger = RicherDomainLogger("GetDomainKnowledge_Logger", False)
     logger.root_logger.info("Starting Domain Knowledge Parser.")
 

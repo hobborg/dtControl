@@ -182,7 +182,6 @@ def get_classifier(numeric_split, categorical_split, determinize, impurity, tole
 
 
 def load_default_config() -> OrderedDict:
-    # TODO T: use this?
     try:
         default_config_file = resource_filename(Requirement.parse("dtcontrol"),
                                                 "dtcontrol/config.yml")  # System-level config file
@@ -297,7 +296,6 @@ def get_controller_data(file):
                        "num_vars": ds.x.shape[1],               # number of state dimensions, e.g. 10 for 10rooms
                        "num_results": num_results,              # number of input dimensions for controller, e.g. 2 for 10rooms
                        "max_non_det": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
-    # TODO T: if 1, we dont need/cannot determize, so dont show field in modal
     return controller_data
 
 def intoJSON(rt, parent, address, y_metadata):

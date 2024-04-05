@@ -92,7 +92,6 @@ $(document).ready(function () {
         }
         
         // fill determinize drop-down
-        // TODO T: only show if not deterministic
         var det_dropdown = document.getElementById("option-determinize");
         for (let det of allConfig.determinize) {
             // don't add the "auto" option, use maxfreq as default:
@@ -121,11 +120,11 @@ $(document).ready(function () {
     
         // make checkbox for numeric predicates
         var div_num_pred = document.getElementById("option-numeric-predicates");
-        makeCheckbox(allConfig['numeric-predicates'], div_num_pred, "axisonly");
+        makeCheckbox(allConfig['numeric-predicates'], div_num_pred, ["axisonly"]);
     
         // make checkbox for categorical predicates
         var div_cat_pred = document.getElementById("cat-pred-div");
-        makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, "multisplit");
+        makeCheckbox(allConfig['categorical-predicates'], div_cat_pred, ["multisplit"]);
         
         // add tolerance field
         var valuegrouping_checkbox = document.getElementById("valuegrouping");
@@ -154,30 +153,6 @@ $(document).ready(function () {
             }
         } else {
             console.error("No checkbox for valuegrouping was created, so cannot create tolerance field.")
-        }
-    }
-
-    function makeCheckbox(options, parent_div, default_option=null){
-        for (let option of options) {
-            var checkbox = document.createElement('input');
-            checkbox.classList.add('form-check-input');
-            checkbox.type = 'checkbox';
-            checkbox.name = option;
-            checkbox.id = option;
-            if(option == default_option){
-                checkbox.checked = true;
-            }
-
-            var label = document.createElement('label');
-            label.classList.add('form-check-label');
-            label.htmlFor = option;
-            label.innerHTML = option;
-
-            var container = document.createElement('div');
-            container.classList.add("form-check");
-            container.appendChild(checkbox);
-            container.appendChild(label);
-            parent_div.appendChild(container);
         }
     }
 
@@ -446,8 +421,6 @@ $(document).ready(function () {
         initializeControllerTable([controller, nice_name]);
         $('#upload-modal').modal('hide');
         
-        // TODO T: we are not doing anything with the metadata file!
-
         return ;
     });
 
@@ -619,7 +592,6 @@ $(document).ready(function () {
             });
         });
 
-        // TODO T: I don't think we wanted this when planning... 
         // delete a controller, i.e. a row of the controller table
         $("#controller-table").on("click", "#delete-button-cont-table", function () {
             const row = $(this).parent().parent();
@@ -783,7 +755,7 @@ $(document).ready(function () {
 
             // find the selected options for the numeric predicates
             var selected_num_predicates = [];
-            $('#option-numeric-predicates .form-check-input:checked').each(function() {
+            $('#option-numeric-predicates .custom-control-input:checked').each(function() {
                 var checkboxValue = $(this).attr('name');
                 selected_num_predicates.push(checkboxValue);
             });
@@ -794,7 +766,7 @@ $(document).ready(function () {
 
             // find the selected options for the categorical predicates
             var selected_cat_predicates = [];
-            $('#option-categorical-predicates .form-check-input:checked').each(function() {
+            $('#option-categorical-predicates .custom-control-input:checked').each(function() {
                 let checkboxValue = $(this).attr('name');
                 selected_cat_predicates.push(checkboxValue);
             });
