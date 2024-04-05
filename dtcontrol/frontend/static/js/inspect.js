@@ -949,9 +949,6 @@ function run_partial_construction(configuration) {
 
         $("body").css("cursor", "default");
 
-        document.getElementById("retrain-button").removeAttribute("disabled");
-        document.getElementById("interactive-button").removeAttribute("disabled");
-
     });
 }
 
@@ -993,7 +990,7 @@ function start_interactive_construction(configuration) {
         }
 
         $("body").css("cursor", "default");
-
+        // TODO T: I think we dont want these two lines:
         document.getElementById("retrain-button").removeAttribute("disabled");
         document.getElementById("interactive-button").removeAttribute("disabled");
     });
@@ -1584,17 +1581,51 @@ $(document).ready(function () {
     $("input[name='retrain'], button[name='retrain']").on('click', function (event) {
         event.preventDefault();
         let configuration = {};
+
+        // find the selected options for the numeric predicates
+        configuration.numeric_predicates = [];
+        $('#numeric-predicates .custom-control-input:checked').each(function() {
+            var checkboxValue = $(this).attr('name');
+            configuration.numeric_predicates.push(checkboxValue);
+        });
+        if (configuration.numeric_predicates.length == 0) {
+            document.getElementById('num-pred-error-msg-edit').style.display = 'block';
+            return;
+        }
+
+        // find the selected options for the categorical predicates
+        configuration.categorical_predicates = [];
+        $('#categorical-predicates .custom-control-input:checked').each(function() {
+            let checkboxValue = $(this).attr('name');
+            configuration.categorical_predicates.push(checkboxValue);
+        });
+        if (configuration.categorical_predicates.length == 0) {
+            document.getElementById('cat-pred-error-msg-edit').style.display = 'block';
+            return;
+        }
+                
         configuration.id = idUnderInspection;
         configuration.controller = controllerFile;
         configuration.config = $('#config').val();
         configuration.determinize = $('#determinize').val();
-        configuration.numeric_predicates = $('#numeric-predicates').val();
-        configuration.categorical_predicates = $('#categorical-predicates').val();
-        configuration.impurity = $('#impurity').val();
+        //configuration.numeric_predicates = $('#numeric-predicates').val();
+        //configuration.categorical_predicates = $('#categorical-predicates').val();
+        //configuration.impurity = $('#impurity').val();
         configuration.tolerance = $('#tolerance').val();
         configuration.safe_pruning = $('#safe-pruning').val();
-        configuration.user_predicates = "";
 
+        configuration.impurity = "entropy"
+        // in CLI + old GUI + backend: "multilabelentropy" was a choice for the impurity
+        // had to be combined with "determinize: auto" bc multilabelentropy automatically determinizes
+        // in new GUI: multilabelentropy is displayed as a choice for the determinization
+        // and we choose impurity automatically depending on the determinization
+        if (configuration.determinize === "multilabelentropy") {
+            configuration.determinize = "auto";
+            configuration.impurity = "multilabelentropy";
+        }
+
+        // TODO T
+        configuration.user_predicates = "";
         if (configuration.config === "algebraic") {
             configuration.config += " (Fallback: " + $("#fallback").val() + ")";
             configuration.numeric_predicates = [""];

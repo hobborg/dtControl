@@ -339,6 +339,7 @@ def insert_into_json_tree(node_address, saved_json, partial_json):
 def partial_construct():
     global completed_experiments, results
     data = request.get_json()
+    logging.info(f"Request for partial construct: \n {data}")
     id = int(data['id'])
     controller_file = os.path.join(UPLOAD_FOLDER, data['controller'])
     config = data['config']
@@ -347,31 +348,46 @@ def partial_construct():
     # results.append([id, controller_file, nice_name, config, 'Running...', None, None, None])
 
     if config == "custom":
-        to_parse_dict = {"controller": controller_file, "determinize": data['determinize'],
-                         "numeric-predicates": data['numeric_predicates'],
-                         "categorical-predicates": data['categorical_predicates'], "impurity": data['impurity'],
-                         "tolerance": data['tolerance'], "safe-pruning": data['safe_pruning']}
-    elif config.startswith("algebraic"):
-        # algebraic strategy with user predicates
-        to_parse_dict = {"controller": controller_file, "config": "algebraic", "fallback": config.split("Fallback: ")[1][:-1],
-                         "tolerance": data['tolerance'], "determinize": data['determinize'], "safe-pruning": data['safe_pruning'],
-                         "impurity": data['impurity'], "user_predicates": html.unescape(data["user_predicates"])}
+        determinize = data["determinize"]
+        numeric_split = data["numeric_predicates"]
+        categorical_split = data["categorical_predicates"]
+        impurity = data["impurity"]
+        tolerance = data["tolerance"]
+        safe_pruning = data["safe_pruning"]
+        user_predicates = html.unescape(data["user_predicates"])
     else:
-        to_parse_dict = {"controller": controller_file, "config": config}
+        numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = frontend_helper.get_preset(data["config"])
+        user_predicates = None
 
+    config = {
+        #"res_id": global_res_counter,
+        #"cont_id": data["id"],
+        "controller": controller_file,
+        #"nice_name": data["nice_name"],
+        "config": data["config"],
+        "determinize": determinize,
+        "numeric_predicates": numeric_split,
+        "categorical_predicates": categorical_split,
+        "impurity": impurity,
+        "tolerance": tolerance,
+        "safe_pruning": safe_pruning,    # TODO
+        "user_predicates": user_predicates,
+        #"status": "Running" 
+    }
+    
     node_address = None
     saved_tree = None
     try:
         node_address = data["selected_node"]
         saved_tree = completed_experiments[id]["saved_tree"]
-        to_parse_dict["existing_tree"] = saved_tree
-        to_parse_dict["base_node_address"] = node_address
+        config["existing_tree"] = saved_tree
+        config["base_node_address"] = node_address
     except KeyError:
         pass
 
-    # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
+    # train returns dict with "classifier", "classifier_as_json", "x_metadata", "y_metadata", "run_time"
     try:
-        classifier = frontend_helper.train(to_parse_dict)
+        classifier = frontend_helper.train(config)
 
         # First edit the classifier object
         if node_address:

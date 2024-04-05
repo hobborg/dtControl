@@ -400,7 +400,7 @@ def train(args):
     ds.load_if_necessary()
 
     if "existing_tree" in args:
-        # train is called from app.partial_construct
+        # train is called from app.partial_construct or app.interactive_construct
         if args["base_node_address"]:
             mask = get_mask_given_address(existing_tree=args["existing_tree"], node_address=args["base_node_address"],
                                           dataset=ds)

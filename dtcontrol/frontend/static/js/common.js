@@ -235,6 +235,14 @@ $(document).ready(function () {
     // These functions handle changing the 'config' of form to custom whenever there's a change in finer controls
     $(".propList").change(function () {
         document.getElementById("config").value = "custom";
+
+        // check if we remove message that at least one option needs to be checked
+        if ($('#numeric-predicates .custom-control-input:checked').length > 0) {
+            document.getElementById('num-pred-error-msg-edit').style.display = 'none';
+        }
+        if ($('#categorical-predicates .custom-control-input:checked').length > 0) {
+            document.getElementById('cat-pred-error-msg-edit').style.display = 'none';
+        }
     });
 
     $("#tolerance").on("input", function () {
