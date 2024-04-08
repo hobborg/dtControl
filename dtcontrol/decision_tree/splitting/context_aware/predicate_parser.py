@@ -487,10 +487,12 @@ class PredicateParser:
         logger = RicherDomainLogger("GetPredicate_Logger", False)
         # TODO T: figure out why these are not printed:
         logger.root_logger.info("Starting Predicate Parser.")
-        if isinstance(user_input, str):
-            predicate_list = user_input.split("\n") if user_input else []
+        if not user_input:
+            predicate_list = []
+        elif isinstance(user_input, str):
+            predicate_list = user_input.split("\n")
         elif isinstance(user_input, list):
-            predicate_list = user_input if user_input else []
+            predicate_list = user_input
         else:
             logging.error(f"The user predicates do not have the correct data type: {user_input}")
 
