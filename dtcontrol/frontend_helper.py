@@ -298,6 +298,29 @@ def get_controller_data(file):
                        "max_non_det": ds.y.shape[-1]}         # maximum number of non-deterministic choices (1 if det.)
     return controller_data
 
+
+def get_plot_data(file, classifier_root):
+    is_valid_file_or_folder(file)
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+    logging.info("Frontend: Loading dataset to get plot data...")
+    ds.load_if_necessary()
+
+    predicted_labels = classifier_root.predict(ds.x, actual_values=False)
+
+    plot_data = {
+        "dataset_x": ds.x,
+        "dataset_y": ds.y,
+        "index_to_actual": ds.index_to_actual,
+        "predicted_labels": predicted_labels
+    }
+    return plot_data
+
+
 def intoJSON(rt, parent, address, y_metadata):
     # returns a string (JSON format that we need)
     # address is an array of integers

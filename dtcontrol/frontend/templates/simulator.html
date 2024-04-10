@@ -126,6 +126,7 @@
 
         <!-- Row in which tree and model visualisation cards get added -->
         <div id="mainRow1" class="row ml-2 mb-2" style="visibility: hidden;">
+
             <!-- Column for tree -->
             <div class="col-lg-12 mb-2" id="expandThisDiv">
                 <div class="card shadow mb-4">
@@ -153,6 +154,54 @@
                             <div class="row mb-2 align-self-end">
                                 <div class="col-auto mr-auto" style="font-size:0.9em">Click and drag to pan, scroll to zoom.</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column for scatter plot -->
+            <div class="col-lg-12 mb-2" id="outerDivPlot">
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="container-fluid h-100">
+                            <div id="plot-legend-wrapper" class="row">
+                                <!-- Row above plot with description and buttons -->
+
+                                    <!--form onsubmit="return checkDimInput()" method="post">
+                                        <label for="xdim">Choose which dimensions of the data get plotted:</label><br>
+                                        <input type="text" id="plottingDims" name="plottingDims_name" placeholder="0,1,2" required><br>
+                                    </form-->
+
+                                <div class="col-md-9">
+                                    <form>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-2">
+                                                <label for="xdim">x-axis:</label>
+                                                <input class="form-control" type="number" step="1" id="xdim" name="xname" value="0">
+                                            </div>
+                                            <div class="form-group col-md-2">
+                                                <label for="ydim">y-axis:</label>
+                                                <input class="form-control" type="number" step="1" id="ydim" name="yname" value="1">
+                                            </div>
+                                            <div class="form-group col-md-2">
+                                                <label for="zdim">z-axis (optional):</label>
+                                                <input class="form-control" type="number" step="1" id="zdim" name="zname" value="2">
+                                            </div>
+                                        </div>
+                                        <h6 id="plot-error-msg" class="mt-2 text-danger" style="display: none"> The given dimensions are not valid for this dataset. </h6>
+                                        <button id="render-plot-button" type="button" class="btn btn-dark mr-2">Render plot</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="row m-3 align-self-end">
+                                <div class="col-auto mr-auto" id="plot-legend" style="font-size:0.9em;"></div>
+                            </div>
+                            <!-- Plot in this div -->
+                            <!--div class="row d-flex align-items-center justify-content-center" style="width:800px;height:800px;">-->
+                                <div class="row" id="plotHere">
+
+                                </div>
+                            <!--/div-->
                         </div>
                     </div>
                 </div>
@@ -535,4 +584,6 @@
     <script src="{{ url_for( 'static', filename='js/inspect.js' ) }}"></script>
 <!--    <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>-->
 <!--    <script src="{{ url_for('static', filename='js/d3.v4.js') }}"></script>-->
+    <script src="{{ url_for( 'static', filename='js/plotly-2.30.0.min.js' ) }}"></script>
+
 {% endblock %}

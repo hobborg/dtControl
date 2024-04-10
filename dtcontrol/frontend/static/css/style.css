@@ -137,3 +137,11 @@ input[type=number] {
     pointer-events: none;
 }
 
+#outerDivPlot {
+    display: flex;
+    flex-direction: column;
+}
+
+#plotHere {
+    flex-grow: 1;
+}

@@ -200,7 +200,6 @@ def delete_controllers_route():
     filename = os.path.join(UPLOAD_FOLDER, controller_name)
     name, _ = split_relevant_extension(filename)
     config_name = name + '_config.json'
-    print("look for config name: ", config_name)
     if os.path.exists(config_name) and os.path.isfile(config_name):
         try:
             os.remove(config_name)
@@ -452,7 +451,7 @@ def interactive_construct():
     except KeyError:
         pass
 
-    # train takes in a dictionary and returns [constructed d-tree, x_metadata, y_metadata, root]
+    # train returns dict with "classifier", "classifier_as_json", "x_metadata", "y_metadata", "run_time"
     try:
         if not interactive_queue.get_ready():
             interactive_queue.set_ready()
@@ -503,6 +502,54 @@ def interact_with_fit():
         print("Queue not ready, perhaps interactive mode has completed.")
         response = {"type": "warning", "body": "Queue not ready. The interactive mode has perhaps completed."}
     return response
+
+
+@app.route("/plot-data", methods=['POST'])
+def get_plot_data_route():
+    data = request.get_json()
+    id = int(data["id"])
+    file = os.path.join(UPLOAD_FOLDER, data['controller'])
+    classifier_root = completed_experiments[id]["saved_tree"]
+    plot_data = frontend_helper.get_plot_data(file, classifier_root)
+    
+    # to make jsonify work to send to frontend:
+    plot_data["index_to_actual"] = {key: str(value) for key, value in plot_data["index_to_actual"].items()}
+    plot_data["dataset_x"] = plot_data["dataset_x"].tolist()
+    plot_data["dataset_y"] = plot_data["dataset_y"].tolist()
+    plot_data["predicted_labels"] = predicted_labels_to_JSON(plot_data["predicted_labels"])
+
+    # add classifier here:
+    plot_data["classifier_as_json"] = completed_experiments[id]["classifier_as_json"]
+    return jsonify(plot_data)
+
+
+def predicted_labels_to_JSON(predicted_labels):
+    # predicted_labels is a list with one entry per data point
+    # single output dataset: entries are integers or lists of integers (can vary in the same list)
+    # multi output dataset: entries are tuples or lists of tuples (can vary in the same list)
+    l1 = []
+    for label in predicted_labels:
+        if isinstance(label, list):
+            if isinstance(label[0], tuple):
+                # label is a list of tuples
+                l1.append(list(map(lambda x: tuple(map(int, x)), label)))
+            elif isinstance(label[0], (int, np.int32, np.int64)):
+                # label is a list of integers
+                l1.append(list(map(int, label)))
+            else:
+                logging.error(f"Error in predicted_labels_to_JSON: Predicted label is {label}")
+        elif isinstance(label, tuple):
+            # label is a tuple
+            l1.append(tuple(map(int, label)))
+        elif isinstance(label, (int, np.int32, np.int64)):
+            # label is an integer
+            l1.append(int(label))
+        elif label is None:
+            # label is None (e.g. bc in edit mode there are nodes without prediction, not yet homogeneous)
+            l1.append(str(label))
+        else:
+            logging.error(f"Error in predicted_labels_to_JSON: Predicted label is {label}")
+    return l1
 
 
 # route for selecting one of the computed configs

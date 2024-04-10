@@ -2062,6 +2062,65 @@ $(document).ready(function () {
         };
         reader.readAsText(file);
     });
+
+    // for plotting
+    $('#render-plot-button').on('click', function () {
+        $(this).prop('disabled', true);
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Rendering...');
+
+        $.ajax('/plot-data', {
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({"id": idUnderInspection, "controller": controllerFile}),
+        }).done(function(data_dict) {
+
+            // TODO T: replace with drop down or refactor/refine error message...
+            let xdim = $('#xdim').val();
+            let ydim = $('#ydim').val();
+            let zdim = $('#zdim').val();
+            let ndim = data_dict.dataset_x[0].length;   // number of dimensions of the data
+        
+            if (!checkInputDim(xdim, ndim) || !checkInputDim(ydim, ndim) || !(checkInputDim(zdim, ndim) || zdim == "")) {
+                $("#plot-error-msg")[0].style.display = "block";
+                $("#render-plot-button").prop('disabled', false);
+                $("#render-plot-button").html("Render plot");        
+                return;
+            }
+            $("#plot-error-msg")[0].style.display = "none";
+            
+            // if data points with different labels share the same coordinates, only one data point is visible at that position
+            // user has to select the displayed classes in the legend to examine them individually
+        
+            let size_data_x = data_dict.dataset_x.length;
+            // TODO T: where do we put this parameter:
+            let max_plotted_datapoints = 1000;
+            let indices_to_use =  Array.from(Array(size_data_x).keys());
+            if (size_data_x > max_plotted_datapoints) {        
+                let indices = Array.from(Array(size_data_x).keys());
+                // shuffle: https://stackoverflow.com/a/2450976
+                let currentIndex = indices.length;
+                while (currentIndex != 0) {
+                    let randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    // swap random index with the current element.
+                    [indices[currentIndex], indices[randomIndex]] = [indices[randomIndex], indices[currentIndex]];
+                }
+                // take first max_plotted_datapoints entries to get random indices
+                indices_to_use = indices.slice(0, max_plotted_datapoints);
+
+                let samplingMsg = "The dataset has size " + size_data_x + ". " +
+                "A subsample of " + max_plotted_datapoints + " was plotted.";
+                document.getElementById("plot-legend").innerHTML = samplingMsg;
+            }
+            constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim)
+
+            $("#render-plot-button").prop('disabled', false);
+            $("#render-plot-button").html("Render plot");
+            // scroll to the bottom of the page:
+            $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
+        });
+    });
+
 });
 
 // Handles play speed slider
@@ -2128,3 +2187,156 @@ $(document).on("change", "#animateTree", function () {
     treeAnimation = !treeAnimation;
     // console.log(treeAnimation);
 });
+
+// functions for plotting
+
+// a given dimension is valid if it is a natural number in [0, number_of_dimensions]
+function checkInputDim(d, ndim){
+    return d == parseInt(d) && d >= 0 && d < ndim;
+}
+
+function constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim=null) {
+    let data_x = data_dict.dataset_x;
+    let predicted_labels = data_dict.predicted_labels;
+    let classes = {};
+    // each possible label will be a key
+    // corresponding value will be a tuple where the first entry is a list of the x-coordinates of all points with that label, 
+    // and the second entry is a list of the y-coordinates all points with that label
+
+    for (let i of indices_to_use) {
+        // replace artificial indices with original actual class labels as string
+        let c = map_index_to_actual_label(data_dict.index_to_actual, predicted_labels[i]);
+        if (zdim) {
+            (c in classes) || (classes[c] = [[],[],[]]);    // start new trace if class c not already in dict classes
+            classes[c][0].push(data_x[i][xdim]);
+            classes[c][1].push(data_x[i][ydim]);  
+            classes[c][2].push(data_x[i][zdim]);
+        } else {
+            (c in classes) || (classes[c] = [[],[]]);    // start new trace if class c not already in dict classes
+            classes[c][0].push(data_x[i][xdim]);
+            classes[c][1].push(data_x[i][ydim]);   
+        }
+    }
+    
+    // create one trace for every class and store them in all_traces
+    let all_traces = [];
+    let trace_keys = Object.keys(classes);
+    for (let c = 0; c < trace_keys.length; c++){
+        let trace = {
+            x: classes[trace_keys[c]][0],
+            y: classes[trace_keys[c]][1],
+            mode: 'markers',
+            marker: {
+                opacity: 0.7,
+                size: 20,
+                symbol: 'circle',
+                line: {
+                    color: 'rgba(217, 217, 217, 0.14)',
+                    width: 0.5,
+                    opacity: 0.7}
+                   },
+            type: 'scatter',
+            name: trace_keys[c]
+		};
+        if (zdim) {
+            // add third coordinate
+            trace["z"] = classes[trace_keys[c]][2];
+            trace["type"] = "scatter3d";
+        }
+		all_traces.push(trace);
+    }
+
+    // change margins like this:
+	// let layout = {margin: {l: 30, r: 5, b: 50, t: 50}};
+    // and then Plotly.newPlot('plotHere', all_traces, layout);
+
+    Plotly.purge('plotHere');
+	Plotly.newPlot('plotHere', all_traces);
+
+    // if 2d plot: add cuts
+    if (!zdim) {
+        let cuts = []
+        let ymax = Math.max(...all_traces.map(trace => Math.max(...trace.y)))
+        let ymin = Math.min(...all_traces.map(trace => Math.min(...trace.y)))
+        let xmax = Math.max(...all_traces.map(trace => Math.max(...trace.x)))
+        let xmin = Math.min(...all_traces.map(trace => Math.min(...trace.x)))
+        console.log("data dict: ", data_dict)
+        plotTreeCuts_recursive(data_dict.classifier_as_json, cuts, xdim, ydim, ymax, ymin, xmax, xmin);
+	    Plotly.addTraces('plotHere', cuts);
+    }
+
+    /* for later use: find clicked point
+    var myPlot = document.getElementById('plotHere');
+    myPlot.on('plotly_click', function (data) {
+        var pts = '';
+        for (var i = 0; i < data.points.length; i++) {
+            pts = 'x = ' + data.points[i].x.toPrecision(3) + '\ny = ' +
+                data.points[i].y.toPrecision(3) + '\n\n';
+        }
+        alert('Closest point clicked:\n\n' + pts);
+    });
+    */
+
+}
+
+// single output dataset: predicted label is integer or list of integers (can vary in the same list)
+// multi output dataset: predicted label is tuple or list of tuples (can vary in the same list)
+ function map_index_to_actual_label(index_to_actual, predicted_label){
+    let label = "";
+    if (Array.isArray(predicted_label)) {
+        if (Array.isArray(predicted_label[0])) {
+            // predicted label is a list of tuples or a list of lists (no difference in js)
+            label = predicted_label.map(x => "(" + x.map(y => index_to_actual[y]).join(", ") + ")").join(", ");
+            // e.g. [[1,2], [3,4]] -> map each integer y with index_to_actual[y], then turn into string "[41, 42], [43, 44]"
+        } else {
+            // predicted label is a list (or tuple) of integers
+            label = predicted_label.map(x => index_to_actual[x]).join(", ");
+        }
+    } else {
+        // predicted label is an integer
+        label = index_to_actual[predicted_label];
+    }
+    return label;
+ }
+
+function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin) {
+    if(!classifier_node.children.length){  
+        // recursion ends in leafs
+        return cuts;
+    }
+
+    let array_of_split = classifier_node.name.split("<=");
+    // e.g. classifier_node.name has the form "x[0] <= 1.5"
+    // TODO T: only works for splits of this form
+    let split_dim = array_of_split[0].replace( /[^-\d.]/g, '');
+
+    if (split_dim == xdim){
+        let x_value = parseFloat(array_of_split[1].replace( /[^-\d.]/g, ''));
+        let cut_line = {
+            x: [x_value, x_value],
+            y: [ymin, ymax],
+            showlegend: false,
+            mode: 'lines'
+        }
+        cuts.push(cut_line);
+        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, x_value, xmin); // left child
+        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, x_value); // right child
+    } else if (split_dim == ydim) {
+        // TODO T: think about case if xdim = ydim
+        let y_value = parseFloat(array_of_split[1].replace( /[^-\d.]/g, ''));
+        let cut_line = {
+            x: [xmin, xmax],
+            y: [y_value, y_value],
+            showlegend: false,
+            mode: 'lines'
+        }
+        cuts.push(cut_line);
+        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, y_value, ymin, xmax, xmin); // left child
+        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, y_value, xmax, xmin); // right child
+    } else {
+        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, xmax, xmin); // left child
+        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, xmin);
+    }
+}
+
+
