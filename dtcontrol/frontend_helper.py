@@ -314,11 +314,34 @@ def get_plot_data(file, classifier_root):
 
     plot_data = {
         "dataset_x": ds.x,
-        "dataset_y": ds.y,
         "index_to_actual": ds.index_to_actual,
         "predicted_labels": predicted_labels
     }
     return plot_data
+
+
+def get_dataset_from_address_node(file, saved_tree, node_address):
+    is_valid_file_or_folder(file)
+    ext = file.split(".")[-1]
+    if BenchmarkSuite.is_multiout(file, ext):
+        ds = MultiOutputDataset(file)
+    else:
+        ds = SingleOutputDataset(file)
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+    logging.info("Frontend: Loading dataset to plot partially...")
+    ds.load_if_necessary()
+
+    mask = get_mask_given_address(existing_tree=saved_tree, node_address=node_address, dataset=ds)
+    ds = ds.from_mask(mask)
+    ds.is_deterministic = BenchmarkSuite.is_deterministic(file, ext)
+
+    # existing_tree is the saved_tree of class Node, not of class DecisionTree
+
+    return {
+        "dataset_x": ds.x,
+        "index_to_actual": ds.index_to_actual,
+        "predicted_labels": saved_tree.predict(ds.x, actual_values=False)
+    }
 
 
 def intoJSON(rt, parent, address, y_metadata):

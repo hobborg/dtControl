@@ -123,6 +123,7 @@ function setSelectedNode(d) {
     document.getElementById("nodeSelectInfo").innerText = "Selected " + selectedNode.data.name;
     document.getElementById("retrain-button").disabled = false;
     document.getElementById("interactive-button").disabled = false;
+    document.getElementById("replot-button").disabled = false;
 }
 
 function unsetSelectedNode() {
@@ -131,6 +132,7 @@ function unsetSelectedNode() {
         update(selectedNode);
         document.getElementById("retrain-button").disabled = true;
         document.getElementById("interactive-button").disabled = true;
+        document.getElementById("replot-button").disabled = true;
     }
     selectedNode = null;
     document.getElementById("nodeSelectInfo").innerText = "";
@@ -915,6 +917,7 @@ function run_partial_construction(configuration) {
             $("body").css("cursor", "progress");
             document.getElementById("retrain-button").disabled = "true";
             document.getElementById("interactive-button").disabled = "true";
+            document.getElementById("replot-button").disabled = "true";
         },
     }).done(data => {
         // Change existing tree data at the necessary position to data
@@ -960,7 +963,9 @@ function start_interactive_construction(configuration) {
         url: '/construct-partial/interactive',
         beforeSend: () => {
             document.getElementById("retrain-button").disabled = "true";
-            document.getElementById("interactive-button").disabled = "true";},
+            document.getElementById("interactive-button").disabled = "true";
+            document.getElementById("replot-button").disabled = "true";
+        },
     }).done(data => {
         // Change existing tree data at the necessary position to data
         console.log("Return from interactive construct");
@@ -990,9 +995,6 @@ function start_interactive_construction(configuration) {
         }
 
         $("body").css("cursor", "default");
-        // TODO T: I think we dont want these two lines:
-        document.getElementById("retrain-button").removeAttribute("disabled");
-        document.getElementById("interactive-button").removeAttribute("disabled");
     });
 }
 
@@ -1264,6 +1266,7 @@ function deactivateEdit()
 
     document.getElementById("retrain-button").classList.add("d-none");
     document.getElementById("interactive-button").classList.add("d-none");
+    document.getElementById("replot-button").classList.add("d-none");
     document.getElementById("presetSelectRow").classList.add("d-none");
     document.getElementById("advanced-options-edit").classList.add("d-none");
     document.getElementById("mainRow-interactive").classList.add("d-none");
@@ -1642,9 +1645,9 @@ $(document).ready(function () {
             // Control must not come here
             console.assert(selectedNode);
         }
-     });
+    });
 
-    // Retrain from sidenav
+    // Start interactive mode from sidenav
     $("input[name='interact'], button[name='interact']").on('click', function (event) {
         event.preventDefault();
         let configuration = {};
@@ -1671,8 +1674,49 @@ $(document).ready(function () {
             // Control must not come here
             console.assert(selectedNode);
         }
-     });
+    });
 
+    // Replot from sidenav
+    $("input[name='replot'], button[name='replot']").on('click', function (event) {
+        event.preventDefault();
+
+        if (selectedNode) {
+            $("body").css("cursor", "progress");
+            document.getElementById("retrain-button").disabled = "true";
+            document.getElementById("interactive-button").disabled = "true";
+            document.getElementById("replot-button").disabled = "true";
+
+            $.ajax('/plot-data/partial', {
+                data: JSON.stringify({"id": idUnderInspection, "controller": controllerFile, "selected_node": selectedNode.data.address}),
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+            }).done(function(data_dict) {
+                // data is dict with "dataset_x", "index_to_actual", "predicted_labels"
+        
+                let xdim = $('#xdim').val();
+                let ydim = $('#ydim').val();
+                let zdim = $('#zdim').val();
+                let ndim = data_dict.dataset_x[0].length;   // number of dimensions of the data
+            
+                if (!checkInputDim(xdim, ndim) || !checkInputDim(ydim, ndim) || !(checkInputDim(zdim, ndim) || zdim == "")) {
+                    $("#plot-error-msg")[0].style.display = "block";
+                } else {
+                    $("#plot-error-msg")[0].style.display = "none";
+                    constructScatterPlot(data_dict, xdim, ydim, zdim)
+                }
+                
+                $("body").css("cursor", "default");
+                document.getElementById("retrain-button").removeAttribute("disabled");
+                document.getElementById("interactive-button").removeAttribute("disabled");
+                document.getElementById("replot-button").removeAttribute("disabled");
+            });        
+        }
+        else {
+            // Nothing to do if node is not selected
+            // Control must not come here
+            console.assert(selectedNode);
+        }
+    });
 
 
     // Simulate Button
@@ -1714,6 +1758,7 @@ $(document).ready(function () {
             document.getElementById("advanced-options-edit").classList.remove("d-none");
             document.getElementById("retrain-button").classList.remove("d-none");
             document.getElementById("interactive-button").classList.remove("d-none");
+            document.getElementById("replot-button").classList.remove("d-none");
 
             document.getElementById("expandAllButton").disabled = "true";
             document.getElementById("collapseAllButton").disabled = "true";
@@ -2073,6 +2118,14 @@ $(document).ready(function () {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({"id": idUnderInspection, "controller": controllerFile}),
         }).done(function(data_dict) {
+            // data_dict is a dictionary with the following entries:
+            // - dataset_x: has the form [[dim1, dim2, ...], [dim1, dim2, ...], ...], contains every data point, but not the labels
+            // - predicted_labels: list, length corresponds to number of data points
+            // predicted labels can take multiple forms: can be single numbers or tuples, e.g. [1,1]
+            // note: the tuples are displayed e.g. (1,1) in Python, but in javascript, they are also just lists, e.g. [1,1]
+            // can be of same type for every data point, or can vary if non-deterministic: sometimes list, sometimes single entry
+            // - index_to_actual: dictionary that maps each integer used in the labels to its original value, e.g. {1: '1.0', 2: '0.0', 3: '0.5'}
+            // the keys to this dictionary are always integers starting at 1
 
             // TODO T: replace with drop down or refactor/refine error message...
             let xdim = $('#xdim').val();
@@ -2091,28 +2144,7 @@ $(document).ready(function () {
             // if data points with different labels share the same coordinates, only one data point is visible at that position
             // user has to select the displayed classes in the legend to examine them individually
         
-            let size_data_x = data_dict.dataset_x.length;
-            // TODO T: where do we put this parameter:
-            let max_plotted_datapoints = 1000;
-            let indices_to_use =  Array.from(Array(size_data_x).keys());
-            if (size_data_x > max_plotted_datapoints) {        
-                let indices = Array.from(Array(size_data_x).keys());
-                // shuffle: https://stackoverflow.com/a/2450976
-                let currentIndex = indices.length;
-                while (currentIndex != 0) {
-                    let randomIndex = Math.floor(Math.random() * currentIndex);
-                    currentIndex--;
-                    // swap random index with the current element.
-                    [indices[currentIndex], indices[randomIndex]] = [indices[randomIndex], indices[currentIndex]];
-                }
-                // take first max_plotted_datapoints entries to get random indices
-                indices_to_use = indices.slice(0, max_plotted_datapoints);
-
-                let samplingMsg = "The dataset has size " + size_data_x + ". " +
-                "A subsample of " + max_plotted_datapoints + " was plotted.";
-                document.getElementById("plot-legend").innerHTML = samplingMsg;
-            }
-            constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim)
+            constructScatterPlot(data_dict, xdim, ydim, zdim)
 
             $("#render-plot-button").prop('disabled', false);
             $("#render-plot-button").html("Render plot");
@@ -2195,8 +2227,31 @@ function checkInputDim(d, ndim){
     return d == parseInt(d) && d >= 0 && d < ndim;
 }
 
-function constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim=null) {
+function constructScatterPlot(data_dict, xdim, ydim, zdim=null) {
+    
     let data_x = data_dict.dataset_x;
+    let size_data_x = data_x.length;
+    // TODO T: where do we put this parameter:
+    let max_plotted_datapoints = 1000;
+    let indices_to_use =  Array.from(Array(size_data_x).keys());
+    if (size_data_x > max_plotted_datapoints) {        
+        let indices = Array.from(Array(size_data_x).keys());
+        // shuffle: https://stackoverflow.com/a/2450976
+        let currentIndex = indices.length;
+        while (currentIndex != 0) {
+            let randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            // swap random index with the current element.
+            [indices[currentIndex], indices[randomIndex]] = [indices[randomIndex], indices[currentIndex]];
+        }
+        // take first max_plotted_datapoints entries to get random indices
+        indices_to_use = indices.slice(0, max_plotted_datapoints);
+
+        let samplingMsg = "The dataset has size " + size_data_x + ". " +
+        "A subsample of " + max_plotted_datapoints + " was plotted.";
+        document.getElementById("plot-legend").innerHTML = samplingMsg;
+    }
+
     let predicted_labels = data_dict.predicted_labels;
     let classes = {};
     // each possible label will be a key
@@ -2205,7 +2260,7 @@ function constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim=null) 
 
     for (let i of indices_to_use) {
         // replace artificial indices with original actual class labels as string
-        let c = map_index_to_actual_label(data_dict.index_to_actual, predicted_labels[i]);
+        let c = mapIndexToActualLabel(data_dict.index_to_actual, predicted_labels[i]);
         if (zdim) {
             (c in classes) || (classes[c] = [[],[],[]]);    // start new trace if class c not already in dict classes
             classes[c][0].push(data_x[i][xdim]);
@@ -2254,14 +2309,14 @@ function constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim=null) 
 	Plotly.newPlot('plotHere', all_traces);
 
     // if 2d plot: add cuts
-    if (!zdim) {
+    if (!zdim && data_dict.classifier_as_json) {
         let cuts = []
         let ymax = Math.max(...all_traces.map(trace => Math.max(...trace.y)))
         let ymin = Math.min(...all_traces.map(trace => Math.min(...trace.y)))
         let xmax = Math.max(...all_traces.map(trace => Math.max(...trace.x)))
         let xmin = Math.min(...all_traces.map(trace => Math.min(...trace.x)))
         console.log("data dict: ", data_dict)
-        plotTreeCuts_recursive(data_dict.classifier_as_json, cuts, xdim, ydim, ymax, ymin, xmax, xmin);
+        plotTreeCuts(data_dict.classifier_as_json, cuts, xdim, ydim, ymax, ymin, xmax, xmin);
 	    Plotly.addTraces('plotHere', cuts);
     }
 
@@ -2281,7 +2336,7 @@ function constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim=null) 
 
 // single output dataset: predicted label is integer or list of integers (can vary in the same list)
 // multi output dataset: predicted label is tuple or list of tuples (can vary in the same list)
- function map_index_to_actual_label(index_to_actual, predicted_label){
+ function mapIndexToActualLabel(index_to_actual, predicted_label){
     let label = "";
     if (Array.isArray(predicted_label)) {
         if (Array.isArray(predicted_label[0])) {
@@ -2299,7 +2354,7 @@ function constructScatterPlot(data_dict, indices_to_use, xdim, ydim, zdim=null) 
     return label;
  }
 
-function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin) {
+function plotTreeCuts(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin) {
     if(!classifier_node.children.length){  
         // recursion ends in leafs
         return cuts;
@@ -2310,7 +2365,7 @@ function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, x
     // TODO T: only works for splits of this form
     let split_dim = array_of_split[0].replace( /[^-\d.]/g, '');
 
-    if (split_dim == xdim){
+    if (split_dim == xdim) {
         let x_value = parseFloat(array_of_split[1].replace( /[^-\d.]/g, ''));
         let cut_line = {
             x: [x_value, x_value],
@@ -2319,8 +2374,8 @@ function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, x
             mode: 'lines'
         }
         cuts.push(cut_line);
-        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, x_value, xmin); // left child
-        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, x_value); // right child
+        plotTreeCuts(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, x_value, xmin); // left child
+        plotTreeCuts(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, x_value); // right child
     } else if (split_dim == ydim) {
         // TODO T: think about case if xdim = ydim
         let y_value = parseFloat(array_of_split[1].replace( /[^-\d.]/g, ''));
@@ -2331,12 +2386,11 @@ function plotTreeCuts_recursive(classifier_node, cuts, xdim, ydim, ymax, ymin, x
             mode: 'lines'
         }
         cuts.push(cut_line);
-        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, y_value, ymin, xmax, xmin); // left child
-        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, y_value, xmax, xmin); // right child
+        plotTreeCuts(classifier_node.children[0], cuts, xdim, ydim, y_value, ymin, xmax, xmin); // left child
+        plotTreeCuts(classifier_node.children[1], cuts, xdim, ydim, ymax, y_value, xmax, xmin); // right child
     } else {
-        plotTreeCuts_recursive(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, xmax, xmin); // left child
-        plotTreeCuts_recursive(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, xmin);
+        plotTreeCuts(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, xmax, xmin); // left child
+        plotTreeCuts(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, xmin);
     }
 }
-
 

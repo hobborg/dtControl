@@ -515,11 +515,31 @@ def get_plot_data_route():
     # to make jsonify work to send to frontend:
     plot_data["index_to_actual"] = {key: str(value) for key, value in plot_data["index_to_actual"].items()}
     plot_data["dataset_x"] = plot_data["dataset_x"].tolist()
-    plot_data["dataset_y"] = plot_data["dataset_y"].tolist()
     plot_data["predicted_labels"] = predicted_labels_to_JSON(plot_data["predicted_labels"])
 
-    # add classifier here:
+    # add classifier here, needed to plot cuts:
     plot_data["classifier_as_json"] = completed_experiments[id]["classifier_as_json"]
+    return jsonify(plot_data)
+
+
+@app.route("/plot-data/partial", methods=['POST'])
+def plot_partial():
+    global completed_experiments
+    data = request.get_json()
+    id = int(data['id'])
+    file = os.path.join(UPLOAD_FOLDER, data['controller'])
+
+    node_address = data["selected_node"]
+    saved_tree = completed_experiments[id]["saved_tree"]
+    # saved_tree is the root of class Node, not of class DecisionTree
+
+    plot_data = frontend_helper.get_dataset_from_address_node(file, saved_tree, node_address)
+
+    # to make jsonify work to send to frontend:
+    plot_data["index_to_actual"] = {key: str(value) for key, value in plot_data["index_to_actual"].items()}
+    plot_data["dataset_x"] = plot_data["dataset_x"].tolist()
+    plot_data["predicted_labels"] = predicted_labels_to_JSON(plot_data["predicted_labels"])
+
     return jsonify(plot_data)
 
 
