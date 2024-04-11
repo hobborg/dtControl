@@ -485,7 +485,6 @@ class PredicateParser:
         """
         # Logger Init
         logger = RicherDomainLogger("GetPredicate_Logger", False)
-        # TODO T: figure out why these are not printed:
         logger.root_logger.info("Starting Predicate Parser.")
         if not user_input:
             predicate_list = []

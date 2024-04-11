@@ -1615,7 +1615,8 @@ $(document).ready(function () {
         //configuration.categorical_predicates = $('#categorical-predicates').val();
         //configuration.impurity = $('#impurity').val();
         configuration.tolerance = $('#tolerance').val();
-        configuration.safe_pruning = $('#safe-pruning').val();
+        //configuration.safe_pruning = $('#safe-pruning').val();
+        configuration.safe_pruning = false;
 
         configuration.impurity = "entropy"
         // in CLI + old GUI + backend: "multilabelentropy" was a choice for the impurity
@@ -1625,16 +1626,14 @@ $(document).ready(function () {
         if (configuration.determinize === "multilabelentropy") {
             configuration.determinize = "auto";
             configuration.impurity = "multilabelentropy";
+        } else if (configuration.determinize === "safe-pruning") {
+            // combined like this in the old preset sos-safepruning (see config.yml), which was the only preset using safe-pruning
+            configuration.determinize = "none";
+            configuration.safe_pruning = true;
         }
 
-        // TODO T
+        // TODO T: add algebraic predicates
         configuration.user_predicates = "";
-        if (configuration.config === "algebraic") {
-            configuration.config += " (Fallback: " + $("#fallback").val() + ")";
-            configuration.numeric_predicates = [""];
-            configuration.categorical_predicates = [""];
-            configuration.user_predicates = $('#userPredicatesInput').val();
-        }
 
         if (selectedNode) {
             configuration.selected_node = selectedNode.data.address;
@@ -2127,7 +2126,6 @@ $(document).ready(function () {
             // - index_to_actual: dictionary that maps each integer used in the labels to its original value, e.g. {1: '1.0', 2: '0.0', 3: '0.5'}
             // the keys to this dictionary are always integers starting at 1
 
-            // TODO T: replace with drop down or refactor/refine error message...
             let xdim = $('#xdim').val();
             let ydim = $('#ydim').val();
             let zdim = $('#zdim').val();
@@ -2362,7 +2360,7 @@ function plotTreeCuts(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin)
 
     let array_of_split = classifier_node.name.split("<=");
     // e.g. classifier_node.name has the form "x[0] <= 1.5"
-    // TODO T: only works for splits of this form
+    // NOTE: only works for splits of this form
     let split_dim = array_of_split[0].replace( /[^-\d.]/g, '');
 
     if (split_dim == xdim) {
@@ -2377,7 +2375,7 @@ function plotTreeCuts(classifier_node, cuts, xdim, ydim, ymax, ymin, xmax, xmin)
         plotTreeCuts(classifier_node.children[0], cuts, xdim, ydim, ymax, ymin, x_value, xmin); // left child
         plotTreeCuts(classifier_node.children[1], cuts, xdim, ydim, ymax, ymin, xmax, x_value); // right child
     } else if (split_dim == ydim) {
-        // TODO T: think about case if xdim = ydim
+        // TODO T: think about case if xdim == ydim
         let y_value = parseFloat(array_of_split[1].replace( /[^-\d.]/g, ''));
         let cut_line = {
             x: [xmin, xmax],

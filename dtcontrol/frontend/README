@@ -1,6 +1,6 @@
 File descriptions:
     app.py -> Countains the flask application to be run
-    frontend_helper.py -> A subset of cli.py containing all the necessary functions for app.py
+    frontend_helper.py -> Originally subset of cli.py containing all the necessary functions for app.py, in new frontend restructured to support functionalities only available in the frontend, e.g. plotting
 
 CSS:
     node-stylings.css -> Styling for SVG tree and nodes, divs, cards, slider
@@ -8,10 +8,16 @@ CSS:
     sidenav-my.css -> Styling for side navigation menu
 
 JS:
-    inspect.js -> Does all the main js work
+    benchmark.js -> Does js work related to page 1 of the frontend containing the tables
+    common.js -> Does some work related to both pages, but mainly work for page 2
+    inspect.js -> Does js work for page 2
+
+HTML:
+    base.html -> Elements of page 1 and page 2
+    index.html -> Structure of page 1
+    simulator.html -> Structure of page 2
 
 NOTE:
-    Ctrl(Cmd)+Click for selecting multiple entries in Numeric-predicates and Categorical-predicates selection
     The dynamics.txt file must be present in ./examples folder to use the simulation functionality.
     The format of dynamics .txt file must be as follows:
 

@@ -114,7 +114,6 @@ class Dataset(ABC):
             
             self.y_metadata['num_state_action_pairs'] = self.get_num_state_action_pairs()
             # compute number of state-action-pairs
-            # TODO T: for other file types/ examples? + also ds.y_metadata['num_flattened'] used...
 
     def load_metadata_from_json(self, json_object):
         metadata = json_object['metadata']

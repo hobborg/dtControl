@@ -27,6 +27,7 @@ logging.basicConfig(format="%(threadName)s: %(message)s", level=logging.INFO)
 
 # stored controllers: controllers[nice_name] contains controller_id, controller_name, controller_nice_name, num_states, state_action_pairs, var_types, num_vars, num_results, max_non_det
 controllers = {}
+# TODO T: maybe turn each controller also into dict
 
 # stored results: results[res_id] contains res_id, cont_id, controller, nice_name, preset, status, determinize, numeric_predicates, categorical predicates, impurity, tolerance, safe_pruning, user_predicates,
 #  inner_nodes, leaf_nodes, construction_time
@@ -222,7 +223,6 @@ def initialize_results_route():
     else:
         numeric_split, categorical_split, determinize, impurity, tolerance, safe_pruning = frontend_helper.get_preset(data["config"])
         user_predicates = None
-    # TODO T: do we want a duplicate check?
     # use global_res_counter to get a new id
     global global_res_counter
     global_res_counter += 1
@@ -238,7 +238,7 @@ def initialize_results_route():
         "categorical_predicates": categorical_split,
         "impurity": impurity,
         "tolerance": tolerance,
-        "safe_pruning": safe_pruning,    # TODO
+        "safe_pruning": safe_pruning,
         "user_predicates": user_predicates,
         "status": "Running" 
     }
@@ -259,7 +259,6 @@ def delete_results_route():
 # First call that receives controller and config and returns constructed tree
 @app.route("/construct", methods=['POST'])
 def construct_route():
-    # TODO T: continue here, compare with original
     global completed_experiments
     data = request.get_json()
     logging.info(f"Request: \n {data}")
@@ -382,7 +381,7 @@ def partial_construct():
         "categorical_predicates": categorical_split,
         "impurity": impurity,
         "tolerance": tolerance,
-        "safe_pruning": safe_pruning,    # TODO
+        "safe_pruning": safe_pruning,
         "user_predicates": user_predicates,
         #"status": "Running" 
     }
@@ -600,7 +599,6 @@ def computed():
         "boundInner": [selected_experiment["min_bounds_inner"], selected_experiment["max_bounds_inner"]],
         "boundOuter": [selected_experiment["min_bounds_outer"], selected_experiment["max_bounds_outer"]],
         "controllerFile": selected_experiment["controller"],
-        # TODO T: turn controller also into dict?
         "max_non_det": controllers[selected_controller_name][8],
         "variable_types": controllers[selected_controller_name][5]
     }

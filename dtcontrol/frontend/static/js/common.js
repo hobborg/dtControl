@@ -147,7 +147,6 @@ function fillYML(preset_json) {
         }
     }
     // add safe-pruning and multilabelentropy as a determinizer:
-    // TODO: does this make sense?
     let other_determinizers = ["safe-pruning", "multilabelentropy"];
     for (let det of other_determinizers) {
         let opt = document.createElement('option');
@@ -206,9 +205,9 @@ $(document).ready(function () {
                     case "tolerance":
                         $("tolerance").val(preset_json.presets[selected_preset][prop]);
                         break;
-                    case "safe-pruning":
-                        $('#safe-pruning').val(preset_json.presets[selected_preset][prop] + "");    // needs to be a String
-                        break;
+                    //case "safe-pruning":
+                    //    $('#safe-pruning').val(preset_json.presets[selected_preset][prop] + "");    // needs to be a String
+                    //    break;
                     case "categorical-predicates":
                     case "numeric-predicates":
                         // numeric and categorical predicates are chosen with checkboxes bc can be more than one

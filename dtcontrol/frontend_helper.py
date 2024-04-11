@@ -6,7 +6,7 @@ README
 Run dtcontrol --help to see usage.
 """
 
-# TODO T: change README in frontend: not subset of cli.py anymore...
+# NOTE: with new GUI, this is not a subset of cli.py anymore, but still share a lot of functions
 
 import logging
 import random
@@ -277,7 +277,7 @@ def get_controller_data(file):
     assert len(ds.x_metadata["min_inner"]) == ds.x.shape[1]
 
     num_results = len(ds.y_metadata["variables"]) if "variables" in ds.y_metadata else 0
-    # TODO T: when is num_results 0? ^ done like this in construct()...
+    # TODO T: copied from construct(), but when is num_results 0? ^ 
     if BenchmarkSuite.is_multiout(file, ext):
         assert num_results >= 2
         assert num_results == ds.y.shape[0]
@@ -383,7 +383,7 @@ def train(args):
 
     file = args["controller"]
 
-    # TODO T: don't repeat all of this bc done in get_controller_data, esp loading
+    # TODO T: maybe we do not need to repeat all of this bc already done in get_controller_data, esp loading
     is_valid_file_or_folder(file)
 
     # kwargs["timeout"] = 20 * 60 * 60
@@ -402,7 +402,6 @@ def train(args):
 
     presets = args["config"]
 
-    # TODO T: test!
     if "user_predicates" in args and args["user_predicates"]:
         assert presets == "custom"      # algebraic predicates can only be added in custom mode
         # TODO T: this construction with numeric_split, categorical_split, fallback numeric and categorical etc
@@ -421,7 +420,7 @@ def train(args):
     determinize = args["determinize"]
     impurity = args["impurity"]
     tolerance = float(args["tolerance"])
-    safe_pruning = (args["safe_pruning"] == "true")
+    safe_pruning = (args["safe_pruning"] == "true" or args["safe_pruning"] is True)
 
     assert "presets" != "default"       # we got rid of this preset in the new GUI
 

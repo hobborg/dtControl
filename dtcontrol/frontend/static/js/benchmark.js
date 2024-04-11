@@ -108,7 +108,6 @@ $(document).ready(function () {
         }
     
         // add safe-pruning and multilabelentropy as a determinizer:
-        // TODO: does this make sense?
         let other_determinizers = ["safe-pruning", "multilabelentropy"];
         for (let det of other_determinizers) {
             let opt = document.createElement('option');
@@ -184,7 +183,6 @@ $(document).ready(function () {
         let fileName = $(this).val().replace('C:\\fakepath\\', "");
         if (! validControllerFile(fileName)) {
             popupModal("Error: Invalid Controller File", "Supported file formats: " + inputFormats.join(", "))
-            // TODO T: test formats...
             return ;
         }
         let formData = new FormData();
@@ -476,9 +474,6 @@ $(document).ready(function () {
         // 8: maximum non-determinism
         // 9: actions
 
-        // row_contents is an array
-        // TODO T: change to dict?
-
         $("#controller-table tr.special").hide();
         if (row == null) {
             // create a new row
@@ -517,7 +512,7 @@ $(document).ready(function () {
             var aa_permissive_tree_button = makeButton("Run axis-aligned permissive", "aa-permissive-build-button-cont-table", "preset-btn", "fa-play text-success", "Use the predicate classes 'axisonly' and 'multisplit'");
             var logreg_permissive_tree_button = makeButton("Run logreg permissive", "logreg-permissive-build-button-cont-table", "preset-btn", "fa-play text-success", "Use the predicate classes 'axisonly', 'linear-logreg' and 'multisplit'");
             var advanced_settings_button = makeButton("Show advanced", "advanced-button-cont-table", "", "fa-gears", "Show advanced settings");
-            var edit_button =  makeButton("Go to tree builder", "edit-button-cont-table", "", "fa-wrench", "Go to interactive tree builder");
+            var edit_button =  makeButton("Go to tree builder", "edit-button-cont-table", "", "fa-wrench", "Go to interactive tree builder", "disabled");
             var delete_button = makeButton("Delete", "delete-button-cont-table", "", "fa-trash text-danger", "Delete");
             // we could also use other nice icons from font-awesome: fa-tree, fa-sitemap (looks like a decision tree)
             icon.innerHTML = det_tree_button +
@@ -528,11 +523,11 @@ $(document).ready(function () {
         }
     }
 
-    function makeButton(text, id, btn_class="", fa_symbol=null, description="", font_size=80) {
+    function makeButton(text, id, btn_class="", fa_symbol=null, description="", disabled="") {
         // e.g. "fa-plus" as fa_symbol
         if (fa_symbol) {
-            return '<button class="btn btn-light m-1 ' + String(btn_class) + ' " data-toggle="tooltip" title=" ' + String(description) + '" id="' + String(id) + '"> <i class="fa ' + String(fa_symbol) +
-                ' " style="font-size: ' + String(font_size) + ' % "> </i> ' + String(text) + '</button>';
+            return '<button class="btn btn-light m-1 ' + String(btn_class) + ' " data-toggle="tooltip" title=" ' + String(description) + '" id="' + String(id) + '" ' + disabled + '> <i class="fa ' + String(fa_symbol) +
+                ' " style="font-size: 80 % "> </i> ' + String(text) + '</button>';
         } else {
             return '<button class="btn btn-light " id=' + String(id) + '>' + String(text) + '</button>';
         }
@@ -617,8 +612,7 @@ $(document).ready(function () {
 
         // click button to tree builder
         $('#controller-table').on('click', '#edit-button-cont-table', function () {
-            console.log("jump to tree builder");
-            // TODO T
+            console.log("Not yet implemented: Jump directly to interactive tree builder.");
         });
 
         // open advanced options modal
@@ -750,7 +744,6 @@ $(document).ready(function () {
             document.getElementById('num-pred-error-msg').style.visibility = 'hidden';
 
             // TODO T: only one option must be chosen if categorical variables present? + better names + better descr on hover?
-            // TODO T: if no cat/num vars... don't show in results table... 
 
             // find the selected options for the numeric predicates
             var selected_num_predicates = [];
@@ -781,6 +774,7 @@ $(document).ready(function () {
 
             var chosen_determinize = document.getElementById("option-determinize").value;
             var chosen_impurity = "entropy";
+            var safe_pruning = false;
             // in CLI + old GUI + backend: "multilabelentropy" was a choice for the impurity
             // had to be combined with "determinize: auto" bc multilabelentropy automatically determinizes
             // in new GUI: multilabelentropy is displayed as a choice for the determinization
@@ -788,6 +782,10 @@ $(document).ready(function () {
             if (chosen_determinize === "multilabelentropy") {
                 chosen_determinize = "auto";
                 chosen_impurity = "multilabelentropy";
+            } else if (chosen_determinize === "safe-pruning") {
+                // combined like this in the old preset sos-safepruning (see config.yml), which was the only preset using safe-pruning
+                chosen_determinize = "none";
+                safe_pruning = true;
             }
 
             // get the user predicates
@@ -811,7 +809,7 @@ $(document).ready(function () {
                 categorical_predicates: selected_cat_predicates,
                 impurity: chosen_impurity,
                 tolerance: tolerance,
-                safe_pruning: false,    // TODO T
+                safe_pruning: safe_pruning,    // TODO T
                 user_predicates: user_preds
             };
             $.ajax('/results/initialize', {
@@ -846,9 +844,9 @@ $(document).ready(function () {
             "determinize"
             "numeric_predicates"
             "catergorical_predicates"
-            "impurity"          # TODO
-            "tolerance"         # TODO
-            "safe_pruning"    # TODO 
+            "impurity"          
+            "tolerance"         
+            "safe_pruning"    
             "status"
             "user prediactes"
         */
@@ -921,7 +919,9 @@ $(document).ready(function () {
                         break;
                     case 4:
                         if (result.determinize === "auto") {
-                            cell.innerHTML = "multilabelentropy"
+                            cell.innerHTML = "multilabelentropy";
+                        } else if (result.safe_pruning) {
+                            cell.innerHTML = "safe-pruning";
                         } else {
                             cell.innerHTML = result.determinize;
                         }
@@ -976,7 +976,6 @@ $(document).ready(function () {
             resultsRow.children[8].innerHTML = result.status;
             resultsRow.children[9].innerHTML = result.construction_time.milliSecondsToHHMMSS();
         } else if (result.status === "Edited") {
-            // TODO T: we don't know them?
             resultsRow.children[7].innerHTML = "";
             resultsRow.children[8].innerHTML = result.status;
             resultsRow.children[9].innerHTML = "";
