@@ -130,7 +130,8 @@ Specifying metadata
 
 While dtControl tries to obtain as much information as possible from the controller directly, it is sometimes necessary to provide additional metadata to the tool. For example, dtControl cannot know which variables in the controller are categorical, which is necessary for some of the specialized algorithms. It is also possible to specify names, e.g. for variables, which are used in the DOT output.
 
-This metadata can be given in a JSON file named ``controller_name_config.json`` (where ``controller_name`` must match the name of the controller file), which allows to set the following options:
+This metadata can be given in a JSON file named ``controller_name_config.json``, where ``controller_name`` must match the name of the controller file. If a metadata file with a matching name is located in the same folder as the controller file, it will be used automatically, i.e. the usage of the file does not have to be specified in the command-line.
+The metadata file allows to set the following options:
 
 - ``x_column_types`` is a dictionary with two entries, ``numeric`` and ``categorical``. These entries are lists with indices specifying which variables are numeric or categorical, respectively.
 
@@ -437,7 +438,7 @@ More advanced users can use dtControl programmatically using Python or as part o
 
     # setting up the predicates
     aa = AxisAlignedSplittingStrategy()
-    logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+    logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
 
     # select the DT learning algorithms we want to run and give them names
     classifiers = [
@@ -485,7 +486,7 @@ For example, to assign a priority of 0.5 to :code:`AxisAlignedSplittingStrategy`
     aa = AxisAlignedSplittingStrategy()
     aa.priority = 0.5
 
-    logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty='none')
+    logreg = LinearClassifierSplittingStrategy(LogisticRegression, solver='lbfgs', penalty=None)
     logreg = 0.7
 
 Web-Based Graphical User Interface
