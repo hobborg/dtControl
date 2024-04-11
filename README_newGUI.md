@@ -117,3 +117,5 @@
 - **debug/ids-exp-results-tables**: I did some debugging of the indices for the controllers and results there. (On the current main / in the old GUI, results did not have a unique id and controllers got the current row number as id, which lead to various problems.) Everything I did on that branch is already included in **new-GUI**, however Christoph did some session support stuff on that branch as well.
 - **update/docs-v3**: This branch was used to test how to change the documentation to write the ReadMe in `docs` file. It contains minor changes in the documentation that were also later commited to the main branch directly, i.e. this branch can be deleted.
 - **svm-predicates**: Most things on this branch are already part of **new-GUI**. Only the last few commits from March 09, 2023 and later could still be useful if the Interactive Tree Builder gets debugged and refactored.
+
+If you have any questions on this, feel free to contact me at <tabea.frisch@tum.de>.
