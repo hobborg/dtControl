@@ -56,14 +56,15 @@ setuptools.setup(
     ],
     python_requires='>=3.8',
     install_requires=[
-        'dd==0.5.7',
-        'Flask==2.0.3',
-        'pandas==1.4.1',
-        'ruamel.yaml==0.17.21',
-        'scikit-learn==1.0.2',
-        'sympy==1.9',
-        'tabulate==0.8.9',
-        'tqdm==4.62.3'
+        'dd>=0.5.7',
+        'Flask>=2.0.3',
+        'pandas>=1.4.1',
+        'ruamel.yaml>=0.17.21',
+        'scikit-learn>=1.0.2',
+        'sympy>=1.9',
+        'tabulate>=0.8.9',
+        'tqdm>=4.62.3',
+        'tensorflow>=2.16.1'
     ],
     package_data={
         'dtcontrol': ['config.yml'],
