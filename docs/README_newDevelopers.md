@@ -39,7 +39,7 @@ If you get no pop-up, PyCharm will still propose "Create a virtual environment u
        (venv) $ pip install -e .
 
    This will install the requirements specified in [setup.py](https://gitlab.com/live-lab/software/dtcontrol/-/blob/master/setup.py). The ``-e`` means that the project will be installed in editable mode, i.e. changes made in the code will be reflected when you run the program.
-4. Run the project using the command-line, e.g. with the command `python3 dtcontrol/frontend/app.py` to start the frontend or by directly using the command line interface of dtControl as described in the [documentation](https://dtcontrol.readthedocs.io/en/latest/index.html). 
+4. Run the project using the command-line, e.g. with the command `dtcontrol-frontend` to start the frontend or by directly using the command line interface of dtControl as described in the [documentation](https://dtcontrol.readthedocs.io/en/latest/index.html). 
 5. Optional: When you are working on the project in PyCharm, you can of course use the PyCharm terminal in the same way. If you want to use PyCharm to run [app.py](https://gitlab.com/live-lab/software/dtcontrol/-/blob/master/dtcontrol/frontend/app.py) directly, you need to configure a Python interpreter and add the virtual environment you just created. This can be done for example as follows: \
 `Settings -> Project: dtcontrol -> Python Interpreter -> Add Interpreter -> Add Local Interpreter... -> Virtualenv Environment -> Environment: Existing`. Next, you need to specify the path to your virtual environment, e.g. `/yourpath/venv/bin/python3.9`. \
 Now you can also run the project in PyCharm using the same virtual environment.
