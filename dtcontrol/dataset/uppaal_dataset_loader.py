@@ -109,7 +109,10 @@ class UppaalDatasetLoader(DatasetLoader):
 
             # Project onto measurable variables, the strategy should not depend on the gua variables coming from euler
             projection_variables = controllable_states + list(filter(lambda x: 'gua' not in x, numeric_features))
-            num_df = pd.DataFrame(row_num_vals, columns=controllable_states + numeric_features, dtype=np.int16)
+            #num_df = pd.DataFrame(row_num_vals, columns=controllable_states + numeric_features, dtype=np.int16)
+            # Changed as pandas was throwing error for failing for coerce float to int, casting to int separately now.
+            num_df = pd.DataFrame(row_num_vals, columns=controllable_states + numeric_features)
+            num_df = num_df.astype(np.int16)
             num_df = num_df[projection_variables]
 
             grouped = num_df.groupby(projection_variables)
