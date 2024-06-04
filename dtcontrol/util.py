@@ -81,6 +81,8 @@ def format_seconds(sec):
 def split_relevant_extension(filename):
     if filename.endswith('.storm.json'):
         return filename.split('.storm.json')[0], '.storm.json'
+    elif filename.endswith('.strategy.txt'):
+        return filename.split('.strategy.txt')[0], '.strategy.txt'
     return splitext(filename)
 
 
